@@ -293,31 +293,6 @@
       border-bottom-right-radius: 18px;
       box-shadow: 0 2px 8px #0002;
     }
-    .caixa-qtd-btns {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    .caixa-qtd-btn {
-      background: #fff;
-      color: var(--primary-color);
-      border: none;
-      border-radius: 8px;
-      font-size: 1.3rem;
-      font-weight: bold;
-      padding: 10px 18px;
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s;
-    }
-    .caixa-qtd-btn.selected, .caixa-qtd-btn:hover {
-      background: var(--primary-color);
-      color: #fff;
-    }
-    .caixa-qtd-btn.outro {
-      background: #a7f3d0;
-      color: #065f46;
-      font-weight: bold;
-    }
     .caixa-search-bar {
       margin-top: 8px;
       width: 100%;
@@ -710,6 +685,208 @@
       top: 0;
       z-index: 2;
     }
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .modal-content {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(15px);
+      margin: 2% auto;
+      padding: 0;
+      border-radius: 16px;
+      width: 98%;
+      max-width: 800px;
+      max-height: 95vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      animation: slideIn 0.3s ease;
+      position: relative;
+    }
+    @keyframes slideIn {
+      from { 
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      to { 
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    .modal-header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .modal-header h3 {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+    .close {
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .close:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+    .modal-body {
+      padding: 24px;
+    }
+    .form-section {
+      margin-bottom: 24px;
+    }
+    .form-section h4 {
+      color: var(--dark-color);
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--primary-color);
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+    .form-group label {
+      font-weight: 600;
+      color: var(--dark-color);
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 12px 16px;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-family: "Poppins", sans-serif;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      background: white;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+    .total-section {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: right;
+    }
+    .total-section h3 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+    .modal-footer {
+      padding: 20px 24px;
+      background: rgba(0, 0, 0, 0.02);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      position: sticky;
+      bottom: 0;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      font-family: "Poppins", sans-serif;
+      font-weight: 500;
+      font-size: 0.95em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    .btn-success {
+      background: linear-gradient(135deg, var(--success-color), #20c997);
+      color: white;
+    }
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger-color), #c82333);
+      color: white;
+    }
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+    }
+    .btn-sm {
+      padding: 8px 12px;
+      font-size: 0.85em;
+    }
+    @media (max-width: 768px) {
+      .modal-content {
+        width: 99%;
+        margin: 1% auto;
+        max-width: 99vw;
+        max-height: 98vh;
+      }
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -739,15 +916,6 @@
     </div>
     <div class="caixa-produtos-col">
       <div class="caixa-top-bar">
-        <div style="font-size:1.1rem;font-weight:600;margin-bottom:6px;">QUANTIDADE OU VALOR DA BALANCA</div>
-        <div class="caixa-qtd-btns">
-          <button class="caixa-qtd-btn selected">1</button>
-          <button class="caixa-qtd-btn">2</button>
-          <button class="caixa-qtd-btn">3</button>
-          <button class="caixa-qtd-btn">4</button>
-          <button class="caixa-qtd-btn">5</button>
-          <button class="caixa-qtd-btn outro">OUTRO VALOR</button>
-        </div>
         <div class="caixa-search-bar">
           <input type="text" id="caixa-busca" placeholder="Use o leitor ou busque por nome ou codigo" />
           <button><i class="fas fa-camera"></i></button>
@@ -800,11 +968,109 @@
       <button class="btn btn-primary" id="btn-salvar-cliente">Salvar Cliente</button>
     </div>
   </div>
+  <!-- Modal para Finalizar Pedido -->
+  <div id="finalizarPedidoModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>Finalizar Pedido</h3>
+        <span class="close" id="closeFinalizarPedido">&times;</span>
+      </div>
+      <div class="modal-body">
+        <form id="finalizarPedidoForm">
+          <div class="form-section">
+            <h4>Informações do Cliente</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="clienteFinalizar">Cliente</label>
+                <select id="clienteFinalizar">
+                  <option value="">Cliente não identificado</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="formaPagamentoFinalizar">Forma de Pagamento *</label>
+                <select id="formaPagamentoFinalizar" required>
+                  <option value="">Selecione</option>
+                  <option value="Cartao de Credito">Cartão de Crédito</option>
+                  <option value="Cartao de Debito">Cartão de Débito</option>
+                  <option value="PIX">PIX</option>
+                  <option value="Boleto Bancario">Boleto Bancário</option>
+                  <option value="Dinheiro">Dinheiro</option>
+                  <option value="Transferencia">Transferência</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="telefoneFinalizar">Telefone</label>
+                <input type="tel" id="telefoneFinalizar" placeholder="(11) 99999-9999">
+              </div>
+              <div class="form-group">
+                <label for="emailFinalizar">E-mail</label>
+                <input type="email" id="emailFinalizar" placeholder="cliente@empresa.com">
+              </div>
+            </div>
+            <div class="form-group full-width">
+              <label for="enderecoFinalizar">Endereço</label>
+              <input type="text" id="enderecoFinalizar" placeholder="Rua, número, bairro, cidade/estado">
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h4>Resumo do Pedido</h4>
+            <div id="resumoItens" style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+              <!-- Itens serão listados aqui -->
+            </div>
+            <div class="total-section">
+              <h3>Total: R$ <span id="totalFinalizar">0,00</span></h3>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h4>Observações</h4>
+            <div class="form-group full-width">
+              <textarea id="observacoesFinalizar" rows="3" placeholder="Observações sobre o pedido, instruções de entrega, etc."></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="confirmarFinalizar">
+          <i class="fas fa-check"></i> Confirmar e Finalizar
+        </button>
+        <button type="button" class="btn btn-danger" id="cancelarFinalizar">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Pedidos em Aberto -->
+  <div id="pedidosAbertosModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <h3>Pedidos em Aberto</h3>
+        <span class="close" id="closePedidosAbertos">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div id="listaPedidosAbertos">
+          <!-- Pedidos em aberto serão listados aqui -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="fecharPedidosAbertos">
+          <i class="fas fa-times"></i> Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Array para armazenar produtos carregados do banco
     let produtos = [];
     let itensPedido = [];
     let quantidadeSelecionada = 1;
+    let clientes = []; // Array para armazenar clientes
+    let pedidosEmAberto = []; // Array para pedidos em aberto
 
     // Função para carregar produtos do banco de dados
     async function carregarProdutos() {
@@ -816,6 +1082,54 @@
       } catch (error) {
         console.error('Erro ao carregar produtos:', error);
         alert('Erro ao carregar produtos do banco de dados');
+      }
+    }
+
+    // Função para carregar clientes do banco de dados
+    async function carregarClientes() {
+      try {
+        const response = await fetch('/api/clientes');
+        if (!response.ok) throw new Error('Erro ao carregar clientes');
+        clientes = await response.json();
+        atualizarSelectClientes();
+      } catch (error) {
+        console.error('Erro ao carregar clientes:', error);
+      }
+    }
+
+    // Função para atualizar o select de clientes
+    function atualizarSelectClientes() {
+      const select = document.getElementById('clienteFinalizar');
+      if (!select) return;
+      
+      select.innerHTML = '<option value="">Cliente não identificado</option>';
+      
+      if (clientes.length === 0) {
+        select.innerHTML += '<option value="" disabled>Nenhum cliente cadastrado</option>';
+        return;
+      }
+      
+      clientes.forEach(cliente => {
+        const option = document.createElement('option');
+        option.value = cliente.id;
+        option.textContent = `${cliente.razao}${cliente.cnpj ? ` - ${cliente.cnpj}` : ''}`;
+        select.appendChild(option);
+      });
+    }
+
+    // Função para preencher informações do cliente automaticamente
+    function preencherInfoCliente() {
+      const clienteId = document.getElementById('clienteFinalizar').value;
+      const cliente = clientes.find(c => c.id == clienteId);
+      
+      if (cliente) {
+        document.getElementById('telefoneFinalizar').value = cliente.telefone || '';
+        document.getElementById('emailFinalizar').value = cliente.email || '';
+        document.getElementById('enderecoFinalizar').value = `${cliente.endereco || ''}${cliente.bairro ? `, ${cliente.bairro}` : ''}${cliente.cidade ? `, ${cliente.cidade}/${cliente.estado || ''}` : ''}`.trim();
+      } else {
+        document.getElementById('telefoneFinalizar').value = '';
+        document.getElementById('emailFinalizar').value = '';
+        document.getElementById('enderecoFinalizar').value = '';
       }
     }
 
@@ -913,56 +1227,265 @@
       renderItensPedido();
     }
 
-    // Função para finalizar venda e registrar no caixa
-    async function finalizarVenda() {
+    // Função para abrir modal de finalização
+    function abrirModalFinalizar() {
       if (!itensPedido.length) {
         alert('Adicione produtos ao pedido antes de finalizar.');
         return;
       }
 
+      // Carregar clientes se ainda não foram carregados
+      if (clientes.length === 0) {
+        carregarClientes().then(() => {
+          mostrarModalFinalizar();
+        });
+      } else {
+        mostrarModalFinalizar();
+      }
+    }
+
+    function mostrarModalFinalizar() {
+      // Preencher resumo dos itens
+      const resumoItens = document.getElementById('resumoItens');
+      resumoItens.innerHTML = itensPedido.map(item => `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span>${item.nome} x${item.qtd}</span>
+          <span>R$ ${(item.preco_venda * item.qtd).toFixed(2).replace('.', ',')}</span>
+        </div>
+      `).join('');
+
+      // Atualizar total
+      const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.preco_venda || 0) * item.qtd), 0);
+      document.getElementById('totalFinalizar').textContent = total.toFixed(2).replace('.', ',');
+
+      // Mostrar modal
+      document.getElementById('finalizarPedidoModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function fecharModalFinalizar() {
+      document.getElementById('finalizarPedidoModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+      document.getElementById('finalizarPedidoForm').reset();
+    }
+
+    // Função para finalizar pedido e salvar no banco
+    async function confirmarFinalizar() {
+      const clienteId = document.getElementById('clienteFinalizar').value;
+      const formaPagamento = document.getElementById('formaPagamentoFinalizar').value;
+      const telefone = document.getElementById('telefoneFinalizar').value;
+      const email = document.getElementById('emailFinalizar').value;
+      const endereco = document.getElementById('enderecoFinalizar').value;
+      const observacoes = document.getElementById('observacoesFinalizar').value;
+      
+      if (!formaPagamento) {
+        alert('Selecione uma forma de pagamento');
+        return;
+      }
+      
       const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.preco_venda || 0) * item.qtd), 0);
       
       try {
+        // Salvar pedido no banco
+        const pedidoData = {
+          cliente_id: clienteId || null,
+          data_pedido: new Date().toISOString().split('T')[0],
+          status: 'Concluído',
+          valor_total: total,
+          observacoes: `${observacoes}\n\nInformações adicionais:\nTelefone: ${telefone}\nEmail: ${email}\nEndereço: ${endereco}\nForma de Pagamento: ${formaPagamento}`
+        };
+
+        const response = await fetch('/api/pedidos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(pedidoData)
+        });
+
+        if (!response.ok) throw new Error('Erro ao salvar pedido');
+        
+        const result = await response.json();
+
         // Registrar pagamento no caixa
-        const response = await fetch('/api/caixa', {
+        const caixaResponse = await fetch('/api/caixa', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             tipo: 'entrada',
             valor: total,
-            descricao: `Venda - ${itensPedido.length} itens`,
+            descricao: `Venda - Pedido #${result.id} - ${itensPedido.length} itens`,
             data: new Date().toISOString().split('T')[0],
-            pedido_id: null // Será atualizado quando criar o pedido
+            pedido_id: result.id
           })
         });
 
-        if (!response.ok) throw new Error('Erro ao registrar pagamento');
+        if (!caixaResponse.ok) throw new Error('Erro ao registrar pagamento');
 
         // Limpar caixa
         itensPedido = [];
         renderItensPedido();
         atualizarTotal();
+        fecharModalFinalizar();
 
-        alert(`Venda finalizada! Total: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
+        alert(`Pedido finalizado com sucesso!\nPedido #${result.id}\nTotal: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
       } catch (error) {
-        console.error('Erro ao finalizar venda:', error);
-        alert('Erro ao finalizar venda');
+        console.error('Erro ao finalizar pedido:', error);
+        alert('Erro ao finalizar pedido');
       }
     }
 
-    // Quantidade rápida
-    document.querySelectorAll('.caixa-qtd-btn').forEach((btn, idx) => {
-      btn.onclick = function() {
-        document.querySelectorAll('.caixa-qtd-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        if (btn.classList.contains('outro')) {
-          const val = prompt('Digite a quantidade desejada:', '1');
-          quantidadeSelecionada = parseInt(val) || 1;
-        } else {
-          quantidadeSelecionada = parseInt(btn.textContent) || 1;
+    // Função para carregar pedidos em aberto
+    async function carregarPedidosEmAberto() {
+      try {
+        const response = await fetch('/api/pedidos');
+        if (!response.ok) throw new Error('Erro ao carregar pedidos');
+        const todosPedidos = await response.json();
+        pedidosEmAberto = todosPedidos.filter(p => p.status === 'Em Processamento' || p.status === 'Pendente');
+        renderPedidosEmAberto();
+      } catch (error) {
+        console.error('Erro ao carregar pedidos em aberto:', error);
+      }
+    }
+
+    function renderPedidosEmAberto() {
+      const container = document.getElementById('listaPedidosAbertos');
+      if (!pedidosEmAberto.length) {
+        container.innerHTML = '<div style="color:#888;text-align:center;margin-top:32px;">Nenhum pedido em aberto.</div>';
+        return;
+      }
+      
+      container.innerHTML = pedidosEmAberto.map((pedido, idx) => `
+        <div style="background: #f8f9fa; border-radius: 8px; padding: 16px; margin-bottom: 16px; border: 1px solid #e5e7eb;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h4 style="margin: 0; color: var(--primary-color);">Pedido #${pedido.id}</h4>
+            <span style="background: #f59e0b; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">
+              ${pedido.status}
+            </span>
+          </div>
+          <div style="margin-bottom: 8px;">
+            <strong>Cliente:</strong> ${pedido.cliente_id || 'Não informado'}<br>
+            <strong>Data:</strong> ${pedido.data_pedido || 'Não informada'}<br>
+            <strong>Total:</strong> R$ ${(pedido.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-primary btn-sm" onclick="reabrirPedidoAberto(${pedido.id})">
+              <i class="fas fa-edit"></i> Reabrir
+            </button>
+            <button class="btn btn-success btn-sm" onclick="finalizarPedidoAberto(${pedido.id})">
+              <i class="fas fa-check"></i> Finalizar
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="removerPedidoAberto(${pedido.id})">
+              <i class="fas fa-trash"></i> Remover
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function abrirModalPedidosAbertos() {
+      carregarPedidosEmAberto();
+      document.getElementById('pedidosAbertosModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function fecharModalPedidosAbertos() {
+      document.getElementById('pedidosAbertosModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    // Função para reabrir pedido em aberto
+    async function reabrirPedidoAberto(pedidoId) {
+      const pedido = pedidosEmAberto.find(p => p.id == pedidoId);
+      if (!pedido) return;
+      
+      try {
+        // Buscar detalhes completos do pedido
+        const response = await fetch(`/api/pedidos/${pedidoId}`);
+        if (!response.ok) throw new Error('Erro ao buscar detalhes do pedido');
+        
+        const pedidoDetalhado = await response.json();
+        
+        // Limpar caixa atual
+        itensPedido = [];
+        
+        // Carregar itens do pedido no caixa
+        if (pedidoDetalhado.itens && pedidoDetalhado.itens.length > 0) {
+          itensPedido = pedidoDetalhado.itens.map(item => ({
+            id: item.produto_id || Math.random(),
+            nome: item.produto,
+            preco_venda: item.precoUnitario || 0,
+            qtd: item.quantidade || 1,
+            subtotal: item.subtotal || 0
+          }));
         }
-      };
-    });
+        
+        // Atualizar interface
+        renderItensPedido();
+        atualizarTotal();
+        
+        // Preencher informações do cliente se disponível
+        if (pedidoDetalhado.cliente_id) {
+          const cliente = clientes.find(c => c.id == pedidoDetalhado.cliente_id);
+          if (cliente) {
+            // Preencher campos do modal de finalização
+            const selectCliente = document.getElementById('clienteFinalizar');
+            if (selectCliente) {
+              selectCliente.value = cliente.id;
+              preencherInfoCliente();
+            }
+          }
+        }
+        
+        // Fechar modal
+        fecharModalPedidosAbertos();
+        
+        // Mostrar mensagem de sucesso
+        alert(`Pedido #${pedidoId} reaberto com sucesso! Os itens foram carregados no caixa.`);
+        
+      } catch (error) {
+        console.error('Erro ao reabrir pedido:', error);
+        alert('Erro ao reabrir pedido: ' + error.message);
+      }
+    }
+
+    // Função para finalizar pedido em aberto
+    async function finalizarPedidoAberto(pedidoId) {
+      if (!confirm('Confirmar finalização deste pedido?')) return;
+      
+      try {
+        const response = await fetch(`/api/pedidos/${pedidoId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'Concluído'
+          })
+        });
+
+        if (!response.ok) throw new Error('Erro ao finalizar pedido');
+        
+        // Atualizar lista
+        await carregarPedidosEmAberto();
+        alert('Pedido finalizado com sucesso!');
+      } catch (error) {
+        alert('Erro ao finalizar pedido');
+        console.error(error);
+      }
+    }
+
+    // Função para remover pedido em aberto
+    async function removerPedidoAberto(pedidoId) {
+      if (!confirm('Tem certeza que deseja remover este pedido?')) return;
+      
+      try {
+        const response = await fetch(`/api/pedidos/${pedidoId}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Erro ao remover pedido');
+        
+        await carregarPedidosEmAberto();
+        alert('Pedido removido com sucesso!');
+      } catch (error) {
+        alert('Erro ao remover pedido');
+        console.error(error);
+      }
+    }
 
     // Busca
     document.getElementById('caixa-busca').addEventListener('input', function() {
@@ -979,6 +1502,7 @@
       
       // Carregar produtos do banco
       carregarProdutos();
+      carregarClientes();
     });
 
     function logout() {
@@ -991,16 +1515,60 @@
     atualizarTotal();
     renderItensPedido();
 
-    // LATERAL CLIENTES
+    // Event listeners para os modais
+    document.addEventListener('DOMContentLoaded', () => {
+      // Modal de finalização
+      document.getElementById('btn-ir-pagamento').onclick = abrirModalFinalizar;
+      document.getElementById('closeFinalizarPedido').onclick = fecharModalFinalizar;
+      document.getElementById('cancelarFinalizar').onclick = fecharModalFinalizar;
+      document.getElementById('confirmarFinalizar').onclick = confirmarFinalizar;
+      
+      // Event listener para preencher informações do cliente
+      document.getElementById('clienteFinalizar').addEventListener('change', preencherInfoCliente);
+
+      // Modal de pedidos em aberto
+      document.getElementById('btn-em-aberto').onclick = abrirModalPedidosAbertos;
+      document.getElementById('closePedidosAbertos').onclick = fecharModalPedidosAbertos;
+      document.getElementById('fecharPedidosAbertos').onclick = fecharModalPedidosAbertos;
+
+      // Fechar modais ao clicar fora
+      window.addEventListener('click', function(event) {
+        const modalFinalizar = document.getElementById('finalizarPedidoModal');
+        const modalPedidos = document.getElementById('pedidosAbertosModal');
+        
+        if (event.target === modalFinalizar) {
+          fecharModalFinalizar();
+        }
+        if (event.target === modalPedidos) {
+          fecharModalPedidosAbertos();
+        }
+      });
+
+      // Fechar modais com ESC
+      document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+          fecharModalFinalizar();
+          fecharModalPedidosAbertos();
+        }
+      });
+    });
+
+    // LATERAL CLIENTES (mantido para compatibilidade)
     async function carregarClientesLateral() {
       try {
         const resp = await fetch('/api/clientes');
         if (!resp.ok) throw new Error('Erro ao buscar clientes na API');
         const clientes = await resp.json();
         const select = document.getElementById('cliente-select');
-        select.innerHTML = '<option value="">Selecione um cliente</option>' + clientes.map(cli => `<option value="${cli.id}">${cli.razao} - ${cli.cnpj}</option>`).join('');
-      } catch (e) {
-        alert('Erro ao carregar clientes.');
+        select.innerHTML = '<option value="">Selecione um cliente</option>';
+        clientes.forEach(cliente => {
+          const option = document.createElement('option');
+          option.value = cliente.id;
+          option.textContent = `${cliente.razao}${cliente.cnpj ? ` - ${cliente.cnpj}` : ''}`;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.error('Erro ao carregar clientes:', error);
       }
     }
 
@@ -1017,45 +1585,7 @@
       document.getElementById('caixaLateralClientes').classList.remove('aberta');
     };
 
-    // PEDIDOS EM ABERTO - Agora integrado com banco de dados
-    let pedidosEmAberto = [];
-
-    // Carregar pedidos em aberto do banco
-    async function carregarPedidosEmAberto() {
-      try {
-        const response = await fetch('/api/pedidos');
-        if (!response.ok) throw new Error('Erro ao carregar pedidos');
-        const todosPedidos = await response.json();
-        pedidosEmAberto = todosPedidos.filter(p => p.status === 'Em Processamento' || p.status === 'Pendente');
-        renderPedidosEmAberto();
-      } catch (error) {
-        console.error('Erro ao carregar pedidos em aberto:', error);
-      }
-    }
-
-    function renderPedidosEmAberto() {
-      const corpo = document.getElementById('corpoPedidosAbertos');
-      if (!pedidosEmAberto.length) {
-        corpo.innerHTML = '<div style="color:#888;text-align:center;margin-top:32px;">Nenhum pedido em aberto.</div>';
-        return;
-      }
-      corpo.innerHTML = pedidosEmAberto.map((p, idx) => `
-        <div class="pedido-aberto-card">
-          <h4>Pedido #${p.id}</h4>
-          <div class="pedido-aberto-itens">
-            Cliente: ${p.cliente_id || 'Não informado'}<br>
-            Data: ${p.data_pedido || 'Não informada'}
-          </div>
-          <div class="pedido-aberto-total">Total: R$ ${(p.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits:2})}</div>
-          <div class="pedido-aberto-actions">
-            <button class="pedido-aberto-btn" onclick="reabrirPedidoAberto(${p.id})"><i class='fas fa-edit'></i> Reabrir</button>
-            <button class="pedido-aberto-btn pedido-aberto-btn-remove" onclick="removerPedidoAberto(${p.id})"><i class='fas fa-trash'></i></button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // Salvar pedido no banco
+    // Salvar pedido no banco (mantido para compatibilidade)
     async function salvarPedidoNoBanco(pedidoData) {
       try {
         const response = await fetch('/api/pedidos', {
@@ -1072,7 +1602,7 @@
         console.error('Erro ao salvar pedido:', error);
         throw error;
       }
-    }
+    };
 
     document.getElementById('btn-salvar-cliente').onclick = async function() {
       const select = document.getElementById('cliente-select');
@@ -1109,10 +1639,6 @@
         atualizarTotal();
         document.getElementById('caixaLateralClientes').classList.remove('aberta');
         
-        // Atualizar lista de pedidos em aberto
-        await carregarPedidosEmAberto();
-        document.getElementById('caixaLateralPedidos').classList.add('aberta');
-        
         alert('Pedido salvo com sucesso!');
       } catch (error) {
         alert('Erro ao salvar pedido');
@@ -1123,40 +1649,6 @@
     document.getElementById('fecharLateralPedidos').onclick = function() {
       document.getElementById('caixaLateralPedidos').classList.remove('aberta');
     };
-
-    // Carregar pedidos em aberto ao inicializar
-    document.addEventListener('DOMContentLoaded', carregarPedidosEmAberto);
-
-    // Reabrir pedido em aberto
-    window.reabrirPedidoAberto = async function(pedidoId) {
-      const pedido = pedidosEmAberto.find(p => p.id == pedidoId);
-      if (!pedido) return;
-      
-      // Aqui você pode implementar a lógica para reabrir o pedido
-      // Por enquanto, apenas remove da lista
-      pedidosEmAberto = pedidosEmAberto.filter(p => p.id != pedidoId);
-      renderPedidosEmAberto();
-      document.getElementById('caixaLateralPedidos').classList.remove('aberta');
-      
-      alert('Funcionalidade de reabrir pedido será implementada em breve.');
-    };
-
-    // Remover pedido em aberto
-    window.removerPedidoAberto = async function(pedidoId) {
-      if (!confirm('Remover este pedido em aberto?')) return;
-      
-      try {
-        const response = await fetch(`/api/pedidos/${pedidoId}`, { method: 'DELETE' });
-        if (!response.ok) throw new Error('Erro ao remover pedido');
-        
-        pedidosEmAberto = pedidosEmAberto.filter(p => p.id != pedidoId);
-        renderPedidosEmAberto();
-        alert('Pedido removido com sucesso!');
-      } catch (error) {
-        alert('Erro ao remover pedido');
-        console.error(error);
-      }
-    };
   </script>
 </body>
-</html> 
+</html>

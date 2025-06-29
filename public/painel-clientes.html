@@ -828,100 +828,150 @@
       const primaryColor = [102, 126, 234];
       const secondaryColor = [118, 75, 162];
 
-      // Cabeçalho
-      doc.setFillColor(...primaryColor);
-      doc.rect(0, 0, 210, 30, 'F');
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(18);
-      doc.setFont('helvetica', 'bold');
-      doc.text('RELATÓRIO DE CLIENTES', 105, 15, { align: 'center' });
-      
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, 25, { align: 'center' });
+      // Inserir logo no cabeçalho
+      carregarImagemBase64('https://i.imgur.com/2jT2EPD.png', function(logoBase64) {
+        // Logo centralizada
+        const logoWidth = 50;
+        const logoHeight = 22;
+        const logoX = (210 - logoWidth) / 2;
+        const logoY = 8;
+        doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
 
-      // Informações do relatório
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Carteira de Clientes', 20, 45);
-      
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Total de Clientes: ${clientes.length}`, 20, 52);
-
-      // Tabela de clientes
-      const tableData = clientes.map(cliente => [
-        cliente.razao || '',
-        cliente.cnpj || '',
-        `${cliente.cidade || ''} / ${cliente.estado || ''}`,
-        cliente.telefone || '',
-        cliente.email || ''
-      ]);
-
-      doc.autoTable({
-        startY: 60,
-        head: [['Razão Social', 'CNPJ', 'Cidade/UF', 'Telefone', 'Email']],
-        body: tableData,
-        theme: 'grid',
-        headStyles: {
-          fillColor: primaryColor,
-          textColor: [255, 255, 255],
-          fontStyle: 'bold'
-        },
-        styles: {
-          fontSize: 8,
-          cellPadding: 2
-        },
-        columnStyles: {
-          0: { cellWidth: 50 },
-          1: { cellWidth: 30 },
-          2: { cellWidth: 25 },
-          3: { cellWidth: 25 },
-          4: { cellWidth: 40 }
-        }
-      });
-
-      // Estatísticas por estado
-      const finalY = doc.lastAutoTable.finalY + 10;
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Distribuição por Estado:', 20, finalY);
-
-      const estados = {};
-      clientes.forEach(cliente => {
-        const estado = cliente.estado || 'Não informado';
-        estados[estado] = (estados[estado] || 0) + 1;
-      });
-
-      let yPos = finalY + 8;
-      Object.entries(estados).forEach(([estado, count]) => {
-        if (yPos > 250) {
-          doc.addPage();
-          yPos = 20;
-        }
+        // Cabeçalho
+        doc.setFillColor(...primaryColor);
+        doc.rect(0, 0, 210, 40, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('RELATÓRIO DE CLIENTES', 105, 35, { align: 'center' });
+        
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
-        doc.text(`${estado}: ${count} cliente(s)`, 25, yPos);
-        yPos += 5;
+        doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, 45, { align: 'center' });
+
+        // Informações do relatório
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Carteira de Clientes', 20, 60);
+        
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Total de Clientes: ${clientes.length}`, 20, 70);
+
+        // Tabela de clientes com dados limpos
+        const tableData = clientes.map(cliente => [
+          (cliente.razao || '').replace(/[^\w\s\-\.]/g, ''), // Remove caracteres especiais
+          (cliente.cnpj || '').replace(/[^\w\s\-\.]/g, ''),
+          `${(cliente.cidade || '').replace(/[^\w\s\-\.]/g, '')} / ${(cliente.estado || '').replace(/[^\w\s\-\.]/g, '')}`,
+          (cliente.telefone || '').replace(/[^\w\s\-\.]/g, ''),
+          (cliente.email || '').replace(/[^\w\s@\-\.]/g, '') // Mantém @ para emails
+        ]);
+
+        doc.autoTable({
+          startY: 80,
+          head: [['Razão Social', 'CNPJ', 'Cidade/UF', 'Telefone', 'Email']],
+          body: tableData,
+          theme: 'grid',
+          headStyles: {
+            fillColor: primaryColor,
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            fontSize: 10
+          },
+          styles: {
+            fontSize: 9,
+            cellPadding: 4,
+            lineColor: [200, 200, 200],
+            lineWidth: 0.1
+          },
+          columnStyles: {
+            0: { cellWidth: 55, halign: 'left' },
+            1: { cellWidth: 35, halign: 'center' },
+            2: { cellWidth: 30, halign: 'center' },
+            3: { cellWidth: 30, halign: 'center' },
+            4: { cellWidth: 40, halign: 'left' }
+          },
+          alternateRowStyles: {
+            fillColor: [248, 249, 250]
+          },
+          margin: { top: 80, right: 10, bottom: 10, left: 10 }
+        });
+
+        // Estatísticas por estado
+        const finalY = doc.lastAutoTable.finalY + 15;
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Distribuição por Estado:', 20, finalY);
+
+        const estados = {};
+        clientes.forEach(cliente => {
+          const estado = (cliente.estado || 'Não informado').replace(/[^\w\s\-\.]/g, '');
+          estados[estado] = (estados[estado] || 0) + 1;
+        });
+
+        let yPos = finalY + 10;
+        let coluna = 0;
+        const colunas = 2;
+        const larguraColuna = 80;
+        
+        Object.entries(estados).forEach(([estado, count], index) => {
+          if (yPos > 250) {
+            doc.addPage();
+            yPos = 20;
+            coluna = 0;
+          }
+          
+          const xPos = 25 + (coluna * larguraColuna);
+          
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          doc.text(`${estado}: ${count} cliente(s)`, xPos, yPos);
+          
+          coluna++;
+          if (coluna >= colunas) {
+            coluna = 0;
+            yPos += 8;
+          }
+        });
+
+        // Rodapé
+        const pageHeight = doc.internal.pageSize.height;
+        doc.setFillColor(240, 240, 240);
+        doc.rect(0, pageHeight - 30, 210, 30, 'F');
+        
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 20, { align: 'center' });
+        doc.text(`Total de clientes: ${clientes.length}`, 105, pageHeight - 15, { align: 'center' });
+
+        // Salvar PDF
+        const hoje = new Date();
+        const dataAtual = `${hoje.getDate().toString().padStart(2, '0')}-${(hoje.getMonth() + 1).toString().padStart(2, '0')}-${hoje.getFullYear()}`;
+        doc.save(`Relatorio_Clientes_${dataAtual}.pdf`);
       });
+    }
 
-      // Rodapé
-      const pageHeight = doc.internal.pageSize.height;
-      doc.setFillColor(240, 240, 240);
-      doc.rect(0, pageHeight - 30, 210, 30, 'F');
-      
-      doc.setTextColor(100, 100, 100);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 20, { align: 'center' });
-      doc.text(`Total de clientes: ${clientes.length}`, 105, pageHeight - 15, { align: 'center' });
-
-      // Salvar PDF
-      const hoje = new Date();
-      const dataAtual = `${hoje.getDate().toString().padStart(2, '0')}-${(hoje.getMonth() + 1).toString().padStart(2, '0')}-${hoje.getFullYear()}`;
-      doc.save(`Relatorio_Clientes_${dataAtual}.pdf`);
+    // Função auxiliar para carregar imagem base64
+    function carregarImagemBase64(url, callback) {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.height = this.naturalHeight;
+        canvas.width = this.naturalWidth;
+        ctx.drawImage(this, 0, 0);
+        const dataURL = canvas.toDataURL('image/png');
+        callback(dataURL);
+      };
+      img.onerror = function() {
+        // Se não conseguir carregar a imagem, continua sem ela
+        callback(null);
+      };
+      img.src = url;
     }
 
     function exportarClientesExcel() {
@@ -1028,10 +1078,10 @@
       // Validar CPF/CNPJ antes de enviar
       const cnpjValue = document.getElementById('cnpj').value.replace(/\D/g, '');
       if (cnpjValue.length > 0 && !validarCPFCNPJ(cnpjValue)) {
-        const continuar = confirm('O CPF/CNPJ informado parece estar inválido. Deseja continuar mesmo assim?');
+        const continuar = window.confirm('O CPF/CNPJ informado parece estar invalido. Deseja continuar mesmo assim?');
         if (!continuar) {
           document.getElementById('cnpj').focus();
-          return;
+          return false;
         }
       }
       
@@ -1076,15 +1126,15 @@
 
     // Funções para formatação automática de CPF/CNPJ
     function formatarCPFCNPJ(valor) {
-      // Remove tudo que não é dígito
+      // Remove tudo que nao e digito
       const numeros = valor.replace(/\D/g, '');
       
-      // Se não tem números, retorna vazio
+      // Se nao tem numeros, retorna vazio
       if (numeros.length === 0) {
         return '';
       }
       
-      // Se tem 11 dígitos ou menos, formata como CPF
+      // Se tem 11 digitos ou menos, formata como CPF
       if (numeros.length <= 11) {
         if (numeros.length <= 3) {
           return numeros;
@@ -1096,7 +1146,7 @@
           return numeros.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4');
         }
       }
-      // Se tem 14 dígitos ou menos, formata como CNPJ
+      // Se tem 14 digitos ou menos, formata como CNPJ
       else if (numeros.length <= 14) {
         if (numeros.length <= 2) {
           return numeros;
@@ -1110,7 +1160,7 @@
           return numeros.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, '$1.$2.$3/$4-$5');
         }
       }
-      // Se tem mais de 14 dígitos, trunca para 14
+      // Se tem mais de 14 digitos, trunca para 14
       else {
         return numeros.substring(0, 14).replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
       }
@@ -1119,18 +1169,18 @@
     function validarCPFCNPJ(valor) {
       const numeros = valor.replace(/\D/g, '');
       
-      // Se não tem números, não é válido
+      // Se nao tem numeros, nao e valido
       if (numeros.length === 0) {
         return false;
       }
       
-      // Se tem menos de 11 dígitos, não é válido
+      // Se tem menos de 11 digitos, nao e valido
       if (numeros.length < 11) {
         return false;
       }
       
       if (numeros.length === 11) {
-        // Validação básica de CPF
+        // Validacao basica de CPF
         if (numeros === '00000000000' || numeros === '11111111111' || 
             numeros === '22222222222' || numeros === '33333333333' || 
             numeros === '44444444444' || numeros === '55555555555' || 
@@ -1139,7 +1189,7 @@
           return false;
         }
         
-        // Validação dos dígitos verificadores do CPF
+        // Validacao dos digitos verificadores do CPF
         let soma = 0;
         for (let i = 0; i < 9; i++) {
           soma += parseInt(numeros.charAt(i)) * (10 - i);
@@ -1156,7 +1206,7 @@
         
         return parseInt(numeros.charAt(9)) === digito1 && parseInt(numeros.charAt(10)) === digito2;
       } else if (numeros.length === 14) {
-        // Validação básica de CNPJ
+        // Validacao basica de CNPJ
         if (numeros === '00000000000000' || numeros === '11111111111111' || 
             numeros === '22222222222222' || numeros === '33333333333333' || 
             numeros === '44444444444444' || numeros === '55555555555555' || 
@@ -1165,7 +1215,7 @@
           return false;
         }
         
-        // Validação dos dígitos verificadores do CNPJ
+        // Validacao dos digitos verificadores do CNPJ
         let tamanho = numeros.length - 2;
         let numeros2 = numeros.substring(0, tamanho);
         let digitos = numeros.substring(tamanho);
@@ -1194,11 +1244,11 @@
         return resultado === parseInt(digitos.charAt(1));
       }
       
-      // Se tem mais de 14 dígitos, não é válido
+      // Se tem mais de 14 digitos, nao e valido
       return false;
     }
 
-    // Adicionar event listener para formatação automática
+    // Adicionar event listener para formatacao automatica
     document.addEventListener('DOMContentLoaded', function() {
       const cnpjInput = document.getElementById('cnpj');
       
@@ -1211,9 +1261,11 @@
       cnpjInput.addEventListener('blur', function(e) {
         const valor = e.target.value.replace(/\D/g, '');
         if (valor.length > 0 && !validarCPFCNPJ(valor)) {
-          const continuar = confirm('CPF/CNPJ inválido! Deseja continuar mesmo assim?');
+          const continuar = window.confirm('CPF/CNPJ invalido! Deseja continuar mesmo assim?');
           if (!continuar) {
-            e.target.focus();
+            setTimeout(() => {
+              e.target.focus();
+            }, 100);
           }
         }
       });

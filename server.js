@@ -436,13 +436,48 @@ app.get('/api/pedidos', async (req, res) => {
       database: 'jpsistemas_admin',
       charset: 'utf8mb4'
     });
-    const [rows] = await connection.execute('SELECT * FROM pedidos ORDER BY data_pedido DESC, id DESC');
+    const [rows] = await connection.execute(`
+      SELECT p.*, c.razao as nome_cliente, c.cnpj, c.telefone, c.email, c.endereco 
+      FROM pedidos p 
+      LEFT JOIN clientes c ON p.cliente_id = c.id 
+      ORDER BY p.data_pedido DESC, p.id DESC
+    `);
     await connection.end();
     res.json(rows);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Buscar pedido individual por ID
+app.get('/api/pedidos/:id', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_admin',
+      charset: 'utf8mb4'
+    });
+    const { id } = req.params;
+    const [rows] = await connection.execute(`
+      SELECT p.*, c.razao as nome_cliente, c.cnpj, c.telefone, c.email, c.endereco 
+      FROM pedidos p 
+      LEFT JOIN clientes c ON p.cliente_id = c.id 
+      WHERE p.id = ?
+    `, [id]);
+    await connection.end();
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Pedido não encontrado' });
+    }
+    
+    res.json(rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Criar novo pedido
 app.post('/api/pedidos', async (req, res) => {
   try {
@@ -464,6 +499,7 @@ app.post('/api/pedidos', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Editar pedido
 app.put('/api/pedidos/:id', async (req, res) => {
   try {
@@ -486,6 +522,7 @@ app.put('/api/pedidos/:id', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Excluir pedido
 app.delete('/api/pedidos/:id', async (req, res) => {
   try {
@@ -523,6 +560,7 @@ app.get('/api/caixa', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Registrar novo pagamento/lançamento
 app.post('/api/caixa', async (req, res) => {
   try {
