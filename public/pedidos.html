@@ -1161,7 +1161,7 @@
                   <tr>
                     <td>${item.produto || 'N/A'}</td>
                     <td style="text-align: center;">${item.quantidade || 0}</td>
-                    <td style="text-align: right;">R$ ${(item.precoUnitario || 0).toFixed(2).replace('.', ',')}</td>
+                    <td style="text-align: right;">R$ ${(item.precoUnitario || 0).toFixed(2).replace('.', ',')}
                     <td style="text-align: right;">R$ ${(item.subtotal || 0).toFixed(2).replace('.', ',')}</td>
                   </tr>
                 `).join('') : '<tr><td colspan="4" style="text-align: center;">Nenhum item encontrado</td></tr>'}
@@ -1232,6 +1232,99 @@
     function fecharModalVisualizarPedido() {
       document.getElementById('visualizarPedidoModal').style.display = 'none';
       document.body.style.overflow = 'auto';
+    }
+
+    // Função para abrir modal de novo pedido
+    function abrirModalNovoPedido() {
+      document.getElementById('novoPedidoModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      
+      // Limpar formulário
+      document.getElementById('novoPedidoForm').reset();
+      document.getElementById('itensContainer').innerHTML = '';
+      novoPedidoItens = [];
+      itemCounter = 0;
+      atualizarTotalPedido();
+      
+      // Remover atributo de edição se existir
+      document.getElementById('salvarPedido').removeAttribute('data-editando');
+    }
+
+    // Função para fechar modal de novo pedido
+    function fecharModalNovoPedido() {
+      document.getElementById('novoPedidoModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    // Função para adicionar item ao pedido
+    function adicionarItem() {
+      const itemId = `item-${itemCounter++}`;
+      
+      const itemHTML = `
+        <div class="item-row" id="${itemId}">
+          <div class="form-group">
+            <select class="produto-select" onchange="selecionarProduto(this, '${itemId}')">
+              <option value="">Selecione um produto</option>
+              ${produtos.map(produto => 
+                `<option value="${produto.id}" data-preco="${produto.preco_venda || 0}">${produto.nome}</option>`
+              ).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <input type="number" class="quantidade-input" value="1" min="1" onchange="calcularSubtotal('${itemId}')" onkeyup="calcularSubtotal('${itemId}')">
+          </div>
+          <div class="form-group">
+            <input type="number" class="preco-input" step="0.01" readonly>
+          </div>
+          <div class="form-group">
+            <input type="number" class="subtotal-input" step="0.01" readonly>
+          </div>
+          <button type="button" class="remove-item" onclick="removerItem('${itemId}')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      `;
+      
+      document.getElementById('itensContainer').insertAdjacentHTML('beforeend', itemHTML);
+    }
+
+    // Função para selecionar produto
+    function selecionarProduto(select, itemId) {
+      const produtoId = select.value;
+      const produto = produtos.find(p => p.id == produtoId);
+      
+      if (produto) {
+        const itemRow = document.getElementById(itemId);
+        const precoInput = itemRow.querySelector('.preco-input');
+        precoInput.value = produto.preco_venda || 0;
+        calcularSubtotal(itemId);
+      }
+    }
+
+    // Função para calcular subtotal
+    function calcularSubtotal(itemId) {
+      const itemRow = document.getElementById(itemId);
+      const quantidade = parseFloat(itemRow.querySelector('.quantidade-input').value) || 0;
+      const preco = parseFloat(itemRow.querySelector('.preco-input').value) || 0;
+      const subtotal = quantidade * preco;
+      
+      itemRow.querySelector('.subtotal-input').value = subtotal.toFixed(2);
+      atualizarTotalPedido();
+    }
+
+    // Função para remover item
+    function removerItem(itemId) {
+      document.getElementById(itemId).remove();
+      atualizarTotalPedido();
+    }
+
+    // Função para atualizar total do pedido
+    function atualizarTotalPedido() {
+      const subtotais = Array.from(document.querySelectorAll('.subtotal-input'))
+        .map(input => parseFloat(input.value) || 0);
+      
+      const total = subtotais.reduce((sum, subtotal) => sum + subtotal, 0);
+      document.getElementById('totalPedido').textContent = total.toFixed(2).replace('.', ',');
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -1552,6 +1645,26 @@
         console.error('Erro ao gerar Excel:', error);
         alert('Erro ao gerar Excel: ' + error.message);
       }
+    }
+
+    // Função auxiliar para carregar imagem base64
+    function carregarImagemBase64(url, callback) {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.height = this.naturalHeight;
+        canvas.width = this.naturalWidth;
+        ctx.drawImage(this, 0, 0);
+        const dataURL = canvas.toDataURL('image/png');
+        callback(dataURL);
+      };
+      img.onerror = function() {
+        // Se não conseguir carregar a imagem, continua sem ela
+        callback(null);
+      };
+      img.src = url;
     }
   </script>
 </body>

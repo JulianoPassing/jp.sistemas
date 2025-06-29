@@ -1398,8 +1398,8 @@
           const tableData = produtos.map(produto => [
             (produto.nome || '').replace(/[^\w\s\-\.]/g, ''), // Remove caracteres especiais
             (produto.categoria || '').replace(/[^\w\s\-\.]/g, ''),
-            `R$ ${(produto.preco_venda || 0).toFixed(2).replace('.', ',')}`,
-            `R$ ${(produto.preco_custo || 0).toFixed(2).replace('.', ',')}`,
+            `R$ ${(parseFloat(produto.preco_venda) || 0).toFixed(2).replace('.', ',')}`,
+            `R$ ${(parseFloat(produto.preco_custo) || 0).toFixed(2).replace('.', ',')}`,
             produto.estoque || 0,
             (produto.status || '').replace(/[^\w\s\-\.]/g, '')
           ]);
