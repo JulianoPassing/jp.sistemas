@@ -216,40 +216,40 @@
     </header>
 
     <main class="main-content">
-      <section class="welcome-section">
-        <h2>Painel Principal</h2>
-        <p>Gerencie seus clientes, produtos, pedidos e relatórios de forma eficiente</p>
-      </section>
+      <div class="welcome-section">
+        <h2>Bem-vindo ao J.P Sistemas Comercial</h2>
+        <p>Gerencie seus clientes, produtos, pedidos e relatorios de forma eficiente</p>
+      </div>
 
       <div class="menu-grid">
         <a href="painel-clientes.html" class="menu-card">
           <i class="fas fa-users"></i>
           <h3>Clientes</h3>
-          <p>Gerencie o cadastro de clientes, visualize informações e mantenha dados atualizados</p>
+          <p>Gerencie o cadastro de clientes, visualize informacoes e mantenha dados atualizados</p>
         </a>
 
         <a href="produtos.html" class="menu-card">
           <i class="fas fa-box"></i>
           <h3>Produtos</h3>
-          <p>Controle seu estoque de produtos, preços e informações detalhadas</p>
+          <p>Controle seu estoque de produtos, precos e informacoes detalhadas</p>
         </a>
 
         <a href="pedidos.html" class="menu-card">
           <i class="fas fa-shopping-cart"></i>
           <h3>Pedidos</h3>
-          <p>Crie e gerencie pedidos, acompanhe status e gere relatórios</p>
+          <p>Crie e gerencie pedidos, acompanhe status e gere relatorios</p>
         </a>
 
         <a href="relatorios.html" class="menu-card">
           <i class="fas fa-chart-bar"></i>
-          <h3>Relatórios</h3>
-          <p>Visualize relatórios detalhados de vendas, clientes e produtos</p>
+          <h3>Relatorios</h3>
+          <p>Visualize relatorios detalhados de vendas, clientes e produtos</p>
         </a>
 
         <a href="configuracoes.html" class="menu-card">
           <i class="fas fa-cog"></i>
-          <h3>Configurações</h3>
-          <p>Configure preferências do sistema e gerencie usuários</p>
+          <h3>Configuracoes</h3>
+          <p>Configure preferencias do sistema e gerencie usuarios</p>
         </a>
 
         <a href="ajuda.html" class="menu-card">
@@ -260,24 +260,26 @@
       </div>
     </main>
     <footer class="footer">
-      © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" style="color: #000; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
+      © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ola,%20gostaria%20de%20mais%20informacoes%20sobre%20os%20sistemas." target="_blank" style="color: #000; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
     </footer>
 
     <script>
-      // Verificar se está logado
-      if (sessionStorage.getItem('loggedIn') !== 'true') {
-        window.location.href = 'index.html';
-      }
+      document.addEventListener('DOMContentLoaded', () => {
+        // Verificar se esta logado
+        if (sessionStorage.getItem('loggedIn') !== 'true') {
+          window.location.href = 'index.html';
+        }
 
-      // Exibir nome do usuário
-      const username = sessionStorage.getItem('username') || 'Usuário';
-      document.getElementById('userDisplay').textContent = username;
+        // Exibir nome do usuario
+        const username = sessionStorage.getItem('username') || 'Usuario';
+        document.getElementById('userDisplay').textContent = username;
 
-      function logout() {
-        sessionStorage.removeItem('loggedIn');
-        sessionStorage.removeItem('username');
-        window.location.href = 'index.html';
-      }
+        function logout() {
+          sessionStorage.removeItem('loggedIn');
+          sessionStorage.removeItem('username');
+          window.location.href = 'index.html';
+        }
+      });
     </script>
   </body>
 </html>

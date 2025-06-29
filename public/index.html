@@ -487,30 +487,31 @@
     <div class="login-container">
       <div class="logo">
         <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 300px; height: 140px; display: block; margin: 0 auto 16px; object-fit: contain; background: none; box-shadow: none; border-radius: 0;" />
-        <p style="color: #000;">Faça login para acessar o painel</p>
+        <p style="color: #000;">Faca login para acessar o painel</p>
       </div>
       
-      <form id="loginForm">
+      <form id="loginForm" class="login-form">
         <div class="form-group">
-          <label for="username">Usuário</label>
-          <div class="input-wrapper">
-            <input type="text" id="username" name="username" placeholder="Digite seu nome de usuário" required>
+          <label for="username">Usuario</label>
+          <div class="input-group">
             <i class="fas fa-user"></i>
+            <input type="text" id="username" name="username" placeholder="Digite seu nome de usuario" required>
           </div>
         </div>
         
         <div class="form-group">
           <label for="password">Senha</label>
-          <div class="input-wrapper">
-            <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
+          <div class="input-group">
             <i class="fas fa-lock"></i>
+            <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
           </div>
         </div>
         
         <button type="submit" class="login-btn">
-          <span class="spinner" id="spinner"></span>
-          <i class="fas fa-sign-in-alt" id="loginIcon"></i>
-          <span id="loginText">Entrar no Sistema</span>
+          <span class="btn-text">Entrar</span>
+          <span class="btn-loading" style="display: none;">
+            <i class="fas fa-spinner fa-spin"></i> Entrando...
+          </span>
         </button>
       </form>
       
@@ -518,12 +519,15 @@
       <div id="successMessage" class="success-message"></div>
 
       <div class="form-footer">
-        <!-- Credenciais de Demonstração removidas -->
+        <div class="demo-info">
+          <p><i class="fas fa-info-circle"></i> <strong>Credenciais de Demonstracao:</strong></p>
+          <p>Usuario: <code>admin</code> | Senha: <code>admin123</code></p>
+        </div>
       </div>
     </div>
 
     <footer class="footer">
-      © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" style="color: #000; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
+      © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ola,%20gostaria%20de%20mais%20informacoes%20sobre%20os%20sistemas." target="_blank" style="color: #000; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
     </footer>
 
     <script>

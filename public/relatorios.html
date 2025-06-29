@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Relatórios - J.P Sistemas Comercial</title>
+  <title>Relatorios - J.P Sistemas Comercial</title>
   <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -602,8 +602,8 @@
 
   <main class="main-content">
     <div class="page-header">
-      <h1 class="page-title">📊 Relatórios Executivos</h1>
-      <p class="page-subtitle">Análise completa e insights do seu negócio em tempo real</p>
+      <h1 class="page-title">Relatorios Executivos</h1>
+      <p class="page-subtitle">Analise completa e insights do seu negocio em tempo real</p>
     </div>
 
     <div class="stats-grid">
@@ -619,7 +619,7 @@
         <div class="stat-label">Total de Clientes</div>
         <div class="stat-change positive">
           <i class="fas fa-arrow-up"></i>
-          <span>Crescimento contínuo</span>
+          <span>Crescimento continuo</span>
         </div>
       </div>
 
@@ -632,10 +632,10 @@
         <div class="stat-value" id="total-produtos">
           <span class="loading"></span>
         </div>
-        <div class="stat-label">Produtos Disponíveis</div>
+        <div class="stat-label">Produtos Disponiveis</div>
         <div class="stat-change positive">
           <i class="fas fa-arrow-up"></i>
-          <span>Catálogo ativo</span>
+          <span>Catalogo ativo</span>
         </div>
       </div>
 
@@ -648,7 +648,7 @@
         <div class="stat-value" id="pedidos-mes">
           <span class="loading"></span>
         </div>
-        <div class="stat-label">Pedidos Este Mês</div>
+        <div class="stat-label">Pedidos Este Mes</div>
         <div class="stat-change positive">
           <i class="fas fa-arrow-up"></i>
           <span>Vendas ativas</span>
@@ -664,7 +664,7 @@
         <div class="stat-value" id="vendas-mes">
           <span class="loading"></span>
         </div>
-        <div class="stat-label">Vendas do Mês</div>
+        <div class="stat-label">Vendas do Mes</div>
         <div class="stat-change positive">
           <i class="fas fa-arrow-up"></i>
           <span>Receita crescente</span>
@@ -680,7 +680,7 @@
         <div class="stat-value" id="lucro-mes">
           <span class="loading"></span>
         </div>
-        <div class="stat-label">Lucro do Mês</div>
+        <div class="stat-label">Lucro do Mes</div>
         <div class="stat-change positive">
           <i class="fas fa-arrow-up"></i>
           <span>Rentabilidade alta</span>
@@ -699,24 +699,24 @@
         <div class="stat-label">Total de Pedidos</div>
         <div class="stat-change positive">
           <i class="fas fa-arrow-up"></i>
-          <span>Histórico completo</span>
+          <span>Historico completo</span>
         </div>
       </div>
     </div>
 
     <div class="actions-section">
       <div class="actions-header">
-        <h2 class="actions-title">📋 Exportar Relatórios</h2>
-        <p class="actions-subtitle">Gere relatórios detalhados em PDF e Excel para análise completa</p>
+        <h2 class="actions-title">Exportar Relatorios</h2>
+        <p class="actions-subtitle">Gere relatorios detalhados em PDF e Excel para analise completa</p>
       </div>
       <div class="btn-group">
         <button class="btn btn-primary" id="btn-relatorio-clientes">
           <i class="fas fa-file-pdf"></i>
-          Relatório PDF
+          Relatorio PDF
         </button>
         <button class="btn btn-success" id="btn-relatorio-produtos">
           <i class="fas fa-file-excel"></i>
-          Relatório Excel
+          Relatorio Excel
         </button>
       </div>
     </div>
@@ -727,7 +727,7 @@
           <div class="chart-icon">
             <i class="fas fa-chart-pie"></i>
           </div>
-          <h3 class="chart-title">Distribuição de Vendas</h3>
+          <h3 class="chart-title">Distribuicao de Vendas</h3>
         </div>
         <div class="chart-container">
           <canvas id="salesChart"></canvas>
@@ -739,7 +739,7 @@
           <div class="chart-icon">
             <i class="fas fa-chart-bar"></i>
           </div>
-          <h3 class="chart-title">Evolução Mensal</h3>
+          <h3 class="chart-title">Evolucao Mensal</h3>
         </div>
         <div class="chart-container">
           <canvas id="evolutionChart"></canvas>
@@ -749,7 +749,7 @@
   </main>
 
   <footer class="footer">
-    © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" style="color: #000; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
+    © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ola,%20gostaria%20de%20mais%20informacoes%20sobre%20os%20sistemas." target="_blank" style="color: #000; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
   </footer>
 
   <script>
@@ -784,7 +784,7 @@
       
       setTimeout(() => {
         gerarRelatorioPDF();
-        this.innerHTML = '<i class="fas fa-file-pdf"></i> Relatório PDF';
+        this.innerHTML = '<i class="fas fa-file-pdf"></i> Relatorio PDF';
         this.disabled = false;
       }, 500);
     };
@@ -795,7 +795,7 @@
       
       setTimeout(() => {
         gerarRelatorioExcel();
-        this.innerHTML = '<i class="fas fa-file-excel"></i> Relatório Excel';
+        this.innerHTML = '<i class="fas fa-file-excel"></i> Relatorio Excel';
         this.disabled = false;
       }, 500);
     };
@@ -857,7 +857,7 @@
       new Chart(ctxPie, {
         type: 'doughnut',
         data: {
-          labels: ['Vendas do Mês', 'Vendas Anteriores', 'Lucro do Mês'],
+          labels: ['Vendas do Mes', 'Vendas Anteriores', 'Lucro do Mes'],
           datasets: [{
             data: [
               parseFloat(dados.vendasMes) || 0,
@@ -1046,11 +1046,11 @@
         ['Total de Clientes', dados.totalClientes.toString()],
         ['Total de Produtos', dados.totalProdutos.toString()],
         ['Total de Pedidos', dados.totalPedidos.toString()],
-        ['Pedidos do Mês', dados.pedidosMes.toString()],
+        ['Pedidos do Mes', dados.pedidosMes.toString()],
         ['Vendas Totais (Geral)', `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Vendas do Mês', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Vendas do Mes', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
         ['Lucro Total (Geral)', `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Lucro do Mês', `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`]
+        ['Lucro do Mes', `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`]
       ];
 
       doc.autoTable({
@@ -1078,13 +1078,13 @@
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...successColor);
-      doc.text(`LUCRO TOTAL DO MÊS: R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 105, finalY, { align: 'center' });
+      doc.text(`LUCRO TOTAL DO MES: R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 105, finalY, { align: 'center' });
 
       // Análise de rentabilidade
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.text('ANÁLISE DE RENTABILIDADE', 20, finalY + 20);
+      doc.text('ANALISE DE RENTABILIDADE', 20, finalY + 20);
 
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
@@ -1097,9 +1097,9 @@
       const ticketMedio = dados.pedidosMes > 0 ? (vendasMes / dados.pedidosMes).toFixed(2) : '0.00';
       const lucroMedio = dados.pedidosMes > 0 ? (lucroMes / dados.pedidosMes).toFixed(2) : '0.00';
       
-      doc.text(`Margem de Lucro (Mês): ${margemLucro}%`, 20, finalY + 30);
-      doc.text(`Ticket Médio (Mês): R$ ${ticketMedio}`, 20, finalY + 37);
-      doc.text(`Lucro Médio por Pedido (Mês): R$ ${lucroMedio}`, 20, finalY + 44);
+      doc.text(`Margem de Lucro (Mes): ${margemLucro}%`, 20, finalY + 30);
+      doc.text(`Ticket Medio (Mes): R$ ${ticketMedio}`, 20, finalY + 37);
+      doc.text(`Lucro Medio por Pedido (Mes): R$ ${lucroMedio}`, 20, finalY + 44);
 
       // Rodapé
       const pageHeight = doc.internal.pageSize.height;
@@ -1110,7 +1110,7 @@
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
       doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 20, { align: 'center' });
-      doc.text(`Relatório de Rentabilidade - ${new Date().toLocaleDateString('pt-BR')}`, 105, pageHeight - 15, { align: 'center' });
+      doc.text(`Relatorio de Rentabilidade - ${new Date().toLocaleDateString('pt-BR')}`, 105, pageHeight - 15, { align: 'center' });
 
       // Salvar PDF
       const hoje = new Date();
@@ -1140,27 +1140,27 @@
 
       // Dados do relatório
       const dadosRelatorio = [
-        ['RELATÓRIO EXECUTIVO - J.P Sistemas'],
+        ['RELATORIO EXECUTIVO - J.P Sistemas'],
         [''],
         ['RESUMO EXECUTIVO'],
         ['Indicador', 'Valor'],
         ['Total de Clientes', dados.totalClientes],
         ['Total de Produtos', dados.totalProdutos],
         ['Total de Pedidos', dados.totalPedidos],
-        ['Pedidos do Mês', dados.pedidosMes],
+        ['Pedidos do Mes', dados.pedidosMes],
         ['Vendas Totais (Geral)', `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Vendas do Mês', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Vendas do Mes', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
         ['Lucro Total (Geral)', `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Lucro do Mês', `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro do Mes', `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
         [''],
-        ['ANÁLISE DE RENTABILIDADE'],
-        ['Margem de Lucro (Mês)', `${margemLucro}%`],
-        ['Ticket Médio (Mês)', `R$ ${ticketMedio}`],
-        ['Lucro Médio por Pedido (Mês)', `R$ ${lucroMedio}`],
+        ['ANALISE DE RENTABILIDADE'],
+        ['Margem de Lucro (Mes)', `${margemLucro}%`],
+        ['Ticket Medio (Mes)', `R$ ${ticketMedio}`],
+        ['Lucro Medio por Pedido (Mes)', `R$ ${lucroMedio}`],
         [''],
-        ['DETALHAMENTO POR PERÍODO'],
-        ['Período', 'Vendas', 'Lucro', 'Margem'],
-        ['Mês Atual', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `${margemLucro}%`],
+        ['DETALHAMENTO POR PERIODO'],
+        ['Periodo', 'Vendas', 'Lucro', 'Margem'],
+        ['Mes Atual', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `${margemLucro}%`],
         ['Total Geral', `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `${parseFloat(dados.totalVendas) > 0 ? ((parseFloat(dados.lucroTotal) / parseFloat(dados.totalVendas)) * 100).toFixed(1) : '0.0'}%`],
         [''],
         ['Gerado em:', new Date().toLocaleString('pt-BR')]
@@ -1169,7 +1169,7 @@
       // Criar planilha
       const ws = XLSX.utils.aoa_to_sheet(dadosRelatorio);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Relatório Executivo');
+      XLSX.utils.book_append_sheet(wb, ws, 'Relatorio Executivo');
 
       // Configurar largura das colunas
       ws['!cols'] = [
