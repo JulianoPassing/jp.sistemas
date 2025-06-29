@@ -1652,20 +1652,8 @@
       // Carregar produtos do banco
       carregarProdutos();
       carregarClientes();
-    });
 
-    function logout() {
-      sessionStorage.removeItem('loggedIn');
-      sessionStorage.removeItem('username');
-      window.location.href = 'index.html';
-    }
-
-    // Inicialização
-    atualizarTotal();
-    renderItensPedido();
-
-    // Event listeners para os modais
-    document.addEventListener('DOMContentLoaded', () => {
+      // Event listeners para os modais
       // Modal de finalização
       document.getElementById('btn-ir-pagamento')?.onclick = abrirModalFinalizar;
       document.getElementById('closeFinalizarPedido')?.onclick = fecharModalFinalizar;
@@ -1727,6 +1715,16 @@
         }
       });
     });
+
+    function logout() {
+      sessionStorage.removeItem('loggedIn');
+      sessionStorage.removeItem('username');
+      window.location.href = 'index.html';
+    }
+
+    // Inicialização
+    atualizarTotal();
+    renderItensPedido();
 
     // LATERAL CLIENTES (mantido para compatibilidade)
     async function carregarClientesLateral() {
