@@ -21,17 +21,13 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 
-// Configuração de sessão com suporte a múltiplos provedores
-const sessionConfig = getSessionConfig();
-const sessionStore = new MySQLStore(sessionConfig);
-
+// Configuração de sessão simplificada (sem banco de dados)
 app.use(session({
   secret: process.env.SESSION_SECRET || 'SeuSessionSecretMuitoForte123!',
-  store: sessionStore,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: false,
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 horas
   }
