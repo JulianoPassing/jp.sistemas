@@ -442,8 +442,35 @@ app.get('/api/pedidos', async (req, res) => {
       LEFT JOIN clientes c ON p.cliente_id = c.id 
       ORDER BY p.data_pedido DESC, p.id DESC
     `);
+
+    // Buscar itens de todos os pedidos
+    const [itens] = await connection.execute(`
+      SELECT pi.pedido_id, pi.quantidade, pi.preco_unitario, pr.nome as produto, pr.preco_custo, pr.preco_venda
+      FROM pedido_itens pi
+      LEFT JOIN produtos pr ON pi.produto_id = pr.id
+    `);
+
+    // Agrupar itens por pedido_id
+    const itensPorPedido = {};
+    itens.forEach(item => {
+      if (!itensPorPedido[item.pedido_id]) itensPorPedido[item.pedido_id] = [];
+      itensPorPedido[item.pedido_id].push({
+        produto: item.produto,
+        quantidade: item.quantidade,
+        precoUnitario: item.preco_unitario,
+        preco_custo: item.preco_custo,
+        preco_venda: item.preco_venda
+      });
+    });
+
+    // Adicionar array itens em cada pedido
+    const pedidosComItens = rows.map(pedido => ({
+      ...pedido,
+      itens: itensPorPedido[pedido.id] || []
+    }));
+
     await connection.end();
-    res.json(rows);
+    res.json(pedidosComItens);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

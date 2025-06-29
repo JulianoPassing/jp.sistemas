@@ -986,17 +986,17 @@
           <td>${formatarDataHora(pedido.data_pedido)}</td>
           <td><span style="color: ${pedido.status === 'Concluído' ? 'var(--success-color)' : pedido.status === 'Cancelado' ? 'var(--danger-color)' : '#f59e0b'}; font-weight: bold;">${pedido.status || ''}</span></td>
           <td>R$ ${(pedido.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-          <td>R$ 0,00</td>
+          <td>R$ ${calcularLucroPedido(pedido).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
           <td>
-            <button class="btn btn-primary btn-sm" onclick="visualizarPedido('${pedido.id}')"><i class="fas fa-eye"></i> Ver</button>
-            <button class="btn btn-success btn-sm" onclick="editarPedido('${pedido.id}')"><i class="fas fa-edit"></i> Editar</button>
-            <button class="btn btn-danger btn-sm" onclick="removerPedido('${pedido.id}')"><i class="fas fa-trash"></i> Remover</button>
+            <button class="btn btn-primary btn-sm" onclick="visualizarPedido('${pedido.id}')"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-success btn-sm" onclick="editarPedido('${pedido.id}')"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-danger btn-sm" onclick="removerPedido('${pedido.id}')"><i class="fas fa-trash"></i></button>
             ${pedido.status !== 'Concluído' && pedido.status !== 'Cancelado' ? `
               <button class="btn btn-sm btn-concluir" onclick="concluirPedido('${pedido.id}')">
-                <i class="fas fa-check"></i> Concluir
+                <i class="fas fa-check"></i>
               </button>
               <button class="btn btn-sm btn-cancelar" onclick="cancelarPedido('${pedido.id}')">
-                <i class="fas fa-times"></i> Cancelar
+                <i class="fas fa-times"></i>
               </button>
             ` : ''}
           </td>
@@ -1502,24 +1502,13 @@
 
     // Função para calcular o lucro de um pedido
     function calcularLucroPedido(pedido) {
-      if (pedido.status === 'Cancelado') {
-        return 0;
-      }
-      
-      let lucroTotal = 0;
-      
-      if (pedido.itens) {
-        pedido.itens.forEach(item => {
-          const produto = produtos.find(p => p.nome === item.produto);
-          if (produto) {
-            const quantidade = item.quantidade;
-            const lucroUnitario = (produto.preco_venda || 0) - (produto.preco_custo || 0);
-            lucroTotal += lucroUnitario * quantidade;
-          }
-        });
-      }
-      
-      return lucroTotal;
+      if (!pedido.itens || !Array.isArray(pedido.itens)) return 0;
+      return pedido.itens.reduce((lucro, item) => {
+        const venda = parseFloat(item.precoUnitario || item.preco_venda || 0);
+        const custo = parseFloat(item.preco_custo || 0);
+        const qtd = parseInt(item.quantidade || 0);
+        return lucro + (venda - custo) * qtd;
+      }, 0);
     }
 
     // Função para formatar valor em reais
