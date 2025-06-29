@@ -887,6 +887,97 @@
         grid-template-columns: 1fr;
       }
     }
+    /* Estilos para o modal de salvar em aberto */
+    .resumo-pedido {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 20px;
+      border: 1px solid var(--border-color);
+    }
+
+    .resumo-pedido h4 {
+      color: var(--primary-color);
+      margin-bottom: 12px;
+      font-size: 1.1rem;
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 8px;
+    }
+
+    .item-resumo {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.9rem;
+    }
+
+    .item-resumo:last-child {
+      border-bottom: none;
+    }
+
+    .item-resumo .nome {
+      flex: 1;
+      font-weight: 500;
+    }
+
+    .item-resumo .qtd {
+      color: var(--text-secondary);
+      margin: 0 8px;
+    }
+
+    .item-resumo .preco {
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .total-resumo {
+      text-align: right;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 2px solid var(--primary-color);
+      font-size: 1.1rem;
+      color: var(--primary-color);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-family: "Poppins", sans-serif;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-group input[readonly] {
+      background-color: #f8f9fa;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -1058,6 +1149,63 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" id="fecharPedidosAbertos">
           <i class="fas fa-times"></i> Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Salvar Pedido em Aberto -->
+  <div id="salvarEmAbertoModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3><i class="fas fa-save"></i> Salvar Pedido em Aberto</h3>
+        <span class="close" id="closeSalvarEmAberto">&times;</span>
+      </div>
+      <div class="modal-body">
+        <form id="formSalvarEmAberto">
+          <div class="form-group">
+            <label for="clienteEmAberto">Cliente *</label>
+            <select id="clienteEmAberto" required>
+              <option value="">Carregando clientes...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="telefoneEmAberto">Telefone</label>
+            <input type="tel" id="telefoneEmAberto" placeholder="(11) 99999-9999">
+          </div>
+          <div class="form-group">
+            <label for="emailEmAberto">E-mail</label>
+            <input type="email" id="emailEmAberto" placeholder="cliente@empresa.com">
+          </div>
+          <div class="form-group">
+            <label for="enderecoEmAberto">Endereço</label>
+            <input type="text" id="enderecoEmAberto" placeholder="Rua, número, bairro, cidade/estado">
+          </div>
+          <div class="form-group">
+            <label for="observacoesEmAberto">Observações</label>
+            <textarea id="observacoesEmAberto" rows="3" placeholder="Observações sobre o pedido..."></textarea>
+          </div>
+          
+          <div class="resumo-pedido">
+            <h4>Resumo do Pedido</h4>
+            <div id="resumoItensEmAberto">
+              <!-- Itens serão listados aqui -->
+            </div>
+            <div class="total-resumo">
+              <strong>Total: R$ <span id="totalEmAberto">0,00</span></strong>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="verPedidosAbertos">
+          <i class="fas fa-list"></i> Ver Pedidos Existentes
+        </button>
+        <button type="button" class="btn btn-success" id="confirmarSalvarEmAberto">
+          <i class="fas fa-save"></i> Salvar Pedido
+        </button>
+        <button type="button" class="btn btn-secondary" id="cancelarSalvarEmAberto">
+          <i class="fas fa-times"></i> Cancelar
         </button>
       </div>
     </div>
@@ -1528,20 +1676,45 @@
       document.getElementById('clienteFinalizar').addEventListener('change', preencherInfoCliente);
 
       // Modal de pedidos em aberto
-      document.getElementById('btn-em-aberto').onclick = abrirModalPedidosAbertos;
+      document.getElementById('btn-em-aberto').onclick = function() {
+        // Verificar se há itens no pedido
+        if (!itensPedido.length) {
+          alert('Adicione produtos ao pedido antes de salvar em aberto.');
+          return;
+        }
+        
+        // Abrir modal para salvar em aberto
+        abrirModalSalvarEmAberto();
+      };
       document.getElementById('closePedidosAbertos').onclick = fecharModalPedidosAbertos;
       document.getElementById('fecharPedidosAbertos').onclick = fecharModalPedidosAbertos;
+
+      // Modal de salvar em aberto
+      document.getElementById('closeSalvarEmAberto').onclick = fecharModalSalvarEmAberto;
+      document.getElementById('cancelarSalvarEmAberto').onclick = fecharModalSalvarEmAberto;
+      document.getElementById('confirmarSalvarEmAberto').onclick = confirmarSalvarEmAberto;
+      document.getElementById('verPedidosAbertos').onclick = function() {
+        fecharModalSalvarEmAberto();
+        abrirModalPedidosAbertos();
+      };
+      
+      // Event listener para preencher informações do cliente automaticamente
+      document.getElementById('clienteEmAberto').addEventListener('change', preencherInfoClienteEmAberto);
 
       // Fechar modais ao clicar fora
       window.addEventListener('click', function(event) {
         const modalFinalizar = document.getElementById('finalizarPedidoModal');
         const modalPedidos = document.getElementById('pedidosAbertosModal');
+        const modalSalvarEmAberto = document.getElementById('salvarEmAbertoModal');
         
         if (event.target === modalFinalizar) {
           fecharModalFinalizar();
         }
         if (event.target === modalPedidos) {
           fecharModalPedidosAbertos();
+        }
+        if (event.target === modalSalvarEmAberto) {
+          fecharModalSalvarEmAberto();
         }
       });
 
@@ -1550,6 +1723,7 @@
         if (event.key === 'Escape') {
           fecharModalFinalizar();
           fecharModalPedidosAbertos();
+          fecharModalSalvarEmAberto();
         }
       });
     });
@@ -1646,6 +1820,141 @@
     document.getElementById('fecharLateralPedidos').onclick = function() {
       document.getElementById('caixaLateralPedidos').classList.remove('aberta');
     };
+
+    // Função para abrir modal de salvar em aberto
+    function abrirModalSalvarEmAberto() {
+      // Carregar clientes se ainda não foram carregados
+      if (clientes.length === 0) {
+        carregarClientes().then(() => {
+          preencherModalSalvarEmAberto();
+        });
+      } else {
+        preencherModalSalvarEmAberto();
+      }
+      
+      document.getElementById('salvarEmAbertoModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Função para preencher o modal de salvar em aberto
+    function preencherModalSalvarEmAberto() {
+      // Preencher select de clientes
+      const selectCliente = document.getElementById('clienteEmAberto');
+      selectCliente.innerHTML = '<option value="">Selecione um cliente</option>';
+      
+      if (clientes.length === 0) {
+        selectCliente.innerHTML += '<option value="" disabled>Nenhum cliente cadastrado</option>';
+      } else {
+        clientes.forEach(cliente => {
+          const option = document.createElement('option');
+          option.value = cliente.id;
+          option.textContent = `${cliente.razao}${cliente.cnpj ? ` - ${cliente.cnpj}` : ''}`;
+          selectCliente.appendChild(option);
+        });
+      }
+      
+      // Preencher resumo dos itens
+      const resumoContainer = document.getElementById('resumoItensEmAberto');
+      resumoContainer.innerHTML = '';
+      
+      itensPedido.forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'item-resumo';
+        itemDiv.innerHTML = `
+          <span class="nome">${item.nome}</span>
+          <span class="qtd">${item.qtd}x</span>
+          <span class="preco">R$ ${(parseFloat(item.preco_venda) * item.qtd).toFixed(2).replace('.', ',')}</span>
+        `;
+        resumoContainer.appendChild(itemDiv);
+      });
+      
+      // Atualizar total
+      const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.preco_venda || 0) * item.qtd), 0);
+      document.getElementById('totalEmAberto').textContent = total.toFixed(2).replace('.', ',');
+    }
+
+    // Função para fechar modal de salvar em aberto
+    function fecharModalSalvarEmAberto() {
+      document.getElementById('salvarEmAbertoModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    // Função para preencher informações do cliente automaticamente
+    function preencherInfoClienteEmAberto() {
+      const clienteId = document.getElementById('clienteEmAberto').value;
+      const cliente = clientes.find(c => c.id == clienteId);
+      
+      if (cliente) {
+        document.getElementById('telefoneEmAberto').value = cliente.telefone || '';
+        document.getElementById('emailEmAberto').value = cliente.email || '';
+        document.getElementById('enderecoEmAberto').value = `${cliente.endereco || ''}${cliente.bairro ? `, ${cliente.bairro}` : ''}${cliente.cidade ? `, ${cliente.cidade}/${cliente.estado || ''}` : ''}`.trim();
+      } else {
+        document.getElementById('telefoneEmAberto').value = '';
+        document.getElementById('emailEmAberto').value = '';
+        document.getElementById('enderecoEmAberto').value = '';
+      }
+    }
+
+    // Função para confirmar salvar em aberto
+    async function confirmarSalvarEmAberto() {
+      const clienteId = document.getElementById('clienteEmAberto').value;
+      const telefone = document.getElementById('telefoneEmAberto').value;
+      const email = document.getElementById('emailEmAberto').value;
+      const endereco = document.getElementById('enderecoEmAberto').value;
+      const observacoes = document.getElementById('observacoesEmAberto').value;
+      
+      if (!clienteId) {
+        alert('Selecione um cliente');
+        return;
+      }
+      
+      if (!itensPedido.length) {
+        alert('Adicione produtos ao pedido antes de salvar');
+        return;
+      }
+      
+      const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.preco_venda || 0) * item.qtd), 0);
+      
+      try {
+        // Preparar dados do pedido
+        const pedidoData = {
+          cliente_id: clienteId,
+          data_pedido: new Date().toISOString().split('T')[0],
+          status: 'Em Processamento',
+          valor_total: total,
+          observacoes: `${observacoes}\n\nInformações adicionais:\nTelefone: ${telefone}\nEmail: ${email}\nEndereço: ${endereco}\nPedido criado via caixa - ${itensPedido.length} itens`
+        };
+
+        // Salvar pedido no banco
+        const response = await fetch('/api/pedidos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(pedidoData)
+        });
+
+        if (!response.ok) throw new Error('Erro ao salvar pedido');
+        
+        const result = await response.json();
+        
+        // Limpar caixa
+        itensPedido = [];
+        renderItensPedido();
+        atualizarTotal();
+        
+        // Fechar modal
+        fecharModalSalvarEmAberto();
+        
+        // Mostrar mensagem de sucesso
+        alert(`Pedido #${result.id} salvo em aberto com sucesso!`);
+        
+        // Atualizar lista de pedidos em aberto na lateral
+        await carregarPedidosEmAberto();
+        
+      } catch (error) {
+        console.error('Erro ao salvar pedido:', error);
+        alert('Erro ao salvar pedido: ' + error.message);
+      }
+    }
   </script>
 </body>
 </html>
