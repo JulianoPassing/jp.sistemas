@@ -1667,16 +1667,16 @@
     // Event listeners para os modais
     document.addEventListener('DOMContentLoaded', () => {
       // Modal de finalização
-      document.getElementById('btn-ir-pagamento').onclick = abrirModalFinalizar;
-      document.getElementById('closeFinalizarPedido').onclick = fecharModalFinalizar;
-      document.getElementById('cancelarFinalizar').onclick = fecharModalFinalizar;
-      document.getElementById('confirmarFinalizar').onclick = confirmarFinalizar;
+      document.getElementById('btn-ir-pagamento')?.onclick = abrirModalFinalizar;
+      document.getElementById('closeFinalizarPedido')?.onclick = fecharModalFinalizar;
+      document.getElementById('cancelarFinalizar')?.onclick = fecharModalFinalizar;
+      document.getElementById('confirmarFinalizar')?.onclick = confirmarFinalizar;
       
       // Event listener para preencher informações do cliente
-      document.getElementById('clienteFinalizar').addEventListener('change', preencherInfoCliente);
+      document.getElementById('clienteFinalizar')?.addEventListener('change', preencherInfoCliente);
 
       // Modal de pedidos em aberto
-      document.getElementById('btn-em-aberto').onclick = function() {
+      document.getElementById('btn-em-aberto')?.onclick = function() {
         // Verificar se há itens no pedido
         if (!itensPedido.length) {
           alert('Adicione produtos ao pedido antes de salvar em aberto.');
@@ -1686,20 +1686,20 @@
         // Abrir modal para salvar em aberto
         abrirModalSalvarEmAberto();
       };
-      document.getElementById('closePedidosAbertos').onclick = fecharModalPedidosAbertos;
-      document.getElementById('fecharPedidosAbertos').onclick = fecharModalPedidosAbertos;
+      document.getElementById('closePedidosAbertos')?.onclick = fecharModalPedidosAbertos;
+      document.getElementById('fecharPedidosAbertos')?.onclick = fecharModalPedidosAbertos;
 
       // Modal de salvar em aberto
-      document.getElementById('closeSalvarEmAberto').onclick = fecharModalSalvarEmAberto;
-      document.getElementById('cancelarSalvarEmAberto').onclick = fecharModalSalvarEmAberto;
-      document.getElementById('confirmarSalvarEmAberto').onclick = confirmarSalvarEmAberto;
-      document.getElementById('verPedidosAbertos').onclick = function() {
+      document.getElementById('closeSalvarEmAberto')?.onclick = fecharModalSalvarEmAberto;
+      document.getElementById('cancelarSalvarEmAberto')?.onclick = fecharModalSalvarEmAberto;
+      document.getElementById('confirmarSalvarEmAberto')?.onclick = confirmarSalvarEmAberto;
+      document.getElementById('verPedidosAbertos')?.onclick = function() {
         fecharModalSalvarEmAberto();
         abrirModalPedidosAbertos();
       };
       
       // Event listener para preencher informações do cliente automaticamente
-      document.getElementById('clienteEmAberto').addEventListener('change', preencherInfoClienteEmAberto);
+      document.getElementById('clienteEmAberto')?.addEventListener('change', preencherInfoClienteEmAberto);
 
       // Fechar modais ao clicar fora
       window.addEventListener('click', function(event) {
@@ -1747,13 +1747,8 @@
       }
     }
 
-    document.getElementById('btn-em-aberto').onclick = function() {
-      document.getElementById('caixaLateralClientes').classList.add('aberta');
-      carregarClientesLateral();
-    };
-
-    document.getElementById('fecharLateralClientes').onclick = function() {
-      document.getElementById('caixaLateralClientes').classList.remove('aberta');
+    document.getElementById('fecharLateralClientes')?.onclick = function() {
+      document.getElementById('caixaLateralClientes')?.classList.remove('aberta');
     };
 
     // Salvar pedido no banco (mantido para compatibilidade)
@@ -1775,7 +1770,7 @@
       }
     };
 
-    document.getElementById('btn-salvar-cliente').onclick = async function() {
+    document.getElementById('btn-salvar-cliente')?.onclick = async function() {
       const select = document.getElementById('cliente-select');
       const clienteId = select.value;
       const clienteNome = select.options[select.selectedIndex]?.text?.split(' - ')[0] || document.getElementById('cliente-manual').value;
@@ -1808,7 +1803,7 @@
         itensPedido = [];
         renderItensPedido();
         atualizarTotal();
-        document.getElementById('caixaLateralClientes').classList.remove('aberta');
+        document.getElementById('caixaLateralClientes')?.classList.remove('aberta');
         
         alert('Pedido salvo com sucesso!');
       } catch (error) {
@@ -1817,8 +1812,8 @@
       }
     };
 
-    document.getElementById('fecharLateralPedidos').onclick = function() {
-      document.getElementById('caixaLateralPedidos').classList.remove('aberta');
+    document.getElementById('fecharLateralPedidos')?.onclick = function() {
+      document.getElementById('caixaLateralPedidos')?.classList.remove('aberta');
     };
 
     // Função para abrir modal de salvar em aberto
