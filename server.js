@@ -329,6 +329,20 @@ app.get('/api/produtos', async (req, res) => {
 // Rota para criar novo produto
 app.post('/api/produtos', async (req, res) => {
   try {
+    // Verificar se as variáveis de ambiente estão configuradas
+    if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_PASSWORD) {
+      console.error('Variáveis de ambiente do banco não configuradas');
+      return res.status(500).json({ 
+        error: 'Configuração de banco de dados não encontrada',
+        details: 'Configure as variáveis DB_HOST, DB_USER e DB_PASSWORD no Vercel'
+      });
+    }
+
+    console.log('Tentando conectar ao banco de dados...');
+    console.log('DB_HOST:', process.env.DB_HOST);
+    console.log('DB_USER:', process.env.DB_USER);
+    console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '***' : 'não definida');
+    
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
@@ -337,17 +351,29 @@ app.post('/api/produtos', async (req, res) => {
       charset: 'utf8mb4'
     });
 
+    console.log('Conexão estabelecida com sucesso');
+
     const { nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status } = req.body;
+    
+    console.log('Dados recebidos:', { nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status });
     
     const [result] = await connection.execute(
       'INSERT INTO produtos (nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status]
     );
     
+    console.log('Produto inserido com sucesso, ID:', result.insertId);
+    
     await connection.end();
     res.status(201).json({ id: result.insertId, message: 'Produto criado com sucesso' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erro detalhado ao criar produto:', error);
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ 
+      error: 'Erro ao criar produto',
+      details: error.message,
+      code: error.code
+    });
   }
 });
 
