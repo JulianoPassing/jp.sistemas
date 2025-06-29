@@ -1053,6 +1053,7 @@
         <div class="caixa-bottom-btns">
           <button class="caixa-bottom-btn open" id="btn-em-aberto"><i class="fas fa-folder-open"></i> EM ABERTO</button>
           <button class="caixa-bottom-btn pay" id="btn-ir-pagamento"><i class="fas fa-credit-card"></i> IR PARA O PAGAMENTO</button>
+          <button class="caixa-bottom-btn" id="btn-abrir-clientes" style="background: var(--accent-color);"><i class="fas fa-users"></i> CLIENTES</button>
         </div>
         <div class="caixa-total">R$ <span id="caixa-total">0,00</span></div>
       </div>
@@ -1761,6 +1762,10 @@
         abrirModalSalvarEmAberto();
       };
       
+      // Botão para abrir lateral de clientes
+      const btnAbrirClientes = document.getElementById('btn-abrir-clientes');
+      if (btnAbrirClientes) btnAbrirClientes.onclick = abrirLateralClientes;
+      
       const closePedidosAbertos = document.getElementById('closePedidosAbertos');
       if (closePedidosAbertos) closePedidosAbertos.onclick = fecharModalPedidosAbertos;
       
@@ -1852,15 +1857,25 @@
     // Salvar pedido no banco (mantido para compatibilidade)
     async function salvarPedidoNoBanco(pedidoData) {
       try {
+        console.log('Enviando pedido para API:', pedidoData);
+        
         const response = await fetch('/api/pedidos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(pedidoData)
         });
         
-        if (!response.ok) throw new Error('Erro ao salvar pedido');
+        console.log('Status da resposta:', response.status);
+        console.log('Headers da resposta:', response.headers);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Erro na resposta:', errorText);
+          throw new Error(`Erro ao salvar pedido: ${response.status} - ${errorText}`);
+        }
         
         const result = await response.json();
+        console.log('Resposta da API:', result);
         return result.id;
       } catch (error) {
         console.error('Erro ao salvar pedido:', error);
@@ -1870,9 +1885,15 @@
 
     const btnSalvarCliente = document.getElementById('btn-salvar-cliente');
     if (btnSalvarCliente) btnSalvarCliente.onclick = async function() {
+      console.log('Botão Salvar Cliente clicado');
+      
       const select = document.getElementById('cliente-select');
       const clienteId = select.value;
       const clienteNome = select.options[select.selectedIndex]?.text?.split(' - ')[0] || document.getElementById('cliente-manual').value;
+      
+      console.log('Cliente ID:', clienteId);
+      console.log('Cliente Nome:', clienteNome);
+      console.log('Itens no pedido:', itensPedido.length);
       
       if (!clienteNome) {
         alert('Selecione ou preencha o nome do cliente.');
@@ -1885,30 +1906,42 @@
       }
 
       const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.preco_venda || 0) * item.qtd), 0);
+      console.log('Total do pedido:', total);
       
       try {
+        console.log('Iniciando salvamento do pedido...');
+        
         // Salvar pedido no banco
         const pedidoData = {
           cliente_id: clienteId || null,
           data_pedido: new Date().toISOString().split('T')[0],
           status: 'Em Processamento',
           valor_total: total,
-          observacoes: `Pedido criado via caixa - ${itensPedido.length} itens`
+          observacoes: `Pedido criado via caixa - Cliente: ${clienteNome} - ${itensPedido.length} itens`
         };
 
+        console.log('Dados do pedido:', pedidoData);
+
         const pedidoId = await salvarPedidoNoBanco(pedidoData);
+        console.log('Pedido salvo com ID:', pedidoId);
 
         // Limpar caixa
         itensPedido = [];
         renderItensPedido();
         atualizarTotal();
+        
+        // Fechar lateral
         const caixaLateralClientes = document.getElementById('caixaLateralClientes');
         if (caixaLateralClientes) caixaLateralClientes.classList.remove('aberta');
         
-        alert('Pedido salvo com sucesso!');
+        alert(`Pedido salvo com sucesso!\nPedido #${pedidoId}\nCliente: ${clienteNome}\nTotal: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
+        
+        // Atualizar lista de pedidos em aberto
+        await carregarPedidosEmAberto();
+        
       } catch (error) {
-        alert('Erro ao salvar pedido');
-        console.error(error);
+        console.error('Erro ao salvar pedido:', error);
+        alert('Erro ao salvar pedido: ' + error.message);
       }
     };
 
@@ -2068,6 +2101,45 @@
       } catch (error) {
         console.error('Erro ao salvar pedido:', error);
         alert('Erro ao salvar pedido: ' + error.message);
+      }
+    }
+
+    // Função para abrir lateral de clientes
+    function abrirLateralClientes() {
+      console.log('Abrindo lateral de clientes...');
+      const lateral = document.getElementById('caixaLateralClientes');
+      if (lateral) {
+        lateral.classList.add('aberta');
+        // Carregar clientes se ainda não foram carregados
+        if (clientes.length === 0) {
+          carregarClientesLateral();
+        }
+      } else {
+        console.error('Lateral de clientes não encontrada');
+      }
+    }
+
+    // Função para carregar clientes na lateral
+    async function carregarClientesLateral() {
+      try {
+        console.log('Carregando clientes para lateral...');
+        const resp = await fetch('/api/clientes');
+        if (!resp.ok) throw new Error('Erro ao buscar clientes na API');
+        const clientesLateral = await resp.json();
+        console.log('Clientes carregados:', clientesLateral.length);
+        
+        const select = document.getElementById('cliente-select');
+        if (select) {
+          select.innerHTML = '<option value="">Selecione um cliente</option>';
+          clientesLateral.forEach(cliente => {
+            const option = document.createElement('option');
+            option.value = cliente.id;
+            option.textContent = `${cliente.razao}${cliente.cnpj ? ` - ${cliente.cnpj}` : ''}`;
+            select.appendChild(option);
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao carregar clientes na lateral:', error);
       }
     }
   </script>
