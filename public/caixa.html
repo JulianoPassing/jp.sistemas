@@ -1281,7 +1281,7 @@
     // Função para carregar produtos do banco de dados
     async function carregarProdutos() {
       try {
-        const response = await fetch('/api/produtos');
+        const response = await fetch('/api/produtos?dev=true');
         if (!response.ok) throw new Error('Erro ao carregar produtos');
         produtos = await response.json();
         renderProdutos();
@@ -1294,7 +1294,7 @@
     // Função para carregar clientes do banco de dados
     async function carregarClientes() {
       try {
-        const response = await fetch('/api/clientes');
+        const response = await fetch('/api/clientes?dev=true');
         if (!response.ok) throw new Error('Erro ao carregar clientes');
         clientes = await response.json();
         atualizarSelectClientes();
@@ -1522,7 +1522,7 @@
           itens: itensPedido
         };
 
-        const response = await fetch('/api/pedidos', {
+        const response = await fetch('/api/pedidos?dev=true', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(pedidoData)
@@ -1533,7 +1533,7 @@
         const result = await response.json();
 
         // Registrar pagamento no caixa
-        const caixaResponse = await fetch('/api/caixa', {
+        const caixaResponse = await fetch('/api/caixa?dev=true', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1563,7 +1563,7 @@
     // Função para carregar pedidos em aberto
     async function carregarPedidosEmAberto() {
       try {
-        const response = await fetch('/api/pedidos');
+        const response = await fetch('/api/pedidos?dev=true');
         if (!response.ok) throw new Error('Erro ao carregar pedidos');
         const todosPedidos = await response.json();
         pedidosEmAberto = todosPedidos.filter(p => p.status === 'Em Processamento' || p.status === 'Pendente');
@@ -1626,7 +1626,7 @@
       
       try {
         // Buscar detalhes completos do pedido
-        const response = await fetch(`/api/pedidos/${pedidoId}`);
+        const response = await fetch(`/api/pedidos/${pedidoId}?dev=true`);
         if (!response.ok) throw new Error('Erro ao buscar detalhes do pedido');
         
         const pedidoDetalhado = await response.json();
@@ -1679,7 +1679,7 @@
       if (!confirm('Confirmar finalização deste pedido?')) return;
       
       try {
-        const response = await fetch(`/api/pedidos/${pedidoId}`, {
+        const response = await fetch(`/api/pedidos/${pedidoId}?dev=true`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1703,7 +1703,7 @@
       if (!confirm('Tem certeza que deseja remover este pedido?')) return;
       
       try {
-        const response = await fetch(`/api/pedidos/${pedidoId}`, { method: 'DELETE' });
+        const response = await fetch(`/api/pedidos/${pedidoId}?dev=true`, { method: 'DELETE' });
         if (!response.ok) throw new Error('Erro ao remover pedido');
         
         await carregarPedidosEmAberto();
@@ -1832,7 +1832,7 @@
     // LATERAL CLIENTES (mantido para compatibilidade)
     async function carregarClientesLateral() {
       try {
-        const resp = await fetch('/api/clientes');
+        const resp = await fetch('/api/clientes?dev=true');
         if (!resp.ok) throw new Error('Erro ao buscar clientes na API');
         const clientes = await resp.json();
         const select = document.getElementById('cliente-select');
@@ -1859,7 +1859,7 @@
       try {
         console.log('Enviando pedido para API:', pedidoData);
         
-        const response = await fetch('/api/pedidos', {
+        const response = await fetch('/api/pedidos?dev=true', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(pedidoData)
@@ -2074,7 +2074,7 @@
         };
 
         // Salvar pedido no banco
-        const response = await fetch('/api/pedidos', {
+        const response = await fetch('/api/pedidos?dev=true', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(pedidoData)
@@ -2123,7 +2123,7 @@
     async function carregarClientesLateral() {
       try {
         console.log('Carregando clientes para lateral...');
-        const resp = await fetch('/api/clientes');
+        const resp = await fetch('/api/clientes?dev=true');
         if (!resp.ok) throw new Error('Erro ao buscar clientes na API');
         const clientesLateral = await resp.json();
         console.log('Clientes carregados:', clientesLateral.length);

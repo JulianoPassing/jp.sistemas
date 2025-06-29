@@ -58,36 +58,42 @@
     <div class="test-section">
         <h2>1. Teste de Status da API</h2>
         <button class="test-button" onclick="testAPI()">Testar API</button>
+        <button class="test-button" onclick="testAPIWithDev()">Testar API (Modo Dev)</button>
         <div id="api-result" class="result"></div>
     </div>
 
     <div class="test-section">
         <h2>2. Teste de Banco de Dados</h2>
         <button class="test-button" onclick="testDatabase()">Testar Banco</button>
+        <button class="test-button" onclick="testDatabaseWithDev()">Testar Banco (Modo Dev)</button>
         <div id="db-result" class="result"></div>
     </div>
 
     <div class="test-section">
         <h2>3. Teste de Produtos</h2>
         <button class="test-button" onclick="testProdutos()">Carregar Produtos</button>
+        <button class="test-button" onclick="testProdutosWithDev()">Carregar Produtos (Modo Dev)</button>
         <div id="produtos-result" class="result"></div>
     </div>
 
     <div class="test-section">
         <h2>4. Teste de Clientes</h2>
         <button class="test-button" onclick="testClientes()">Carregar Clientes</button>
+        <button class="test-button" onclick="testClientesWithDev()">Carregar Clientes (Modo Dev)</button>
         <div id="clientes-result" class="result"></div>
     </div>
 
     <div class="test-section">
         <h2>5. Teste de Pedidos</h2>
         <button class="test-button" onclick="testPedidos()">Carregar Pedidos</button>
+        <button class="test-button" onclick="testPedidosWithDev()">Carregar Pedidos (Modo Dev)</button>
         <div id="pedidos-result" class="result"></div>
     </div>
 
     <div class="test-section">
         <h2>6. Teste de Criação de Pedido</h2>
         <button class="test-button" onclick="testCriarPedido()">Criar Pedido de Teste</button>
+        <button class="test-button" onclick="testCriarPedidoWithDev()">Criar Pedido de Teste (Modo Dev)</button>
         <div id="criar-pedido-result" class="result"></div>
     </div>
 
@@ -99,6 +105,23 @@
             
             try {
                 const response = await fetch('/api/test');
+                const data = await response.json();
+                
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.textContent = 'Erro: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testAPIWithDev() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.textContent = 'Testando com modo dev...';
+            resultDiv.className = 'result';
+            
+            try {
+                const response = await fetch('/api/test?dev=true');
                 const data = await response.json();
                 
                 resultDiv.textContent = JSON.stringify(data, null, 2);
@@ -126,6 +149,23 @@
             }
         }
 
+        async function testDatabaseWithDev() {
+            const resultDiv = document.getElementById('db-result');
+            resultDiv.textContent = 'Testando com modo dev...';
+            resultDiv.className = 'result';
+            
+            try {
+                const response = await fetch('/api/test-db?dev=true');
+                const data = await response.json();
+                
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.textContent = 'Erro: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+
         async function testProdutos() {
             const resultDiv = document.getElementById('produtos-result');
             resultDiv.textContent = 'Carregando...';
@@ -133,6 +173,23 @@
             
             try {
                 const response = await fetch('/api/produtos');
+                const data = await response.json();
+                
+                resultDiv.textContent = `Produtos carregados: ${data.length}\n\nPrimeiros 3 produtos:\n${JSON.stringify(data.slice(0, 3), null, 2)}`;
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.textContent = 'Erro: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testProdutosWithDev() {
+            const resultDiv = document.getElementById('produtos-result');
+            resultDiv.textContent = 'Carregando com modo dev...';
+            resultDiv.className = 'result';
+            
+            try {
+                const response = await fetch('/api/produtos?dev=true');
                 const data = await response.json();
                 
                 resultDiv.textContent = `Produtos carregados: ${data.length}\n\nPrimeiros 3 produtos:\n${JSON.stringify(data.slice(0, 3), null, 2)}`;
@@ -160,6 +217,23 @@
             }
         }
 
+        async function testClientesWithDev() {
+            const resultDiv = document.getElementById('clientes-result');
+            resultDiv.textContent = 'Carregando com modo dev...';
+            resultDiv.className = 'result';
+            
+            try {
+                const response = await fetch('/api/clientes?dev=true');
+                const data = await response.json();
+                
+                resultDiv.textContent = `Clientes carregados: ${data.length}\n\nPrimeiros 3 clientes:\n${JSON.stringify(data.slice(0, 3), null, 2)}`;
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.textContent = 'Erro: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+
         async function testPedidos() {
             const resultDiv = document.getElementById('pedidos-result');
             resultDiv.textContent = 'Carregando...';
@@ -167,6 +241,23 @@
             
             try {
                 const response = await fetch('/api/pedidos');
+                const data = await response.json();
+                
+                resultDiv.textContent = `Pedidos carregados: ${data.length}\n\nPrimeiros 3 pedidos:\n${JSON.stringify(data.slice(0, 3), null, 2)}`;
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.textContent = 'Erro: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testPedidosWithDev() {
+            const resultDiv = document.getElementById('pedidos-result');
+            resultDiv.textContent = 'Carregando com modo dev...';
+            resultDiv.className = 'result';
+            
+            try {
+                const response = await fetch('/api/pedidos?dev=true');
                 const data = await response.json();
                 
                 resultDiv.textContent = `Pedidos carregados: ${data.length}\n\nPrimeiros 3 pedidos:\n${JSON.stringify(data.slice(0, 3), null, 2)}`;
@@ -200,6 +291,46 @@
                 };
 
                 const response = await fetch('/api/pedidos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(pedidoTeste)
+                });
+
+                const data = await response.json();
+                
+                resultDiv.textContent = `Pedido criado com sucesso!\n\nResposta:\n${JSON.stringify(data, null, 2)}`;
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.textContent = 'Erro: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testCriarPedidoWithDev() {
+            const resultDiv = document.getElementById('criar-pedido-result');
+            resultDiv.textContent = 'Criando pedido de teste com modo dev...';
+            resultDiv.className = 'result';
+            
+            try {
+                const pedidoTeste = {
+                    cliente_id: null,
+                    data_pedido: new Date().toISOString().split('T')[0],
+                    status: 'Em Processamento',
+                    valor_total: 100.00,
+                    observacoes: 'Pedido de teste criado via página de teste (modo dev)',
+                    itens: [
+                        {
+                            id: 1,
+                            nome: 'Produto Teste',
+                            preco_venda: 50.00,
+                            qtd: 2
+                        }
+                    ]
+                };
+
+                const response = await fetch('/api/pedidos?dev=true', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

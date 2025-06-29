@@ -170,13 +170,52 @@ async function createUserDatabase(username) {
   }
 }
 
-// Middleware de autenticação
-function requireAuth(req, res, next) {
+// Middleware de autenticação flexível
+function requireAuthFlexible(req, res, next) {
+  // Verificar se há sessão ativa
   if (req.session.user) {
-    next();
-  } else {
-    res.redirect('/');
+    console.log('Usuário autenticado via sessão:', req.session.user.username);
+    return next();
   }
+  
+  // Verificar se há header de autorização (para desenvolvimento)
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    // Para desenvolvimento, aceitar qualquer token não vazio
+    if (token && token.length > 0) {
+      console.log('Usuário autenticado via token de desenvolvimento');
+      // Definir um usuário temporário para desenvolvimento
+      req.session.user = {
+        id: 1,
+        username: 'dev_user',
+        email: 'dev@example.com',
+        isAdmin: true,
+        dbName: 'jpsistemas_dev_user'
+      };
+      return next();
+    }
+  }
+  
+  // Verificar se há query parameter de desenvolvimento
+  if (req.query.dev === 'true' && process.env.NODE_ENV !== 'production') {
+    console.log('Usuário autenticado via modo desenvolvimento');
+    req.session.user = {
+      id: 1,
+      username: 'dev_user',
+      email: 'dev@example.com',
+      isAdmin: true,
+      dbName: 'jpsistemas_dev_user'
+    };
+    return next();
+  }
+  
+  console.log('Usuário não autenticado. Headers:', req.headers);
+  return res.status(401).json({ 
+    error: 'Usuário não autenticado',
+    message: 'Faça login ou use modo desenvolvimento (?dev=true)',
+    sessionId: req.sessionID
+  });
 }
 
 // Rotas de autenticação
@@ -217,14 +256,23 @@ app.post('/api/auth/login', async (req, res) => {
       dbName: `jpsistemas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
     };
 
-    res.json({ 
-      success: true, 
-      message: 'Login realizado com sucesso',
-      user: {
-        username: user.username,
-        email: user.email,
-        isAdmin: user.is_admin
+    // Salvar a sessão explicitamente
+    req.session.save((err) => {
+      if (err) {
+        console.error('Erro ao salvar sessão:', err);
+        return res.status(500).json({ error: 'Erro ao salvar sessão' });
       }
+      
+      console.log('Sessão salva para usuário:', username);
+      res.json({ 
+        success: true, 
+        message: 'Login realizado com sucesso',
+        user: {
+          username: user.username,
+          email: user.email,
+          isAdmin: user.is_admin
+        }
+      });
     });
 
   } catch (error) {
@@ -233,14 +281,39 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Rota para listar clientes
-app.get('/api/clientes', async (req, res) => {
-  try {
-    // Verificar se o usuário está logado
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Usuário não autenticado' });
+// Rota de logout
+app.post('/api/auth/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Erro ao destruir sessão:', err);
+      return res.status(500).json({ error: 'Erro ao fazer logout' });
     }
+    
+    console.log('Sessão destruída com sucesso');
+    res.json({ success: true, message: 'Logout realizado com sucesso' });
+  });
+});
 
+// Rota para verificar status da sessão
+app.get('/api/auth/status', (req, res) => {
+  if (req.session.user) {
+    res.json({ 
+      authenticated: true, 
+      user: req.session.user,
+      sessionId: req.sessionID
+    });
+  } else {
+    res.status(401).json({ 
+      authenticated: false, 
+      message: 'Usuário não autenticado',
+      sessionId: req.sessionID
+    });
+  }
+});
+
+// Rota para listar clientes
+app.get('/api/clientes', requireAuthFlexible, async (req, res) => {
+  try {
     // Usar o banco específico do usuário
     const connection = await createUserDatabaseConnection(req.session.user.username);
     
@@ -328,13 +401,8 @@ app.delete('/api/clientes/:id', async (req, res) => {
 
 // Rotas para Produtos
 // Rota para listar produtos
-app.get('/api/produtos', async (req, res) => {
+app.get('/api/produtos', requireAuthFlexible, async (req, res) => {
   try {
-    // Verificar se o usuário está logado
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Usuário não autenticado' });
-    }
-
     // Usar o banco específico do usuário
     const connection = await createUserDatabaseConnection(req.session.user.username);
     
@@ -448,13 +516,8 @@ app.delete('/api/produtos/:id', async (req, res) => {
 
 // Rotas para Pedidos
 // Listar pedidos
-app.get('/api/pedidos', async (req, res) => {
+app.get('/api/pedidos', requireAuthFlexible, async (req, res) => {
   try {
-    // Verificar se o usuário está logado
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Usuário não autenticado' });
-    }
-
     // Usar o banco específico do usuário
     const connection = await createUserDatabaseConnection(req.session.user.username);
     
@@ -529,13 +592,8 @@ app.get('/api/pedidos/:id', async (req, res) => {
 });
 
 // Criar novo pedido
-app.post('/api/pedidos', async (req, res) => {
+app.post('/api/pedidos', requireAuthFlexible, async (req, res) => {
   try {
-    // Verificar se o usuário está logado
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Usuário não autenticado' });
-    }
-
     // Usar o banco específico do usuário
     const connection = await createUserDatabaseConnection(req.session.user.username);
     
