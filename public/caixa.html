@@ -1655,16 +1655,25 @@
 
       // Event listeners para os modais
       // Modal de finalização
-      document.getElementById('btn-ir-pagamento')?.onclick = abrirModalFinalizar;
-      document.getElementById('closeFinalizarPedido')?.onclick = fecharModalFinalizar;
-      document.getElementById('cancelarFinalizar')?.onclick = fecharModalFinalizar;
-      document.getElementById('confirmarFinalizar')?.onclick = confirmarFinalizar;
+      const btnIrPagamento = document.getElementById('btn-ir-pagamento');
+      if (btnIrPagamento) btnIrPagamento.onclick = abrirModalFinalizar;
+      
+      const closeFinalizarPedido = document.getElementById('closeFinalizarPedido');
+      if (closeFinalizarPedido) closeFinalizarPedido.onclick = fecharModalFinalizar;
+      
+      const cancelarFinalizar = document.getElementById('cancelarFinalizar');
+      if (cancelarFinalizar) cancelarFinalizar.onclick = fecharModalFinalizar;
+      
+      const confirmarFinalizar = document.getElementById('confirmarFinalizar');
+      if (confirmarFinalizar) confirmarFinalizar.onclick = confirmarFinalizar;
       
       // Event listener para preencher informações do cliente
-      document.getElementById('clienteFinalizar')?.addEventListener('change', preencherInfoCliente);
+      const clienteFinalizar = document.getElementById('clienteFinalizar');
+      if (clienteFinalizar) clienteFinalizar.addEventListener('change', preencherInfoCliente);
 
       // Modal de pedidos em aberto
-      document.getElementById('btn-em-aberto')?.onclick = function() {
+      const btnEmAberto = document.getElementById('btn-em-aberto');
+      if (btnEmAberto) btnEmAberto.onclick = function() {
         // Verificar se há itens no pedido
         if (!itensPedido.length) {
           alert('Adicione produtos ao pedido antes de salvar em aberto.');
@@ -1674,20 +1683,32 @@
         // Abrir modal para salvar em aberto
         abrirModalSalvarEmAberto();
       };
-      document.getElementById('closePedidosAbertos')?.onclick = fecharModalPedidosAbertos;
-      document.getElementById('fecharPedidosAbertos')?.onclick = fecharModalPedidosAbertos;
+      
+      const closePedidosAbertos = document.getElementById('closePedidosAbertos');
+      if (closePedidosAbertos) closePedidosAbertos.onclick = fecharModalPedidosAbertos;
+      
+      const fecharPedidosAbertos = document.getElementById('fecharPedidosAbertos');
+      if (fecharPedidosAbertos) fecharPedidosAbertos.onclick = fecharModalPedidosAbertos;
 
       // Modal de salvar em aberto
-      document.getElementById('closeSalvarEmAberto')?.onclick = fecharModalSalvarEmAberto;
-      document.getElementById('cancelarSalvarEmAberto')?.onclick = fecharModalSalvarEmAberto;
-      document.getElementById('confirmarSalvarEmAberto')?.onclick = confirmarSalvarEmAberto;
-      document.getElementById('verPedidosAbertos')?.onclick = function() {
+      const closeSalvarEmAberto = document.getElementById('closeSalvarEmAberto');
+      if (closeSalvarEmAberto) closeSalvarEmAberto.onclick = fecharModalSalvarEmAberto;
+      
+      const cancelarSalvarEmAberto = document.getElementById('cancelarSalvarEmAberto');
+      if (cancelarSalvarEmAberto) cancelarSalvarEmAberto.onclick = fecharModalSalvarEmAberto;
+      
+      const confirmarSalvarEmAberto = document.getElementById('confirmarSalvarEmAberto');
+      if (confirmarSalvarEmAberto) confirmarSalvarEmAberto.onclick = confirmarSalvarEmAberto;
+      
+      const verPedidosAbertos = document.getElementById('verPedidosAbertos');
+      if (verPedidosAbertos) verPedidosAbertos.onclick = function() {
         fecharModalSalvarEmAberto();
         abrirModalPedidosAbertos();
       };
       
       // Event listener para preencher informações do cliente automaticamente
-      document.getElementById('clienteEmAberto')?.addEventListener('change', preencherInfoClienteEmAberto);
+      const clienteEmAberto = document.getElementById('clienteEmAberto');
+      if (clienteEmAberto) clienteEmAberto.addEventListener('change', preencherInfoClienteEmAberto);
 
       // Fechar modais ao clicar fora
       window.addEventListener('click', function(event) {
