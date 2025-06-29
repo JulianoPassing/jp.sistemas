@@ -1021,7 +1021,8 @@
             produto: produto ? produto.nome : '',
             quantidade: parseFloat(quantidadeInput.value) || 0,
             precoUnitario: parseFloat(precoInput.value) || 0,
-            subtotal: parseFloat(subtotalInput.value) || 0
+            subtotal: parseFloat(subtotalInput.value) || 0,
+            preco_custo: produto ? produto.preco_custo : 0
           });
         }
       });
@@ -1109,26 +1110,44 @@
     // Função para concluir pedido
     async function concluirPedido(pedidoId) {
       if (!confirm('Tem certeza que deseja concluir este pedido?')) return;
+      
       try {
+        console.log('Iniciando conclusão do pedido:', pedidoId);
+        
         const pedido = pedidos.find(p => p.id == pedidoId);
         if (!pedido) {
           alert('Pedido não encontrado!');
           return;
         }
 
+        console.log('Pedido encontrado:', pedido);
+        console.log('Status atual:', pedido.status);
+
+        const pedidoData = {
+          cliente_id: pedido.cliente_id,
+          data_pedido: pedido.data_pedido,
+          status: 'Concluído',
+          valor_total: pedido.valor_total,
+          observacoes: pedido.observacoes
+        };
+
+        console.log('Dados para atualização:', pedidoData);
+
         const response = await fetch(`/api/pedidos/${pedidoId}`, {
           method: 'PUT',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            cliente_id: pedido.cliente_id,
-            data_pedido: pedido.data_pedido,
-            status: 'Concluído',
-            valor_total: pedido.valor_total,
-            observacoes: pedido.observacoes
-          })
+          body: JSON.stringify(pedidoData)
         });
 
-        if (!response.ok) throw new Error('Erro ao concluir pedido');
+        console.log('Resposta do servidor:', response.status, response.statusText);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Erro ao concluir pedido: ${errorData.error || response.statusText}`);
+        }
+        
+        const result = await response.json();
+        console.log('Resultado da atualização:', result);
         
         await carregarPedidos();
         alert('Pedido concluído com sucesso!');
@@ -1156,7 +1175,8 @@
             data_pedido: pedido.data_pedido,
             status: 'Cancelado',
             valor_total: pedido.valor_total,
-            observacoes: pedido.observacoes
+            observacoes: pedido.observacoes,
+            itens: pedido.itens
           })
         });
 
@@ -1322,22 +1342,42 @@
       }
 
       try {
+        console.log('Iniciando alteração de status do pedido:', pedidoId, 'para:', novoStatus);
+        
         const pedido = pedidos.find(p => p.id == pedidoId);
         if (!pedido) {
           alert('Pedido não encontrado!');
           return;
         }
 
+        console.log('Pedido encontrado:', pedido);
+        console.log('Status atual:', pedido.status);
+
+        const pedidoData = {
+          cliente_id: pedido.cliente_id,
+          data_pedido: pedido.data_pedido,
+          status: novoStatus,
+          valor_total: pedido.valor_total,
+          observacoes: pedido.observacoes
+        };
+
+        console.log('Dados para atualização:', pedidoData);
+
         const response = await fetch(`/api/pedidos/${pedidoId}`, {
           method: 'PUT',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            ...pedido,
-            status: novoStatus
-          })
+          body: JSON.stringify(pedidoData)
         });
 
-        if (!response.ok) throw new Error('Erro ao alterar status do pedido');
+        console.log('Resposta do servidor:', response.status, response.statusText);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Erro ao alterar status do pedido: ${errorData.error || response.statusText}`);
+        }
+        
+        const result = await response.json();
+        console.log('Resultado da atualização:', result);
         
         await carregarPedidos();
         fecharModalVisualizarPedido();

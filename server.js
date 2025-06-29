@@ -516,9 +516,13 @@ app.post('/api/pedidos', async (req, res) => {
       charset: 'utf8mb4'
     });
     const { cliente_id, data_pedido, status, valor_total, observacoes } = req.body;
+    
+    // Normalizar o status
+    const statusNormalizado = normalizarStatus(status);
+    
     const [result] = await connection.execute(
       'INSERT INTO pedidos (cliente_id, data_pedido, status, valor_total, observacoes) VALUES (?, ?, ?, ?, ?)',
-      [cliente_id, data_pedido, status, valor_total, observacoes]
+      [cliente_id, data_pedido, statusNormalizado, valor_total, observacoes]
     );
     await connection.end();
     res.status(201).json({ id: result.insertId, message: 'Pedido criado com sucesso' });
@@ -527,9 +531,39 @@ app.post('/api/pedidos', async (req, res) => {
   }
 });
 
+// Função para normalizar status do pedido
+function normalizarStatus(status) {
+  if (!status) return 'Em Processamento';
+  
+  const statusNormalizado = status.toString().trim();
+  
+  // Mapear variações para valores padrão
+  const mapeamentoStatus = {
+    'pendente': 'Em Processamento',
+    'Pendente': 'Em Processamento',
+    'PENDENTE': 'Em Processamento',
+    'em processamento': 'Em Processamento',
+    'Em processamento': 'Em Processamento',
+    'EM PROCESSAMENTO': 'Em Processamento',
+    'concluido': 'Concluído',
+    'Concluido': 'Concluído',
+    'CONCLUIDO': 'Concluído',
+    'concluído': 'Concluído',
+    'CONCLUÍDO': 'Concluído',
+    'cancelado': 'Cancelado',
+    'Cancelado': 'Cancelado',
+    'CANCELADO': 'Cancelado'
+  };
+  
+  return mapeamentoStatus[statusNormalizado] || statusNormalizado;
+}
+
 // Editar pedido
 app.put('/api/pedidos/:id', async (req, res) => {
   try {
+    console.log('Recebendo requisição PUT para pedido:', req.params.id);
+    console.log('Dados recebidos:', req.body);
+    
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
@@ -539,13 +573,30 @@ app.put('/api/pedidos/:id', async (req, res) => {
     });
     const { id } = req.params;
     const { cliente_id, data_pedido, status, valor_total, observacoes } = req.body;
+    
+    // Normalizar o status
+    const statusNormalizado = normalizarStatus(status);
+    
+    console.log('Atualizando pedido com dados:', {
+      id,
+      cliente_id,
+      data_pedido,
+      status: statusNormalizado,
+      valor_total,
+      observacoes
+    });
+    
     await connection.execute(
       'UPDATE pedidos SET cliente_id=?, data_pedido=?, status=?, valor_total=?, observacoes=? WHERE id=?',
-      [cliente_id, data_pedido, status, valor_total, observacoes, id]
+      [cliente_id, data_pedido, statusNormalizado, valor_total, observacoes, id]
     );
+    
+    console.log('Pedido atualizado com sucesso');
+    
     await connection.end();
     res.json({ message: 'Pedido atualizado com sucesso' });
   } catch (error) {
+    console.error('Erro ao atualizar pedido:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -621,6 +672,22 @@ app.get('/api/relatorios/estatisticas', async (req, res) => {
       charset: 'utf8mb4'
     });
 
+    // Verificar se foi passado um parâmetro de mês
+    const { mes } = req.query;
+    let mesFiltro = '';
+    let anoFiltro = '';
+    
+    if (mes) {
+      const [ano, mesNum] = mes.split('-');
+      mesFiltro = mesNum;
+      anoFiltro = ano;
+    } else {
+      // Se não foi passado, usar mês atual
+      const hoje = new Date();
+      mesFiltro = hoje.getMonth() + 1;
+      anoFiltro = hoje.getFullYear();
+    }
+
     // Buscar total de clientes
     const [clientesResult] = await connection.execute('SELECT COUNT(*) as total FROM clientes');
     const totalClientes = clientesResult[0].total;
@@ -629,38 +696,70 @@ app.get('/api/relatorios/estatisticas', async (req, res) => {
     const [produtosResult] = await connection.execute('SELECT COUNT(*) as total FROM produtos');
     const totalProdutos = produtosResult[0].total;
 
-    // Buscar total de pedidos
-    const [pedidosResult] = await connection.execute('SELECT COUNT(*) as total FROM pedidos');
+    // Buscar total de pedidos CONCLUÍDOS
+    const [pedidosResult] = await connection.execute('SELECT COUNT(*) as total FROM pedidos WHERE status IN ("Concluído", "concluído", "Concluido", "concluido", "CONCLUÍDO", "CONCLUIDO")');
     const totalPedidos = pedidosResult[0].total;
 
-    // Buscar soma total de vendas (valor_total dos pedidos)
-    const [vendasResult] = await connection.execute('SELECT COALESCE(SUM(valor_total), 0) as total FROM pedidos');
+    // Buscar total de pedidos EM PROCESSAMENTO
+    const [pedidosProcessamentoResult] = await connection.execute('SELECT COUNT(*) as total FROM pedidos WHERE status IN ("Em Processamento", "em processamento", "Em processamento", "EM PROCESSAMENTO", "pendente", "Pendente", "PENDENTE")');
+    const totalPedidosProcessamento = pedidosProcessamentoResult[0].total;
+
+    // Buscar soma total de vendas (valor_total dos pedidos CONCLUÍDOS)
+    const [vendasResult] = await connection.execute('SELECT COALESCE(SUM(valor_total), 0) as total FROM pedidos WHERE status IN ("Concluído", "concluído", "Concluido", "concluido", "CONCLUÍDO", "CONCLUIDO")');
     const totalVendas = parseFloat(vendasResult[0].total);
+
+    // Buscar soma total de vendas EM PROCESSAMENTO
+    const [vendasProcessamentoResult] = await connection.execute('SELECT COALESCE(SUM(valor_total), 0) as total FROM pedidos WHERE status IN ("Em Processamento", "em processamento", "Em processamento", "EM PROCESSAMENTO", "pendente", "Pendente", "PENDENTE")');
+    const totalVendasProcessamento = parseFloat(vendasProcessamentoResult[0].total);
 
     // Buscar lucro total (aproximação baseada na diferença entre preço de venda e custo)
     // Para uma aproximação mais precisa, vamos usar uma margem média de 30%
     const lucroTotal = totalVendas * 0.3;
+    const lucroTotalProcessamento = totalVendasProcessamento * 0.3;
 
-    // Buscar pedidos do mês atual
+    // Buscar pedidos CONCLUÍDOS do mês selecionado
     const [pedidosMesResult] = await connection.execute(`
       SELECT COUNT(*) as total 
       FROM pedidos 
-      WHERE MONTH(data_pedido) = MONTH(CURRENT_DATE()) 
-      AND YEAR(data_pedido) = YEAR(CURRENT_DATE())
-    `);
+      WHERE MONTH(data_pedido) = ? 
+      AND YEAR(data_pedido) = ?
+      AND status IN ("Concluído", "concluído", "Concluido", "concluido", "CONCLUÍDO", "CONCLUIDO")
+    `, [mesFiltro, anoFiltro]);
     const pedidosMes = pedidosMesResult[0].total;
 
-    // Buscar vendas do mês atual
+    // Buscar pedidos EM PROCESSAMENTO do mês selecionado
+    const [pedidosMesProcessamentoResult] = await connection.execute(`
+      SELECT COUNT(*) as total 
+      FROM pedidos 
+      WHERE MONTH(data_pedido) = ? 
+      AND YEAR(data_pedido) = ?
+      AND status IN ("Em Processamento", "em processamento", "Em processamento", "EM PROCESSAMENTO", "pendente", "Pendente", "PENDENTE")
+    `, [mesFiltro, anoFiltro]);
+    const pedidosMesProcessamento = pedidosMesProcessamentoResult[0].total;
+
+    // Buscar vendas do mês selecionado (apenas pedidos CONCLUÍDOS)
     const [vendasMesResult] = await connection.execute(`
       SELECT COALESCE(SUM(valor_total), 0) as total 
       FROM pedidos 
-      WHERE MONTH(data_pedido) = MONTH(CURRENT_DATE()) 
-      AND YEAR(data_pedido) = YEAR(CURRENT_DATE())
-    `);
+      WHERE MONTH(data_pedido) = ? 
+      AND YEAR(data_pedido) = ?
+      AND status IN ("Concluído", "concluído", "Concluido", "concluido", "CONCLUÍDO", "CONCLUIDO")
+    `, [mesFiltro, anoFiltro]);
     const vendasMes = parseFloat(vendasMesResult[0].total);
+
+    // Buscar vendas EM PROCESSAMENTO do mês selecionado
+    const [vendasMesProcessamentoResult] = await connection.execute(`
+      SELECT COALESCE(SUM(valor_total), 0) as total 
+      FROM pedidos 
+      WHERE MONTH(data_pedido) = ? 
+      AND YEAR(data_pedido) = ?
+      AND status IN ("Em Processamento", "em processamento", "Em processamento", "EM PROCESSAMENTO", "pendente", "Pendente", "PENDENTE")
+    `, [mesFiltro, anoFiltro]);
+    const vendasMesProcessamento = parseFloat(vendasMesProcessamentoResult[0].total);
 
     // Calcular lucro do mês
     const lucroMes = vendasMes * 0.3;
+    const lucroMesProcessamento = vendasMesProcessamento * 0.3;
 
     await connection.end();
 
@@ -668,11 +767,18 @@ app.get('/api/relatorios/estatisticas', async (req, res) => {
       totalClientes,
       totalProdutos,
       totalPedidos,
+      totalPedidosProcessamento,
       totalVendas: totalVendas.toFixed(2),
+      totalVendasProcessamento: totalVendasProcessamento.toFixed(2),
       lucroTotal: lucroTotal.toFixed(2),
+      lucroTotalProcessamento: lucroTotalProcessamento.toFixed(2),
       pedidosMes,
+      pedidosMesProcessamento,
       vendasMes: vendasMes.toFixed(2),
-      lucroMes: lucroMes.toFixed(2)
+      vendasMesProcessamento: vendasMesProcessamento.toFixed(2),
+      lucroMes: lucroMes.toFixed(2),
+      lucroMesProcessamento: lucroMesProcessamento.toFixed(2),
+      mesSelecionado: mes || `${anoFiltro}-${String(mesFiltro).padStart(2, '0')}`
     });
 
   } catch (error) {

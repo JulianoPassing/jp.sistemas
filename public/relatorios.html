@@ -171,6 +171,55 @@
       font-weight: 400;
     }
 
+    .month-selector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 20px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .month-selector label {
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .month-selector input[type="month"] {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .month-selector input[type="month"]:hover {
+      background: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .month-selector input[type="month"]:focus {
+      outline: none;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+    }
+
+    .month-selector .btn {
+      padding: 10px 20px;
+      font-size: 0.9rem;
+      min-width: auto;
+    }
+
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -228,6 +277,10 @@
 
     .stat-card.profit {
       border-left: 4px solid var(--success-light);
+    }
+
+    .stat-card.total-orders {
+      border-left: 4px solid var(--danger-color);
     }
 
     .stat-card.total-orders {
@@ -537,6 +590,17 @@
         font-size: 2rem;
       }
 
+      .month-selector {
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+      }
+
+      .month-selector input[type="month"] {
+        width: 100%;
+        max-width: 200px;
+      }
+
       .stats-grid {
         grid-template-columns: 1fr;
         gap: 16px;
@@ -603,7 +667,16 @@
   <main class="main-content">
     <div class="page-header">
       <h1 class="page-title">Relatorios Executivos</h1>
-      <p class="page-subtitle">Analise completa e insights do seu negocio em tempo real</p>
+      <p class="page-subtitle">Analise completa e insights do seu negocio em tempo real (Pedidos Concluidos e Em Processamento)</p>
+      
+      <!-- Seletor de mês/ano -->
+      <div class="month-selector">
+        <label for="monthYear">Selecionar Mês/Ano:</label>
+        <input type="month" id="monthYear" name="monthYear" />
+        <button class="btn btn-primary" onclick="atualizarRelatorio()">
+          <i class="fas fa-sync-alt"></i> Atualizar
+        </button>
+      </div>
     </div>
 
     <div class="stats-grid">
@@ -648,7 +721,7 @@
         <div class="stat-value" id="pedidos-mes">
           <span class="loading"></span>
         </div>
-        <div class="stat-label">Pedidos Este Mes</div>
+        <div class="stat-label">Pedidos Concluidos Este Mes</div>
         <div class="stat-change positive">
           <i class="fas fa-arrow-up"></i>
           <span>Vendas ativas</span>
@@ -664,7 +737,7 @@
         <div class="stat-value" id="vendas-mes">
           <span class="loading"></span>
         </div>
-        <div class="stat-label">Vendas do Mes</div>
+        <div class="stat-label">Vendas Concluidas do Mes</div>
         <div class="stat-change positive">
           <i class="fas fa-arrow-up"></i>
           <span>Receita crescente</span>
@@ -680,7 +753,7 @@
         <div class="stat-value" id="lucro-mes">
           <span class="loading"></span>
         </div>
-        <div class="stat-label">Lucro do Mes</div>
+        <div class="stat-label">Lucro do Mes (Concluidos)</div>
         <div class="stat-change positive">
           <i class="fas fa-arrow-up"></i>
           <span>Rentabilidade alta</span>
@@ -696,7 +769,7 @@
         <div class="stat-value" id="total-pedidos">
           <span class="loading"></span>
         </div>
-        <div class="stat-label">Total de Pedidos</div>
+        <div class="stat-label">Total de Pedidos Concluidos</div>
         <div class="stat-change positive">
           <i class="fas fa-arrow-up"></i>
           <span>Historico completo</span>
@@ -727,7 +800,7 @@
           <div class="chart-icon">
             <i class="fas fa-chart-pie"></i>
           </div>
-          <h3 class="chart-title">Distribuicao de Vendas</h3>
+          <h3 class="chart-title">Distribuicao de Vendas (Concluidos e Em Processamento)</h3>
         </div>
         <div class="chart-container">
           <canvas id="salesChart"></canvas>
@@ -739,7 +812,7 @@
           <div class="chart-icon">
             <i class="fas fa-chart-bar"></i>
           </div>
-          <h3 class="chart-title">Evolucao Mensal</h3>
+          <h3 class="chart-title">Evolucao Mensal (Concluidos e Em Processamento)</h3>
         </div>
         <div class="chart-container">
           <canvas id="evolutionChart"></canvas>
@@ -762,6 +835,11 @@
       // Exibir nome do usuário
       const username = sessionStorage.getItem('username') || 'Usuário';
       document.getElementById('userDisplay').textContent = username;
+
+      // Configurar seletor de mês com mês atual
+      const hoje = new Date();
+      const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+      document.getElementById('monthYear').value = mesAtual;
 
       // Carregar estatísticas reais
       carregarEstatisticas();
@@ -857,22 +935,31 @@
       new Chart(ctxPie, {
         type: 'doughnut',
         data: {
-          labels: ['Vendas do Mes', 'Vendas Anteriores', 'Lucro do Mes'],
+          labels: ['Vendas Concluidas do Mes', 'Vendas Anteriores (Concluidas)', 'Lucro do Mes (Concluidos)', 'Vendas Em Processamento do Mes', 'Vendas Anteriores (Em Processamento)', 'Lucro do Mes (Em Processamento)'],
           datasets: [{
             data: [
               parseFloat(dados.vendasMes) || 0,
               parseFloat(dados.totalVendas) - parseFloat(dados.vendasMes) || 0,
-              parseFloat(dados.lucroMes) || 0
+              parseFloat(dados.lucroMes) || 0,
+              parseFloat(dados.vendasMesProcessamento || 0),
+              parseFloat(dados.totalVendasProcessamento || 0) - parseFloat(dados.vendasMesProcessamento || 0),
+              parseFloat(dados.lucroMesProcessamento || 0)
             ],
             backgroundColor: [
               'rgba(99, 102, 241, 0.8)',
               'rgba(16, 185, 129, 0.8)',
-              'rgba(245, 158, 11, 0.8)'
+              'rgba(245, 158, 11, 0.8)',
+              'rgba(220, 38, 38, 0.8)',
+              'rgba(168, 85, 247, 0.8)',
+              'rgba(236, 72, 153, 0.8)'
             ],
             borderColor: [
               'rgba(99, 102, 241, 1)',
               'rgba(16, 185, 129, 1)',
-              'rgba(245, 158, 11, 1)'
+              'rgba(245, 158, 11, 1)',
+              'rgba(220, 38, 38, 1)',
+              'rgba(168, 85, 247, 1)',
+              'rgba(236, 72, 153, 1)'
             ],
             borderWidth: 2
           }]
@@ -918,29 +1005,38 @@
       new Chart(ctxBar, {
         type: 'bar',
         data: {
-          labels: ['Clientes', 'Produtos', 'Pedidos', 'Vendas (R$)', 'Lucro (R$)'],
+          labels: ['Clientes', 'Produtos', 'Pedidos Concluidos', 'Pedidos Em Processamento', 'Vendas Concluidas (R$)', 'Vendas Em Processamento (R$)', 'Lucro Concluidos (R$)', 'Lucro Em Processamento (R$)'],
           datasets: [{
-            label: 'Valores Atuais',
+            label: 'Valores Atuais (Concluidos e Em Processamento)',
             data: [
               dados.totalClientes || 0,
               dados.totalProdutos || 0,
               dados.pedidosMes || 0,
+              dados.pedidosMesProcessamento || 0,
               parseFloat(dados.vendasMes) || 0,
-              parseFloat(dados.lucroMes) || 0
+              parseFloat(dados.vendasMesProcessamento || 0),
+              parseFloat(dados.lucroMes) || 0,
+              parseFloat(dados.lucroMesProcessamento || 0)
             ],
             backgroundColor: [
               'rgba(99, 102, 241, 0.8)',
               'rgba(16, 185, 129, 0.8)',
               'rgba(245, 158, 11, 0.8)',
+              'rgba(220, 38, 38, 0.8)',
               'rgba(8, 145, 178, 0.8)',
-              'rgba(16, 185, 129, 0.8)'
+              'rgba(168, 85, 247, 0.8)',
+              'rgba(16, 185, 129, 0.8)',
+              'rgba(236, 72, 153, 0.8)'
             ],
             borderColor: [
               'rgba(99, 102, 241, 1)',
               'rgba(16, 185, 129, 1)',
               'rgba(245, 158, 11, 1)',
+              'rgba(220, 38, 38, 1)',
               'rgba(8, 145, 178, 1)',
-              'rgba(16, 185, 129, 1)'
+              'rgba(168, 85, 247, 1)',
+              'rgba(16, 185, 129, 1)',
+              'rgba(236, 72, 153, 1)'
             ],
             borderWidth: 2,
             borderRadius: 8,
@@ -960,7 +1056,7 @@
                   const label = context.label || '';
                   const value = context.parsed.y;
                   
-                  if (label.includes('Vendas') || label.includes('Lucro')) {
+                  if (label.includes('Vendas Concluidas') || label.includes('Vendas Em Processamento') || label.includes('Lucro Concluidos') || label.includes('Lucro Em Processamento')) {
                     return `${label}: R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
                   }
                   return `${label}: ${value.toLocaleString('pt-BR')}`;
@@ -1010,6 +1106,10 @@
       const primaryColor = [102, 126, 234];
       const successColor = [40, 167, 69];
 
+      // Obter mês selecionado
+      const mesSelecionado = document.getElementById('monthYear').value;
+      const mesNome = mesSelecionado ? new Date(mesSelecionado + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : 'Mês Atual';
+
       // Cabeçalho
       doc.setFillColor(...primaryColor);
       doc.rect(0, 0, 210, 30, 'F');
@@ -1021,13 +1121,13 @@
       
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, 25, { align: 'center' });
+      doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')} - Período: ${mesNome}`, 105, 25, { align: 'center' });
 
       // Dados do relatório
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text('RESUMO EXECUTIVO', 20, 45);
+      doc.text(`RESUMO EXECUTIVO - ${mesNome.toUpperCase()} (Pedidos Concluidos e Em Processamento)`, 20, 45);
 
       // Usar dados reais se disponíveis, senão usar valores padrão
       const dados = window.dadosEstatisticas || {
@@ -1045,12 +1145,22 @@
       const estatisticas = [
         ['Total de Clientes', dados.totalClientes.toString()],
         ['Total de Produtos', dados.totalProdutos.toString()],
-        ['Total de Pedidos', dados.totalPedidos.toString()],
-        ['Pedidos do Mes', dados.pedidosMes.toString()],
-        ['Vendas Totais (Geral)', `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Vendas do Mes', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Lucro Total (Geral)', `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Lucro do Mes', `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`]
+        ['', ''],
+        ['PEDIDOS CONCLUÍDOS:', ''],
+        ['Total de Pedidos Concluidos', dados.totalPedidos.toString()],
+        ['Pedidos Concluidos do Mes', dados.pedidosMes.toString()],
+        ['Vendas Totais (Geral - Concluidos)', `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Vendas Concluidas do Mes', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro Total (Geral - Concluidos)', `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro do Mes (Concluidos)', `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['', ''],
+        ['PEDIDOS EM PROCESSAMENTO:', ''],
+        ['Total de Pedidos em Processamento', dados.totalPedidosProcessamento ? dados.totalPedidosProcessamento.toString() : '0'],
+        ['Pedidos em Processamento do Mes', dados.pedidosMesProcessamento ? dados.pedidosMesProcessamento.toString() : '0'],
+        ['Vendas Totais (Geral - Em Processamento)', `R$ ${parseFloat(dados.totalVendasProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Vendas em Processamento do Mes', `R$ ${parseFloat(dados.vendasMesProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro Total (Geral - Em Processamento)', `R$ ${parseFloat(dados.lucroTotalProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro do Mes (Em Processamento)', `R$ ${parseFloat(dados.lucroMesProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`]
       ];
 
       doc.autoTable({
@@ -1084,7 +1194,7 @@
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.text('ANALISE DE RENTABILIDADE', 20, finalY + 20);
+      doc.text('ANALISE DE RENTABILIDADE (Concluidos e Em Processamento)', 20, finalY + 20);
 
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
@@ -1093,13 +1203,26 @@
       const vendasTotal = parseFloat(dados.totalVendas);
       const lucroTotal = parseFloat(dados.lucroTotal);
       
+      const vendasMesProcessamento = parseFloat(dados.vendasMesProcessamento || 0);
+      const lucroMesProcessamento = parseFloat(dados.lucroMesProcessamento || 0);
+      const vendasTotalProcessamento = parseFloat(dados.totalVendasProcessamento || 0);
+      const lucroTotalProcessamento = parseFloat(dados.lucroTotalProcessamento || 0);
+      
       const margemLucro = vendasMes > 0 ? ((lucroMes / vendasMes) * 100).toFixed(1) : '0.0';
       const ticketMedio = dados.pedidosMes > 0 ? (vendasMes / dados.pedidosMes).toFixed(2) : '0.00';
       const lucroMedio = dados.pedidosMes > 0 ? (lucroMes / dados.pedidosMes).toFixed(2) : '0.00';
       
-      doc.text(`Margem de Lucro (Mes): ${margemLucro}%`, 20, finalY + 30);
-      doc.text(`Ticket Medio (Mes): R$ ${ticketMedio}`, 20, finalY + 37);
-      doc.text(`Lucro Medio por Pedido (Mes): R$ ${lucroMedio}`, 20, finalY + 44);
+      const margemLucroProcessamento = vendasMesProcessamento > 0 ? ((lucroMesProcessamento / vendasMesProcessamento) * 100).toFixed(1) : '0.0';
+      const ticketMedioProcessamento = dados.pedidosMesProcessamento > 0 ? (vendasMesProcessamento / dados.pedidosMesProcessamento).toFixed(2) : '0.00';
+      const lucroMedioProcessamento = dados.pedidosMesProcessamento > 0 ? (lucroMesProcessamento / dados.pedidosMesProcessamento).toFixed(2) : '0.00';
+      
+      doc.text(`Margem de Lucro (Mes - Concluidos): ${margemLucro}%`, 20, finalY + 30);
+      doc.text(`Ticket Medio (Mes - Concluidos): R$ ${ticketMedio}`, 20, finalY + 37);
+      doc.text(`Lucro Medio por Pedido (Mes - Concluidos): R$ ${lucroMedio}`, 20, finalY + 44);
+      doc.text(``, 20, finalY + 51);
+      doc.text(`Margem de Lucro (Mes - Em Processamento): ${margemLucroProcessamento}%`, 20, finalY + 58);
+      doc.text(`Ticket Medio (Mes - Em Processamento): R$ ${ticketMedioProcessamento}`, 20, finalY + 65);
+      doc.text(`Lucro Medio por Pedido (Mes - Em Processamento): R$ ${lucroMedioProcessamento}`, 20, finalY + 72);
 
       // Rodapé
       const pageHeight = doc.internal.pageSize.height;
@@ -1115,11 +1238,16 @@
       // Salvar PDF
       const hoje = new Date();
       const dataAtual = `${hoje.getDate().toString().padStart(2, '0')}-${(hoje.getMonth() + 1).toString().padStart(2, '0')}-${hoje.getFullYear()}`;
-      doc.save(`Relatorio_Executivo_${dataAtual}.pdf`);
+      const mesArquivo = mesSelecionado ? mesSelecionado.replace('-', '_') : 'atual';
+      doc.save(`Relatorio_Executivo_${mesArquivo}_${dataAtual}.pdf`);
     }
 
     // Função para gerar relatório Excel
     function gerarRelatorioExcel() {
+      // Obter mês selecionado
+      const mesSelecionado = document.getElementById('monthYear').value;
+      const mesNome = mesSelecionado ? new Date(mesSelecionado + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : 'Mês Atual';
+
       // Usar dados reais se disponíveis, senão usar valores padrão
       const dados = window.dadosEstatisticas || {
         totalClientes: 0,
@@ -1138,31 +1266,53 @@
       const ticketMedio = dados.pedidosMes > 0 ? (vendasMes / dados.pedidosMes).toFixed(2) : '0.00';
       const lucroMedio = dados.pedidosMes > 0 ? (lucroMes / dados.pedidosMes).toFixed(2) : '0.00';
 
+      const vendasMesProcessamento = parseFloat(dados.vendasMesProcessamento || 0);
+      const lucroMesProcessamento = parseFloat(dados.lucroMesProcessamento || 0);
+      const margemLucroProcessamento = vendasMesProcessamento > 0 ? ((lucroMesProcessamento / vendasMesProcessamento) * 100).toFixed(1) : '0.0';
+      const ticketMedioProcessamento = dados.pedidosMesProcessamento > 0 ? (vendasMesProcessamento / dados.pedidosMesProcessamento).toFixed(2) : '0.00';
+      const lucroMedioProcessamento = dados.pedidosMesProcessamento > 0 ? (lucroMesProcessamento / dados.pedidosMesProcessamento).toFixed(2) : '0.00';
+
       // Dados do relatório
       const dadosRelatorio = [
-        ['RELATORIO EXECUTIVO - J.P Sistemas'],
+        [`RELATORIO EXECUTIVO - J.P Sistemas - ${mesNome.toUpperCase()}`],
         [''],
-        ['RESUMO EXECUTIVO'],
+        [`RESUMO EXECUTIVO - ${mesNome.toUpperCase()} (Pedidos Concluidos e Em Processamento)`],
         ['Indicador', 'Valor'],
         ['Total de Clientes', dados.totalClientes],
         ['Total de Produtos', dados.totalProdutos],
-        ['Total de Pedidos', dados.totalPedidos],
-        ['Pedidos do Mes', dados.pedidosMes],
-        ['Vendas Totais (Geral)', `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Vendas do Mes', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Lucro Total (Geral)', `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Lucro do Mes', `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        [''],
+        ['', ''],
+        ['PEDIDOS CONCLUÍDOS:', ''],
+        ['Total de Pedidos Concluidos', dados.totalPedidos],
+        ['Pedidos Concluidos do Mes', dados.pedidosMes],
+        ['Vendas Totais (Geral - Concluidos)', `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Vendas Concluidas do Mes', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro Total (Geral - Concluidos)', `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro do Mes (Concluidos)', `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['', ''],
+        ['PEDIDOS EM PROCESSAMENTO:', ''],
+        ['Total de Pedidos em Processamento', dados.totalPedidosProcessamento || 0],
+        ['Pedidos em Processamento do Mes', dados.pedidosMesProcessamento || 0],
+        ['Vendas Totais (Geral - Em Processamento)', `R$ ${parseFloat(dados.totalVendasProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Vendas em Processamento do Mes', `R$ ${parseFloat(dados.vendasMesProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro Total (Geral - Em Processamento)', `R$ ${parseFloat(dados.lucroTotalProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro do Mes (Em Processamento)', `R$ ${parseFloat(dados.lucroMesProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['', ''],
         ['ANALISE DE RENTABILIDADE'],
-        ['Margem de Lucro (Mes)', `${margemLucro}%`],
-        ['Ticket Medio (Mes)', `R$ ${ticketMedio}`],
-        ['Lucro Medio por Pedido (Mes)', `R$ ${lucroMedio}`],
-        [''],
+        ['Margem de Lucro (Mes - Concluidos)', `${margemLucro}%`],
+        ['Ticket Medio (Mes - Concluidos)', `R$ ${ticketMedio}`],
+        ['Lucro Medio por Pedido (Mes - Concluidos)', `R$ ${lucroMedio}`],
+        ['', ''],
+        ['Margem de Lucro (Mes - Em Processamento)', `${margemLucroProcessamento}%`],
+        ['Ticket Medio (Mes - Em Processamento)', `R$ ${ticketMedioProcessamento}`],
+        ['Lucro Medio por Pedido (Mes - Em Processamento)', `R$ ${lucroMedioProcessamento}`],
+        ['', ''],
         ['DETALHAMENTO POR PERIODO'],
-        ['Periodo', 'Vendas', 'Lucro', 'Margem'],
-        ['Mes Atual', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `${margemLucro}%`],
-        ['Total Geral', `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `${parseFloat(dados.totalVendas) > 0 ? ((parseFloat(dados.lucroTotal) / parseFloat(dados.totalVendas)) * 100).toFixed(1) : '0.0'}%`],
-        [''],
+        ['Status', 'Periodo', 'Vendas', 'Lucro', 'Margem'],
+        ['Concluidos', 'Mes Atual', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `${margemLucro}%`],
+        ['Concluidos', 'Total Geral', `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `${parseFloat(dados.totalVendas) > 0 ? ((parseFloat(dados.lucroTotal) / parseFloat(dados.totalVendas)) * 100).toFixed(1) : '0.0'}%`],
+        ['Em Processamento', 'Mes Atual', `R$ ${parseFloat(dados.vendasMesProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `R$ ${parseFloat(dados.lucroMesProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `${margemLucroProcessamento}%`],
+        ['Em Processamento', 'Total Geral', `R$ ${parseFloat(dados.totalVendasProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `R$ ${parseFloat(dados.lucroTotalProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `${parseFloat(dados.totalVendasProcessamento || 0) > 0 ? ((parseFloat(dados.lucroTotalProcessamento || 0) / parseFloat(dados.totalVendasProcessamento || 0)) * 100).toFixed(1) : '0.0'}%`],
+        ['', ''],
         ['Gerado em:', new Date().toLocaleString('pt-BR')]
       ];
 
@@ -1180,13 +1330,41 @@
       // Salvar arquivo
       const hoje = new Date();
       const dataAtual = `${hoje.getDate().toString().padStart(2, '0')}-${(hoje.getMonth() + 1).toString().padStart(2, '0')}-${hoje.getFullYear()}`;
-      XLSX.writeFile(wb, `Relatorio_Executivo_${dataAtual}.xlsx`);
+      const mesArquivo = mesSelecionado ? mesSelecionado.replace('-', '_') : 'atual';
+      XLSX.writeFile(wb, `Relatorio_Executivo_${mesArquivo}_${dataAtual}.xlsx`);
+    }
+
+    // Função para atualizar relatório com mês selecionado
+    function atualizarRelatorio() {
+      const mesSelecionado = document.getElementById('monthYear').value;
+      if (!mesSelecionado) {
+        alert('Por favor, selecione um mês/ano');
+        return;
+      }
+      
+      // Mostrar loading
+      document.querySelectorAll('.stat-value').forEach(el => {
+        el.innerHTML = '<span class="loading"></span>';
+      });
+      
+      // Recarregar estatísticas com o mês selecionado
+      carregarEstatisticas(mesSelecionado);
+      
+      // Reinicializar gráficos
+      setTimeout(() => {
+        inicializarGraficos();
+      }, 1000);
     }
 
     // Função para carregar estatísticas do banco de dados
-    async function carregarEstatisticas() {
+    async function carregarEstatisticas(mesAno = null) {
       try {
-        const response = await fetch('/api/relatorios/estatisticas');
+        let url = '/api/relatorios/estatisticas';
+        if (mesAno) {
+          url += `?mes=${mesAno}`;
+        }
+        
+        const response = await fetch(url);
         if (!response.ok) throw new Error('Erro ao carregar estatísticas');
         
         const dados = await response.json();
