@@ -21,13 +21,33 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 
-// Configuração de sessão simplificada (sem banco de dados)
+// Configuração de sessão com MySQL Store para produção
+const sessionConfig = getSessionConfig();
+const sessionStore = new MySQLStore({
+  host: sessionConfig.host,
+  port: sessionConfig.port,
+  user: sessionConfig.user,
+  password: sessionConfig.password,
+  database: sessionConfig.database,
+  ssl: sessionConfig.ssl,
+  createDatabaseTable: true,
+  schema: {
+    tableName: 'sessions',
+    columnNames: {
+      session_id: 'session_id',
+      expires: 'expires',
+      data: 'data'
+    }
+  }
+});
+
 app.use(session({
+  store: sessionStore,
   secret: process.env.SESSION_SECRET || 'SeuSessionSecretMuitoForte123!',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false,
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 horas
   }

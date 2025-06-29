@@ -978,6 +978,40 @@
       background-color: #f8f9fa;
       cursor: not-allowed;
     }
+
+    /* Estilos para campos manuais do cliente */
+    .cliente-manual-section {
+      background: #f8f9fa;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+
+    .cliente-manual-section h5 {
+      color: var(--primary-color);
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .cliente-manual-section .form-group {
+      margin-bottom: 12px;
+    }
+
+    .cliente-manual-section .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .cliente-manual-section input {
+      background: #fff;
+      border: 1px solid #d1d5db;
+    }
+
+    .cliente-manual-section input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
   </style>
 </head>
 <body>
@@ -1071,7 +1105,7 @@
             <h4>Informações do Cliente</h4>
             <div class="form-row">
               <div class="form-group">
-                <label for="clienteFinalizar">Cliente</label>
+                <label for="clienteFinalizar">Cliente (Selecionar ou Preencher Manual)</label>
                 <select id="clienteFinalizar">
                   <option value="">Cliente não identificado</option>
                 </select>
@@ -1087,6 +1121,19 @@
                   <option value="Dinheiro">Dinheiro</option>
                   <option value="Transferencia">Transferência</option>
                 </select>
+              </div>
+            </div>
+            <div class="cliente-manual-section">
+              <h5><i class="fas fa-edit"></i> Dados do Cliente (Preenchimento Manual)</h5>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="nomeClienteManual">Nome do Cliente</label>
+                  <input type="text" id="nomeClienteManual" placeholder="Digite o nome do cliente">
+                </div>
+                <div class="form-group">
+                  <label for="cnpjClienteManual">CNPJ/CPF</label>
+                  <input type="text" id="cnpjClienteManual" placeholder="Digite CNPJ ou CPF">
+                </div>
               </div>
             </div>
             <div class="form-row">
@@ -1164,10 +1211,21 @@
       <div class="modal-body">
         <form id="formSalvarEmAberto">
           <div class="form-group">
-            <label for="clienteEmAberto">Cliente *</label>
-            <select id="clienteEmAberto" required>
+            <label for="clienteEmAberto">Cliente (Selecionar ou Preencher Manual)</label>
+            <select id="clienteEmAberto">
               <option value="">Carregando clientes...</option>
             </select>
+          </div>
+          <div class="cliente-manual-section">
+            <h5><i class="fas fa-edit"></i> Dados do Cliente (Preenchimento Manual)</h5>
+            <div class="form-group">
+              <label for="nomeClienteManualEmAberto">Nome do Cliente</label>
+              <input type="text" id="nomeClienteManualEmAberto" placeholder="Digite o nome do cliente">
+            </div>
+            <div class="form-group">
+              <label for="cnpjClienteManualEmAberto">CNPJ/CPF</label>
+              <input type="text" id="cnpjClienteManualEmAberto" placeholder="Digite CNPJ ou CPF">
+            </div>
           </div>
           <div class="form-group">
             <label for="telefoneEmAberto">Telefone</label>
@@ -1270,10 +1328,16 @@
       const cliente = clientes.find(c => c.id == clienteId);
       
       if (cliente) {
+        // Preencher campos manuais com dados do cliente selecionado
+        document.getElementById('nomeClienteManual').value = cliente.razao || '';
+        document.getElementById('cnpjClienteManual').value = cliente.cnpj || '';
         document.getElementById('telefoneFinalizar').value = cliente.telefone || '';
         document.getElementById('emailFinalizar').value = cliente.email || '';
         document.getElementById('enderecoFinalizar').value = `${cliente.endereco || ''}${cliente.bairro ? `, ${cliente.bairro}` : ''}${cliente.cidade ? `, ${cliente.cidade}/${cliente.estado || ''}` : ''}`.trim();
       } else {
+        // Limpar campos se nenhum cliente selecionado
+        document.getElementById('nomeClienteManual').value = '';
+        document.getElementById('cnpjClienteManual').value = '';
         document.getElementById('telefoneFinalizar').value = '';
         document.getElementById('emailFinalizar').value = '';
         document.getElementById('enderecoFinalizar').value = '';
@@ -1420,6 +1484,8 @@
     // Função para finalizar pedido e salvar no banco
     async function confirmarFinalizar() {
       const clienteId = document.getElementById('clienteFinalizar').value;
+      const nomeClienteManual = document.getElementById('nomeClienteManual').value;
+      const cnpjClienteManual = document.getElementById('cnpjClienteManual').value;
       const formaPagamento = document.getElementById('formaPagamentoFinalizar').value;
       const telefone = document.getElementById('telefoneFinalizar').value;
       const email = document.getElementById('emailFinalizar').value;
@@ -1431,6 +1497,17 @@
         return;
       }
       
+      // Determinar informações do cliente
+      let clienteInfo = '';
+      if (clienteId) {
+        const cliente = clientes.find(c => c.id == clienteId);
+        clienteInfo = `Cliente: ${cliente ? cliente.razao : 'ID: ' + clienteId}`;
+      } else if (nomeClienteManual) {
+        clienteInfo = `Cliente Manual: ${nomeClienteManual}${cnpjClienteManual ? ` (${cnpjClienteManual})` : ''}`;
+      } else {
+        clienteInfo = 'Cliente: Não identificado';
+      }
+      
       const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.preco_venda || 0) * item.qtd), 0);
       
       try {
@@ -1440,7 +1517,7 @@
           data_pedido: new Date().toISOString().split('T')[0],
           status: 'Concluído',
           valor_total: total,
-          observacoes: `${observacoes}\n\nInformações adicionais:\nTelefone: ${telefone}\nEmail: ${email}\nEndereço: ${endereco}\nForma de Pagamento: ${formaPagamento}`,
+          observacoes: `${observacoes}\n\n${clienteInfo}\nTelefone: ${telefone}\nEmail: ${email}\nEndereço: ${endereco}\nForma de Pagamento: ${formaPagamento}`,
           itens: itensPedido
         };
 
@@ -1461,7 +1538,7 @@
           body: JSON.stringify({
             tipo: 'entrada',
             valor: total,
-            descricao: `Venda - Pedido #${result.id} - ${itensPedido.length} itens`,
+            descricao: `Venda - Pedido #${result.id} - ${itensPedido.length} itens - ${clienteInfo}`,
             data: new Date().toISOString().split('T')[0],
             pedido_id: result.id
           })
@@ -1475,7 +1552,7 @@
         atualizarTotal();
         fecharModalFinalizar();
 
-        alert(`Pedido finalizado com sucesso!\nPedido #${result.id}\nTotal: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
+        alert(`Pedido finalizado com sucesso!\nPedido #${result.id}\n${clienteInfo}\nTotal: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
       } catch (error) {
         console.error('Erro ao finalizar pedido:', error);
         alert('Erro ao finalizar pedido');
@@ -1905,10 +1982,16 @@
       const cliente = clientes.find(c => c.id == clienteId);
       
       if (cliente) {
+        // Preencher campos manuais com dados do cliente selecionado
+        document.getElementById('nomeClienteManualEmAberto').value = cliente.razao || '';
+        document.getElementById('cnpjClienteManualEmAberto').value = cliente.cnpj || '';
         document.getElementById('telefoneEmAberto').value = cliente.telefone || '';
         document.getElementById('emailEmAberto').value = cliente.email || '';
         document.getElementById('enderecoEmAberto').value = `${cliente.endereco || ''}${cliente.bairro ? `, ${cliente.bairro}` : ''}${cliente.cidade ? `, ${cliente.cidade}/${cliente.estado || ''}` : ''}`.trim();
       } else {
+        // Limpar campos se nenhum cliente selecionado
+        document.getElementById('nomeClienteManualEmAberto').value = '';
+        document.getElementById('cnpjClienteManualEmAberto').value = '';
         document.getElementById('telefoneEmAberto').value = '';
         document.getElementById('emailEmAberto').value = '';
         document.getElementById('enderecoEmAberto').value = '';
@@ -1918,13 +2001,16 @@
     // Função para confirmar salvar em aberto
     async function confirmarSalvarEmAberto() {
       const clienteId = document.getElementById('clienteEmAberto').value;
+      const nomeClienteManual = document.getElementById('nomeClienteManualEmAberto').value;
+      const cnpjClienteManual = document.getElementById('cnpjClienteManualEmAberto').value;
       const telefone = document.getElementById('telefoneEmAberto').value;
       const email = document.getElementById('emailEmAberto').value;
       const endereco = document.getElementById('enderecoEmAberto').value;
       const observacoes = document.getElementById('observacoesEmAberto').value;
       
-      if (!clienteId) {
-        alert('Selecione um cliente');
+      // Verificar se há cliente selecionado ou dados manuais
+      if (!clienteId && !nomeClienteManual) {
+        alert('Selecione um cliente ou preencha o nome do cliente manualmente');
         return;
       }
       
@@ -1933,16 +2019,25 @@
         return;
       }
       
+      // Determinar informações do cliente
+      let clienteInfo = '';
+      if (clienteId) {
+        const cliente = clientes.find(c => c.id == clienteId);
+        clienteInfo = `Cliente: ${cliente ? cliente.razao : 'ID: ' + clienteId}`;
+      } else if (nomeClienteManual) {
+        clienteInfo = `Cliente Manual: ${nomeClienteManual}${cnpjClienteManual ? ` (${cnpjClienteManual})` : ''}`;
+      }
+      
       const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.preco_venda || 0) * item.qtd), 0);
       
       try {
         // Preparar dados do pedido
         const pedidoData = {
-          cliente_id: clienteId,
+          cliente_id: clienteId || null,
           data_pedido: new Date().toISOString().split('T')[0],
           status: 'Em Processamento',
           valor_total: total,
-          observacoes: `${observacoes}\n\nInformações adicionais:\nTelefone: ${telefone}\nEmail: ${email}\nEndereço: ${endereco}\nPedido criado via caixa - ${itensPedido.length} itens`
+          observacoes: `${observacoes}\n\n${clienteInfo}\nTelefone: ${telefone}\nEmail: ${email}\nEndereço: ${endereco}\nPedido criado via caixa - ${itensPedido.length} itens`
         };
 
         // Salvar pedido no banco
@@ -1965,7 +2060,7 @@
         fecharModalSalvarEmAberto();
         
         // Mostrar mensagem de sucesso
-        alert(`Pedido #${result.id} salvo em aberto com sucesso!`);
+        alert(`Pedido #${result.id} salvo em aberto com sucesso!\n${clienteInfo}`);
         
         // Atualizar lista de pedidos em aberto na lateral
         await carregarPedidosEmAberto();
