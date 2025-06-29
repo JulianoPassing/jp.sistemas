@@ -1024,6 +1024,17 @@
 
     document.getElementById('cliente-form').onsubmit = async function(e) {
       e.preventDefault();
+      
+      // Validar CPF/CNPJ antes de enviar
+      const cnpjValue = document.getElementById('cnpj').value.replace(/\D/g, '');
+      if (cnpjValue.length > 0 && !validarCPFCNPJ(cnpjValue)) {
+        const continuar = confirm('O CPF/CNPJ informado parece estar inválido. Deseja continuar mesmo assim?');
+        if (!continuar) {
+          document.getElementById('cnpj').focus();
+          return;
+        }
+      }
+      
       const cliente = {
         razao: document.getElementById('razao').value,
         cnpj: document.getElementById('cnpj').value,
@@ -1068,13 +1079,36 @@
       // Remove tudo que não é dígito
       const numeros = valor.replace(/\D/g, '');
       
-      // Se tem 11 dígitos, formata como CPF
-      if (numeros.length <= 11) {
-        return numeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+      // Se não tem números, retorna vazio
+      if (numeros.length === 0) {
+        return '';
       }
-      // Se tem 14 dígitos, formata como CNPJ
+      
+      // Se tem 11 dígitos ou menos, formata como CPF
+      if (numeros.length <= 11) {
+        if (numeros.length <= 3) {
+          return numeros;
+        } else if (numeros.length <= 6) {
+          return numeros.replace(/(\d{3})(\d{0,3})/, '$1.$2');
+        } else if (numeros.length <= 9) {
+          return numeros.replace(/(\d{3})(\d{3})(\d{0,3})/, '$1.$2.$3');
+        } else {
+          return numeros.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4');
+        }
+      }
+      // Se tem 14 dígitos ou menos, formata como CNPJ
       else if (numeros.length <= 14) {
-        return numeros.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+        if (numeros.length <= 2) {
+          return numeros;
+        } else if (numeros.length <= 5) {
+          return numeros.replace(/(\d{2})(\d{0,3})/, '$1.$2');
+        } else if (numeros.length <= 8) {
+          return numeros.replace(/(\d{2})(\d{3})(\d{0,3})/, '$1.$2.$3');
+        } else if (numeros.length <= 12) {
+          return numeros.replace(/(\d{2})(\d{3})(\d{3})(\d{0,4})/, '$1.$2.$3/$4');
+        } else {
+          return numeros.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, '$1.$2.$3/$4-$5');
+        }
       }
       // Se tem mais de 14 dígitos, trunca para 14
       else {
@@ -1084,6 +1118,16 @@
 
     function validarCPFCNPJ(valor) {
       const numeros = valor.replace(/\D/g, '');
+      
+      // Se não tem números, não é válido
+      if (numeros.length === 0) {
+        return false;
+      }
+      
+      // Se tem menos de 11 dígitos, não é válido
+      if (numeros.length < 11) {
+        return false;
+      }
       
       if (numeros.length === 11) {
         // Validação básica de CPF
@@ -1150,6 +1194,7 @@
         return resultado === parseInt(digitos.charAt(1));
       }
       
+      // Se tem mais de 14 dígitos, não é válido
       return false;
     }
 
@@ -1166,8 +1211,10 @@
       cnpjInput.addEventListener('blur', function(e) {
         const valor = e.target.value.replace(/\D/g, '');
         if (valor.length > 0 && !validarCPFCNPJ(valor)) {
-          alert('CPF/CNPJ inválido! Por favor, verifique os números.');
-          e.target.focus();
+          const continuar = confirm('CPF/CNPJ inválido! Deseja continuar mesmo assim?');
+          if (!continuar) {
+            e.target.focus();
+          }
         }
       });
     });

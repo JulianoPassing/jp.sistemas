@@ -5,12 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Relatórios - J.P Sistemas Comercial</title>
   <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --primary-color: #2563eb;
@@ -26,30 +28,57 @@
       --shadow: rgba(37, 99, 235, 0.1);
       --shadow-hover: rgba(37, 99, 235, 0.2);
       --success-color: #059669;
+      --success-light: #10b981;
       --danger-color: #dc2626;
+      --warning-color: #d97706;
+      --info-color: #0891b2;
       --light-color: #f9fafb;
       --dark-color: #111827;
       --bg-color: #f3f4f6;
-      --card-bg: #ffffff;
-      --border-color: #e0e0e0;
-      --border-radius: 12px;
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --border-color: rgba(156, 163, 175, 0.2);
+      --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      --border-radius: 16px;
+      --border-radius-lg: 24px;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
-      font-size: 14px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: var(--text-primary);
       padding: 0;
       min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
     }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23374151" opacity="0.03"/><circle cx="75" cy="75" r="1" fill="%23374151" opacity="0.03"/><circle cx="50" cy="10" r="0.5" fill="%23374151" opacity="0.03"/><circle cx="10" cy="60" r="0.5" fill="%23374151" opacity="0.03"/><circle cx="90" cy="40" r="0.5" fill="%23374151" opacity="0.03"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+      pointer-events: none;
+    }
+
     .header {
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(20px);
       padding: 20px 0;
       box-shadow: 0 4px 20px rgba(37, 99, 235, 0.1);
       border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+      z-index: 100;
     }
+
     .header-content {
       max-width: 1200px;
       margin: 0 auto;
@@ -58,10 +87,12 @@
       justify-content: space-between;
       align-items: center;
     }
+
     .logo {
       display: flex;
       align-items: center;
     }
+
     .logo img {
       width: 150px;
       height: 67px;
@@ -72,20 +103,24 @@
       border-radius: 0;
       margin: 0;
     }
+
     .user-info {
       display: flex;
       align-items: center;
       gap: 12px;
     }
+
     .user-info span {
       color: var(--text-primary);
       font-family: 'Inter', sans-serif;
       font-size: 16px;
       font-weight: 500;
     }
+
     .user-info #userDisplay {
       font-weight: 700;
     }
+
     .logout-btn {
       background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
       color: white;
@@ -101,108 +136,333 @@
       gap: 6px;
       text-decoration: none;
     }
+
     .logout-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
     }
+
     .main-content {
       max-width: 1200px;
       margin: 40px auto;
       padding: 0 20px;
+      position: relative;
+      z-index: 10;
     }
-    .container { max-width: 1200px; margin: 0 auto; }
-    #logo-container { text-align: center; margin-bottom: 25px; }
-    #logo { 
-      max-width: 100%; 
-      height: auto; 
-      max-height: 80px; 
-      filter: brightness(0) invert(1);
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 40px;
+      animation: fadeInUp 0.8s ease-out;
+    }
+
+    .page-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .page-subtitle {
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 400;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: var(--border-radius);
+      padding: 32px;
+      border: 1px solid var(--border-color);
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
+      animation: fadeInUp 0.8s ease-out;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.6s;
+    }
+
+    .stat-card:hover::before {
+      left: 100%;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-card.clients {
+      border-left: 4px solid var(--primary-color);
+    }
+
+    .stat-card.products {
+      border-left: 4px solid var(--success-color);
+    }
+
+    .stat-card.orders {
+      border-left: 4px solid var(--warning-color);
+    }
+
+    .stat-card.revenue {
+      border-left: 4px solid var(--info-color);
+    }
+
+    .stat-card.profit {
+      border-left: 4px solid var(--success-light);
+    }
+
+    .stat-card.total-orders {
+      border-left: 4px solid var(--danger-color);
+    }
+
+    .stat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-icon::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
       opacity: 0.9;
     }
-    .card { 
-      background-color: var(--card-bg); 
-      border-radius: var(--border-radius); 
-      box-shadow: var(--shadow); 
-      padding: 25px; 
-      margin-bottom: 25px; 
-      border: 1px solid var(--border-color); 
+
+    .stat-icon i {
+      position: relative;
+      z-index: 1;
     }
-    .card-header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid var(--border-color);
+
+    .stat-card.clients .stat-icon::before {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     }
-    .card-header .btn-group {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      width: 100%;
+
+    .stat-card.products .stat-icon::before {
+      background: linear-gradient(135deg, var(--success-color), var(--success-light));
     }
-    .card-header h2 { 
-      font-size: 1.8em; 
-      color: var(--dark-color); 
-      font-weight: 600; 
-      text-align: center;
+
+    .stat-card.orders .stat-icon::before {
+      background: linear-gradient(135deg, var(--warning-color), #f59e0b);
     }
-    .btn { 
-      display: inline-flex; 
-      align-items: center; 
-      justify-content: center; 
-      gap: 8px; 
-      padding: 12px 20px; 
-      border-radius: 8px; 
-      border: none; 
-      font-family: "Poppins", sans-serif; 
-      font-weight: 500; 
-      font-size: 0.95em; 
-      cursor: pointer; 
-      transition: all 0.3s ease; 
-      text-decoration: none; 
+
+    .stat-card.revenue .stat-icon::before {
+      background: linear-gradient(135deg, var(--info-color), #06b6d4);
     }
-    .btn-primary { 
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); 
-      color: white; 
+
+    .stat-card.profit .stat-icon::before {
+      background: linear-gradient(135deg, var(--success-light), #34d399);
     }
-    .btn-primary:hover { 
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+
+    .stat-card.total-orders .stat-icon::before {
+      background: linear-gradient(135deg, var(--danger-color), #ef4444);
     }
-    .btn-success { 
-      background: linear-gradient(135deg, var(--success-color), #20c997); 
-      color: white; 
-    }
-    .btn-success:hover { 
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
-    }
-    .btn-danger { 
-      background: linear-gradient(135deg, var(--danger-color), #c82333); 
-      color: white; 
-    }
-    .btn-danger:hover { 
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
-    }
-    .relatorio-area {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 20px;
-      margin-top: 20px;
-      min-height: 180px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-    .relatorio-area h3 {
-      color: var(--primary-color);
-      margin-bottom: 10px;
-    }
-    .relatorio-area ul {
-      margin-left: 20px;
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 800;
       color: var(--dark-color);
+      margin-bottom: 8px;
+      font-family: 'Poppins', sans-serif;
     }
+
+    .stat-label {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    .stat-change {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .stat-change.positive {
+      color: var(--success-color);
+    }
+
+    .stat-change.negative {
+      color: var(--danger-color);
+    }
+
+    .actions-section {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: var(--border-radius);
+      padding: 32px;
+      margin-bottom: 40px;
+      border: 1px solid var(--border-color);
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .actions-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .actions-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--dark-color);
+      margin-bottom: 8px;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .actions-subtitle {
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 16px 32px;
+      border-radius: 12px;
+      border: none;
+      font-family: "Poppins", sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      min-width: 200px;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 35px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--success-color), var(--success-light));
+      color: white;
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-success:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 35px rgba(16, 185, 129, 0.4);
+    }
+
+    .charts-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .chart-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: var(--border-radius);
+      padding: 32px;
+      border: 1px solid var(--border-color);
+      animation: fadeInUp 1.2s ease-out;
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .chart-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+    }
+
+    .chart-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--dark-color);
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 300px;
+    }
+
     .footer {
       width: 100%;
       text-align: center;
@@ -212,6 +472,113 @@
       background: transparent;
       font-family: 'Inter', sans-serif;
       letter-spacing: 0.02em;
+    }
+
+    /* Animações */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+    }
+
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+      .page-title {
+        font-size: 2rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .stat-card {
+        padding: 24px;
+      }
+
+      .stat-value {
+        font-size: 2rem;
+      }
+
+      .charts-section {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .btn-group {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .btn {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main-content {
+        padding: 0 16px;
+        margin: 20px auto;
+      }
+
+      .stat-card {
+        padding: 20px;
+      }
+
+      .actions-section {
+        padding: 24px;
+      }
     }
   </style>
 </head>
@@ -232,37 +599,159 @@
       </div>
     </div>
   </header>
+
   <main class="main-content">
-    <div class="card">
-      <div class="card-header">
-        <h2>Relatórios</h2>
-        <div class="btn-group">
-          <button class="btn btn-primary" id="btn-relatorio-clientes">
-            <i class="fas fa-file-pdf"></i> Exportar Relatório PDF
-          </button>
-          <button class="btn btn-success" id="btn-relatorio-produtos">
-            <i class="fas fa-file-excel"></i> Exportar Relatório EXCEL
-          </button>
+    <div class="page-header">
+      <h1 class="page-title">📊 Relatórios Executivos</h1>
+      <p class="page-subtitle">Análise completa e insights do seu negócio em tempo real</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card clients">
+        <div class="stat-header">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+        </div>
+        <div class="stat-value" id="total-clientes">
+          <span class="loading"></span>
+        </div>
+        <div class="stat-label">Total de Clientes</div>
+        <div class="stat-change positive">
+          <i class="fas fa-arrow-up"></i>
+          <span>Crescimento contínuo</span>
         </div>
       </div>
-      <div class="relatorio-area">
-        <h3>Relatórios em Tempo Real</h3>
-        <ul>
-          <li>Total de clientes cadastrados: <b id="total-clientes">Carregando...</b></li>
-          <li>Total de produtos disponíveis: <b id="total-produtos">Carregando...</b></li>
-          <li>Pedidos realizados este mês: <b id="pedidos-mes">Carregando...</b></li>
-          <li>Vendas totais do mês: <b id="vendas-mes">Carregando...</b></li>
-          <li>Lucro total do mês: <b id="lucro-mes" style="color: var(--success-color);">Carregando...</b></li>
-          <li>Total de pedidos realizados: <b id="total-pedidos">Carregando...</b></li>
-          <li>Vendas totais (geral): <b id="vendas-total">Carregando...</b></li>
-          <li>Lucro total (geral): <b id="lucro-total" style="color: var(--success-color);">Carregando...</b></li>
-        </ul>
+
+      <div class="stat-card products">
+        <div class="stat-header">
+          <div class="stat-icon">
+            <i class="fas fa-box"></i>
+          </div>
+        </div>
+        <div class="stat-value" id="total-produtos">
+          <span class="loading"></span>
+        </div>
+        <div class="stat-label">Produtos Disponíveis</div>
+        <div class="stat-change positive">
+          <i class="fas fa-arrow-up"></i>
+          <span>Catálogo ativo</span>
+        </div>
+      </div>
+
+      <div class="stat-card orders">
+        <div class="stat-header">
+          <div class="stat-icon">
+            <i class="fas fa-shopping-cart"></i>
+          </div>
+        </div>
+        <div class="stat-value" id="pedidos-mes">
+          <span class="loading"></span>
+        </div>
+        <div class="stat-label">Pedidos Este Mês</div>
+        <div class="stat-change positive">
+          <i class="fas fa-arrow-up"></i>
+          <span>Vendas ativas</span>
+        </div>
+      </div>
+
+      <div class="stat-card revenue">
+        <div class="stat-header">
+          <div class="stat-icon">
+            <i class="fas fa-dollar-sign"></i>
+          </div>
+        </div>
+        <div class="stat-value" id="vendas-mes">
+          <span class="loading"></span>
+        </div>
+        <div class="stat-label">Vendas do Mês</div>
+        <div class="stat-change positive">
+          <i class="fas fa-arrow-up"></i>
+          <span>Receita crescente</span>
+        </div>
+      </div>
+
+      <div class="stat-card profit">
+        <div class="stat-header">
+          <div class="stat-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+        </div>
+        <div class="stat-value" id="lucro-mes">
+          <span class="loading"></span>
+        </div>
+        <div class="stat-label">Lucro do Mês</div>
+        <div class="stat-change positive">
+          <i class="fas fa-arrow-up"></i>
+          <span>Rentabilidade alta</span>
+        </div>
+      </div>
+
+      <div class="stat-card total-orders">
+        <div class="stat-header">
+          <div class="stat-icon">
+            <i class="fas fa-clipboard-list"></i>
+          </div>
+        </div>
+        <div class="stat-value" id="total-pedidos">
+          <span class="loading"></span>
+        </div>
+        <div class="stat-label">Total de Pedidos</div>
+        <div class="stat-change positive">
+          <i class="fas fa-arrow-up"></i>
+          <span>Histórico completo</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions-section">
+      <div class="actions-header">
+        <h2 class="actions-title">📋 Exportar Relatórios</h2>
+        <p class="actions-subtitle">Gere relatórios detalhados em PDF e Excel para análise completa</p>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="btn-relatorio-clientes">
+          <i class="fas fa-file-pdf"></i>
+          Relatório PDF
+        </button>
+        <button class="btn btn-success" id="btn-relatorio-produtos">
+          <i class="fas fa-file-excel"></i>
+          Relatório Excel
+        </button>
+      </div>
+    </div>
+
+    <div class="charts-section">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-icon">
+            <i class="fas fa-chart-pie"></i>
+          </div>
+          <h3 class="chart-title">Distribuição de Vendas</h3>
+        </div>
+        <div class="chart-container">
+          <canvas id="salesChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-icon">
+            <i class="fas fa-chart-bar"></i>
+          </div>
+          <h3 class="chart-title">Evolução Mensal</h3>
+        </div>
+        <div class="chart-container">
+          <canvas id="evolutionChart"></canvas>
+        </div>
       </div>
     </div>
   </main>
+
   <footer class="footer">
     © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" style="color: #000; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
   </footer>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       // Verificar se está logado
@@ -276,6 +765,11 @@
 
       // Carregar estatísticas reais
       carregarEstatisticas();
+      
+      // Inicializar gráficos
+      setTimeout(() => {
+        inicializarGraficos();
+      }, 1000);
     });
 
     function logout() {
@@ -285,11 +779,227 @@
     }
 
     document.getElementById('btn-relatorio-clientes').onclick = function() {
-      gerarRelatorioPDF();
+      this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando PDF...';
+      this.disabled = true;
+      
+      setTimeout(() => {
+        gerarRelatorioPDF();
+        this.innerHTML = '<i class="fas fa-file-pdf"></i> Relatório PDF';
+        this.disabled = false;
+      }, 500);
     };
+    
     document.getElementById('btn-relatorio-produtos').onclick = function() {
-      gerarRelatorioExcel();
+      this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando Excel...';
+      this.disabled = true;
+      
+      setTimeout(() => {
+        gerarRelatorioExcel();
+        this.innerHTML = '<i class="fas fa-file-excel"></i> Relatório Excel';
+        this.disabled = false;
+      }, 500);
     };
+
+    // Função para animar números
+    function animarNumero(elemento, valorFinal, duracao = 2000) {
+      const valorInicial = 0;
+      const incremento = valorFinal / (duracao / 16);
+      let valorAtual = valorInicial;
+      
+      const timer = setInterval(() => {
+        valorAtual += incremento;
+        if (valorAtual >= valorFinal) {
+          valorAtual = valorFinal;
+          clearInterval(timer);
+        }
+        
+        if (typeof valorFinal === 'number') {
+          elemento.textContent = Math.floor(valorAtual).toLocaleString('pt-BR');
+        } else {
+          elemento.textContent = valorFinal;
+        }
+      }, 16);
+    }
+
+    // Função para animar valores monetários
+    function animarValorMonetario(elemento, valorFinal, duracao = 2000) {
+      const valorNumerico = parseFloat(valorFinal.replace(/[^\d,.-]/g, '').replace(',', '.'));
+      const valorInicial = 0;
+      const incremento = valorNumerico / (duracao / 16);
+      let valorAtual = valorInicial;
+      
+      const timer = setInterval(() => {
+        valorAtual += incremento;
+        if (valorAtual >= valorNumerico) {
+          valorAtual = valorNumerico;
+          clearInterval(timer);
+        }
+        
+        elemento.textContent = `R$ ${valorAtual.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+      }, 16);
+    }
+
+    // Função para inicializar gráficos
+    function inicializarGraficos() {
+      const dados = window.dadosEstatisticas || {
+        totalClientes: 0,
+        totalProdutos: 0,
+        totalPedidos: 0,
+        totalVendas: '0.00',
+        lucroTotal: '0.00',
+        pedidosMes: 0,
+        vendasMes: '0.00',
+        lucroMes: '0.00'
+      };
+
+      // Gráfico de pizza - Distribuição de Vendas
+      const ctxPie = document.getElementById('salesChart').getContext('2d');
+      new Chart(ctxPie, {
+        type: 'doughnut',
+        data: {
+          labels: ['Vendas do Mês', 'Vendas Anteriores', 'Lucro do Mês'],
+          datasets: [{
+            data: [
+              parseFloat(dados.vendasMes) || 0,
+              parseFloat(dados.totalVendas) - parseFloat(dados.vendasMes) || 0,
+              parseFloat(dados.lucroMes) || 0
+            ],
+            backgroundColor: [
+              'rgba(99, 102, 241, 0.8)',
+              'rgba(16, 185, 129, 0.8)',
+              'rgba(245, 158, 11, 0.8)'
+            ],
+            borderColor: [
+              'rgba(99, 102, 241, 1)',
+              'rgba(16, 185, 129, 1)',
+              'rgba(245, 158, 11, 1)'
+            ],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                padding: 20,
+                usePointStyle: true,
+                font: {
+                  family: 'Inter',
+                  size: 12
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = context.parsed;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = ((value / total) * 100).toFixed(1);
+                  return `${label}: R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})} (${percentage}%)`;
+                }
+              }
+            }
+          },
+          animation: {
+            animateRotate: true,
+            animateScale: true,
+            duration: 2000,
+            easing: 'easeOutQuart'
+          }
+        }
+      });
+
+      // Gráfico de barras - Evolução Mensal
+      const ctxBar = document.getElementById('evolutionChart').getContext('2d');
+      new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+          labels: ['Clientes', 'Produtos', 'Pedidos', 'Vendas (R$)', 'Lucro (R$)'],
+          datasets: [{
+            label: 'Valores Atuais',
+            data: [
+              dados.totalClientes || 0,
+              dados.totalProdutos || 0,
+              dados.pedidosMes || 0,
+              parseFloat(dados.vendasMes) || 0,
+              parseFloat(dados.lucroMes) || 0
+            ],
+            backgroundColor: [
+              'rgba(99, 102, 241, 0.8)',
+              'rgba(16, 185, 129, 0.8)',
+              'rgba(245, 158, 11, 0.8)',
+              'rgba(8, 145, 178, 0.8)',
+              'rgba(16, 185, 129, 0.8)'
+            ],
+            borderColor: [
+              'rgba(99, 102, 241, 1)',
+              'rgba(16, 185, 129, 1)',
+              'rgba(245, 158, 11, 1)',
+              'rgba(8, 145, 178, 1)',
+              'rgba(16, 185, 129, 1)'
+            ],
+            borderWidth: 2,
+            borderRadius: 8,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = context.parsed.y;
+                  
+                  if (label.includes('Vendas') || label.includes('Lucro')) {
+                    return `${label}: R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                  }
+                  return `${label}: ${value.toLocaleString('pt-BR')}`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(0, 0, 0, 0.1)'
+              },
+              ticks: {
+                font: {
+                  family: 'Inter',
+                  size: 12
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                font: {
+                  family: 'Inter',
+                  size: 12
+                }
+              }
+            }
+          },
+          animation: {
+            duration: 2000,
+            easing: 'easeOutQuart'
+          }
+        }
+      });
+    }
 
     // Função para gerar relatório PDF
     function gerarRelatorioPDF() {
@@ -307,7 +1017,7 @@
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
-      doc.text('RELATÓRIO GERAL', 105, 15, { align: 'center' });
+      doc.text('RELATÓRIO EXECUTIVO', 105, 15, { align: 'center' });
       
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
@@ -405,7 +1115,7 @@
       // Salvar PDF
       const hoje = new Date();
       const dataAtual = `${hoje.getDate().toString().padStart(2, '0')}-${(hoje.getMonth() + 1).toString().padStart(2, '0')}-${hoje.getFullYear()}`;
-      doc.save(`Relatorio_Geral_${dataAtual}.pdf`);
+      doc.save(`Relatorio_Executivo_${dataAtual}.pdf`);
     }
 
     // Função para gerar relatório Excel
@@ -430,7 +1140,7 @@
 
       // Dados do relatório
       const dadosRelatorio = [
-        ['RELATÓRIO GERAL - J.P Sistemas'],
+        ['RELATÓRIO EXECUTIVO - J.P Sistemas'],
         [''],
         ['RESUMO EXECUTIVO'],
         ['Indicador', 'Valor'],
@@ -459,7 +1169,7 @@
       // Criar planilha
       const ws = XLSX.utils.aoa_to_sheet(dadosRelatorio);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Relatório Geral');
+      XLSX.utils.book_append_sheet(wb, ws, 'Relatório Executivo');
 
       // Configurar largura das colunas
       ws['!cols'] = [
@@ -470,7 +1180,7 @@
       // Salvar arquivo
       const hoje = new Date();
       const dataAtual = `${hoje.getDate().toString().padStart(2, '0')}-${(hoje.getMonth() + 1).toString().padStart(2, '0')}-${hoje.getFullYear()}`;
-      XLSX.writeFile(wb, `Relatorio_Geral_${dataAtual}.xlsx`);
+      XLSX.writeFile(wb, `Relatorio_Executivo_${dataAtual}.xlsx`);
     }
 
     // Função para carregar estatísticas do banco de dados
@@ -481,15 +1191,30 @@
         
         const dados = await response.json();
         
-        // Atualizar os elementos na página
-        document.getElementById('total-clientes').textContent = dados.totalClientes;
-        document.getElementById('total-produtos').textContent = dados.totalProdutos;
-        document.getElementById('pedidos-mes').textContent = dados.pedidosMes;
-        document.getElementById('vendas-mes').textContent = `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-        document.getElementById('lucro-mes').textContent = `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-        document.getElementById('total-pedidos').textContent = dados.totalPedidos;
-        document.getElementById('vendas-total').textContent = `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-        document.getElementById('lucro-total').textContent = `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        // Animar os valores com delay
+        setTimeout(() => {
+          animarNumero(document.getElementById('total-clientes'), dados.totalClientes);
+        }, 200);
+        
+        setTimeout(() => {
+          animarNumero(document.getElementById('total-produtos'), dados.totalProdutos);
+        }, 400);
+        
+        setTimeout(() => {
+          animarNumero(document.getElementById('pedidos-mes'), dados.pedidosMes);
+        }, 600);
+        
+        setTimeout(() => {
+          animarValorMonetario(document.getElementById('vendas-mes'), `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
+        }, 800);
+        
+        setTimeout(() => {
+          animarValorMonetario(document.getElementById('lucro-mes'), `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
+        }, 1000);
+        
+        setTimeout(() => {
+          animarNumero(document.getElementById('total-pedidos'), dados.totalPedidos);
+        }, 1200);
         
         // Armazenar dados para uso nos relatórios
         window.dadosEstatisticas = dados;
@@ -503,10 +1228,23 @@
         document.getElementById('vendas-mes').textContent = 'R$ 0,00';
         document.getElementById('lucro-mes').textContent = 'R$ 0,00';
         document.getElementById('total-pedidos').textContent = '0';
-        document.getElementById('vendas-total').textContent = 'R$ 0,00';
-        document.getElementById('lucro-total').textContent = 'R$ 0,00';
       }
     }
+
+    // Adicionar efeitos de hover nos cards
+    document.addEventListener('DOMContentLoaded', function() {
+      const cards = document.querySelectorAll('.stat-card');
+      
+      cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+          this.style.transform = 'translateY(-8px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+          this.style.transform = 'translateY(0) scale(1)';
+        });
+      });
+    });
   </script>
 </body>
 </html> 
