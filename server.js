@@ -688,3 +688,13 @@ app.get('*', (req, res) => {
 });
 
 module.exports = app;
+
+// Inicialização do servidor (apenas se executado diretamente)
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Servidor J.P Sistemas rodando na porta ${PORT}`);
+    console.log(`📱 Acesse: http://localhost:${PORT}`);
+    console.log(`🔧 Ambiente: ${process.env.NODE_ENV || 'development'}`);
+  });
+}

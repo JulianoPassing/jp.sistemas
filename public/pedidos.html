@@ -675,6 +675,31 @@
       font-family: 'Inter', sans-serif;
       letter-spacing: 0.02em;
     }
+
+    /* Estilos específicos para botões de ação de pedidos */
+    .btn-concluir {
+      background: linear-gradient(135deg, #059669, #10b981) !important;
+      color: white !important;
+      border: none !important;
+    }
+    
+    .btn-concluir:hover {
+      background: linear-gradient(135deg, #047857, #059669) !important;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(5, 150, 105, 0.3);
+    }
+    
+    .btn-cancelar {
+      background: linear-gradient(135deg, #dc2626, #ef4444) !important;
+      color: white !important;
+      border: none !important;
+    }
+    
+    .btn-cancelar:hover {
+      background: linear-gradient(135deg, #b91c1c, #dc2626) !important;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -958,7 +983,7 @@
         tr.innerHTML = `
           <td>${pedido.id}</td>
           <td>${pedido.nome_cliente || pedido.cliente_id || 'Cliente não identificado'}</td>
-          <td>${pedido.data_pedido || ''}</td>
+          <td>${formatarDataHora(pedido.data_pedido)}</td>
           <td><span style="color: ${pedido.status === 'Concluído' ? 'var(--success-color)' : pedido.status === 'Cancelado' ? 'var(--danger-color)' : '#f59e0b'}; font-weight: bold;">${pedido.status || ''}</span></td>
           <td>R$ ${(pedido.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
           <td>R$ 0,00</td>
@@ -966,6 +991,14 @@
             <button class="btn btn-primary btn-sm" onclick="visualizarPedido('${pedido.id}')"><i class="fas fa-eye"></i> Ver</button>
             <button class="btn btn-success btn-sm" onclick="editarPedido('${pedido.id}')"><i class="fas fa-edit"></i> Editar</button>
             <button class="btn btn-danger btn-sm" onclick="removerPedido('${pedido.id}')"><i class="fas fa-trash"></i> Remover</button>
+            ${pedido.status !== 'Concluído' && pedido.status !== 'Cancelado' ? `
+              <button class="btn btn-sm btn-concluir" onclick="concluirPedido('${pedido.id}')">
+                <i class="fas fa-check"></i> Concluir
+              </button>
+              <button class="btn btn-sm btn-cancelar" onclick="cancelarPedido('${pedido.id}')">
+                <i class="fas fa-times"></i> Cancelar
+              </button>
+            ` : ''}
           </td>
         `;
         tbody.appendChild(tr);
@@ -1047,6 +1080,70 @@
       } catch (error) {
         alert('Erro ao remover pedido');
         console.error(error);
+      }
+    }
+
+    // Função para concluir pedido
+    async function concluirPedido(pedidoId) {
+      if (!confirm('Tem certeza que deseja concluir este pedido?')) return;
+      try {
+        const pedido = pedidos.find(p => p.id == pedidoId);
+        if (!pedido) {
+          alert('Pedido não encontrado!');
+          return;
+        }
+
+        const response = await fetch(`/api/pedidos/${pedidoId}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            cliente_id: pedido.cliente_id,
+            data_pedido: pedido.data_pedido,
+            status: 'Concluído',
+            valor_total: pedido.valor_total,
+            observacoes: pedido.observacoes
+          })
+        });
+
+        if (!response.ok) throw new Error('Erro ao concluir pedido');
+        
+        await carregarPedidos();
+        alert('Pedido concluído com sucesso!');
+      } catch (error) {
+        console.error('Erro ao concluir pedido:', error);
+        alert('Erro ao concluir pedido: ' + error.message);
+      }
+    }
+
+    // Função para cancelar pedido
+    async function cancelarPedido(pedidoId) {
+      if (!confirm('Tem certeza que deseja cancelar este pedido?')) return;
+      try {
+        const pedido = pedidos.find(p => p.id == pedidoId);
+        if (!pedido) {
+          alert('Pedido não encontrado!');
+          return;
+        }
+
+        const response = await fetch(`/api/pedidos/${pedidoId}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            cliente_id: pedido.cliente_id,
+            data_pedido: pedido.data_pedido,
+            status: 'Cancelado',
+            valor_total: pedido.valor_total,
+            observacoes: pedido.observacoes
+          })
+        });
+
+        if (!response.ok) throw new Error('Erro ao cancelar pedido');
+        
+        await carregarPedidos();
+        alert('Pedido cancelado com sucesso!');
+      } catch (error) {
+        console.error('Erro ao cancelar pedido:', error);
+        alert('Erro ao cancelar pedido: ' + error.message);
       }
     }
 
@@ -1665,6 +1762,16 @@
         callback(null);
       };
       img.src = url;
+    }
+
+    function formatarDataHora(dataISO) {
+      if (!dataISO) return '';
+      const data = new Date(dataISO);
+      if (isNaN(data.getTime())) return dataISO;
+      return data.toLocaleString('pt-BR', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
     }
   </script>
 </body>

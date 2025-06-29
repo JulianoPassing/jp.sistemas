@@ -958,6 +958,7 @@
       }
 
       function openEditProductModal(produto) {
+        console.log('Abrindo modal de edição para produto:', produto);
         modalTitle.textContent = `Editar ${produto.nome}`;
         productInfo.innerHTML = `
           <form id='formEditarProduto' class="product-form">
@@ -1093,9 +1094,15 @@
           </form>
         `;
         
+        // Exibir o modal
+        console.log('Exibindo modal...');
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        
         document.getElementById('cancelarEditar').onclick = closeProductModal;
         document.getElementById('formEditarProduto').onsubmit = async function(e) {
           e.preventDefault();
+          console.log('Formulário de edição submetido');
           const form = e.target;
           
           // Validação básica
@@ -1112,6 +1119,20 @@
           }
           
           try {
+            console.log('Enviando dados para atualização:', {
+              nome: form.nome.value.trim(),
+              categoria: form.categoria.value,
+              preco_custo: parseFloat(form.preco_custo.value) || 0,
+              preco_venda: parseFloat(form.preco_venda.value) || 0,
+              estoque: parseInt(form.estoque.value) || 0,
+              fornecedor: form.fornecedor.value.trim(),
+              codigo: form.codigo.value.trim(),
+              peso: form.peso.value.trim(),
+              dimensoes: form.dimensoes.value.trim(),
+              status: form.status.value,
+              descricao: form.descricao.value.trim()
+            });
+
             const response = await fetch(`/api/produtos/${produto.id}`, {
               method: 'PUT',
               headers: {
@@ -1577,8 +1598,15 @@
           btn.onclick = function() {
             const tr = this.closest('tr');
             const id = tr.getAttribute('data-id');
+            console.log('Editando produto com ID:', id);
             const produto = produtos.find(p => p.id == id);
-            openEditProductModal(produto);
+            console.log('Produto encontrado:', produto);
+            if (produto) {
+              openEditProductModal(produto);
+            } else {
+              console.error('Produto não encontrado para edição');
+              alert('Erro: Produto não encontrado');
+            }
           };
         });
         document.querySelectorAll('.btn-remover-produto').forEach(btn => {
