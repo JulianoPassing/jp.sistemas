@@ -1,0 +1,49 @@
+{
+  "name": "jpsistemas",
+  "version": "1.0.0",
+  "description": "Sistema de Gestão Comercial com Multi-tenancy",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "echo 'Build completed'",
+    "vercel-build": "echo 'Vercel build completed'",
+    "init-db": "node scripts/init-db.js",
+    "init-vercel": "node scripts/init-vercel-db.js",
+    "backup": "bash scripts/backup.sh",
+    "backup-debian": "bash scripts/backup-debian.sh"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mysql2": "^3.9.7",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "express-session": "^1.17.3",
+    "express-mysql-session": "^3.0.0",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "sistema",
+    "gestao",
+    "comercial",
+    "multi-tenancy",
+    "mysql",
+    "nodejs",
+    "vercel",
+    "debian",
+    "mariadb"
+  ],
+  "author": "J.P Sistemas",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+} 

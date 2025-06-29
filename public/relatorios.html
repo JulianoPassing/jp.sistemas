@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relatórios - J.P Sistemas Comercial</title>
+  <link rel="icon" href="https://i.imgur.com/WveVVY5.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #3b82f6;
+      --secondary-color: #1e40af;
+      --accent-color: #60a5fa;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --background: #f8fafc;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --shadow: rgba(37, 99, 235, 0.1);
+      --shadow-hover: rgba(37, 99, 235, 0.2);
+      --success-color: #059669;
+      --danger-color: #dc2626;
+      --light-color: #f9fafb;
+      --dark-color: #111827;
+      --bg-color: #f3f4f6;
+      --card-bg: #ffffff;
+      --border-color: #e0e0e0;
+      --border-radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: var(--text-primary);
+      padding: 0;
+      min-height: 100vh;
+    }
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 20px 0;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+    }
+    .logo img {
+      width: 150px;
+      height: 67px;
+      display: block;
+      object-fit: contain;
+      background: none;
+      box-shadow: none;
+      border-radius: 0;
+      margin: 0;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .user-info span {
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .user-info #userDisplay {
+      font-weight: 700;
+    }
+    .logout-btn {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+    }
+    .main-content {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    #logo-container { text-align: center; margin-bottom: 25px; }
+    #logo { 
+      max-width: 100%; 
+      height: auto; 
+      max-height: 80px; 
+      filter: brightness(0) invert(1);
+      opacity: 0.9;
+    }
+    .card { 
+      background-color: var(--card-bg); 
+      border-radius: var(--border-radius); 
+      box-shadow: var(--shadow); 
+      padding: 25px; 
+      margin-bottom: 25px; 
+      border: 1px solid var(--border-color); 
+    }
+    .card-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .card-header .btn-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      width: 100%;
+    }
+    .card-header h2 { 
+      font-size: 1.8em; 
+      color: var(--dark-color); 
+      font-weight: 600; 
+      text-align: center;
+    }
+    .btn { 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 8px; 
+      padding: 12px 20px; 
+      border-radius: 8px; 
+      border: none; 
+      font-family: "Poppins", sans-serif; 
+      font-weight: 500; 
+      font-size: 0.95em; 
+      cursor: pointer; 
+      transition: all 0.3s ease; 
+      text-decoration: none; 
+    }
+    .btn-primary { 
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); 
+      color: white; 
+    }
+    .btn-primary:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    .btn-success { 
+      background: linear-gradient(135deg, var(--success-color), #20c997); 
+      color: white; 
+    }
+    .btn-success:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+    }
+    .btn-danger { 
+      background: linear-gradient(135deg, var(--danger-color), #c82333); 
+      color: white; 
+    }
+    .btn-danger:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+    }
+    .relatorio-area {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 20px;
+      min-height: 180px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .relatorio-area h3 {
+      color: var(--primary-color);
+      margin-bottom: 10px;
+    }
+    .relatorio-area ul {
+      margin-left: 20px;
+      color: var(--dark-color);
+    }
+    .footer {
+      width: 100%;
+      text-align: center;
+      padding: 18px 0 12px 0;
+      color: #000;
+      font-size: 15px;
+      background: transparent;
+      font-family: 'Inter', sans-serif;
+      letter-spacing: 0.02em;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 150px; height: 67px; display: block; object-fit: contain; background: none; box-shadow: none; border-radius: 0; margin: 0;" />
+      </div>
+      <div class="user-info">
+        <span>Bem-vindo, <span id="userDisplay"></span></span>
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+        <a href="painel.html" class="logout-btn" style="background: var(--primary-light); margin-left: 8px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+      </div>
+    </div>
+  </header>
+  <main class="main-content">
+    <div class="card">
+      <div class="card-header">
+        <h2>Relatórios</h2>
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btn-relatorio-clientes">
+            <i class="fas fa-file-pdf"></i> Exportar Relatório PDF
+          </button>
+          <button class="btn btn-success" id="btn-relatorio-produtos">
+            <i class="fas fa-file-excel"></i> Exportar Relatório EXCEL
+          </button>
+        </div>
+      </div>
+      <div class="relatorio-area">
+        <h3>Relatórios Simulados</h3>
+        <ul>
+          <li>Total de clientes cadastrados: <b>127</b></li>
+          <li>Total de produtos disponíveis: <b>45</b></li>
+          <li>Pedidos realizados este mês: <b>32</b></li>
+          <li>Vendas totais do mês: <b>R$ 12.450,00</b></li>
+          <li>Lucro total do mês: <b style="color: var(--success-color);">R$ 4.850,00</b></li>
+        </ul>
+      </div>
+    </div>
+  </main>
+  <footer class="footer">
+    © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" style="color: #000; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
+  </footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Verificar se está logado
+      if (sessionStorage.getItem('loggedIn') !== 'true') {
+        window.location.href = 'index.html';
+      }
+
+      // Exibir nome do usuário
+      const username = sessionStorage.getItem('username') || 'Usuário';
+      document.getElementById('userDisplay').textContent = username;
+    });
+
+    function logout() {
+      sessionStorage.removeItem('loggedIn');
+      sessionStorage.removeItem('username');
+      window.location.href = 'index.html';
+    }
+
+    document.getElementById('btn-relatorio-clientes').onclick = function() {
+      gerarRelatorioPDF();
+    };
+    document.getElementById('btn-relatorio-produtos').onclick = function() {
+      gerarRelatorioExcel();
+    };
+
+    // Função para gerar relatório PDF
+    function gerarRelatorioPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Configurações de cores
+      const primaryColor = [102, 126, 234];
+      const successColor = [40, 167, 69];
+
+      // Cabeçalho
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 0, 210, 30, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('RELATÓRIO GERAL', 105, 15, { align: 'center' });
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, 25, { align: 'center' });
+
+      // Dados do relatório
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('RESUMO EXECUTIVO', 20, 45);
+
+      // Estatísticas
+      const estatisticas = [
+        ['Total de Clientes', '127'],
+        ['Total de Produtos', '45'],
+        ['Pedidos do Mês', '32'],
+        ['Vendas Totais', 'R$ 12.450,00'],
+        ['Lucro Total', 'R$ 4.850,00']
+      ];
+
+      doc.autoTable({
+        startY: 55,
+        head: [['Indicador', 'Valor']],
+        body: estatisticas,
+        theme: 'grid',
+        headStyles: {
+          fillColor: primaryColor,
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        styles: {
+          fontSize: 10,
+          cellPadding: 5
+        },
+        columnStyles: {
+          0: { fontStyle: 'bold' },
+          1: { halign: 'right' }
+        }
+      });
+
+      // Destaque do lucro
+      const finalY = doc.lastAutoTable.finalY + 15;
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...successColor);
+      doc.text('LUCRO TOTAL DO MÊS: R$ 4.850,00', 105, finalY, { align: 'center' });
+
+      // Análise de rentabilidade
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('ANÁLISE DE RENTABILIDADE', 20, finalY + 20);
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      const margemLucro = ((4850 / 12450) * 100).toFixed(1);
+      doc.text(`Margem de Lucro: ${margemLucro}%`, 20, finalY + 30);
+      doc.text(`Ticket Médio: R$ 389,06`, 20, finalY + 37);
+      doc.text(`Lucro Médio por Pedido: R$ 151,56`, 20, finalY + 44);
+
+      // Rodapé
+      const pageHeight = doc.internal.pageSize.height;
+      doc.setFillColor(240, 240, 240);
+      doc.rect(0, pageHeight - 30, 210, 30, 'F');
+      
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 20, { align: 'center' });
+      doc.text(`Relatório de Rentabilidade - ${new Date().toLocaleDateString('pt-BR')}`, 105, pageHeight - 15, { align: 'center' });
+
+      // Salvar PDF
+      const hoje = new Date();
+      const dataAtual = `${hoje.getDate().toString().padStart(2, '0')}-${(hoje.getMonth() + 1).toString().padStart(2, '0')}-${hoje.getFullYear()}`;
+      doc.save(`Relatorio_Geral_${dataAtual}.pdf`);
+    }
+
+    // Função para gerar relatório Excel
+    function gerarRelatorioExcel() {
+      // Dados do relatório
+      const dados = [
+        ['RELATÓRIO GERAL - J.P Sistemas'],
+        [''],
+        ['RESUMO EXECUTIVO'],
+        ['Indicador', 'Valor'],
+        ['Total de Clientes', 127],
+        ['Total de Produtos', 45],
+        ['Pedidos do Mês', 32],
+        ['Vendas Totais', 'R$ 12.450,00'],
+        ['Lucro Total', 'R$ 4.850,00'],
+        [''],
+        ['ANÁLISE DE RENTABILIDADE'],
+        ['Margem de Lucro', '39,0%'],
+        ['Ticket Médio', 'R$ 389,06'],
+        ['Lucro Médio por Pedido', 'R$ 151,56'],
+        [''],
+        ['DETALHAMENTO POR CATEGORIA'],
+        ['Categoria', 'Vendas', 'Lucro', 'Margem'],
+        ['Eletrônicos', 'R$ 5.200,00', 'R$ 2.080,00', '40,0%'],
+        ['Informática', 'R$ 4.150,00', 'R$ 1.660,00', '40,0%'],
+        ['Escritório', 'R$ 3.100,00', 'R$ 1.110,00', '35,8%'],
+        [''],
+        ['Gerado em:', new Date().toLocaleString('pt-BR')]
+      ];
+
+      // Criar planilha
+      const ws = XLSX.utils.aoa_to_sheet(dados);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Relatório Geral');
+
+      // Configurar largura das colunas
+      ws['!cols'] = [
+        { width: 25 },
+        { width: 15 }
+      ];
+
+      // Salvar arquivo
+      const hoje = new Date();
+      const dataAtual = `${hoje.getDate().toString().padStart(2, '0')}-${(hoje.getMonth() + 1).toString().padStart(2, '0')}-${hoje.getFullYear()}`;
+      XLSX.writeFile(wb, `Relatorio_Geral_${dataAtual}.xlsx`);
+    }
+  </script>
+</body>
+</html> 

@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pedidos e Vendas - J.P Sistemas Comercial</title>
+  <link rel="icon" href="https://i.imgur.com/WveVVY5.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #3b82f6;
+      --secondary-color: #1e40af;
+      --accent-color: #60a5fa;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --background: #f8fafc;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --shadow: rgba(37, 99, 235, 0.1);
+      --shadow-hover: rgba(37, 99, 235, 0.2);
+      --success-color: #059669;
+      --danger-color: #dc2626;
+      --light-color: #f9fafb;
+      --dark-color: #111827;
+      --bg-color: #f3f4f6;
+      --card-bg: #ffffff;
+      --border-radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: var(--text-primary);
+      padding: 0;
+      min-height: 100vh;
+    }
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 20px 0;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+    }
+    .logo img {
+      width: 150px;
+      height: 67px;
+      object-fit: contain;
+      background: none;
+      box-shadow: none;
+      border-radius: 0;
+      margin: 0;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .user-info span {
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .user-info #userDisplay {
+      font-weight: 700;
+    }
+    .logout-btn {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+    }
+    .main-content {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    #logo-container { text-align: center; margin-bottom: 25px; }
+    #logo { 
+      max-width: 100%; 
+      height: auto; 
+      max-height: 80px; 
+      filter: brightness(0) invert(1);
+      opacity: 0.9;
+    }
+    .card { 
+      background-color: var(--card-bg); 
+      border-radius: var(--border-radius); 
+      box-shadow: var(--shadow); 
+      padding: 25px; 
+      margin-bottom: 25px; 
+      border: 1px solid var(--border-color); 
+    }
+    .card-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .card-header .btn-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      width: 100%;
+    }
+    .card-header h2 { 
+      font-size: 1.8em; 
+      color: var(--dark-color); 
+      font-weight: 600; 
+      text-align: center;
+    }
+    .btn { 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 8px; 
+      padding: 12px 20px; 
+      border-radius: 8px; 
+      border: none; 
+      font-family: "Poppins", sans-serif; 
+      font-weight: 500; 
+      font-size: 0.95em; 
+      cursor: pointer; 
+      transition: all 0.3s ease; 
+      text-decoration: none; 
+    }
+    .btn-primary { 
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); 
+      color: white; 
+    }
+    .btn-primary:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    .btn-success { 
+      background: linear-gradient(135deg, var(--success-color), #20c997); 
+      color: white; 
+    }
+    .btn-success:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+    }
+    .btn-danger { 
+      background: linear-gradient(135deg, var(--danger-color), #c82333); 
+      color: white; 
+    }
+    .btn-danger:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+    thead th { 
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); 
+      color: white; 
+      font-weight: 600; 
+      white-space: nowrap; 
+    }
+    tbody tr:hover { background-color: #f8f9fa; }
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      max-width: 400px;
+      background: #fff;
+      border-radius: 24px;
+      border: 2px solid var(--border-color);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+      padding: 4px 16px 4px 14px;
+      margin: 0 auto 24px auto;
+      transition: all 0.3s ease;
+    }
+    .search-box:focus-within {
+      border-color: var(--primary-color);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.15);
+    }
+    .search-icon {
+      font-size: 1.35em;
+      color: var(--primary-color);
+      margin-right: 10px;
+      opacity: 0.85;
+      transition: color 0.2s;
+    }
+    #busca-pedido {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 1.13em;
+      font-family: "Poppins", sans-serif;
+      width: 100%;
+      padding: 10px 0 10px 0;
+      color: var(--text-color);
+      letter-spacing: 0.01em;
+    }
+    #busca-pedido::placeholder {
+      color: #b0b0b0;
+      opacity: 1;
+      font-size: 1em;
+      letter-spacing: 0.01em;
+    }
+    .table-responsive { max-height: 420px; overflow-y: auto; }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(15px);
+      margin: 2% auto;
+      padding: 0;
+      border-radius: var(--border-radius);
+      width: 98%;
+      max-width: 1200px;
+      max-height: 95vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      animation: slideIn 0.3s ease;
+      position: relative;
+    }
+
+    @keyframes slideIn {
+      from { 
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      to { 
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .close {
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .close:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .form-section {
+      margin-bottom: 24px;
+    }
+
+    .form-section h4 {
+      color: var(--dark-color);
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--primary-color);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-weight: 600;
+      color: var(--dark-color);
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 12px 16px;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-family: "Poppins", sans-serif;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .items-section {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .item-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .item-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .remove-item {
+      background: var(--danger-color);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .remove-item:hover {
+      transform: scale(1.1);
+      background: #c82333;
+    }
+
+    .add-item-btn {
+      background: var(--success-color);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: "Poppins", sans-serif;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .add-item-btn:hover {
+      background: #20c997;
+      transform: translateY(-1px);
+    }
+
+    .total-section {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: right;
+    }
+
+    .total-section h3 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .modal-footer {
+      padding: 20px 24px;
+      background: rgba(0, 0, 0, 0.02);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      position: sticky;
+      bottom: 0;
+    }
+
+    @media (max-width: 768px) {
+      .modal-content {
+        width: 99%;
+        margin: 1% auto;
+        max-width: 99vw;
+        max-height: 98vh;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .item-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .item-row > * {
+        width: 100%;
+      }
+    }
+
+    .footer {
+      width: 100%;
+      text-align: center;
+      padding: 18px 0 12px 0;
+      color: #000;
+      font-size: 15px;
+      background: transparent;
+      font-family: 'Inter', sans-serif;
+      letter-spacing: 0.02em;
+    }
+  </style>
+</head>
+<body>
+  <!-- Modal para Novo Pedido -->
+  <div id="novoPedidoModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Novo Pedido</h3>
+        <span class="close" id="closeNovoPedido">&times;</span>
+      </div>
+      <div class="modal-body">
+        <form id="novoPedidoForm">
+          <!-- Informações do Cliente -->
+          <div class="form-section">
+            <h4>Informações do Cliente</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="cliente">Cliente *</label>
+                <select id="cliente" required>
+                  <option value="">Selecione um cliente</option>
+                  <option value="Comercial ABC">Comercial ABC</option>
+                  <option value="Comercial XYZ">Comercial XYZ</option>
+                  <option value="Empresa DEF">Empresa DEF</option>
+                  <option value="Loja GHI">Loja GHI</option>
+                  <option value="Distribuidora JKL">Distribuidora JKL</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="formaPagamento">Forma de Pagamento *</label>
+                <select id="formaPagamento" required>
+                  <option value="">Selecione</option>
+                  <option value="Cartão de Crédito">Cartão de Crédito</option>
+                  <option value="Cartão de Débito">Cartão de Débito</option>
+                  <option value="PIX">PIX</option>
+                  <option value="Boleto Bancário">Boleto Bancário</option>
+                  <option value="Dinheiro">Dinheiro</option>
+                  <option value="Transferência">Transferência</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="telefone">Telefone</label>
+                <input type="tel" id="telefone" placeholder="(11) 99999-9999">
+              </div>
+              <div class="form-group">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" placeholder="cliente@empresa.com">
+              </div>
+            </div>
+            <div class="form-group full-width">
+              <label for="endereco">Endereço</label>
+              <input type="text" id="endereco" placeholder="Rua, número, bairro, cidade/estado">
+            </div>
+          </div>
+
+          <!-- Itens do Pedido -->
+          <div class="form-section">
+            <h4>Itens do Pedido</h4>
+            <div class="items-section">
+              <div id="itensContainer">
+                <!-- Itens serão adicionados aqui dinamicamente -->
+              </div>
+              <button type="button" class="add-item-btn" id="addItemBtn">
+                <i class="fas fa-plus"></i> Adicionar Item
+              </button>
+            </div>
+            <div class="total-section">
+              <h3>Total: R$ <span id="totalPedido">0,00</span></h3>
+            </div>
+          </div>
+
+          <!-- Observações -->
+          <div class="form-section">
+            <h4>Observações</h4>
+            <div class="form-group full-width">
+              <textarea id="observacoes" rows="3" placeholder="Observações sobre o pedido, instruções de entrega, etc."></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="salvarPedido">
+          <i class="fas fa-save"></i> Salvar Pedido
+        </button>
+        <button type="button" class="btn btn-danger" id="cancelarPedido">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 150px; height: 67px; display: block; object-fit: contain; background: none; box-shadow: none; border-radius: 0; margin: 0;" />
+      </div>
+      <div class="user-info">
+        <span>Bem-vindo, <span id="userDisplay"></span></span>
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+        <a href="painel.html" class="logout-btn" style="background: var(--primary-light); margin-left: 8px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+      </div>
+    </div>
+  </header>
+  <main class="main-content">
+    <div class="card">
+      <div class="card-header">
+        <h2>Pedidos e Vendas</h2>
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btn-novo-pedido">
+            <i class="fas fa-plus"></i> Novo Pedido
+          </button>
+          <button class="btn btn-primary" id="btn-exportar-pdf">
+            <i class="fas fa-file-pdf"></i> Exportar PDF
+          </button>
+          <button class="btn btn-success" id="btn-exportar-excel">
+            <i class="fas fa-file-excel"></i> Exportar Excel
+          </button>
+          <button class="btn btn-warning" id="btn-ir-caixa" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #fff;">
+            <i class="fas fa-cash-register"></i> Ir para o Caixa
+          </button>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: center; position: relative;">
+        <div class="search-box" style="width:100%;">
+          <span class="search-icon">&#128269;</span>
+          <input type="text" id="busca-pedido" placeholder="Buscar pedido..." autocomplete="off" />
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Cliente</th>
+              <th>Data</th>
+              <th>Status</th>
+              <th>Valor Total</th>
+              <th>Lucro</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="pedidos-tbody">
+            <tr>
+              <td>1001</td>
+              <td>Comercial ABC</td>
+              <td>25/06/2025</td>
+              <td><span style="color: var(--success-color); font-weight: bold;">Concluído</span></td>
+              <td>R$ 1.250,00</td>
+              <td>R$ 500,00</td>
+              <td>
+                <button class="btn btn-primary btn-sm"><i class="fas fa-eye"></i> Ver</button>
+                <button class="btn btn-success btn-sm"><i class="fas fa-edit"></i> Editar</button>
+                <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Remover</button>
+              </td>
+            </tr>
+            <tr>
+              <td>1002</td>
+              <td>Comercial XYZ</td>
+              <td>24/06/2025</td>
+              <td><span style="color: var(--danger-color); font-weight: bold;">Cancelado</span></td>
+              <td>R$ 890,00</td>
+              <td>R$ 0,00</td>
+              <td>
+                <button class="btn btn-primary btn-sm"><i class="fas fa-eye"></i> Ver</button>
+                <button class="btn btn-success btn-sm"><i class="fas fa-edit"></i> Editar</button>
+                <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Remover</button>
+              </td>
+            </tr>
+            <tr>
+              <td>1003</td>
+              <td>Empresa DEF</td>
+              <td>23/06/2025</td>
+              <td><span style="color: #f59e0b; font-weight: bold;">Em Processamento</span></td>
+              <td>R$ 2.150,00</td>
+              <td>R$ 1.000,00</td>
+              <td>
+                <button class="btn btn-primary btn-sm"><i class="fas fa-eye"></i> Ver</button>
+                <button class="btn btn-success btn-sm"><i class="fas fa-edit"></i> Editar</button>
+                <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Remover</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+  <footer class="footer">
+    © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" style="color: #000; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
+  </footer>
+  <script>
+    // Dados simulados dos pedidos
+    const pedidos = [
+      {
+        id: "1001",
+        cliente: "Comercial ABC",
+        data: "25/06/2025",
+        status: "Concluído",
+        valorTotal: "R$ 1.250,00",
+        lucro: "R$ 500,00",
+        itens: [
+          { produto: "Produto A", quantidade: 2, precoUnitario: "R$ 150,00", subtotal: "R$ 300,00" },
+          { produto: "Produto B", quantidade: 1, precoUnitario: "R$ 89,90", subtotal: "R$ 89,90" },
+          { produto: "Produto C", quantidade: 3, precoUnitario: "R$ 45,50", subtotal: "R$ 136,50" },
+          { produto: "Produto D", quantidade: 1, precoUnitario: "R$ 220,00", subtotal: "R$ 220,00" },
+          { produto: "Produto E", quantidade: 2, precoUnitario: "R$ 75,00", subtotal: "R$ 150,00" }
+        ],
+        endereco: "Rua das Flores, 123 - Centro - São Paulo/SP",
+        telefone: "(11) 99999-9999",
+        email: "contato@comercialabc.com.br",
+        formaPagamento: "Cartão de Crédito",
+        observacoes: "Entrega preferencialmente no período da manhã."
+      },
+      {
+        id: "1002",
+        cliente: "Comercial XYZ",
+        data: "24/06/2025",
+        status: "Cancelado",
+        valorTotal: "R$ 890,00",
+        lucro: "R$ 0,00",
+        itens: [
+          { produto: "Produto B", quantidade: 2, precoUnitario: "R$ 89,90", subtotal: "R$ 179,80" },
+          { produto: "Produto C", quantidade: 1, precoUnitario: "R$ 45,50", subtotal: "R$ 45,50" },
+          { produto: "Produto E", quantidade: 3, precoUnitario: "R$ 75,00", subtotal: "R$ 225,00" }
+        ],
+        endereco: "Av. Paulista, 1000 - Bela Vista - São Paulo/SP",
+        telefone: "(11) 88888-8888",
+        email: "vendas@comercialxyz.com.br",
+        formaPagamento: "PIX",
+        observacoes: "Pedido cancelado por solicitação do cliente."
+      },
+      {
+        id: "1003",
+        cliente: "Empresa DEF",
+        data: "23/06/2025",
+        status: "Em Processamento",
+        valorTotal: "R$ 2.150,00",
+        lucro: "R$ 1.000,00",
+        itens: [
+          { produto: "Produto A", quantidade: 3, precoUnitario: "R$ 150,00", subtotal: "R$ 450,00" },
+          { produto: "Produto D", quantidade: 2, precoUnitario: "R$ 220,00", subtotal: "R$ 440,00" },
+          { produto: "Produto E", quantidade: 4, precoUnitario: "R$ 75,00", subtotal: "R$ 300,00" }
+        ],
+        endereco: "Rua Augusta, 500 - Consolação - São Paulo/SP",
+        telefone: "(11) 77777-7777",
+        email: "pedidos@empresadef.com.br",
+        formaPagamento: "Boleto Bancário",
+        observacoes: "Entrega urgente solicitada."
+      }
+    ];
+
+    // Dados dos produtos disponíveis com preços de custo e venda
+    const produtos = [
+      { id: 1, nome: "Produto A", precoCusto: 120.00, precoVenda: 150.00, categoria: "Eletrônicos" },
+      { id: 2, nome: "Produto B", precoCusto: 65.00, precoVenda: 89.90, categoria: "Informática" },
+      { id: 3, nome: "Produto C", precoCusto: 32.00, precoVenda: 45.50, categoria: "Escritório" },
+      { id: 4, nome: "Produto D", precoCusto: 175.00, precoVenda: 220.00, categoria: "Eletrônicos" },
+      { id: 5, nome: "Produto E", precoCusto: 55.00, precoVenda: 75.00, categoria: "Informática" }
+    ];
+
+    // Variáveis globais
+    let itemCounter = 0;
+    let novoPedidoItens = [];
+
+    // Função utilitária para carregar imagem como base64
+    function carregarImagemBase64(url, callback) {
+      const img = new window.Image();
+      img.setAttribute('crossOrigin', 'anonymous');
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const dataURL = canvas.toDataURL('image/png');
+        callback(dataURL);
+      };
+      img.src = url;
+    }
+
+    // Função para gerar PDF do pedido
+    function gerarPDFPedido(pedidoId) {
+      const pedido = pedidos.find(p => p.id === pedidoId);
+      if (!pedido) {
+        alert('Pedido não encontrado!');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Configurações de cores
+      const primaryColor = [102, 126, 234];
+      const secondaryColor = [118, 75, 162];
+      const successColor = [40, 167, 69];
+      const dangerColor = [220, 53, 69];
+
+      // Inserir logo no lugar do texto
+      carregarImagemBase64('https://i.imgur.com/2jT2EPD.png', function(logoBase64) {
+        // Logo centralizada
+        const logoWidth = 50;
+        const logoHeight = 22;
+        const logoX = (210 - logoWidth) / 2;
+        const logoY = 8;
+        doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Pedido de Venda', 105, 32, { align: 'center' });
+        doc.text(`Data: ${pedido.data}`, 105, 38, { align: 'center' });
+
+        // Informações do pedido
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`PEDIDO #${pedido.id}`, 20, 55);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Status:', 20, 65);
+        // Status colorido
+        if (pedido.status === 'Concluído') {
+          doc.setTextColor(...successColor);
+        } else if (pedido.status === 'Cancelado') {
+          doc.setTextColor(...dangerColor);
+        } else {
+          doc.setTextColor(255, 165, 0);
+        }
+        doc.setFont('helvetica', 'bold');
+        doc.text(pedido.status, 45, 65);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont('helvetica', 'normal');
+        // Informações do cliente
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('INFORMAÇÕES DO CLIENTE', 20, 85);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Cliente: ${pedido.cliente}`, 20, 95);
+        doc.text(`Endereço: ${pedido.endereco}`, 20, 102);
+        doc.text(`Telefone: ${pedido.telefone}`, 20, 109);
+        doc.text(`E-mail: ${pedido.email}`, 20, 116);
+        doc.text(`Forma de Pagamento: ${pedido.formaPagamento}`, 20, 123);
+        // Itens do pedido
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('ITENS DO PEDIDO', 20, 145);
+        // Tabela de itens
+        const tableData = pedido.itens.map(item => [
+          item.produto,
+          item.quantidade,
+          item.precoUnitario,
+          item.subtotal
+        ]);
+        doc.autoTable({
+          startY: 150,
+          head: [['Produto', 'Qtd', 'Preço Unit.', 'Subtotal']],
+          body: tableData,
+          theme: 'grid',
+          headStyles: {
+            fillColor: primaryColor,
+            textColor: [255, 255, 255],
+            fontStyle: 'bold'
+          },
+          styles: {
+            fontSize: 9,
+            cellPadding: 3
+          },
+          columnStyles: {
+            1: { halign: 'center' },
+            2: { halign: 'right' },
+            3: { halign: 'right' }
+          }
+        });
+        // Total
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Valor Total: ${pedido.valorTotal}`, 150, finalY);
+        // Observações
+        if (pedido.observacoes) {
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'bold');
+          doc.text('OBSERVAÇÕES:', 20, finalY + 20);
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          const observacoes = doc.splitTextToSize(pedido.observacoes, 170);
+          doc.text(observacoes, 20, finalY + 28);
+        }
+        // Rodapé
+        const pageHeight = doc.internal.pageSize.height;
+        doc.setFillColor(240, 240, 240);
+        doc.rect(0, pageHeight - 30, 210, 30, 'F');
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 20, { align: 'center' });
+        doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, pageHeight - 15, { align: 'center' });
+        // Salvar PDF
+        doc.save(`Pedido_${pedido.id}_${pedido.cliente.replace(/\s+/g, '_')}.pdf`);
+      });
+    }
+
+    // Função para gerar PDF com todos os pedidos
+    function gerarPDFTodosPedidos() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      // Configurações de cores
+      const primaryColor = [102, 126, 234];
+      const secondaryColor = [118, 75, 162];
+      // Inserir logo no lugar do texto
+      carregarImagemBase64('https://i.imgur.com/2jT2EPD.png', function(logoBase64) {
+        // Logo centralizada
+        const logoWidth = 50;
+        const logoHeight = 22;
+        const logoX = (210 - logoWidth) / 2;
+        const logoY = 5;
+        doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, 25, { align: 'center' });
+        // Tabela de pedidos
+        const tableData = pedidos.map(pedido => [
+          pedido.id,
+          pedido.cliente,
+          pedido.data,
+          pedido.status,
+          pedido.valorTotal
+        ]);
+        doc.autoTable({
+          startY: 40,
+          head: [['ID', 'Cliente', 'Data', 'Status', 'Valor Total']],
+          body: tableData,
+          theme: 'grid',
+          headStyles: {
+            fillColor: primaryColor,
+            textColor: [255, 255, 255],
+            fontStyle: 'bold'
+          },
+          styles: {
+            fontSize: 9,
+            cellPadding: 3
+          },
+          columnStyles: {
+            0: { halign: 'center' },
+            2: { halign: 'center' },
+            3: { halign: 'center' },
+            4: { halign: 'right' }
+          }
+        });
+        // Total geral
+        const totalGeral = pedidos.reduce((total, pedido) => {
+          return total + parseFloat(pedido.valorTotal.replace('R$ ', '').replace(',', '.'));
+        }, 0);
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Total Geral: R$ ${totalGeral.toFixed(2).replace('.', ',')}`, 150, finalY);
+        // Estatísticas
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Total de Pedidos: ${pedidos.length}`, 20, finalY + 15);
+        const concluidos = pedidos.filter(p => p.status === 'Concluído').length;
+        const cancelados = pedidos.filter(p => p.status === 'Cancelado').length;
+        const processamento = pedidos.filter(p => p.status === 'Em Processamento').length;
+        doc.text(`Concluídos: ${concluidos}`, 20, finalY + 22);
+        doc.text(`Cancelados: ${cancelados}`, 20, finalY + 29);
+        doc.text(`Em Processamento: ${processamento}`, 20, finalY + 36);
+        // Salvar PDF
+        doc.save(`Relatorio_Pedidos_${new Date().toISOString().split('T')[0]}.pdf`);
+      });
+    }
+
+    // Função para gerar Excel com todos os pedidos
+    function gerarExcelTodosPedidos() {
+      // Criar conteúdo CSV
+      let csvContent = "ID,Cliente,Data,Status,Valor Total,Forma Pagamento,Telefone,Email\n";
+      
+      pedidos.forEach(pedido => {
+        csvContent += `${pedido.id},"${pedido.cliente}","${pedido.data}","${pedido.status}","${pedido.valorTotal}","${pedido.formaPagamento}","${pedido.telefone}","${pedido.email}"\n`;
+      });
+
+      // Criar e baixar arquivo
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Relatorio_Pedidos_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Funções do modal de novo pedido
+    function abrirModalNovoPedido() {
+      document.getElementById('novoPedidoModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      limparFormulario();
+      adicionarItemPadrao();
+    }
+
+    function fecharModalNovoPedido() {
+      document.getElementById('novoPedidoModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+      limparFormulario();
+    }
+
+    function limparFormulario() {
+      document.getElementById('novoPedidoForm').reset();
+      document.getElementById('itensContainer').innerHTML = '';
+      novoPedidoItens = [];
+      itemCounter = 0;
+      atualizarTotal();
+    }
+
+    function adicionarItemPadrao() {
+      const itemHtml = `
+        <div class="item-row" data-item-id="${itemCounter}">
+          <select class="produto-select" onchange="atualizarPreco(${itemCounter})">
+            <option value="">Selecione um produto</option>
+            ${produtos.map(p => `<option value="${p.id}" data-preco="${p.precoVenda}">${p.nome} - R$ ${p.precoVenda.toFixed(2).replace('.', ',')}</option>`).join('')}
+          </select>
+          <input type="number" class="quantidade-input" value="1" min="1" onchange="calcularSubtotal(${itemCounter})" onkeyup="calcularSubtotal(${itemCounter})">
+          <input type="text" class="preco-input" value="R$ 0,00" readonly>
+          <input type="text" class="subtotal-input" value="R$ 0,00" readonly>
+          <button type="button" class="remove-item" onclick="removerItem(${itemCounter})">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      `;
+      
+      document.getElementById('itensContainer').insertAdjacentHTML('beforeend', itemHtml);
+      novoPedidoItens.push({
+        id: itemCounter,
+        produto: '',
+        quantidade: 1,
+        preco: 0,
+        subtotal: 0
+      });
+      itemCounter++;
+    }
+
+    function adicionarItem() {
+      adicionarItemPadrao();
+    }
+
+    function removerItem(itemId) {
+      const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
+      if (itemElement) {
+        itemElement.remove();
+        novoPedidoItens = novoPedidoItens.filter(item => item.id !== itemId);
+        atualizarTotal();
+      }
+    }
+
+    function atualizarPreco(itemId) {
+      const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
+      const select = itemElement.querySelector('.produto-select');
+      const precoInput = itemElement.querySelector('.preco-input');
+      
+      if (select.value) {
+        const produto = produtos.find(p => p.id == select.value);
+        if (produto) {
+          precoInput.value = `R$ ${produto.precoVenda.toFixed(2).replace('.', ',')}`;
+          const item = novoPedidoItens.find(i => i.id === itemId);
+          if (item) {
+            item.produto = produto.nome;
+            item.preco = produto.precoVenda;
+            calcularSubtotal(itemId);
+          }
+        }
+      }
+    }
+
+    function calcularSubtotal(itemId) {
+      const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
+      const quantidadeInput = itemElement.querySelector('.quantidade-input');
+      const precoInput = itemElement.querySelector('.preco-input');
+      const subtotalInput = itemElement.querySelector('.subtotal-input');
+      
+      const quantidade = parseInt(quantidadeInput.value) || 0;
+      const preco = parseFloat(precoInput.value.replace('R$ ', '').replace(',', '.')) || 0;
+      const subtotal = quantidade * preco;
+      
+      subtotalInput.value = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
+      
+      const item = novoPedidoItens.find(i => i.id === itemId);
+      if (item) {
+        item.quantidade = quantidade;
+        item.subtotal = subtotal;
+      }
+      
+      atualizarTotal();
+    }
+
+    function atualizarTotal() {
+      const total = novoPedidoItens.reduce((sum, item) => sum + item.subtotal, 0);
+      document.getElementById('totalPedido').textContent = total.toFixed(2).replace('.', ',');
+    }
+
+    function salvarPedido() {
+      const cliente = document.getElementById('cliente').value;
+      const formaPagamento = document.getElementById('formaPagamento').value;
+      const telefone = document.getElementById('telefone').value;
+      const email = document.getElementById('email').value;
+      const endereco = document.getElementById('endereco').value;
+      const observacoes = document.getElementById('observacoes').value;
+      const editandoId = document.getElementById('salvarPedido').getAttribute('data-editando');
+
+      if (!cliente || !formaPagamento) {
+        alert('Por favor, preencha os campos obrigatórios (Cliente e Forma de Pagamento).');
+        return;
+      }
+
+      if (novoPedidoItens.length === 0 || novoPedidoItens.every(item => item.produto === '')) {
+        alert('Por favor, adicione pelo menos um item ao pedido.');
+        return;
+      }
+
+      const hoje = new Date().toLocaleDateString('pt-BR');
+      const total = novoPedidoItens.reduce((sum, item) => sum + item.subtotal, 0);
+
+      if (editandoId) {
+        // Editar pedido existente
+        const pedido = pedidos.find(p => p.id === editandoId);
+        if (pedido) {
+          pedido.cliente = cliente;
+          pedido.formaPagamento = formaPagamento;
+          pedido.telefone = telefone || 'Não informado';
+          pedido.email = email || 'Não informado';
+          pedido.endereco = endereco || 'Não informado';
+          pedido.observacoes = observacoes || '';
+          pedido.itens = novoPedidoItens.map(item => ({
+            produto: item.produto,
+            quantidade: item.quantidade,
+            precoUnitario: `R$ ${item.preco.toFixed(2).replace('.', ',')}`,
+            subtotal: `R$ ${item.subtotal.toFixed(2).replace('.', ',')}`
+          }));
+          pedido.valorTotal = `R$ ${total.toFixed(2).replace('.', ',')}`;
+          // Atualizar tabela
+          const tbody = document.getElementById('pedidos-tbody');
+          const row = Array.from(tbody.rows).find(r => r.cells[0].textContent === editandoId);
+          if (row) {
+            row.cells[1].textContent = pedido.cliente;
+            row.cells[2].textContent = pedido.data;
+            row.cells[3].innerHTML = `<span style="color: #f59e0b; font-weight: bold;">${pedido.status}</span>`;
+            row.cells[4].textContent = pedido.valorTotal;
+            row.cells[5].textContent = pedido.lucro || 'R$ 0,00';
+          }
+        }
+        alert('Pedido editado com sucesso!');
+        document.getElementById('salvarPedido').removeAttribute('data-editando');
+        fecharModalNovoPedido();
+        return;
+      }
+
+      // Criar novo pedido
+      const novoId = (Math.max(...pedidos.map(p => parseInt(p.id))) + 1).toString();
+      const novoPedido = {
+        id: novoId,
+        cliente: cliente,
+        data: hoje,
+        status: "Em Processamento",
+        valorTotal: `R$ ${total.toFixed(2).replace('.', ',')}`,
+        lucro: "R$ 0,00",
+        itens: novoPedidoItens.map(item => ({
+          produto: item.produto,
+          quantidade: item.quantidade,
+          precoUnitario: `R$ ${item.preco.toFixed(2).replace('.', ',')}`,
+          subtotal: `R$ ${item.subtotal.toFixed(2).replace('.', ',')}`
+        })),
+        endereco: endereco || "Não informado",
+        telefone: telefone || "Não informado",
+        email: email || "Não informado",
+        formaPagamento: formaPagamento,
+        observacoes: observacoes || ""
+      };
+
+      // Adicionar à lista de pedidos
+      pedidos.push(novoPedido);
+
+      // Adicionar à tabela
+      const tbody = document.getElementById('pedidos-tbody');
+      const newRow = `
+        <tr>
+          <td>${novoPedido.id}</td>
+          <td>${novoPedido.cliente}</td>
+          <td>${novoPedido.data}</td>
+          <td><span style="color: #f59e0b; font-weight: bold;">${novoPedido.status}</span></td>
+          <td>${novoPedido.valorTotal}</td>
+          <td>R$ 0,00</td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="gerarPDFPedido('${novoPedido.id}')"><i class="fas fa-eye"></i> Ver</button>
+            <button class="btn btn-success btn-sm" onclick="editarPedido('${novoPedido.id}')"><i class="fas fa-edit"></i> Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="removerPedido('${novoPedido.id}')"><i class="fas fa-trash"></i> Remover</button>
+          </td>
+        </tr>
+      `;
+      tbody.insertAdjacentHTML('beforeend', newRow);
+
+      alert('Pedido criado com sucesso!');
+      fecharModalNovoPedido();
+    }
+
+    // Função para remover pedido
+    function removerPedido(pedidoId) {
+      if (!confirm('Tem certeza que deseja remover este pedido?')) return;
+      // Remover do array
+      const index = pedidos.findIndex(p => p.id === pedidoId);
+      if (index !== -1) {
+        pedidos.splice(index, 1);
+      }
+      // Remover da tabela
+      const tbody = document.getElementById('pedidos-tbody');
+      const row = Array.from(tbody.rows).find(r => r.cells[0].textContent === pedidoId);
+      if (row) {
+        tbody.removeChild(row);
+      }
+    }
+
+    // Função para preencher o modal com dados do pedido para edição
+    function editarPedido(pedidoId) {
+      const pedido = pedidos.find(p => p.id === pedidoId);
+      if (!pedido) return;
+      abrirModalNovoPedido();
+      // Preencher campos
+      document.getElementById('cliente').value = pedido.cliente;
+      document.getElementById('formaPagamento').value = pedido.formaPagamento;
+      document.getElementById('telefone').value = pedido.telefone !== 'Não informado' ? pedido.telefone : '';
+      document.getElementById('email').value = pedido.email !== 'Não informado' ? pedido.email : '';
+      document.getElementById('endereco').value = pedido.endereco !== 'Não informado' ? pedido.endereco : '';
+      document.getElementById('observacoes').value = pedido.observacoes || '';
+      // Limpar itens
+      document.getElementById('itensContainer').innerHTML = '';
+      novoPedidoItens = [];
+      itemCounter = 0;
+      // Adicionar itens do pedido
+      pedido.itens.forEach(item => {
+        const produtoObj = produtos.find(p => p.nome === item.produto);
+        const itemHtml = `
+          <div class="item-row" data-item-id="${itemCounter}">
+            <select class="produto-select" onchange="atualizarPreco(${itemCounter})">
+              <option value="">Selecione um produto</option>
+              ${produtos.map(p => `<option value="${p.id}" data-preco="${p.precoVenda}"${produtoObj && p.nome === item.produto ? ' selected' : ''}>${p.nome} - R$ ${p.precoVenda.toFixed(2).replace('.', ',')}</option>`).join('')}
+            </select>
+            <input type="number" class="quantidade-input" value="${item.quantidade}" min="1" onchange="calcularSubtotal(${itemCounter})" onkeyup="calcularSubtotal(${itemCounter})">
+            <input type="text" class="preco-input" value="${item.precoUnitario}" readonly>
+            <input type="text" class="subtotal-input" value="${item.subtotal}" readonly>
+            <button type="button" class="remove-item" onclick="removerItem(${itemCounter})">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        `;
+        document.getElementById('itensContainer').insertAdjacentHTML('beforeend', itemHtml);
+        novoPedidoItens.push({
+          id: itemCounter,
+          produto: item.produto,
+          quantidade: item.quantidade,
+          preco: produtoObj ? produtoObj.precoVenda : 0,
+          subtotal: parseFloat(item.subtotal.replace('R$ ', '').replace(',', '.'))
+        });
+        itemCounter++;
+      });
+      atualizarTotal();
+      // Marcar que está editando
+      document.getElementById('salvarPedido').setAttribute('data-editando', pedidoId);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Verificar se está logado
+      if (sessionStorage.getItem('loggedIn') !== 'true') {
+        window.location.href = 'index.html';
+      }
+      // Exibir nome do usuário
+      const username = sessionStorage.getItem('username') || 'Usuário';
+      document.getElementById('userDisplay').textContent = username;
+
+      // Event listeners do modal
+      document.getElementById('btn-novo-pedido').addEventListener('click', abrirModalNovoPedido);
+      document.getElementById('closeNovoPedido').addEventListener('click', fecharModalNovoPedido);
+      document.getElementById('cancelarPedido').addEventListener('click', fecharModalNovoPedido);
+      document.getElementById('addItemBtn').addEventListener('click', adicionarItem);
+      document.getElementById('salvarPedido').addEventListener('click', salvarPedido);
+
+      // Fechar modal ao clicar fora
+      window.addEventListener('click', function(event) {
+        const modal = document.getElementById('novoPedidoModal');
+        if (event.target === modal) {
+          fecharModalNovoPedido();
+        }
+      });
+
+      // Fechar modal com ESC
+      document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+          fecharModalNovoPedido();
+        }
+      });
+
+      // Adicionar event listeners aos botões "Ver", "Editar" e "Remover" existentes
+      const tbody = document.getElementById('pedidos-tbody');
+      Array.from(tbody.rows).forEach(row => {
+        const pedidoId = row.cells[0].textContent;
+        // Ver
+        const verBtn = row.querySelector('.btn-primary');
+        if (verBtn && verBtn.textContent.includes('Ver')) {
+          verBtn.onclick = function() { gerarPDFPedido(pedidoId); };
+        }
+        // Editar
+        const editarBtn = row.querySelector('.btn-success');
+        if (editarBtn && editarBtn.textContent.includes('Editar')) {
+          editarBtn.onclick = function() { editarPedido(pedidoId); };
+        }
+        // Remover
+        const removerBtn = row.querySelector('.btn-danger');
+        if (removerBtn && removerBtn.textContent.includes('Remover')) {
+          removerBtn.onclick = function() { removerPedido(pedidoId); };
+        }
+      });
+
+      // Busca em tempo real
+      document.getElementById('busca-pedido').addEventListener('input', function() {
+        const termo = this.value.toLowerCase();
+        const linhas = document.querySelectorAll('#pedidos-tbody tr');
+        
+        linhas.forEach(linha => {
+          const texto = linha.textContent.toLowerCase();
+          if (texto.includes(termo)) {
+            linha.style.display = '';
+          } else {
+            linha.style.display = 'none';
+          }
+        });
+      });
+
+      // Exportar PDF
+      document.getElementById('btn-exportar-pdf').onclick = function() {
+        gerarPDFTodosPedidos();
+      };
+      
+      // Exportar Excel
+      document.getElementById('btn-exportar-excel').onclick = function() {
+        gerarExcelTodosPedidos();
+      };
+
+      // Ir para o Caixa
+      document.getElementById('btn-ir-caixa').onclick = function() {
+        window.location.href = 'caixa.html';
+      };
+    });
+
+    function logout() {
+      sessionStorage.removeItem('loggedIn');
+      sessionStorage.removeItem('username');
+      window.location.href = 'index.html';
+    }
+
+    // Função para calcular o lucro de um pedido
+    function calcularLucroPedido(pedido) {
+      if (pedido.status === 'Cancelado') {
+        return 0;
+      }
+      
+      let lucroTotal = 0;
+      
+      pedido.itens.forEach(item => {
+        const produto = produtos.find(p => p.nome === item.produto);
+        if (produto) {
+          const quantidade = item.quantidade;
+          const lucroUnitario = produto.precoVenda - produto.precoCusto;
+          lucroTotal += lucroUnitario * quantidade;
+        }
+      });
+      
+      return lucroTotal;
+    }
+
+    // Função para formatar valor em reais
+    function formatarMoeda(valor) {
+      return `R$ ${valor.toFixed(2).replace('.', ',')}`;
+    }
+  </script>
+</body>
+</html> 
