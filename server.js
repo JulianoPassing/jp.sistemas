@@ -233,22 +233,22 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Rota pública para listar clientes (exemplo para banco do admin)
+// Rota para listar clientes
 app.get('/api/clientes', async (req, res) => {
   try {
-    // Conectar ao banco do admin (ajuste para multi-tenant se necessário)
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin', // ou o banco correto do usuário logado
-      charset: 'utf8mb4'
-    });
+    // Verificar se o usuário está logado
+    if (!req.session.user) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
 
+    // Usar o banco específico do usuário
+    const connection = await createUserDatabaseConnection(req.session.user.username);
+    
     const [rows] = await connection.execute('SELECT * FROM clientes ORDER BY razao');
     await connection.end();
     res.json(rows);
   } catch (error) {
+    console.error('Erro ao listar clientes:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -330,18 +330,19 @@ app.delete('/api/clientes/:id', async (req, res) => {
 // Rota para listar produtos
 app.get('/api/produtos', async (req, res) => {
   try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin',
-      charset: 'utf8mb4'
-    });
+    // Verificar se o usuário está logado
+    if (!req.session.user) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
 
+    // Usar o banco específico do usuário
+    const connection = await createUserDatabaseConnection(req.session.user.username);
+    
     const [rows] = await connection.execute('SELECT * FROM produtos ORDER BY nome');
     await connection.end();
     res.json(rows);
   } catch (error) {
+    console.error('Erro ao listar produtos:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -449,13 +450,14 @@ app.delete('/api/produtos/:id', async (req, res) => {
 // Listar pedidos
 app.get('/api/pedidos', async (req, res) => {
   try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin',
-      charset: 'utf8mb4'
-    });
+    // Verificar se o usuário está logado
+    if (!req.session.user) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+
+    // Usar o banco específico do usuário
+    const connection = await createUserDatabaseConnection(req.session.user.username);
+    
     const [rows] = await connection.execute(`
       SELECT p.*, c.razao as nome_cliente, c.cnpj, c.telefone, c.email, c.endereco 
       FROM pedidos p 
@@ -492,6 +494,7 @@ app.get('/api/pedidos', async (req, res) => {
     await connection.end();
     res.json(pedidosComItens);
   } catch (error) {
+    console.error('Erro ao listar pedidos:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -528,14 +531,24 @@ app.get('/api/pedidos/:id', async (req, res) => {
 // Criar novo pedido
 app.post('/api/pedidos', async (req, res) => {
   try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin',
-      charset: 'utf8mb4'
+    // Verificar se o usuário está logado
+    if (!req.session.user) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+
+    // Usar o banco específico do usuário
+    const connection = await createUserDatabaseConnection(req.session.user.username);
+    
+    const { cliente_id, data_pedido, status, valor_total, observacoes, itens } = req.body;
+    
+    console.log('Dados do pedido recebidos:', {
+      cliente_id,
+      data_pedido,
+      status,
+      valor_total,
+      observacoes,
+      itens: itens ? itens.length : 0
     });
-    const { cliente_id, data_pedido, status, valor_total, observacoes } = req.body;
     
     // Normalizar o status
     const statusNormalizado = normalizarStatus(status);
@@ -545,19 +558,48 @@ app.post('/api/pedidos', async (req, res) => {
     if (data_pedido) {
       try {
         const data = new Date(data_pedido);
-        dataFormatada = data.toISOString().split('T')[0]; // Pega apenas a parte da data (YYYY-MM-DD)
+        dataFormatada = data.toISOString().split('T')[0];
       } catch (error) {
         console.log('Erro ao formatar data, usando data original:', data_pedido);
       }
     }
     
+    // Inserir o pedido
     const [result] = await connection.execute(
       'INSERT INTO pedidos (cliente_id, data_pedido, status, valor_total, observacoes) VALUES (?, ?, ?, ?, ?)',
-      [cliente_id, dataFormatada, statusNormalizado, valor_total, observacoes]
+      [cliente_id || null, dataFormatada, statusNormalizado, valor_total, observacoes]
     );
+    
+    const pedidoId = result.insertId;
+    console.log('Pedido criado com ID:', pedidoId);
+    
+    // Inserir os itens do pedido se fornecidos
+    if (itens && itens.length > 0) {
+      console.log('Inserindo itens do pedido...');
+      for (const item of itens) {
+        await connection.execute(
+          'INSERT INTO pedido_itens (pedido_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)',
+          [pedidoId, item.id, item.qtd, item.preco_venda]
+        );
+      }
+      console.log(`${itens.length} itens inseridos`);
+    }
+    
     await connection.end();
-    res.status(201).json({ id: result.insertId, message: 'Pedido criado com sucesso' });
+    res.status(201).json({ 
+      id: pedidoId, 
+      message: 'Pedido criado com sucesso',
+      pedido: {
+        id: pedidoId,
+        cliente_id,
+        data_pedido: dataFormatada,
+        status: statusNormalizado,
+        valor_total,
+        observacoes
+      }
+    });
   } catch (error) {
+    console.error('Erro ao criar pedido:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -860,6 +902,47 @@ app.get('/ajuda', (req, res) => {
 // Fallback para SPA ou 404
 app.get('*', (req, res) => {
   res.sendFile(path.join(publicPath, 'index.html'));
+});
+
+// Rota de teste para verificar status
+app.get('/api/test', async (req, res) => {
+  try {
+    res.json({ 
+      status: 'OK',
+      message: 'API funcionando',
+      session: req.session ? 'Sessão ativa' : 'Sem sessão',
+      user: req.session?.user ? req.session.user.username : 'Usuário não logado',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Rota para verificar banco do usuário
+app.get('/api/test-db', async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+
+    const connection = await createUserDatabaseConnection(req.session.user.username);
+    
+    // Testar conexão
+    const [result] = await connection.execute('SELECT 1 as test');
+    
+    await connection.end();
+    
+    res.json({ 
+      status: 'OK',
+      message: 'Conexão com banco OK',
+      user: req.session.user.username,
+      test: result[0].test
+    });
+  } catch (error) {
+    console.error('Erro no teste de banco:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 module.exports = app;
