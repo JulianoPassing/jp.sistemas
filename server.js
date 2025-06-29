@@ -40,7 +40,6 @@ app.use(session({
 // Função para criar conexão com banco de dados específico do usuário
 async function createUserDatabaseConnection(username) {
   const dbConfig = getUserDatabaseConfig(username);
-  
   try {
     const connection = await mysql.createConnection(dbConfig);
     return connection;
@@ -53,7 +52,6 @@ async function createUserDatabaseConnection(username) {
 // Função para criar banco de dados do usuário
 async function createUserDatabase(username) {
   const dbName = `jpsistemas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
-  
   try {
     // Conectar como root para criar o banco
     const rootConfig = getRootConfig();
@@ -96,10 +94,15 @@ async function createUserDatabase(username) {
         id INT AUTO_INCREMENT PRIMARY KEY,
         nome VARCHAR(255) NOT NULL,
         descricao TEXT,
-        preco DECIMAL(10,2),
+        preco_custo DECIMAL(10,2),
+        preco_venda DECIMAL(10,2),
         categoria VARCHAR(100),
         codigo VARCHAR(50),
         estoque INT DEFAULT 0,
+        fornecedor VARCHAR(255),
+        peso VARCHAR(50),
+        dimensoes VARCHAR(100),
+        status VARCHAR(50) DEFAULT 'Ativo',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_nome (nome),
@@ -164,17 +167,13 @@ function requireAuth(req, res, next) {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    
-    // Conectar ao banco principal de usuários
     const usersConfig = getUsersConfig();
     const connection = await mysql.createConnection(usersConfig);
 
-    // Buscar usuário
     const [users] = await connection.execute(
       'SELECT * FROM users WHERE username = ? AND is_active = TRUE',
       [username]
     );
-
     await connection.end();
 
     if (users.length === 0) {
@@ -182,14 +181,11 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     const user = users[0];
-
-    // Verificar senha
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Senha incorreta' });
     }
 
-    // Criar ou verificar banco de dados do usuário
     try {
       await createUserDatabase(username);
     } catch (dbError) {
@@ -197,7 +193,6 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(500).json({ error: 'Erro interno do servidor' });
     }
 
-    // Criar sessão
     req.session.user = {
       id: user.id,
       username: user.username,
@@ -222,227 +217,414 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-app.post('/api/auth/register', async (req, res) => {
+// Rota pública para listar clientes (exemplo para banco do admin)
+app.get('/api/clientes', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-    
-    // Conectar ao banco principal de usuários
+    // Conectar ao banco do admin (ajuste para multi-tenant se necessário)
     const connection = await mysql.createConnection({
-      host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'jpsistemas',
-      password: process.env.DB_PASSWORD || 'SuaSenhaForte123!',
-      database: 'jpsistemas_users',
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_admin', // ou o banco correto do usuário logado
       charset: 'utf8mb4'
     });
 
-    // Verificar se usuário já existe
-    const [existingUsers] = await connection.execute(
-      'SELECT * FROM users WHERE username = ? OR email = ?',
-      [username, email]
-    );
+    const [rows] = await connection.execute('SELECT * FROM clientes ORDER BY razao');
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-    if (existingUsers.length > 0) {
-      await connection.end();
-      return res.status(400).json({ error: 'Usuário ou email já existe' });
-    }
+// Rota para criar novo cliente
+app.post('/api/clientes', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_admin',
+      charset: 'utf8mb4'
+    });
 
-    // Hash da senha
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    // Criar usuário
+    const { razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs } = req.body;
+    
     const [result] = await connection.execute(
-      'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-      [username, email, hashedPassword]
+      'INSERT INTO clientes (razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs]
     );
+    
+    await connection.end();
+    res.status(201).json({ id: result.insertId, message: 'Cliente criado com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Rota para atualizar cliente
+app.put('/api/clientes/:id', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_admin',
+      charset: 'utf8mb4'
+    });
+
+    const { id } = req.params;
+    const { razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs } = req.body;
+    
+    await connection.execute(
+      'UPDATE clientes SET razao = ?, cnpj = ?, ie = ?, endereco = ?, bairro = ?, cidade = ?, estado = ?, cep = ?, email = ?, telefone = ?, transporte = ?, prazo = ?, obs = ? WHERE id = ?',
+      [razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs, id]
+    );
+    
+    await connection.end();
+    res.json({ message: 'Cliente atualizado com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Rota para deletar cliente
+app.delete('/api/clientes/:id', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_admin',
+      charset: 'utf8mb4'
+    });
+
+    const { id } = req.params;
+    
+    await connection.execute('DELETE FROM clientes WHERE id = ?', [id]);
+    
+    await connection.end();
+    res.json({ message: 'Cliente removido com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Rotas para Produtos
+// Rota para listar produtos
+app.get('/api/produtos', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_admin',
+      charset: 'utf8mb4'
+    });
+
+    const [rows] = await connection.execute('SELECT * FROM produtos ORDER BY nome');
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Rota para criar novo produto
+app.post('/api/produtos', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_admin',
+      charset: 'utf8mb4'
+    });
+
+    const { nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status } = req.body;
+    
+    const [result] = await connection.execute(
+      'INSERT INTO produtos (nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status]
+    );
+    
+    await connection.end();
+    res.status(201).json({ id: result.insertId, message: 'Produto criado com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Rota para atualizar produto
+app.put('/api/produtos/:id', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_admin',
+      charset: 'utf8mb4'
+    });
+
+    const { id } = req.params;
+    const { nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status } = req.body;
+    
+    await connection.execute(
+      'UPDATE produtos SET nome = ?, descricao = ?, preco_custo = ?, preco_venda = ?, categoria = ?, codigo = ?, estoque = ?, fornecedor = ?, peso = ?, dimensoes = ?, status = ? WHERE id = ?',
+      [nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status, id]
+    );
+    
+    await connection.end();
+    res.json({ message: 'Produto atualizado com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Rota para deletar produto
+app.delete('/api/produtos/:id', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_admin',
+      charset: 'utf8mb4'
+    });
+
+    const { id } = req.params;
+    
+    await connection.execute('DELETE FROM produtos WHERE id = ?', [id]);
+    
+    await connection.end();
+    res.json({ message: 'Produto removido com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Rotas para Pedidos
+// Listar pedidos
+app.get('/api/pedidos', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_admin',
+      charset: 'utf8mb4'
+    });
+    const [rows] = await connection.execute('SELECT * FROM pedidos ORDER BY data_pedido DESC, id DESC');
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+// Criar novo pedido
+app.post('/api/pedidos', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_admin',
+      charset: 'utf8mb4'
+    });
+    const { cliente_id, data_pedido, status, valor_total, observacoes } = req.body;
+    const [result] = await connection.execute(
+      'INSERT INTO pedidos (cliente_id, data_pedido, status, valor_total, observacoes) VALUES (?, ?, ?, ?, ?)',
+      [cliente_id, data_pedido, status, valor_total, observacoes]
+    );
+    await connection.end();
+    res.status(201).json({ id: result.insertId, message: 'Pedido criado com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+// Editar pedido
+app.put('/api/pedidos/:id', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_admin',
+      charset: 'utf8mb4'
+    });
+    const { id } = req.params;
+    const { cliente_id, data_pedido, status, valor_total, observacoes } = req.body;
+    await connection.execute(
+      'UPDATE pedidos SET cliente_id=?, data_pedido=?, status=?, valor_total=?, observacoes=? WHERE id=?',
+      [cliente_id, data_pedido, status, valor_total, observacoes, id]
+    );
+    await connection.end();
+    res.json({ message: 'Pedido atualizado com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+// Excluir pedido
+app.delete('/api/pedidos/:id', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_admin',
+      charset: 'utf8mb4'
+    });
+    const { id } = req.params;
+    await connection.execute('DELETE FROM pedidos WHERE id=?', [id]);
+    await connection.end();
+    res.json({ message: 'Pedido removido com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Rotas para Caixa
+// Listar lançamentos de caixa
+app.get('/api/caixa', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_admin',
+      charset: 'utf8mb4'
+    });
+    const [rows] = await connection.execute('SELECT * FROM caixa ORDER BY data DESC, id DESC');
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+// Registrar novo pagamento/lançamento
+app.post('/api/caixa', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_admin',
+      charset: 'utf8mb4'
+    });
+    const { tipo, valor, descricao, data, pedido_id } = req.body;
+    const [result] = await connection.execute(
+      'INSERT INTO caixa (tipo, valor, descricao, data, pedido_id) VALUES (?, ?, ?, ?, ?)',
+      [tipo, valor, descricao, data, pedido_id]
+    );
+    await connection.end();
+    res.status(201).json({ id: result.insertId, message: 'Lançamento registrado com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Rota para relatórios
+app.get('/api/relatorios/estatisticas', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_admin',
+      charset: 'utf8mb4'
+    });
+
+    // Buscar total de clientes
+    const [clientesResult] = await connection.execute('SELECT COUNT(*) as total FROM clientes');
+    const totalClientes = clientesResult[0].total;
+
+    // Buscar total de produtos
+    const [produtosResult] = await connection.execute('SELECT COUNT(*) as total FROM produtos');
+    const totalProdutos = produtosResult[0].total;
+
+    // Buscar total de pedidos
+    const [pedidosResult] = await connection.execute('SELECT COUNT(*) as total FROM pedidos');
+    const totalPedidos = pedidosResult[0].total;
+
+    // Buscar soma total de vendas (valor_total dos pedidos)
+    const [vendasResult] = await connection.execute('SELECT COALESCE(SUM(valor_total), 0) as total FROM pedidos');
+    const totalVendas = parseFloat(vendasResult[0].total);
+
+    // Buscar lucro total (aproximação baseada na diferença entre preço de venda e custo)
+    // Para uma aproximação mais precisa, vamos usar uma margem média de 30%
+    const lucroTotal = totalVendas * 0.3;
+
+    // Buscar pedidos do mês atual
+    const [pedidosMesResult] = await connection.execute(`
+      SELECT COUNT(*) as total 
+      FROM pedidos 
+      WHERE MONTH(data_pedido) = MONTH(CURRENT_DATE()) 
+      AND YEAR(data_pedido) = YEAR(CURRENT_DATE())
+    `);
+    const pedidosMes = pedidosMesResult[0].total;
+
+    // Buscar vendas do mês atual
+    const [vendasMesResult] = await connection.execute(`
+      SELECT COALESCE(SUM(valor_total), 0) as total 
+      FROM pedidos 
+      WHERE MONTH(data_pedido) = MONTH(CURRENT_DATE()) 
+      AND YEAR(data_pedido) = YEAR(CURRENT_DATE())
+    `);
+    const vendasMes = parseFloat(vendasMesResult[0].total);
+
+    // Calcular lucro do mês
+    const lucroMes = vendasMes * 0.3;
 
     await connection.end();
 
-    // Criar banco de dados do usuário
-    await createUserDatabase(username);
-
-    res.status(201).json({ 
-      success: true, 
-      message: 'Usuário criado com sucesso' 
+    res.json({
+      totalClientes,
+      totalProdutos,
+      totalPedidos,
+      totalVendas: totalVendas.toFixed(2),
+      lucroTotal: lucroTotal.toFixed(2),
+      pedidosMes,
+      vendasMes: vendasMes.toFixed(2),
+      lucroMes: lucroMes.toFixed(2)
     });
 
   } catch (error) {
-    console.error('Erro no registro:', error);
+    console.error('Erro ao buscar estatísticas:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
-app.post('/api/auth/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Erro ao fazer logout' });
-    }
-    res.json({ success: true, message: 'Logout realizado com sucesso' });
-  });
+// Rotas para servir páginas do painel e principais HTML
+const publicPath = path.join(__dirname, 'public');
+
+app.get('/painel', (req, res) => {
+  res.sendFile(path.join(publicPath, 'painel.html'));
+});
+app.get('/painel-clientes', (req, res) => {
+  res.sendFile(path.join(publicPath, 'painel-clientes.html'));
+});
+app.get('/pedidos', (req, res) => {
+  res.sendFile(path.join(publicPath, 'pedidos.html'));
+});
+app.get('/produtos', (req, res) => {
+  res.sendFile(path.join(publicPath, 'produtos.html'));
+});
+app.get('/relatorios', (req, res) => {
+  res.sendFile(path.join(publicPath, 'relatorios.html'));
+});
+app.get('/configuracoes', (req, res) => {
+  res.sendFile(path.join(publicPath, 'configuracoes.html'));
+});
+app.get('/caixa', (req, res) => {
+  res.sendFile(path.join(publicPath, 'caixa.html'));
+});
+app.get('/ajuda', (req, res) => {
+  res.sendFile(path.join(publicPath, 'ajuda.html'));
 });
 
-// Middleware para injetar conexão do banco do usuário
-async function injectUserDatabase(req, res, next) {
-  if (req.session.user) {
-    try {
-      req.dbConnection = await createUserDatabaseConnection(req.session.user.username);
-      next();
-    } catch (error) {
-      res.status(500).json({ error: 'Erro ao conectar ao banco de dados' });
-    }
-  } else {
-    res.status(401).json({ error: 'Usuário não autenticado' });
-  }
-}
-
-// Rotas da API com banco de dados específico do usuário
-app.get('/api/clientes', requireAuth, injectUserDatabase, async (req, res) => {
-  try {
-    const [rows] = await req.dbConnection.execute('SELECT * FROM clientes ORDER BY razao');
-    res.json(rows);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  } finally {
-    await req.dbConnection.end();
-  }
+// Fallback para SPA ou 404
+app.get('*', (req, res) => {
+  res.sendFile(path.join(publicPath, 'index.html'));
 });
 
-app.post('/api/clientes', requireAuth, injectUserDatabase, async (req, res) => {
-  try {
-    const {
-      razao, cnpj, ie, endereco, bairro, cidade, estado, cep,
-      email, telefone, transporte, prazo, obs
-    } = req.body;
-
-    const [result] = await req.dbConnection.execute(
-      `INSERT INTO clientes (razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs]
-    );
-    
-    res.status(201).json({ id: result.insertId, message: 'Cliente cadastrado com sucesso!' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  } finally {
-    await req.dbConnection.end();
-  }
-});
-
-app.delete('/api/clientes/:id', requireAuth, injectUserDatabase, async (req, res) => {
-  try {
-    const { id } = req.params;
-    await req.dbConnection.execute('DELETE FROM clientes WHERE id = ?', [id]);
-    res.json({ message: 'Cliente removido com sucesso!' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  } finally {
-    await req.dbConnection.end();
-  }
-});
-
-// Rotas para páginas HTML
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/painel', requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'painel.html'));
-});
-
-app.get('/clientes', requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'painel-clientes.html'));
-});
-
-app.get('/produtos', requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'produtos.html'));
-});
-
-app.get('/pedidos', requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'pedidos.html'));
-});
-
-app.get('/relatorios', requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'relatorios.html'));
-});
-
-app.get('/configuracoes', requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'configuracoes.html'));
-});
-
-// Inicializar banco de dados principal
-async function initializeMainDatabase() {
-  try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'jpsistemas',
-      password: process.env.DB_PASSWORD || 'SuaSenhaForte123!',
-      charset: 'utf8mb4'
-    });
-
-    // Criar banco de usuários
-    await connection.execute('CREATE DATABASE IF NOT EXISTS jpsistemas_users CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
-    await connection.execute('CREATE DATABASE IF NOT EXISTS jpsistemas_sessions CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
-
-    // Usar banco de usuários
-    await connection.execute('USE jpsistemas_users');
-
-    // Criar tabela de usuários
-    await connection.execute(`
-      CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(50) UNIQUE NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        is_active BOOLEAN DEFAULT TRUE,
-        is_admin BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        INDEX idx_username (username),
-        INDEX idx_email (email),
-        INDEX idx_is_active (is_active)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    `);
-
-    // Usar banco de sessões
-    await connection.execute('USE jpsistemas_sessions');
-
-    // Criar tabela de sessões
-    await connection.execute(`
-      CREATE TABLE IF NOT EXISTS sessions (
-        session_id VARCHAR(128) NOT NULL PRIMARY KEY,
-        expires INT UNSIGNED NOT NULL,
-        data TEXT,
-        INDEX idx_expires (expires)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    `);
-
-    // Criar usuário administrador padrão se não existir
-    await connection.execute('USE jpsistemas_users');
-    
-    const bcrypt = require('bcryptjs');
-    const adminPassword = await bcrypt.hash('admin123', 12);
-    
-    await connection.execute(`
-      INSERT IGNORE INTO users (username, email, password, is_admin) 
-      VALUES ('admin', 'admin@jpsistemas.com', ?, TRUE)
-    `, [adminPassword]);
-
-    console.log('Usuário administrador criado: admin / admin123');
-
-    await connection.end();
-    console.log('Banco de dados principal inicializado com sucesso');
-  } catch (error) {
-    console.error('Erro ao inicializar banco de dados principal:', error);
-  }
-}
-
-// Inicializar e iniciar servidor
-async function startServer() {
-  await initializeMainDatabase();
-  
-  app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-    console.log(`Acesse: http://localhost:${PORT}`);
-  });
-}
-
-startServer().catch(console.error); 
+module.exports = app;

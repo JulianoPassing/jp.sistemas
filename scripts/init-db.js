@@ -18,6 +18,7 @@ async function initializeDatabase() {
     // Criar bancos de dados principais
     await connection.execute('CREATE DATABASE IF NOT EXISTS jpsistemas_users CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
     await connection.execute('CREATE DATABASE IF NOT EXISTS jpsistemas_sessions CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    await connection.execute('CREATE DATABASE IF NOT EXISTS jpsistemas_admin CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
     
     console.log('Bancos de dados principais criados');
 
@@ -66,6 +67,23 @@ async function initializeDatabase() {
     `, [adminPassword]);
 
     console.log('Usuário administrador criado: admin / admin123');
+
+    // Usar banco de admin para tabelas principais do sistema
+    await connection.execute('USE jpsistemas_admin');
+
+    // Criar tabela de caixa
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS caixa (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        tipo VARCHAR(20),
+        valor DECIMAL(10,2),
+        descricao VARCHAR(255),
+        data DATE,
+        pedido_id INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (pedido_id) REFERENCES pedidos(id) ON DELETE SET NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
 
     await connection.end();
     

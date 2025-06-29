@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Caixa - J.P Sistemas Comercial</title>
-  <link rel="icon" href="https://i.imgur.com/WveVVY5.png" type="image/png" />
+  <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -758,7 +758,7 @@
       </div>
       <div class="caixa-bottom-bar">
         <div class="caixa-bottom-btns">
-          <button class="caixa-bottom-btn cancel"><i class="fas fa-times"></i></button>
+          <button class="caixa-bottom-btn cancel" id="btn-cancelar-caixa"><i class="fas fa-times"></i></button>
           <button class="caixa-bottom-btn open" id="btn-em-aberto"><i class="fas fa-folder-open"></i> EM ABERTO</button>
           <button class="caixa-bottom-btn pay"><i class="fas fa-credit-card"></i> IR PARA O PAGAMENTO</button>
         </div>
@@ -801,98 +801,40 @@
     </div>
   </div>
   <script>
-    // Copiado do produtos.html para manter o padrão e os dados sincronizados
-    let produtos = [
-      {
-        id: "1001",
-        nome: "Produto A",
-        categoria: "Eletrônicos",
-        precoCusto: "R$ 120,00",
-        precoVenda: "R$ 150,00",
-        estoque: "25",
-        descricao: "Produto eletrônico de alta qualidade com garantia de 1 ano. Ideal para uso doméstico e profissional.",
-        fornecedor: "TechCorp Ltda",
-        codigo: "ELET-001",
-        peso: "2.5 kg",
-        dimensoes: "30 x 20 x 10 cm",
-        status: "Ativo"
-      },
-      {
-        id: "1002",
-        nome: "Produto B",
-        categoria: "Informática",
-        precoCusto: "R$ 65,00",
-        precoVenda: "R$ 89,90",
-        estoque: "12",
-        descricao: "Acessório de informática essencial para aumentar a produtividade no trabalho.",
-        fornecedor: "InfoTech Solutions",
-        codigo: "INFO-002",
-        peso: "0.8 kg",
-        dimensoes: "25 x 15 x 5 cm",
-        status: "Ativo"
-      },
-      {
-        id: "1003",
-        nome: "Produto C",
-        categoria: "Escritório",
-        precoCusto: "R$ 32,00",
-        precoVenda: "R$ 45,50",
-        estoque: "8",
-        descricao: "Material de escritório de qualidade premium para uso corporativo.",
-        fornecedor: "OfficeMax Brasil",
-        codigo: "OFF-003",
-        peso: "0.3 kg",
-        dimensoes: "20 x 15 x 3 cm",
-        status: "Ativo"
-      },
-      {
-        id: "1004",
-        nome: "Produto D",
-        categoria: "Eletrônicos",
-        precoCusto: "R$ 175,00",
-        precoVenda: "R$ 220,00",
-        estoque: "15",
-        descricao: "Dispositivo eletrônico avançado com tecnologia de ponta e design moderno.",
-        fornecedor: "TechCorp Ltda",
-        codigo: "ELET-004",
-        peso: "1.2 kg",
-        dimensoes: "35 x 25 x 8 cm",
-        status: "Ativo"
-      },
-      {
-        id: "1005",
-        nome: "Produto E",
-        categoria: "Informática",
-        precoCusto: "R$ 55,00",
-        precoVenda: "R$ 75,00",
-        estoque: "30",
-        descricao: "Componente de informática essencial para manutenção e upgrade de sistemas.",
-        fornecedor: "InfoTech Solutions",
-        codigo: "INFO-005",
-        peso: "0.5 kg",
-        dimensoes: "18 x 12 x 4 cm",
-        status: "Ativo"
-      }
-    ];
+    // Array para armazenar produtos carregados do banco
+    let produtos = [];
     let itensPedido = [];
     let quantidadeSelecionada = 1;
+
+    // Função para carregar produtos do banco de dados
+    async function carregarProdutos() {
+      try {
+        const response = await fetch('/api/produtos');
+        if (!response.ok) throw new Error('Erro ao carregar produtos');
+        produtos = await response.json();
+        renderProdutos();
+      } catch (error) {
+        console.error('Erro ao carregar produtos:', error);
+        alert('Erro ao carregar produtos do banco de dados');
+      }
+    }
 
     function renderProdutos(filtro = "") {
       const lista = document.getElementById('caixa-produtos-lista');
       lista.innerHTML = "";
       produtos.filter(p =>
         p.nome.toLowerCase().includes(filtro.toLowerCase()) ||
-        p.codigo.toLowerCase().includes(filtro.toLowerCase())
+        (p.codigo && p.codigo.toLowerCase().includes(filtro.toLowerCase()))
       ).forEach((produto, idx) => {
         const item = document.createElement('div');
         item.className = 'caixa-produto-item';
         item.innerHTML = `
           <div class="caixa-produto-info">
             <span class="caixa-produto-nome">${produto.nome}</span>
-            <span class="caixa-produto-cod">${produto.codigo}</span>
+            <span class="caixa-produto-cod">${produto.codigo || 'Sem código'}</span>
           </div>
-          <span class="caixa-produto-estoque">${produto.estoque} UN</span>
-          <span class="caixa-produto-preco">${produto.precoVenda}</span>
+          <span class="caixa-produto-estoque">${produto.estoque || 0} UN</span>
+          <span class="caixa-produto-preco">R$ ${(produto.preco_venda || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
           <button class="caixa-produto-add" onclick="adicionarAoPedido(${idx})"><i class="fas fa-plus"></i></button>
         `;
         lista.appendChild(item);
@@ -900,7 +842,7 @@
     }
 
     function atualizarTotal() {
-      const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.precoVenda.replace('R$ ', '').replace(',', '.')) * item.qtd), 0);
+      const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.preco_venda || 0) * item.qtd), 0);
       document.getElementById('caixa-total').textContent = total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
     }
 
@@ -916,7 +858,7 @@
           <button class="caixa-item-btn" onclick="alterarQtdItem(${idx}, -1)">-</button>
           <input type="number" min="1" value="${item.qtd}" onchange="alterarQtdDireto(${idx}, this.value)" style="width:38px;text-align:center;border-radius:4px;border:1px solid #ddd;">
           <button class="caixa-item-btn" onclick="alterarQtdItem(${idx}, 1)">+</button>
-          <input type="text" value="${item.precoVenda}" onchange="alterarPrecoItem(${idx}, this.value)" style="width:70px;text-align:center;border-radius:4px;border:1px solid #ddd;margin-left:8px;">
+          <input type="text" value="R$ ${(item.preco_venda || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}" onchange="alterarPrecoItem(${idx}, this.value)" style="width:70px;text-align:center;border-radius:4px;border:1px solid #ddd;margin-left:8px;">
           <button class="caixa-item-btn caixa-item-btn-remove" onclick="removerItemPedido(${idx})"><i class="fas fa-trash"></i></button>
         </div>
       `).join('');
@@ -941,7 +883,8 @@
 
     function alterarPrecoItem(idx, val) {
       if (itensPedido[idx]) {
-        itensPedido[idx].precoVenda = val;
+        const preco = parseFloat(val.replace('R$ ', '').replace(',', '.')) || 0;
+        itensPedido[idx].preco_venda = preco;
         renderItensPedido();
         atualizarTotal();
       }
@@ -959,10 +902,52 @@
       if (existente) {
         existente.qtd += quantidadeSelecionada;
       } else {
-        itensPedido.push({ ...produto, qtd: quantidadeSelecionada });
+        itensPedido.push({ 
+          id: produto.id,
+          nome: produto.nome,
+          preco_venda: produto.preco_venda || 0,
+          qtd: quantidadeSelecionada 
+        });
       }
       atualizarTotal();
       renderItensPedido();
+    }
+
+    // Função para finalizar venda e registrar no caixa
+    async function finalizarVenda() {
+      if (!itensPedido.length) {
+        alert('Adicione produtos ao pedido antes de finalizar.');
+        return;
+      }
+
+      const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.preco_venda || 0) * item.qtd), 0);
+      
+      try {
+        // Registrar pagamento no caixa
+        const response = await fetch('/api/caixa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tipo: 'entrada',
+            valor: total,
+            descricao: `Venda - ${itensPedido.length} itens`,
+            data: new Date().toISOString().split('T')[0],
+            pedido_id: null // Será atualizado quando criar o pedido
+          })
+        });
+
+        if (!response.ok) throw new Error('Erro ao registrar pagamento');
+
+        // Limpar caixa
+        itensPedido = [];
+        renderItensPedido();
+        atualizarTotal();
+
+        alert(`Venda finalizada! Total: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
+      } catch (error) {
+        console.error('Erro ao finalizar venda:', error);
+        alert('Erro ao finalizar venda');
+      }
     }
 
     // Quantidade rápida
@@ -991,14 +976,18 @@
       }
       const username = sessionStorage.getItem('username') || 'Usuário';
       document.getElementById('userDisplay').textContent = username;
+      
+      // Carregar produtos do banco
+      carregarProdutos();
     });
+
     function logout() {
       sessionStorage.removeItem('loggedIn');
       sessionStorage.removeItem('username');
       window.location.href = 'index.html';
     }
+
     // Inicialização
-    renderProdutos();
     atualizarTotal();
     renderItensPedido();
 
@@ -1014,20 +1003,34 @@
         alert('Erro ao carregar clientes.');
       }
     }
+
     document.getElementById('btn-em-aberto').onclick = function() {
       document.getElementById('caixaLateralClientes').classList.add('aberta');
       carregarClientesLateral();
     };
+
+    document.getElementById('btn-cancelar-caixa').onclick = function() {
+      window.location.href = 'pedidos.html';
+    };
+
     document.getElementById('fecharLateralClientes').onclick = function() {
       document.getElementById('caixaLateralClientes').classList.remove('aberta');
     };
 
-    // PEDIDOS EM ABERTO
-    let pedidosEmAberto = JSON.parse(localStorage.getItem('pedidosEmAberto') || '[]');
+    // PEDIDOS EM ABERTO - Agora integrado com banco de dados
+    let pedidosEmAberto = [];
 
-    function salvarPedidoEmAberto(pedido) {
-      pedidosEmAberto.push(pedido);
-      localStorage.setItem('pedidosEmAberto', JSON.stringify(pedidosEmAberto));
+    // Carregar pedidos em aberto do banco
+    async function carregarPedidosEmAberto() {
+      try {
+        const response = await fetch('/api/pedidos');
+        if (!response.ok) throw new Error('Erro ao carregar pedidos');
+        const todosPedidos = await response.json();
+        pedidosEmAberto = todosPedidos.filter(p => p.status === 'Em Processamento' || p.status === 'Pendente');
+        renderPedidosEmAberto();
+      } catch (error) {
+        console.error('Erro ao carregar pedidos em aberto:', error);
+      }
     }
 
     function renderPedidosEmAberto() {
@@ -1038,89 +1041,122 @@
       }
       corpo.innerHTML = pedidosEmAberto.map((p, idx) => `
         <div class="pedido-aberto-card">
-          <h4>${p.clienteNome || 'Cliente Manual'}</h4>
+          <h4>Pedido #${p.id}</h4>
           <div class="pedido-aberto-itens">
-            ${p.itens.map(i => `${i.nome} x${i.qtd} <span style='color:var(--success-color);font-weight:600;'>${i.precoVenda}</span>`).join('<br>')}
+            Cliente: ${p.cliente_id || 'Não informado'}<br>
+            Data: ${p.data_pedido || 'Não informada'}
           </div>
-          <div class="pedido-aberto-total">Total: R$ ${p.total.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div>
+          <div class="pedido-aberto-total">Total: R$ ${(p.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits:2})}</div>
           <div class="pedido-aberto-actions">
-            <button class="pedido-aberto-btn" onclick="reabrirPedidoAberto(${idx})"><i class='fas fa-edit'></i> Reabrir</button>
-            <button class="pedido-aberto-btn pedido-aberto-btn-remove" onclick="removerPedidoAberto(${idx})"><i class='fas fa-trash'></i></button>
+            <button class="pedido-aberto-btn" onclick="reabrirPedidoAberto(${p.id})"><i class='fas fa-edit'></i> Reabrir</button>
+            <button class="pedido-aberto-btn pedido-aberto-btn-remove" onclick="removerPedidoAberto(${p.id})"><i class='fas fa-trash'></i></button>
           </div>
         </div>
       `).join('');
     }
 
-    document.getElementById('btn-salvar-cliente').onclick = function() {
-      // Pega cliente selecionado ou manual
+    // Salvar pedido no banco
+    async function salvarPedidoNoBanco(pedidoData) {
+      try {
+        const response = await fetch('/api/pedidos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(pedidoData)
+        });
+        
+        if (!response.ok) throw new Error('Erro ao salvar pedido');
+        
+        const result = await response.json();
+        return result.id;
+      } catch (error) {
+        console.error('Erro ao salvar pedido:', error);
+        throw error;
+      }
+    }
+
+    document.getElementById('btn-salvar-cliente').onclick = async function() {
       const select = document.getElementById('cliente-select');
       const clienteId = select.value;
       const clienteNome = select.options[select.selectedIndex]?.text?.split(' - ')[0] || document.getElementById('cliente-manual').value;
-      const cnpj = document.getElementById('cliente-cnpj').value;
-      const telefone = document.getElementById('cliente-telefone').value;
-      const email = document.getElementById('cliente-email').value;
-      const endereco = document.getElementById('cliente-endereco').value;
+      
       if (!clienteNome) {
         alert('Selecione ou preencha o nome do cliente.');
         return;
       }
+      
       if (!itensPedido.length) {
         alert('Adicione produtos ao pedido antes de salvar.');
         return;
       }
-      // Monta pedido
-      const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.precoVenda.replace('R$ ', '').replace(',', '.')) * item.qtd), 0);
-      const pedido = {
-        clienteId,
-        clienteNome,
-        cnpj,
-        telefone,
-        email,
-        endereco,
-        itens: JSON.parse(JSON.stringify(itensPedido)),
-        total
-      };
-      salvarPedidoEmAberto(pedido);
-      // Limpa caixa
-      itensPedido = [];
-      renderItensPedido();
-      atualizarTotal();
-      document.getElementById('caixaLateralClientes').classList.remove('aberta');
-      // Mostra lateral de pedidos em aberto
-      renderPedidosEmAberto();
-      document.getElementById('caixaLateralPedidos').classList.add('aberta');
+
+      const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.preco_venda || 0) * item.qtd), 0);
+      
+      try {
+        // Salvar pedido no banco
+        const pedidoData = {
+          cliente_id: clienteId || null,
+          data_pedido: new Date().toISOString().split('T')[0],
+          status: 'Em Processamento',
+          valor_total: total,
+          observacoes: `Pedido criado via caixa - ${itensPedido.length} itens`
+        };
+
+        const pedidoId = await salvarPedidoNoBanco(pedidoData);
+
+        // Limpar caixa
+        itensPedido = [];
+        renderItensPedido();
+        atualizarTotal();
+        document.getElementById('caixaLateralClientes').classList.remove('aberta');
+        
+        // Atualizar lista de pedidos em aberto
+        await carregarPedidosEmAberto();
+        document.getElementById('caixaLateralPedidos').classList.add('aberta');
+        
+        alert('Pedido salvo com sucesso!');
+      } catch (error) {
+        alert('Erro ao salvar pedido');
+        console.error(error);
+      }
     };
+
     document.getElementById('fecharLateralPedidos').onclick = function() {
       document.getElementById('caixaLateralPedidos').classList.remove('aberta');
     };
-    // Renderiza pedidos em aberto ao abrir lateral
-    document.addEventListener('DOMContentLoaded', renderPedidosEmAberto);
 
-    window.reabrirPedidoAberto = function(idx) {
-      const pedido = pedidosEmAberto[idx];
+    // Carregar pedidos em aberto ao inicializar
+    document.addEventListener('DOMContentLoaded', carregarPedidosEmAberto);
+
+    // Reabrir pedido em aberto
+    window.reabrirPedidoAberto = async function(pedidoId) {
+      const pedido = pedidosEmAberto.find(p => p.id == pedidoId);
       if (!pedido) return;
-      // Preenche o caixa com os itens e cliente do pedido
-      itensPedido = JSON.parse(JSON.stringify(pedido.itens));
-      renderItensPedido();
-      atualizarTotal();
-      // Remove da lista de abertos
-      pedidosEmAberto.splice(idx, 1);
-      localStorage.setItem('pedidosEmAberto', JSON.stringify(pedidosEmAberto));
+      
+      // Aqui você pode implementar a lógica para reabrir o pedido
+      // Por enquanto, apenas remove da lista
+      pedidosEmAberto = pedidosEmAberto.filter(p => p.id != pedidoId);
       renderPedidosEmAberto();
       document.getElementById('caixaLateralPedidos').classList.remove('aberta');
-      // Opcional: preencher campos do cliente manualmente se desejar
-      document.getElementById('cliente-manual').value = pedido.clienteNome || '';
-      document.getElementById('cliente-cnpj').value = pedido.cnpj || '';
-      document.getElementById('cliente-telefone').value = pedido.telefone || '';
-      document.getElementById('cliente-email').value = pedido.email || '';
-      document.getElementById('cliente-endereco').value = pedido.endereco || '';
-    }
-    window.removerPedidoAberto = function(idx) {
+      
+      alert('Funcionalidade de reabrir pedido será implementada em breve.');
+    };
+
+    // Remover pedido em aberto
+    window.removerPedidoAberto = async function(pedidoId) {
       if (!confirm('Remover este pedido em aberto?')) return;
-      pedidosEmAberto.splice(idx, 1);
-      localStorage.setItem('pedidosEmAberto', JSON.stringify(pedidosEmAberto));
-      renderPedidosEmAberto();
-    }
+      
+      try {
+        const response = await fetch(`/api/pedidos/${pedidoId}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Erro ao remover pedido');
+        
+        pedidosEmAberto = pedidosEmAberto.filter(p => p.id != pedidoId);
+        renderPedidosEmAberto();
+        alert('Pedido removido com sucesso!');
+      } catch (error) {
+        alert('Erro ao remover pedido');
+        console.error(error);
+      }
+    };
   </script>
 </body>
 </html> 

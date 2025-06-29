@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gestão de Clientes - J.P Sistemas Comercial</title>
-  <link rel="icon" href="https://i.imgur.com/WveVVY5.png" type="image/png" />
+  <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet" />
@@ -557,56 +557,56 @@
       <form id="cliente-form">
         <div class="form-grid">
           <div class="form-group">
-            <label for="razao">Razão Social</label>
-            <input type="text" id="razao" name="razao" required />
+            <label for="razao">Nome ou Razão Social</label>
+            <input type="text" id="razao" name="razao" required placeholder="Digite Nome ou Razão Social" />
           </div>
           <div class="form-group">
-            <label for="cnpj">CNPJ</label>
-            <input type="text" id="cnpj" name="cnpj" required />
+            <label for="cnpj">CPF/CNPJ</label>
+            <input type="text" id="cnpj" name="cnpj" required placeholder="Digite CPF ou CNPJ" />
           </div>
           <div class="form-group">
-            <label for="ie">IE</label>
-            <input type="text" id="ie" name="ie" />
+            <label for="ie">IE (Opcional)</label>
+            <input type="text" id="ie" name="ie" placeholder="Digite IE (se houver)" />
           </div>
           <div class="form-group">
             <label for="endereco">Endereço</label>
-            <input type="text" id="endereco" name="endereco" />
+            <input type="text" id="endereco" name="endereco" placeholder="Digite o endereço (opcional)" />
           </div>
           <div class="form-group">
             <label for="bairro">Bairro</label>
-            <input type="text" id="bairro" name="bairro" />
+            <input type="text" id="bairro" name="bairro" placeholder="Digite o bairro (opcional)" />
           </div>
           <div class="form-group">
             <label for="cidade">Cidade</label>
-            <input type="text" id="cidade" name="cidade" required />
+            <input type="text" id="cidade" name="cidade" required placeholder="Digite a cidade" />
           </div>
           <div class="form-group">
             <label for="estado">Estado</label>
-            <input type="text" id="estado" name="estado" required />
+            <input type="text" id="estado" name="estado" required placeholder="Digite o estado" />
           </div>
           <div class="form-group">
             <label for="cep">CEP</label>
-            <input type="text" id="cep" name="cep" />
+            <input type="text" id="cep" name="cep" placeholder="Digite o CEP (opcional)" />
           </div>
           <div class="form-group">
             <label for="email">Email</label>
-            <input type="email" id="email" name="email" required />
+            <input type="email" id="email" name="email" required placeholder="Digite o email" />
           </div>
           <div class="form-group">
             <label for="telefone">Telefone</label>
-            <input type="text" id="telefone" name="telefone" required />
+            <input type="text" id="telefone" name="telefone" required placeholder="Digite o telefone" />
           </div>
           <div class="form-group">
-            <label for="transporte">Transporte</label>
-            <input type="text" id="transporte" name="transporte" />
+            <label for="transporte">Transporte (Opcional)</label>
+            <input type="text" id="transporte" name="transporte" placeholder="Digite Transporte (se houver)" />
           </div>
           <div class="form-group">
-            <label for="prazo">Prazo</label>
-            <input type="text" id="prazo" name="prazo" />
+            <label for="prazo">Prazo (Opcional)</label>
+            <input type="text" id="prazo" name="prazo" placeholder="Digite Prazo (se houver)" />
           </div>
           <div class="form-group" style="grid-column: 1/3;">
             <label for="obs">Observações</label>
-            <input type="text" id="obs" name="obs" />
+            <input type="text" id="obs" name="obs" placeholder="Digite observações (opcional)" />
           </div>
         </div>
         <div class="actions">
@@ -648,8 +648,8 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>Razão Social</th>
-              <th>CNPJ</th>
+              <th>Nome/Razão Social</th>
+              <th>CPF/CNPJ</th>
               <th>Cidade/UF</th>
               <th>Ações</th>
             </tr>
@@ -973,8 +973,8 @@
       const conteudo = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px 20px;">
           <div><b>ID:</b><br>${cli.id ?? ''}</div>
-          <div><b>Razão Social:</b><br>${cli.razao ?? ''}</div>
-          <div><b>CNPJ:</b><br>${cli.cnpj ?? ''}</div>
+          <div><b>Nome/Razão Social:</b><br>${cli.razao ?? ''}</div>
+          <div><b>CPF/CNPJ:</b><br>${cli.cnpj ?? ''}</div>
           <div><b>IE:</b><br>${cli.ie ?? ''}</div>
           <div style="grid-column:1/3"><b>Endereço:</b><br>${cli.endereco ?? ''}</div>
           <div><b>Bairro:</b><br>${cli.bairro ?? ''}</div>
@@ -1062,6 +1062,115 @@
         alert('Erro ao salvar cliente.');
       }
     };
+
+    // Funções para formatação automática de CPF/CNPJ
+    function formatarCPFCNPJ(valor) {
+      // Remove tudo que não é dígito
+      const numeros = valor.replace(/\D/g, '');
+      
+      // Se tem 11 dígitos, formata como CPF
+      if (numeros.length <= 11) {
+        return numeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+      }
+      // Se tem 14 dígitos, formata como CNPJ
+      else if (numeros.length <= 14) {
+        return numeros.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+      }
+      // Se tem mais de 14 dígitos, trunca para 14
+      else {
+        return numeros.substring(0, 14).replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+      }
+    }
+
+    function validarCPFCNPJ(valor) {
+      const numeros = valor.replace(/\D/g, '');
+      
+      if (numeros.length === 11) {
+        // Validação básica de CPF
+        if (numeros === '00000000000' || numeros === '11111111111' || 
+            numeros === '22222222222' || numeros === '33333333333' || 
+            numeros === '44444444444' || numeros === '55555555555' || 
+            numeros === '66666666666' || numeros === '77777777777' || 
+            numeros === '88888888888' || numeros === '99999999999') {
+          return false;
+        }
+        
+        // Validação dos dígitos verificadores do CPF
+        let soma = 0;
+        for (let i = 0; i < 9; i++) {
+          soma += parseInt(numeros.charAt(i)) * (10 - i);
+        }
+        let resto = 11 - (soma % 11);
+        let digito1 = resto < 2 ? 0 : resto;
+        
+        soma = 0;
+        for (let i = 0; i < 10; i++) {
+          soma += parseInt(numeros.charAt(i)) * (11 - i);
+        }
+        resto = 11 - (soma % 11);
+        let digito2 = resto < 2 ? 0 : resto;
+        
+        return parseInt(numeros.charAt(9)) === digito1 && parseInt(numeros.charAt(10)) === digito2;
+      } else if (numeros.length === 14) {
+        // Validação básica de CNPJ
+        if (numeros === '00000000000000' || numeros === '11111111111111' || 
+            numeros === '22222222222222' || numeros === '33333333333333' || 
+            numeros === '44444444444444' || numeros === '55555555555555' || 
+            numeros === '66666666666666' || numeros === '77777777777777' || 
+            numeros === '88888888888888' || numeros === '99999999999999') {
+          return false;
+        }
+        
+        // Validação dos dígitos verificadores do CNPJ
+        let tamanho = numeros.length - 2;
+        let numeros2 = numeros.substring(0, tamanho);
+        let digitos = numeros.substring(tamanho);
+        let soma = 0;
+        let pos = tamanho - 7;
+        
+        for (let i = tamanho; i >= 1; i--) {
+          soma += parseInt(numeros2.charAt(tamanho - i)) * pos--;
+          if (pos < 2) pos = 9;
+        }
+        
+        let resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+        if (resultado !== parseInt(digitos.charAt(0))) return false;
+        
+        tamanho = tamanho + 1;
+        numeros2 = numeros.substring(0, tamanho);
+        soma = 0;
+        pos = tamanho - 7;
+        
+        for (let i = tamanho; i >= 1; i--) {
+          soma += parseInt(numeros2.charAt(tamanho - i)) * pos--;
+          if (pos < 2) pos = 9;
+        }
+        
+        resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+        return resultado === parseInt(digitos.charAt(1));
+      }
+      
+      return false;
+    }
+
+    // Adicionar event listener para formatação automática
+    document.addEventListener('DOMContentLoaded', function() {
+      const cnpjInput = document.getElementById('cnpj');
+      
+      cnpjInput.addEventListener('input', function(e) {
+        const valor = e.target.value;
+        const formatado = formatarCPFCNPJ(valor);
+        e.target.value = formatado;
+      });
+      
+      cnpjInput.addEventListener('blur', function(e) {
+        const valor = e.target.value.replace(/\D/g, '');
+        if (valor.length > 0 && !validarCPFCNPJ(valor)) {
+          alert('CPF/CNPJ inválido! Por favor, verifique os números.');
+          e.target.focus();
+        }
+      });
+    });
   </script>
 </body>
 </html> 

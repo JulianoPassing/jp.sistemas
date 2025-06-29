@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Relatórios - J.P Sistemas Comercial</title>
-  <link rel="icon" href="https://i.imgur.com/WveVVY5.png" type="image/png" />
+  <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -246,13 +246,16 @@
         </div>
       </div>
       <div class="relatorio-area">
-        <h3>Relatórios Simulados</h3>
+        <h3>Relatórios em Tempo Real</h3>
         <ul>
-          <li>Total de clientes cadastrados: <b>127</b></li>
-          <li>Total de produtos disponíveis: <b>45</b></li>
-          <li>Pedidos realizados este mês: <b>32</b></li>
-          <li>Vendas totais do mês: <b>R$ 12.450,00</b></li>
-          <li>Lucro total do mês: <b style="color: var(--success-color);">R$ 4.850,00</b></li>
+          <li>Total de clientes cadastrados: <b id="total-clientes">Carregando...</b></li>
+          <li>Total de produtos disponíveis: <b id="total-produtos">Carregando...</b></li>
+          <li>Pedidos realizados este mês: <b id="pedidos-mes">Carregando...</b></li>
+          <li>Vendas totais do mês: <b id="vendas-mes">Carregando...</b></li>
+          <li>Lucro total do mês: <b id="lucro-mes" style="color: var(--success-color);">Carregando...</b></li>
+          <li>Total de pedidos realizados: <b id="total-pedidos">Carregando...</b></li>
+          <li>Vendas totais (geral): <b id="vendas-total">Carregando...</b></li>
+          <li>Lucro total (geral): <b id="lucro-total" style="color: var(--success-color);">Carregando...</b></li>
         </ul>
       </div>
     </div>
@@ -270,6 +273,9 @@
       // Exibir nome do usuário
       const username = sessionStorage.getItem('username') || 'Usuário';
       document.getElementById('userDisplay').textContent = username;
+
+      // Carregar estatísticas reais
+      carregarEstatisticas();
     });
 
     function logout() {
@@ -313,13 +319,28 @@
       doc.setFont('helvetica', 'bold');
       doc.text('RESUMO EXECUTIVO', 20, 45);
 
+      // Usar dados reais se disponíveis, senão usar valores padrão
+      const dados = window.dadosEstatisticas || {
+        totalClientes: 0,
+        totalProdutos: 0,
+        totalPedidos: 0,
+        totalVendas: '0.00',
+        lucroTotal: '0.00',
+        pedidosMes: 0,
+        vendasMes: '0.00',
+        lucroMes: '0.00'
+      };
+
       // Estatísticas
       const estatisticas = [
-        ['Total de Clientes', '127'],
-        ['Total de Produtos', '45'],
-        ['Pedidos do Mês', '32'],
-        ['Vendas Totais', 'R$ 12.450,00'],
-        ['Lucro Total', 'R$ 4.850,00']
+        ['Total de Clientes', dados.totalClientes.toString()],
+        ['Total de Produtos', dados.totalProdutos.toString()],
+        ['Total de Pedidos', dados.totalPedidos.toString()],
+        ['Pedidos do Mês', dados.pedidosMes.toString()],
+        ['Vendas Totais (Geral)', `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Vendas do Mês', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro Total (Geral)', `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro do Mês', `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`]
       ];
 
       doc.autoTable({
@@ -347,7 +368,7 @@
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...successColor);
-      doc.text('LUCRO TOTAL DO MÊS: R$ 4.850,00', 105, finalY, { align: 'center' });
+      doc.text(`LUCRO TOTAL DO MÊS: R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 105, finalY, { align: 'center' });
 
       // Análise de rentabilidade
       doc.setTextColor(0, 0, 0);
@@ -357,10 +378,18 @@
 
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      const margemLucro = ((4850 / 12450) * 100).toFixed(1);
-      doc.text(`Margem de Lucro: ${margemLucro}%`, 20, finalY + 30);
-      doc.text(`Ticket Médio: R$ 389,06`, 20, finalY + 37);
-      doc.text(`Lucro Médio por Pedido: R$ 151,56`, 20, finalY + 44);
+      const vendasMes = parseFloat(dados.vendasMes);
+      const lucroMes = parseFloat(dados.lucroMes);
+      const vendasTotal = parseFloat(dados.totalVendas);
+      const lucroTotal = parseFloat(dados.lucroTotal);
+      
+      const margemLucro = vendasMes > 0 ? ((lucroMes / vendasMes) * 100).toFixed(1) : '0.0';
+      const ticketMedio = dados.pedidosMes > 0 ? (vendasMes / dados.pedidosMes).toFixed(2) : '0.00';
+      const lucroMedio = dados.pedidosMes > 0 ? (lucroMes / dados.pedidosMes).toFixed(2) : '0.00';
+      
+      doc.text(`Margem de Lucro (Mês): ${margemLucro}%`, 20, finalY + 30);
+      doc.text(`Ticket Médio (Mês): R$ ${ticketMedio}`, 20, finalY + 37);
+      doc.text(`Lucro Médio por Pedido (Mês): R$ ${lucroMedio}`, 20, finalY + 44);
 
       // Rodapé
       const pageHeight = doc.internal.pageSize.height;
@@ -381,47 +410,102 @@
 
     // Função para gerar relatório Excel
     function gerarRelatorioExcel() {
+      // Usar dados reais se disponíveis, senão usar valores padrão
+      const dados = window.dadosEstatisticas || {
+        totalClientes: 0,
+        totalProdutos: 0,
+        totalPedidos: 0,
+        totalVendas: '0.00',
+        lucroTotal: '0.00',
+        pedidosMes: 0,
+        vendasMes: '0.00',
+        lucroMes: '0.00'
+      };
+
+      const vendasMes = parseFloat(dados.vendasMes);
+      const lucroMes = parseFloat(dados.lucroMes);
+      const margemLucro = vendasMes > 0 ? ((lucroMes / vendasMes) * 100).toFixed(1) : '0.0';
+      const ticketMedio = dados.pedidosMes > 0 ? (vendasMes / dados.pedidosMes).toFixed(2) : '0.00';
+      const lucroMedio = dados.pedidosMes > 0 ? (lucroMes / dados.pedidosMes).toFixed(2) : '0.00';
+
       // Dados do relatório
-      const dados = [
+      const dadosRelatorio = [
         ['RELATÓRIO GERAL - J.P Sistemas'],
         [''],
         ['RESUMO EXECUTIVO'],
         ['Indicador', 'Valor'],
-        ['Total de Clientes', 127],
-        ['Total de Produtos', 45],
-        ['Pedidos do Mês', 32],
-        ['Vendas Totais', 'R$ 12.450,00'],
-        ['Lucro Total', 'R$ 4.850,00'],
+        ['Total de Clientes', dados.totalClientes],
+        ['Total de Produtos', dados.totalProdutos],
+        ['Total de Pedidos', dados.totalPedidos],
+        ['Pedidos do Mês', dados.pedidosMes],
+        ['Vendas Totais (Geral)', `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Vendas do Mês', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro Total (Geral)', `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro do Mês', `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
         [''],
         ['ANÁLISE DE RENTABILIDADE'],
-        ['Margem de Lucro', '39,0%'],
-        ['Ticket Médio', 'R$ 389,06'],
-        ['Lucro Médio por Pedido', 'R$ 151,56'],
+        ['Margem de Lucro (Mês)', `${margemLucro}%`],
+        ['Ticket Médio (Mês)', `R$ ${ticketMedio}`],
+        ['Lucro Médio por Pedido (Mês)', `R$ ${lucroMedio}`],
         [''],
-        ['DETALHAMENTO POR CATEGORIA'],
-        ['Categoria', 'Vendas', 'Lucro', 'Margem'],
-        ['Eletrônicos', 'R$ 5.200,00', 'R$ 2.080,00', '40,0%'],
-        ['Informática', 'R$ 4.150,00', 'R$ 1.660,00', '40,0%'],
-        ['Escritório', 'R$ 3.100,00', 'R$ 1.110,00', '35,8%'],
+        ['DETALHAMENTO POR PERÍODO'],
+        ['Período', 'Vendas', 'Lucro', 'Margem'],
+        ['Mês Atual', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `${margemLucro}%`],
+        ['Total Geral', `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, `${parseFloat(dados.totalVendas) > 0 ? ((parseFloat(dados.lucroTotal) / parseFloat(dados.totalVendas)) * 100).toFixed(1) : '0.0'}%`],
         [''],
         ['Gerado em:', new Date().toLocaleString('pt-BR')]
       ];
 
       // Criar planilha
-      const ws = XLSX.utils.aoa_to_sheet(dados);
+      const ws = XLSX.utils.aoa_to_sheet(dadosRelatorio);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Relatório Geral');
 
       // Configurar largura das colunas
       ws['!cols'] = [
         { width: 25 },
-        { width: 15 }
+        { width: 20 }
       ];
 
       // Salvar arquivo
       const hoje = new Date();
       const dataAtual = `${hoje.getDate().toString().padStart(2, '0')}-${(hoje.getMonth() + 1).toString().padStart(2, '0')}-${hoje.getFullYear()}`;
       XLSX.writeFile(wb, `Relatorio_Geral_${dataAtual}.xlsx`);
+    }
+
+    // Função para carregar estatísticas do banco de dados
+    async function carregarEstatisticas() {
+      try {
+        const response = await fetch('/api/relatorios/estatisticas');
+        if (!response.ok) throw new Error('Erro ao carregar estatísticas');
+        
+        const dados = await response.json();
+        
+        // Atualizar os elementos na página
+        document.getElementById('total-clientes').textContent = dados.totalClientes;
+        document.getElementById('total-produtos').textContent = dados.totalProdutos;
+        document.getElementById('pedidos-mes').textContent = dados.pedidosMes;
+        document.getElementById('vendas-mes').textContent = `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        document.getElementById('lucro-mes').textContent = `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        document.getElementById('total-pedidos').textContent = dados.totalPedidos;
+        document.getElementById('vendas-total').textContent = `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        document.getElementById('lucro-total').textContent = `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        
+        // Armazenar dados para uso nos relatórios
+        window.dadosEstatisticas = dados;
+        
+      } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+        // Em caso de erro, mostrar valores padrão
+        document.getElementById('total-clientes').textContent = '0';
+        document.getElementById('total-produtos').textContent = '0';
+        document.getElementById('pedidos-mes').textContent = '0';
+        document.getElementById('vendas-mes').textContent = 'R$ 0,00';
+        document.getElementById('lucro-mes').textContent = 'R$ 0,00';
+        document.getElementById('total-pedidos').textContent = '0';
+        document.getElementById('vendas-total').textContent = 'R$ 0,00';
+        document.getElementById('lucro-total').textContent = 'R$ 0,00';
+      }
     }
   </script>
 </body>

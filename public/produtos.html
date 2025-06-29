@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gestão de Produtos - J.P Sistemas Comercial</title>
-    <link rel="icon" href="https://i.imgur.com/WveVVY5.png" type="image/png" />
+    <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet" />
@@ -720,76 +720,7 @@
               </tr>
             </thead>
             <tbody id="produtos-tbody">
-              <tr data-id="1001" data-nome="Produto A" data-custo="R$ 120,00" data-venda="R$ 150,00" data-estoque="25" data-desc="Produto eletrônico de alta qualidade com garantia de 1 ano. Ideal para uso doméstico e profissional.">
-                  <td>1001</td>
-                  <td>Produto A</td>
-                  <td>R$ 120,00</td>
-                  <td>R$ 150,00</td>
-                  <td>25</td>
-                  <td>
-                    <div class="product-actions">
-                      <button class="btn btn-primary btn-sm btn-ver-produto"><i class="fas fa-eye"></i> Ver</button>
-                      <button class="btn btn-success btn-sm btn-editar-produto"><i class="fas fa-edit"></i> Editar</button>
-                      <button class="btn btn-danger btn-sm btn-remover-produto"><i class="fas fa-trash"></i> Remover</button>
-                    </div>
-                  </td>
-              </tr>
-              <tr data-id="1002" data-nome="Produto B" data-custo="R$ 65,00" data-venda="R$ 89,90" data-estoque="12" data-desc="Acessório de informática essencial para aumentar a produtividade no trabalho.">
-                  <td>1002</td>
-                  <td>Produto B</td>
-                  <td>R$ 65,00</td>
-                  <td>R$ 89,90</td>
-                  <td>12</td>
-                  <td>
-                    <div class="product-actions">
-                      <button class="btn btn-primary btn-sm btn-ver-produto"><i class="fas fa-eye"></i> Ver</button>
-                      <button class="btn btn-success btn-sm btn-editar-produto"><i class="fas fa-edit"></i> Editar</button>
-                      <button class="btn btn-danger btn-sm btn-remover-produto"><i class="fas fa-trash"></i> Remover</button>
-                    </div>
-                  </td>
-              </tr>
-              <tr data-id="1003" data-nome="Produto C" data-custo="R$ 32,00" data-venda="R$ 45,50" data-estoque="8" data-desc="Material de escritório de qualidade premium para uso corporativo.">
-                  <td>1003</td>
-                  <td>Produto C</td>
-                  <td>R$ 32,00</td>
-                  <td>R$ 45,50</td>
-                  <td>8</td>
-                  <td>
-                    <div class="product-actions">
-                      <button class="btn btn-primary btn-sm btn-ver-produto"><i class="fas fa-eye"></i> Ver</button>
-                      <button class="btn btn-success btn-sm btn-editar-produto"><i class="fas fa-edit"></i> Editar</button>
-                      <button class="btn btn-danger btn-sm btn-remover-produto"><i class="fas fa-trash"></i> Remover</button>
-                    </div>
-                  </td>
-              </tr>
-              <tr data-id="1004" data-nome="Produto D" data-custo="R$ 175,00" data-venda="R$ 220,00" data-estoque="15" data-desc="Dispositivo eletrônico avançado com tecnologia de ponta e design moderno.">
-                  <td>1004</td>
-                  <td>Produto D</td>
-                  <td>R$ 175,00</td>
-                  <td>R$ 220,00</td>
-                  <td>15</td>
-                  <td>
-                    <div class="product-actions">
-                      <button class="btn btn-primary btn-sm btn-ver-produto"><i class="fas fa-eye"></i> Ver</button>
-                      <button class="btn btn-success btn-sm btn-editar-produto"><i class="fas fa-edit"></i> Editar</button>
-                      <button class="btn btn-danger btn-sm btn-remover-produto"><i class="fas fa-trash"></i> Remover</button>
-                    </div>
-                  </td>
-              </tr>
-              <tr data-id="1005" data-nome="Produto E" data-custo="R$ 55,00" data-venda="R$ 75,00" data-estoque="30" data-desc="Componente de informática essencial para manutenção e upgrade de sistemas.">
-                  <td>1005</td>
-                  <td>Produto E</td>
-                  <td>R$ 55,00</td>
-                  <td>R$ 75,00</td>
-                  <td>30</td>
-                  <td>
-                    <div class="product-actions">
-                      <button class="btn btn-primary btn-sm btn-ver-produto"><i class="fas fa-eye"></i> Ver</button>
-                      <button class="btn btn-success btn-sm btn-editar-produto"><i class="fas fa-edit"></i> Editar</button>
-                      <button class="btn btn-danger btn-sm btn-remover-produto"><i class="fas fa-trash"></i> Remover</button>
-                    </div>
-                  </td>
-              </tr>
+              <!-- Os produtos serão carregados dinamicamente do banco de dados -->
             </tbody>
           </table>
           </div>
@@ -818,6 +749,9 @@
             alert('Você saiu do sistema com sucesso.');
             window.location.href = 'index.html';
         }
+        
+        // Carregar produtos do banco de dados
+        carregarProdutos();
       });
 
       // Busca em tempo real
@@ -825,102 +759,48 @@
         renderTabelaProdutos(this.value);
       });
 
-      // Dados simulados dos produtos
-      let produtos = [
-        {
-          id: "1001",
-          nome: "Produto A",
-          categoria: "Eletrônicos",
-          precoCusto: "R$ 120,00",
-          precoVenda: "R$ 150,00",
-          estoque: "25",
-          descricao: "Produto eletrônico de alta qualidade com garantia de 1 ano. Ideal para uso doméstico e profissional.",
-          fornecedor: "TechCorp Ltda",
-          codigo: "ELET-001",
-          peso: "2.5 kg",
-          dimensoes: "30 x 20 x 10 cm",
-          status: "Ativo"
-        },
-        {
-          id: "1002",
-          nome: "Produto B",
-          categoria: "Informática",
-          precoCusto: "R$ 65,00",
-          precoVenda: "R$ 89,90",
-          estoque: "12",
-          descricao: "Acessório de informática essencial para aumentar a produtividade no trabalho.",
-          fornecedor: "InfoTech Solutions",
-          codigo: "INFO-002",
-          peso: "0.8 kg",
-          dimensoes: "25 x 15 x 5 cm",
-          status: "Ativo"
-        },
-        {
-          id: "1003",
-          nome: "Produto C",
-          categoria: "Escritório",
-          precoCusto: "R$ 32,00",
-          precoVenda: "R$ 45,50",
-          estoque: "8",
-          descricao: "Material de escritório de qualidade premium para uso corporativo.",
-          fornecedor: "OfficeMax Brasil",
-          codigo: "OFF-003",
-          peso: "0.3 kg",
-          dimensoes: "20 x 15 x 3 cm",
-          status: "Ativo"
-        },
-        {
-          id: "1004",
-          nome: "Produto D",
-          categoria: "Eletrônicos",
-          precoCusto: "R$ 175,00",
-          precoVenda: "R$ 220,00",
-          estoque: "15",
-          descricao: "Dispositivo eletrônico avançado com tecnologia de ponta e design moderno.",
-          fornecedor: "TechCorp Ltda",
-          codigo: "ELET-004",
-          peso: "1.2 kg",
-          dimensoes: "35 x 25 x 8 cm",
-          status: "Ativo"
-        },
-        {
-          id: "1005",
-          nome: "Produto E",
-          categoria: "Informática",
-          precoCusto: "R$ 55,00",
-          precoVenda: "R$ 75,00",
-          estoque: "30",
-          descricao: "Componente de informática essencial para manutenção e upgrade de sistemas.",
-          fornecedor: "InfoTech Solutions",
-          codigo: "INFO-005",
-          peso: "0.5 kg",
-          dimensoes: "18 x 12 x 4 cm",
-          status: "Ativo"
+      // Array para armazenar produtos carregados do banco
+      let produtos = [];
+
+      // Função para carregar produtos do banco de dados
+      async function carregarProdutos() {
+        try {
+          const response = await fetch('/api/produtos');
+          if (!response.ok) {
+            throw new Error('Erro ao carregar produtos');
+          }
+          produtos = await response.json();
+          renderTabelaProdutos();
+        } catch (error) {
+          console.error('Erro ao carregar produtos:', error);
+          alert('Erro ao carregar produtos do banco de dados');
         }
-      ];
+      }
 
       // Renderizar tabela de produtos
       function renderTabelaProdutos(filtro = "") {
         const tbody = document.getElementById('produtos-tbody');
         tbody.innerHTML = '';
+        
         let filtrados = produtos.filter(p => {
-          const texto = `${p.id} ${p.nome} ${p.precoCusto} ${p.precoVenda} ${p.estoque} ${p.descricao}`.toLowerCase();
+          const texto = `${p.id} ${p.nome} ${p.preco_custo} ${p.preco_venda} ${p.estoque} ${p.descricao}`.toLowerCase();
           return texto.includes(filtro.toLowerCase());
         });
+        
         filtrados.forEach(produto => {
           const tr = document.createElement('tr');
           tr.setAttribute('data-id', produto.id);
           tr.setAttribute('data-nome', produto.nome);
-          tr.setAttribute('data-custo', produto.precoCusto);
-          tr.setAttribute('data-venda', produto.precoVenda);
+          tr.setAttribute('data-custo', produto.preco_custo);
+          tr.setAttribute('data-venda', produto.preco_venda);
           tr.setAttribute('data-estoque', produto.estoque);
           tr.setAttribute('data-desc', produto.descricao);
           tr.innerHTML = `
             <td>${produto.id}</td>
             <td>${produto.nome}</td>
-            <td>${produto.precoCusto}</td>
-            <td>${produto.precoVenda}</td>
-            <td>${produto.estoque}</td>
+            <td>R$ ${parseFloat(produto.preco_custo || 0).toFixed(2).replace('.', ',')}</td>
+            <td>R$ ${parseFloat(produto.preco_venda || 0).toFixed(2).replace('.', ',')}</td>
+            <td>${produto.estoque || 0}</td>
             <td>
               <div class="product-actions">
                 <button class="btn btn-primary btn-sm btn-ver-produto"><i class="fas fa-eye"></i> Ver</button>
@@ -947,16 +827,16 @@
         productInfo.innerHTML = `
           <div class="info-row"><span class="info-label">ID do Produto:</span><span class="info-value">${produto.id}</span></div>
           <div class="info-row"><span class="info-label">Nome:</span><span class="info-value">${produto.nome}</span></div>
-          <div class="info-row"><span class="info-label">Categoria:</span><span class="info-value">${produto.categoria}</span></div>
-          <div class="info-row"><span class="info-label">Preço de Custo:</span><span class="info-value">${produto.precoCusto}</span></div>
-          <div class="info-row"><span class="info-label">Preço de Venda:</span><span class="info-value">${produto.precoVenda}</span></div>
-          <div class="info-row"><span class="info-label">Estoque:</span><span class="info-value">${produto.estoque} unidades</span></div>
-          <div class="info-row"><span class="info-label">Código:</span><span class="info-value">${produto.codigo}</span></div>
-          <div class="info-row"><span class="info-label">Fornecedor:</span><span class="info-value">${produto.fornecedor}</span></div>
-          <div class="info-row"><span class="info-label">Peso:</span><span class="info-value">${produto.peso}</span></div>
-          <div class="info-row"><span class="info-label">Dimensões:</span><span class="info-value">${produto.dimensoes}</span></div>
-          <div class="info-row"><span class="info-label">Status:</span><span class="info-value">${produto.status}</span></div>
-          <div class="info-row"><span class="info-label">Descrição:</span><span class="info-value">${produto.descricao}</span></div>
+          <div class="info-row"><span class="info-label">Categoria:</span><span class="info-value">${produto.categoria || 'Não informado'}</span></div>
+          <div class="info-row"><span class="info-label">Preço de Custo:</span><span class="info-value">R$ ${parseFloat(produto.preco_custo || 0).toFixed(2).replace('.', ',')}</span></div>
+          <div class="info-row"><span class="info-label">Preço de Venda:</span><span class="info-value price">R$ ${parseFloat(produto.preco_venda || 0).toFixed(2).replace('.', ',')}</span></div>
+          <div class="info-row"><span class="info-label">Estoque:</span><span class="info-value stock">${produto.estoque || 0} unidades</span></div>
+          <div class="info-row"><span class="info-label">Código:</span><span class="info-value">${produto.codigo || 'Não informado'}</span></div>
+          <div class="info-row"><span class="info-label">Fornecedor:</span><span class="info-value">${produto.fornecedor || 'Não informado'}</span></div>
+          <div class="info-row"><span class="info-label">Peso:</span><span class="info-value">${produto.peso || 'Não informado'}</span></div>
+          <div class="info-row"><span class="info-label">Dimensões:</span><span class="info-value">${produto.dimensoes || 'Não informado'}</span></div>
+          <div class="info-row"><span class="info-label">Status:</span><span class="info-value">${produto.status || 'Ativo'}</span></div>
+          <div class="info-row"><span class="info-label">Descrição:</span><span class="info-value">${produto.descricao || 'Sem descrição'}</span></div>
         `;
         modal.style.display = 'block';
         document.body.style.overflow = 'hidden';
@@ -971,42 +851,60 @@
         productInfo.innerHTML = `
           <form id='formEditarProduto'>
             <label>ID:<br><input type='text' name='id' value='${produto.id}' readonly style='width:100%;margin-bottom:8px;'/></label>
-            <label>Nome:<br><input type='text' name='nome' value='${produto.nome}' style='width:100%;margin-bottom:8px;'/></label>
-            <label>Categoria:<br><input type='text' name='categoria' value='${produto.categoria}' style='width:100%;margin-bottom:8px;'/></label>
-            <label>Preço de Custo:<br><input type='text' name='precoCusto' value='${produto.precoCusto}' style='width:100%;margin-bottom:8px;'/></label>
-            <label>Preço de Venda:<br><input type='text' name='precoVenda' value='${produto.precoVenda}' style='width:100%;margin-bottom:8px;'/></label>
-            <label>Estoque:<br><input type='text' name='estoque' value='${produto.estoque}' style='width:100%;margin-bottom:8px;'/></label>
-            <label>Fornecedor:<br><input type='text' name='fornecedor' value='${produto.fornecedor}' style='width:100%;margin-bottom:8px;'/></label>
-            <label>Código:<br><input type='text' name='codigo' value='${produto.codigo}' style='width:100%;margin-bottom:8px;'/></label>
-            <label>Peso:<br><input type='text' name='peso' value='${produto.peso}' style='width:100%;margin-bottom:8px;'/></label>
-            <label>Dimensões:<br><input type='text' name='dimensoes' value='${produto.dimensoes}' style='width:100%;margin-bottom:8px;'/></label>
-            <label>Status:<br><input type='text' name='status' value='${produto.status}' style='width:100%;margin-bottom:8px;'/></label>
-            <label>Descrição:<br><textarea name='descricao' style='width:100%;margin-bottom:8px;'>${produto.descricao}</textarea></label>
+            <label>Nome:<br><input type='text' name='nome' value='${produto.nome}' required style='width:100%;margin-bottom:8px;'/></label>
+            <label>Categoria:<br><input type='text' name='categoria' value='${produto.categoria || ''}' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Preço de Custo:<br><input type='number' step='0.01' name='preco_custo' value='${produto.preco_custo || ''}' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Preço de Venda:<br><input type='number' step='0.01' name='preco_venda' value='${produto.preco_venda || ''}' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Estoque:<br><input type='number' name='estoque' value='${produto.estoque || ''}' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Fornecedor:<br><input type='text' name='fornecedor' value='${produto.fornecedor || ''}' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Código:<br><input type='text' name='codigo' value='${produto.codigo || ''}' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Peso:<br><input type='text' name='peso' value='${produto.peso || ''}' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Dimensões:<br><input type='text' name='dimensoes' value='${produto.dimensoes || ''}' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Status:<br><input type='text' name='status' value='${produto.status || 'Ativo'}' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Descrição:<br><textarea name='descricao' style='width:100%;margin-bottom:8px;'>${produto.descricao || ''}</textarea></label>
             <button type='submit' class='btn btn-success btn-sm'>Salvar</button>
             <button type='button' class='btn btn-danger btn-sm' id='cancelarEditar'>Cancelar</button>
           </form>
         `;
         document.getElementById('cancelarEditar').onclick = closeProductModal;
-        document.getElementById('formEditarProduto').onsubmit = function(e) {
+        document.getElementById('formEditarProduto').onsubmit = async function(e) {
           e.preventDefault();
           const form = e.target;
-          // Atualiza produto no array
-          Object.assign(produto, {
-            nome: form.nome.value,
-            categoria: form.categoria.value,
-            precoCusto: form.precoCusto.value,
-            precoVenda: form.precoVenda.value,
-            estoque: form.estoque.value,
-            fornecedor: form.fornecedor.value,
-            codigo: form.codigo.value,
-            peso: form.peso.value,
-            dimensoes: form.dimensoes.value,
-            status: form.status.value,
-            descricao: form.descricao.value
-          });
-          renderTabelaProdutos(document.getElementById('busca-produto').value);
-          closeProductModal();
-          alert('Produto editado com sucesso!');
+          
+          try {
+            const response = await fetch(`/api/produtos/${produto.id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                nome: form.nome.value,
+                categoria: form.categoria.value,
+                preco_custo: parseFloat(form.preco_custo.value) || 0,
+                preco_venda: parseFloat(form.preco_venda.value) || 0,
+                estoque: parseInt(form.estoque.value) || 0,
+                fornecedor: form.fornecedor.value,
+                codigo: form.codigo.value,
+                peso: form.peso.value,
+                dimensoes: form.dimensoes.value,
+                status: form.status.value,
+                descricao: form.descricao.value
+              })
+            });
+
+            if (!response.ok) {
+              throw new Error('Erro ao atualizar produto');
+            }
+
+            // Recarregar produtos do banco
+            await carregarProdutos();
+            renderTabelaProdutos(document.getElementById('busca-produto').value);
+            closeProductModal();
+            alert('Produto editado com sucesso!');
+          } catch (error) {
+            console.error('Erro ao editar produto:', error);
+            alert('Erro ao editar produto');
+          }
         };
       }
 
@@ -1029,16 +927,16 @@
         productInfo.innerHTML = `
           <form id='formNovoProduto'>
             <label>Nome:<br><input type='text' name='nome' required style='width:100%;margin-bottom:8px;'/></label>
-            <label>Categoria:<br><input type='text' name='categoria' required style='width:100%;margin-bottom:8px;'/></label>
-            <label>Preço de Custo:<br><input type='text' name='precoCusto' required style='width:100%;margin-bottom:8px;'/></label>
-            <label>Preço de Venda:<br><input type='text' name='precoVenda' required style='width:100%;margin-bottom:8px;'/></label>
-            <label>Estoque:<br><input type='text' name='estoque' required style='width:100%;margin-bottom:8px;'/></label>
-            <label>Fornecedor:<br><input type='text' name='fornecedor' required style='width:100%;margin-bottom:8px;'/></label>
-            <label>Código:<br><input type='text' name='codigo' required style='width:100%;margin-bottom:8px;'/></label>
-            <label>Peso:<br><input type='text' name='peso' required style='width:100%;margin-bottom:8px;'/></label>
-            <label>Dimensões:<br><input type='text' name='dimensoes' required style='width:100%;margin-bottom:8px;'/></label>
-            <label>Status:<br><input type='text' name='status' value='Ativo' required style='width:100%;margin-bottom:8px;'/></label>
-            <label>Descrição:<br><textarea name='descricao' required style='width:100%;margin-bottom:8px;'></textarea></label>
+            <label>Categoria:<br><input type='text' name='categoria' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Preço de Custo:<br><input type='number' step='0.01' name='preco_custo' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Preço de Venda:<br><input type='number' step='0.01' name='preco_venda' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Estoque:<br><input type='number' name='estoque' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Fornecedor:<br><input type='text' name='fornecedor' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Código:<br><input type='text' name='codigo' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Peso:<br><input type='text' name='peso' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Dimensões:<br><input type='text' name='dimensoes' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Status:<br><input type='text' name='status' value='Ativo' style='width:100%;margin-bottom:8px;'/></label>
+            <label>Descrição:<br><textarea name='descricao' style='width:100%;margin-bottom:8px;'></textarea></label>
             <button type='submit' class='btn btn-success btn-sm'>Adicionar</button>
             <button type='button' class='btn btn-danger btn-sm' id='cancelarNovo'>Cancelar</button>
           </form>
@@ -1046,27 +944,44 @@
         modal.style.display = 'block';
         document.body.style.overflow = 'hidden';
         document.getElementById('cancelarNovo').onclick = closeProductModal;
-        document.getElementById('formNovoProduto').onsubmit = function(e) {
+        document.getElementById('formNovoProduto').onsubmit = async function(e) {
           e.preventDefault();
           const form = e.target;
-          const novo = {
-            id: (Math.max(0, ...produtos.map(p => +p.id)) + 1).toString(),
-            nome: form.nome.value,
-            categoria: form.categoria.value,
-            precoCusto: form.precoCusto.value,
-            precoVenda: form.precoVenda.value,
-            estoque: form.estoque.value,
-            fornecedor: form.fornecedor.value,
-            codigo: form.codigo.value,
-            peso: form.peso.value,
-            dimensoes: form.dimensoes.value,
-            status: form.status.value,
-            descricao: form.descricao.value
-          };
-          produtos.push(novo);
-          renderTabelaProdutos(document.getElementById('busca-produto').value);
-          closeProductModal();
-          alert('Produto adicionado com sucesso!');
+          
+          try {
+            const response = await fetch('/api/produtos', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                nome: form.nome.value,
+                categoria: form.categoria.value,
+                preco_custo: parseFloat(form.preco_custo.value) || 0,
+                preco_venda: parseFloat(form.preco_venda.value) || 0,
+                estoque: parseInt(form.estoque.value) || 0,
+                fornecedor: form.fornecedor.value,
+                codigo: form.codigo.value,
+                peso: form.peso.value,
+                dimensoes: form.dimensoes.value,
+                status: form.status.value,
+                descricao: form.descricao.value
+              })
+            });
+
+            if (!response.ok) {
+              throw new Error('Erro ao criar produto');
+            }
+
+            // Recarregar produtos do banco
+            await carregarProdutos();
+            renderTabelaProdutos(document.getElementById('busca-produto').value);
+            closeProductModal();
+            alert('Produto adicionado com sucesso!');
+          } catch (error) {
+            console.error('Erro ao criar produto:', error);
+            alert('Erro ao criar produto');
+          }
         };
       };
 
@@ -1077,11 +992,12 @@
         doc.text('Lista de Produtos', 10, 10);
         let y = 20;
         produtos.forEach(p => {
-          doc.text(`ID: ${p.id} | Nome: ${p.nome} | Venda: ${p.precoVenda} | Estoque: ${p.estoque}`, 10, y);
+          doc.text(`ID: ${p.id} | Nome: ${p.nome} | Venda: R$ ${parseFloat(p.preco_venda || 0).toFixed(2)} | Estoque: ${p.estoque || 0}`, 10, y);
           y += 8;
         });
         doc.save('produtos.pdf');
       };
+      
       // Exportar para Excel
       document.getElementById('btn-exportar-excel').onclick = function() {
         const ws = XLSX.utils.json_to_sheet(produtos);
@@ -1091,10 +1007,25 @@
       };
 
       // Função para remover produto
-      function removerProduto(id) {
+      async function removerProduto(id) {
         if (confirm('Tem certeza que deseja remover este produto?')) {
-          produtos = produtos.filter(p => p.id !== id);
-          renderTabelaProdutos(document.getElementById('busca-produto').value);
+          try {
+            const response = await fetch(`/api/produtos/${id}`, {
+              method: 'DELETE'
+            });
+
+            if (!response.ok) {
+              throw new Error('Erro ao remover produto');
+            }
+
+            // Recarregar produtos do banco
+            await carregarProdutos();
+            renderTabelaProdutos(document.getElementById('busca-produto').value);
+            alert('Produto removido com sucesso!');
+          } catch (error) {
+            console.error('Erro ao remover produto:', error);
+            alert('Erro ao remover produto');
+          }
         }
       }
 
@@ -1104,7 +1035,7 @@
           btn.onclick = function() {
             const tr = this.closest('tr');
             const id = tr.getAttribute('data-id');
-            const produto = produtos.find(p => p.id === id);
+            const produto = produtos.find(p => p.id == id);
             openProductModal(produto);
           };
         });
@@ -1112,7 +1043,7 @@
           btn.onclick = function() {
             const tr = this.closest('tr');
             const id = tr.getAttribute('data-id');
-            const produto = produtos.find(p => p.id === id);
+            const produto = produtos.find(p => p.id == id);
             openEditProductModal(produto);
           };
         });
@@ -1124,12 +1055,6 @@
           };
         });
       }
-
-      // Inicializar tabela ao carregar
-      renderTabelaProdutos();
-      
-      // Inicializar event listeners para os botões da tabela HTML original
-      ativarAcoesProdutos();
     </script>
   </body>
 </html>

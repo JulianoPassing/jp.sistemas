@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pedidos e Vendas - J.P Sistemas Comercial</title>
-  <link rel="icon" href="https://i.imgur.com/WveVVY5.png" type="image/png" />
+  <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -519,12 +519,7 @@
               <div class="form-group">
                 <label for="cliente">Cliente *</label>
                 <select id="cliente" required>
-                  <option value="">Selecione um cliente</option>
-                  <option value="Comercial ABC">Comercial ABC</option>
-                  <option value="Comercial XYZ">Comercial XYZ</option>
-                  <option value="Empresa DEF">Empresa DEF</option>
-                  <option value="Loja GHI">Loja GHI</option>
-                  <option value="Distribuidora JKL">Distribuidora JKL</option>
+                  <option value="">Carregando clientes...</option>
                 </select>
               </div>
               <div class="form-group">
@@ -647,45 +642,7 @@
             </tr>
           </thead>
           <tbody id="pedidos-tbody">
-            <tr>
-              <td>1001</td>
-              <td>Comercial ABC</td>
-              <td>25/06/2025</td>
-              <td><span style="color: var(--success-color); font-weight: bold;">Concluído</span></td>
-              <td>R$ 1.250,00</td>
-              <td>R$ 500,00</td>
-              <td>
-                <button class="btn btn-primary btn-sm"><i class="fas fa-eye"></i> Ver</button>
-                <button class="btn btn-success btn-sm"><i class="fas fa-edit"></i> Editar</button>
-                <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Remover</button>
-              </td>
-            </tr>
-            <tr>
-              <td>1002</td>
-              <td>Comercial XYZ</td>
-              <td>24/06/2025</td>
-              <td><span style="color: var(--danger-color); font-weight: bold;">Cancelado</span></td>
-              <td>R$ 890,00</td>
-              <td>R$ 0,00</td>
-              <td>
-                <button class="btn btn-primary btn-sm"><i class="fas fa-eye"></i> Ver</button>
-                <button class="btn btn-success btn-sm"><i class="fas fa-edit"></i> Editar</button>
-                <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Remover</button>
-              </td>
-            </tr>
-            <tr>
-              <td>1003</td>
-              <td>Empresa DEF</td>
-              <td>23/06/2025</td>
-              <td><span style="color: #f59e0b; font-weight: bold;">Em Processamento</span></td>
-              <td>R$ 2.150,00</td>
-              <td>R$ 1.000,00</td>
-              <td>
-                <button class="btn btn-primary btn-sm"><i class="fas fa-eye"></i> Ver</button>
-                <button class="btn btn-success btn-sm"><i class="fas fa-edit"></i> Editar</button>
-                <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Remover</button>
-              </td>
-            </tr>
+            <!-- Os pedidos serão carregados dinamicamente do banco de dados -->
           </tbody>
         </table>
       </div>
@@ -695,93 +652,145 @@
     © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" style="color: #000; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
   </footer>
   <script>
-    // Dados simulados dos pedidos
-    const pedidos = [
-      {
-        id: "1001",
-        cliente: "Comercial ABC",
-        data: "25/06/2025",
-        status: "Concluído",
-        valorTotal: "R$ 1.250,00",
-        lucro: "R$ 500,00",
-        itens: [
-          { produto: "Produto A", quantidade: 2, precoUnitario: "R$ 150,00", subtotal: "R$ 300,00" },
-          { produto: "Produto B", quantidade: 1, precoUnitario: "R$ 89,90", subtotal: "R$ 89,90" },
-          { produto: "Produto C", quantidade: 3, precoUnitario: "R$ 45,50", subtotal: "R$ 136,50" },
-          { produto: "Produto D", quantidade: 1, precoUnitario: "R$ 220,00", subtotal: "R$ 220,00" },
-          { produto: "Produto E", quantidade: 2, precoUnitario: "R$ 75,00", subtotal: "R$ 150,00" }
-        ],
-        endereco: "Rua das Flores, 123 - Centro - São Paulo/SP",
-        telefone: "(11) 99999-9999",
-        email: "contato@comercialabc.com.br",
-        formaPagamento: "Cartão de Crédito",
-        observacoes: "Entrega preferencialmente no período da manhã."
-      },
-      {
-        id: "1002",
-        cliente: "Comercial XYZ",
-        data: "24/06/2025",
-        status: "Cancelado",
-        valorTotal: "R$ 890,00",
-        lucro: "R$ 0,00",
-        itens: [
-          { produto: "Produto B", quantidade: 2, precoUnitario: "R$ 89,90", subtotal: "R$ 179,80" },
-          { produto: "Produto C", quantidade: 1, precoUnitario: "R$ 45,50", subtotal: "R$ 45,50" },
-          { produto: "Produto E", quantidade: 3, precoUnitario: "R$ 75,00", subtotal: "R$ 225,00" }
-        ],
-        endereco: "Av. Paulista, 1000 - Bela Vista - São Paulo/SP",
-        telefone: "(11) 88888-8888",
-        email: "vendas@comercialxyz.com.br",
-        formaPagamento: "PIX",
-        observacoes: "Pedido cancelado por solicitação do cliente."
-      },
-      {
-        id: "1003",
-        cliente: "Empresa DEF",
-        data: "23/06/2025",
-        status: "Em Processamento",
-        valorTotal: "R$ 2.150,00",
-        lucro: "R$ 1.000,00",
-        itens: [
-          { produto: "Produto A", quantidade: 3, precoUnitario: "R$ 150,00", subtotal: "R$ 450,00" },
-          { produto: "Produto D", quantidade: 2, precoUnitario: "R$ 220,00", subtotal: "R$ 440,00" },
-          { produto: "Produto E", quantidade: 4, precoUnitario: "R$ 75,00", subtotal: "R$ 300,00" }
-        ],
-        endereco: "Rua Augusta, 500 - Consolação - São Paulo/SP",
-        telefone: "(11) 77777-7777",
-        email: "pedidos@empresadef.com.br",
-        formaPagamento: "Boleto Bancário",
-        observacoes: "Entrega urgente solicitada."
+    // Array para armazenar pedidos carregados do banco
+    let pedidos = [];
+    let clientes = []; // Array para armazenar clientes do banco
+
+    // Função para carregar clientes do banco de dados
+    async function carregarClientes() {
+      try {
+        const response = await fetch('/api/clientes');
+        if (!response.ok) throw new Error('Erro ao carregar clientes');
+        clientes = await response.json();
+        atualizarSelectClientes();
+      } catch (error) {
+        console.error('Erro ao carregar clientes:', error);
+        alert('Erro ao carregar clientes do banco de dados');
       }
-    ];
+    }
 
-    // Dados dos produtos disponíveis com preços de custo e venda
-    const produtos = [
-      { id: 1, nome: "Produto A", precoCusto: 120.00, precoVenda: 150.00, categoria: "Eletrônicos" },
-      { id: 2, nome: "Produto B", precoCusto: 65.00, precoVenda: 89.90, categoria: "Informática" },
-      { id: 3, nome: "Produto C", precoCusto: 32.00, precoVenda: 45.50, categoria: "Escritório" },
-      { id: 4, nome: "Produto D", precoCusto: 175.00, precoVenda: 220.00, categoria: "Eletrônicos" },
-      { id: 5, nome: "Produto E", precoCusto: 55.00, precoVenda: 75.00, categoria: "Informática" }
-    ];
+    // Função para atualizar o select de clientes
+    function atualizarSelectClientes() {
+      const select = document.getElementById('cliente');
+      if (!select) return;
+      
+      select.innerHTML = '<option value="">Selecione um cliente</option>';
+      
+      if (clientes.length === 0) {
+        select.innerHTML += '<option value="" disabled>Nenhum cliente cadastrado</option>';
+        return;
+      }
+      
+      clientes.forEach(cliente => {
+        const option = document.createElement('option');
+        option.value = cliente.id;
+        option.textContent = `${cliente.razao}${cliente.cnpj ? ` - ${cliente.cnpj}` : ''}`;
+        select.appendChild(option);
+      });
+    }
 
-    // Variáveis globais
-    let itemCounter = 0;
-    let novoPedidoItens = [];
+    // Função para carregar pedidos do banco de dados
+    async function carregarPedidos() {
+      try {
+        const response = await fetch('/api/pedidos');
+        if (!response.ok) throw new Error('Erro ao carregar pedidos');
+        pedidos = await response.json();
+        renderTabelaPedidos();
+      } catch (error) {
+        alert('Erro ao carregar pedidos do banco de dados');
+        console.error(error);
+      }
+    }
 
-    // Função utilitária para carregar imagem como base64
-    function carregarImagemBase64(url, callback) {
-      const img = new window.Image();
-      img.setAttribute('crossOrigin', 'anonymous');
-      img.onload = function() {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        const dataURL = canvas.toDataURL('image/png');
-        callback(dataURL);
-      };
-      img.src = url;
+    // Renderizar tabela de pedidos
+    function renderTabelaPedidos(filtro = "") {
+      const tbody = document.getElementById('pedidos-tbody');
+      tbody.innerHTML = '';
+      let filtrados = pedidos.filter(p => {
+        const texto = `${p.id} ${p.cliente_id || ''} ${p.data_pedido || ''} ${p.status || ''} ${p.valor_total || ''}`.toLowerCase();
+        return texto.includes(filtro.toLowerCase());
+      });
+      filtrados.forEach(pedido => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${pedido.id}</td>
+          <td>${pedido.cliente_id || ''}</td>
+          <td>${pedido.data_pedido || ''}</td>
+          <td><span style="color: ${pedido.status === 'Concluído' ? 'var(--success-color)' : pedido.status === 'Cancelado' ? 'var(--danger-color)' : '#f59e0b'}; font-weight: bold;">${pedido.status || ''}</span></td>
+          <td>R$ ${(pedido.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+          <td>R$ 0,00</td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="gerarPDFPedido('${pedido.id}')"><i class="fas fa-eye"></i> Ver</button>
+            <button class="btn btn-success btn-sm" onclick="editarPedido('${pedido.id}')"><i class="fas fa-edit"></i> Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="removerPedido('${pedido.id}')"><i class="fas fa-trash"></i> Remover</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Função para salvar pedido (criar ou editar)
+    async function salvarPedido() {
+      // ... coletar dados do formulário ...
+      const cliente_id = document.getElementById('cliente').value;
+      const data_pedido = new Date().toISOString().split('T')[0];
+      const status = 'Em Processamento';
+      const valor_total = 0; // Calcule o valor total dos itens
+      const observacoes = document.getElementById('observacoes').value;
+      const editandoId = document.getElementById('salvarPedido').getAttribute('data-editando');
+      try {
+        let response;
+        if (editandoId) {
+          response = await fetch(`/api/pedidos/${editandoId}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({cliente_id, data_pedido, status, valor_total, observacoes})
+          });
+        } else {
+          response = await fetch('/api/pedidos', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({cliente_id, data_pedido, status, valor_total, observacoes})
+          });
+        }
+        if (!response.ok) throw new Error('Erro ao salvar pedido');
+        await carregarPedidos();
+        fecharModalNovoPedido();
+        alert('Pedido salvo com sucesso!');
+      } catch (error) {
+        alert('Erro ao salvar pedido');
+        console.error(error);
+      }
+    }
+
+    // Função para remover pedido
+    async function removerPedido(pedidoId) {
+      if (!confirm('Tem certeza que deseja remover este pedido?')) return;
+      try {
+        const response = await fetch(`/api/pedidos/${pedidoId}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Erro ao remover pedido');
+        await carregarPedidos();
+        alert('Pedido removido com sucesso!');
+      } catch (error) {
+        alert('Erro ao remover pedido');
+        console.error(error);
+      }
+    }
+
+    // Função para editar pedido (preencher modal)
+    async function editarPedido(pedidoId) {
+      const pedido = pedidos.find(p => p.id == pedidoId);
+      if (!pedido) return;
+      
+      // Carregar clientes se ainda não foram carregados
+      if (clientes.length === 0) {
+        await carregarClientes();
+      }
+      
+      abrirModalNovoPedido();
+      document.getElementById('cliente').value = pedido.cliente_id || '';
+      document.getElementById('observacoes').value = pedido.observacoes || '';
+      document.getElementById('salvarPedido').setAttribute('data-editando', pedidoId);
     }
 
     // Função para gerar PDF do pedido
@@ -814,7 +823,7 @@
         doc.setFontSize(12);
         doc.setFont('helvetica', 'normal');
         doc.text('Pedido de Venda', 105, 32, { align: 'center' });
-        doc.text(`Data: ${pedido.data}`, 105, 38, { align: 'center' });
+        doc.text(`Data: ${pedido.data_pedido}`, 105, 38, { align: 'center' });
 
         // Informações do pedido
         doc.setTextColor(0, 0, 0);
@@ -842,11 +851,11 @@
         doc.text('INFORMAÇÕES DO CLIENTE', 20, 85);
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
-        doc.text(`Cliente: ${pedido.cliente}`, 20, 95);
-        doc.text(`Endereço: ${pedido.endereco}`, 20, 102);
-        doc.text(`Telefone: ${pedido.telefone}`, 20, 109);
-        doc.text(`E-mail: ${pedido.email}`, 20, 116);
-        doc.text(`Forma de Pagamento: ${pedido.formaPagamento}`, 20, 123);
+        doc.text(`Cliente: ${pedido.cliente_id}`, 20, 95);
+        doc.text(`Endereço: ${pedido.endereco || 'Não informado'}`, 20, 102);
+        doc.text(`Telefone: ${pedido.telefone || 'Não informado'}`, 20, 109);
+        doc.text(`E-mail: ${pedido.email || 'Não informado'}`, 20, 116);
+        doc.text(`Forma de Pagamento: ${pedido.formaPagamento || 'Não informado'}`, 20, 123);
         // Itens do pedido
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
@@ -882,7 +891,7 @@
         const finalY = doc.lastAutoTable.finalY + 10;
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
-        doc.text(`Valor Total: ${pedido.valorTotal}`, 150, finalY);
+        doc.text(`Valor Total: R$ ${pedido.valor_total || '0,00'}`, 150, finalY);
         // Observações
         if (pedido.observacoes) {
           doc.setFontSize(12);
@@ -903,7 +912,7 @@
         doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 20, { align: 'center' });
         doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, pageHeight - 15, { align: 'center' });
         // Salvar PDF
-        doc.save(`Pedido_${pedido.id}_${pedido.cliente.replace(/\s+/g, '_')}.pdf`);
+        doc.save(`Pedido_${pedido.id}_${pedido.cliente_id.replace(/\s+/g, '_')}.pdf`);
       });
     }
 
@@ -929,10 +938,10 @@
         // Tabela de pedidos
         const tableData = pedidos.map(pedido => [
           pedido.id,
-          pedido.cliente,
-          pedido.data,
+          pedido.cliente_id,
+          pedido.data_pedido,
           pedido.status,
-          pedido.valorTotal
+          pedido.valor_total
         ]);
         doc.autoTable({
           startY: 40,
@@ -957,7 +966,7 @@
         });
         // Total geral
         const totalGeral = pedidos.reduce((total, pedido) => {
-          return total + parseFloat(pedido.valorTotal.replace('R$ ', '').replace(',', '.'));
+          return total + parseFloat(pedido.valor_total.replace('R$ ', '').replace(',', '.'));
         }, 0);
         const finalY = doc.lastAutoTable.finalY + 10;
         doc.setFontSize(12);
@@ -984,7 +993,7 @@
       let csvContent = "ID,Cliente,Data,Status,Valor Total,Forma Pagamento,Telefone,Email\n";
       
       pedidos.forEach(pedido => {
-        csvContent += `${pedido.id},"${pedido.cliente}","${pedido.data}","${pedido.status}","${pedido.valorTotal}","${pedido.formaPagamento}","${pedido.telefone}","${pedido.email}"\n`;
+        csvContent += `${pedido.id},"${pedido.cliente_id}","${pedido.data_pedido}","${pedido.status}","${pedido.valor_total}","${pedido.formaPagamento || 'Não informado'}","${pedido.telefone || 'Não informado'}","${pedido.email || 'Não informado'}"\n`;
       });
 
       // Criar e baixar arquivo
@@ -1000,11 +1009,16 @@
     }
 
     // Funções do modal de novo pedido
-    function abrirModalNovoPedido() {
+    async function abrirModalNovoPedido() {
       document.getElementById('novoPedidoModal').style.display = 'block';
       document.body.style.overflow = 'hidden';
       limparFormulario();
       adicionarItemPadrao();
+      
+      // Carregar clientes se ainda não foram carregados
+      if (clientes.length === 0) {
+        await carregarClientes();
+      }
     }
 
     function fecharModalNovoPedido() {
@@ -1106,174 +1120,6 @@
       document.getElementById('totalPedido').textContent = total.toFixed(2).replace('.', ',');
     }
 
-    function salvarPedido() {
-      const cliente = document.getElementById('cliente').value;
-      const formaPagamento = document.getElementById('formaPagamento').value;
-      const telefone = document.getElementById('telefone').value;
-      const email = document.getElementById('email').value;
-      const endereco = document.getElementById('endereco').value;
-      const observacoes = document.getElementById('observacoes').value;
-      const editandoId = document.getElementById('salvarPedido').getAttribute('data-editando');
-
-      if (!cliente || !formaPagamento) {
-        alert('Por favor, preencha os campos obrigatórios (Cliente e Forma de Pagamento).');
-        return;
-      }
-
-      if (novoPedidoItens.length === 0 || novoPedidoItens.every(item => item.produto === '')) {
-        alert('Por favor, adicione pelo menos um item ao pedido.');
-        return;
-      }
-
-      const hoje = new Date().toLocaleDateString('pt-BR');
-      const total = novoPedidoItens.reduce((sum, item) => sum + item.subtotal, 0);
-
-      if (editandoId) {
-        // Editar pedido existente
-        const pedido = pedidos.find(p => p.id === editandoId);
-        if (pedido) {
-          pedido.cliente = cliente;
-          pedido.formaPagamento = formaPagamento;
-          pedido.telefone = telefone || 'Não informado';
-          pedido.email = email || 'Não informado';
-          pedido.endereco = endereco || 'Não informado';
-          pedido.observacoes = observacoes || '';
-          pedido.itens = novoPedidoItens.map(item => ({
-            produto: item.produto,
-            quantidade: item.quantidade,
-            precoUnitario: `R$ ${item.preco.toFixed(2).replace('.', ',')}`,
-            subtotal: `R$ ${item.subtotal.toFixed(2).replace('.', ',')}`
-          }));
-          pedido.valorTotal = `R$ ${total.toFixed(2).replace('.', ',')}`;
-          // Atualizar tabela
-          const tbody = document.getElementById('pedidos-tbody');
-          const row = Array.from(tbody.rows).find(r => r.cells[0].textContent === editandoId);
-          if (row) {
-            row.cells[1].textContent = pedido.cliente;
-            row.cells[2].textContent = pedido.data;
-            row.cells[3].innerHTML = `<span style="color: #f59e0b; font-weight: bold;">${pedido.status}</span>`;
-            row.cells[4].textContent = pedido.valorTotal;
-            row.cells[5].textContent = pedido.lucro || 'R$ 0,00';
-          }
-        }
-        alert('Pedido editado com sucesso!');
-        document.getElementById('salvarPedido').removeAttribute('data-editando');
-        fecharModalNovoPedido();
-        return;
-      }
-
-      // Criar novo pedido
-      const novoId = (Math.max(...pedidos.map(p => parseInt(p.id))) + 1).toString();
-      const novoPedido = {
-        id: novoId,
-        cliente: cliente,
-        data: hoje,
-        status: "Em Processamento",
-        valorTotal: `R$ ${total.toFixed(2).replace('.', ',')}`,
-        lucro: "R$ 0,00",
-        itens: novoPedidoItens.map(item => ({
-          produto: item.produto,
-          quantidade: item.quantidade,
-          precoUnitario: `R$ ${item.preco.toFixed(2).replace('.', ',')}`,
-          subtotal: `R$ ${item.subtotal.toFixed(2).replace('.', ',')}`
-        })),
-        endereco: endereco || "Não informado",
-        telefone: telefone || "Não informado",
-        email: email || "Não informado",
-        formaPagamento: formaPagamento,
-        observacoes: observacoes || ""
-      };
-
-      // Adicionar à lista de pedidos
-      pedidos.push(novoPedido);
-
-      // Adicionar à tabela
-      const tbody = document.getElementById('pedidos-tbody');
-      const newRow = `
-        <tr>
-          <td>${novoPedido.id}</td>
-          <td>${novoPedido.cliente}</td>
-          <td>${novoPedido.data}</td>
-          <td><span style="color: #f59e0b; font-weight: bold;">${novoPedido.status}</span></td>
-          <td>${novoPedido.valorTotal}</td>
-          <td>R$ 0,00</td>
-          <td>
-            <button class="btn btn-primary btn-sm" onclick="gerarPDFPedido('${novoPedido.id}')"><i class="fas fa-eye"></i> Ver</button>
-            <button class="btn btn-success btn-sm" onclick="editarPedido('${novoPedido.id}')"><i class="fas fa-edit"></i> Editar</button>
-            <button class="btn btn-danger btn-sm" onclick="removerPedido('${novoPedido.id}')"><i class="fas fa-trash"></i> Remover</button>
-          </td>
-        </tr>
-      `;
-      tbody.insertAdjacentHTML('beforeend', newRow);
-
-      alert('Pedido criado com sucesso!');
-      fecharModalNovoPedido();
-    }
-
-    // Função para remover pedido
-    function removerPedido(pedidoId) {
-      if (!confirm('Tem certeza que deseja remover este pedido?')) return;
-      // Remover do array
-      const index = pedidos.findIndex(p => p.id === pedidoId);
-      if (index !== -1) {
-        pedidos.splice(index, 1);
-      }
-      // Remover da tabela
-      const tbody = document.getElementById('pedidos-tbody');
-      const row = Array.from(tbody.rows).find(r => r.cells[0].textContent === pedidoId);
-      if (row) {
-        tbody.removeChild(row);
-      }
-    }
-
-    // Função para preencher o modal com dados do pedido para edição
-    function editarPedido(pedidoId) {
-      const pedido = pedidos.find(p => p.id === pedidoId);
-      if (!pedido) return;
-      abrirModalNovoPedido();
-      // Preencher campos
-      document.getElementById('cliente').value = pedido.cliente;
-      document.getElementById('formaPagamento').value = pedido.formaPagamento;
-      document.getElementById('telefone').value = pedido.telefone !== 'Não informado' ? pedido.telefone : '';
-      document.getElementById('email').value = pedido.email !== 'Não informado' ? pedido.email : '';
-      document.getElementById('endereco').value = pedido.endereco !== 'Não informado' ? pedido.endereco : '';
-      document.getElementById('observacoes').value = pedido.observacoes || '';
-      // Limpar itens
-      document.getElementById('itensContainer').innerHTML = '';
-      novoPedidoItens = [];
-      itemCounter = 0;
-      // Adicionar itens do pedido
-      pedido.itens.forEach(item => {
-        const produtoObj = produtos.find(p => p.nome === item.produto);
-        const itemHtml = `
-          <div class="item-row" data-item-id="${itemCounter}">
-            <select class="produto-select" onchange="atualizarPreco(${itemCounter})">
-              <option value="">Selecione um produto</option>
-              ${produtos.map(p => `<option value="${p.id}" data-preco="${p.precoVenda}"${produtoObj && p.nome === item.produto ? ' selected' : ''}>${p.nome} - R$ ${p.precoVenda.toFixed(2).replace('.', ',')}</option>`).join('')}
-            </select>
-            <input type="number" class="quantidade-input" value="${item.quantidade}" min="1" onchange="calcularSubtotal(${itemCounter})" onkeyup="calcularSubtotal(${itemCounter})">
-            <input type="text" class="preco-input" value="${item.precoUnitario}" readonly>
-            <input type="text" class="subtotal-input" value="${item.subtotal}" readonly>
-            <button type="button" class="remove-item" onclick="removerItem(${itemCounter})">
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
-        `;
-        document.getElementById('itensContainer').insertAdjacentHTML('beforeend', itemHtml);
-        novoPedidoItens.push({
-          id: itemCounter,
-          produto: item.produto,
-          quantidade: item.quantidade,
-          preco: produtoObj ? produtoObj.precoVenda : 0,
-          subtotal: parseFloat(item.subtotal.replace('R$ ', '').replace(',', '.'))
-        });
-        itemCounter++;
-      });
-      atualizarTotal();
-      // Marcar que está editando
-      document.getElementById('salvarPedido').setAttribute('data-editando', pedidoId);
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
       // Verificar se está logado
       if (sessionStorage.getItem('loggedIn') !== 'true') {
@@ -1305,40 +1151,9 @@
         }
       });
 
-      // Adicionar event listeners aos botões "Ver", "Editar" e "Remover" existentes
-      const tbody = document.getElementById('pedidos-tbody');
-      Array.from(tbody.rows).forEach(row => {
-        const pedidoId = row.cells[0].textContent;
-        // Ver
-        const verBtn = row.querySelector('.btn-primary');
-        if (verBtn && verBtn.textContent.includes('Ver')) {
-          verBtn.onclick = function() { gerarPDFPedido(pedidoId); };
-        }
-        // Editar
-        const editarBtn = row.querySelector('.btn-success');
-        if (editarBtn && editarBtn.textContent.includes('Editar')) {
-          editarBtn.onclick = function() { editarPedido(pedidoId); };
-        }
-        // Remover
-        const removerBtn = row.querySelector('.btn-danger');
-        if (removerBtn && removerBtn.textContent.includes('Remover')) {
-          removerBtn.onclick = function() { removerPedido(pedidoId); };
-        }
-      });
-
       // Busca em tempo real
       document.getElementById('busca-pedido').addEventListener('input', function() {
-        const termo = this.value.toLowerCase();
-        const linhas = document.querySelectorAll('#pedidos-tbody tr');
-        
-        linhas.forEach(linha => {
-          const texto = linha.textContent.toLowerCase();
-          if (texto.includes(termo)) {
-            linha.style.display = '';
-          } else {
-            linha.style.display = 'none';
-          }
-        });
+        renderTabelaPedidos(this.value);
       });
 
       // Exportar PDF
@@ -1355,6 +1170,10 @@
       document.getElementById('btn-ir-caixa').onclick = function() {
         window.location.href = 'caixa.html';
       };
+
+      // Ao carregar a página, buscar pedidos do banco
+      carregarPedidos();
+      carregarClientes();
     });
 
     function logout() {
