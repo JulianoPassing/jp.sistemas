@@ -1005,8 +1005,31 @@
       });
     }
 
+    // Função para atualizar o array novoPedidoItens a partir do DOM
+    function atualizarNovoPedidoItens() {
+      novoPedidoItens = [];
+      const itemRows = document.querySelectorAll('#itensContainer .item-row');
+      itemRows.forEach(row => {
+        const produtoSelect = row.querySelector('.produto-select');
+        const quantidadeInput = row.querySelector('.quantidade-input');
+        const precoInput = row.querySelector('.preco-input');
+        const subtotalInput = row.querySelector('.subtotal-input');
+        if (produtoSelect.value) {
+          const produto = produtos.find(p => p.id == produtoSelect.value);
+          novoPedidoItens.push({
+            produto_id: produtoSelect.value,
+            produto: produto ? produto.nome : '',
+            quantidade: parseFloat(quantidadeInput.value) || 0,
+            precoUnitario: parseFloat(precoInput.value) || 0,
+            subtotal: parseFloat(subtotalInput.value) || 0
+          });
+        }
+      });
+    }
+
     // Função para salvar pedido (criar ou editar)
     async function salvarPedido() {
+      atualizarNovoPedidoItens(); // <-- Garante que novoPedidoItens está atualizado
       const cliente_id = document.getElementById('cliente').value;
       const formaPagamento = document.getElementById('formaPagamento').value;
       const telefone = document.getElementById('telefone').value;
@@ -1356,7 +1379,6 @@
     // Função para adicionar item ao pedido
     function adicionarItem() {
       const itemId = `item-${itemCounter++}`;
-      
       const itemHTML = `
         <div class="item-row" id="${itemId}">
           <div class="form-group">
@@ -1381,21 +1403,21 @@
           </button>
         </div>
       `;
-      
       document.getElementById('itensContainer').insertAdjacentHTML('beforeend', itemHTML);
+      atualizarNovoPedidoItens();
     }
 
     // Função para selecionar produto
     function selecionarProduto(select, itemId) {
       const produtoId = select.value;
       const produto = produtos.find(p => p.id == produtoId);
-      
       if (produto) {
         const itemRow = document.getElementById(itemId);
         const precoInput = itemRow.querySelector('.preco-input');
         precoInput.value = produto.preco_venda || 0;
         calcularSubtotal(itemId);
       }
+      atualizarNovoPedidoItens();
     }
 
     // Função para calcular subtotal
@@ -1404,15 +1426,16 @@
       const quantidade = parseFloat(itemRow.querySelector('.quantidade-input').value) || 0;
       const preco = parseFloat(itemRow.querySelector('.preco-input').value) || 0;
       const subtotal = quantidade * preco;
-      
       itemRow.querySelector('.subtotal-input').value = subtotal.toFixed(2);
       atualizarTotalPedido();
+      atualizarNovoPedidoItens();
     }
 
     // Função para remover item
     function removerItem(itemId) {
       document.getElementById(itemId).remove();
       atualizarTotalPedido();
+      atualizarNovoPedidoItens();
     }
 
     // Função para atualizar total do pedido
