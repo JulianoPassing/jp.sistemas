@@ -185,11 +185,11 @@
 
         async function testProdutosWithDev() {
             const resultDiv = document.getElementById('produtos-result');
-            resultDiv.textContent = 'Carregando com modo dev...';
+            resultDiv.textContent = 'Carregando com rotas dev...';
             resultDiv.className = 'result';
             
             try {
-                const response = await fetch('/api/produtos?dev=true');
+                const response = await fetch('/api/dev/produtos');
                 const data = await response.json();
                 
                 resultDiv.textContent = `Produtos carregados: ${data.length}\n\nPrimeiros 3 produtos:\n${JSON.stringify(data.slice(0, 3), null, 2)}`;
@@ -219,11 +219,11 @@
 
         async function testClientesWithDev() {
             const resultDiv = document.getElementById('clientes-result');
-            resultDiv.textContent = 'Carregando com modo dev...';
+            resultDiv.textContent = 'Carregando com rotas dev...';
             resultDiv.className = 'result';
             
             try {
-                const response = await fetch('/api/clientes?dev=true');
+                const response = await fetch('/api/dev/clientes');
                 const data = await response.json();
                 
                 resultDiv.textContent = `Clientes carregados: ${data.length}\n\nPrimeiros 3 clientes:\n${JSON.stringify(data.slice(0, 3), null, 2)}`;
@@ -253,11 +253,11 @@
 
         async function testPedidosWithDev() {
             const resultDiv = document.getElementById('pedidos-result');
-            resultDiv.textContent = 'Carregando com modo dev...';
+            resultDiv.textContent = 'Carregando com rotas dev...';
             resultDiv.className = 'result';
             
             try {
-                const response = await fetch('/api/pedidos?dev=true');
+                const response = await fetch('/api/dev/pedidos');
                 const data = await response.json();
                 
                 resultDiv.textContent = `Pedidos carregados: ${data.length}\n\nPrimeiros 3 pedidos:\n${JSON.stringify(data.slice(0, 3), null, 2)}`;
@@ -310,7 +310,7 @@
 
         async function testCriarPedidoWithDev() {
             const resultDiv = document.getElementById('criar-pedido-result');
-            resultDiv.textContent = 'Criando pedido de teste com modo dev...';
+            resultDiv.textContent = 'Criando pedido de teste com rotas dev...';
             resultDiv.className = 'result';
             
             try {
@@ -319,7 +319,7 @@
                     data_pedido: new Date().toISOString().split('T')[0],
                     status: 'Em Processamento',
                     valor_total: 100.00,
-                    observacoes: 'Pedido de teste criado via página de teste (modo dev)',
+                    observacoes: 'Pedido de teste criado via página de teste (rotas dev)',
                     itens: [
                         {
                             id: 1,
@@ -330,7 +330,7 @@
                     ]
                 };
 
-                const response = await fetch('/api/pedidos?dev=true', {
+                const response = await fetch('/api/dev/pedidos', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
