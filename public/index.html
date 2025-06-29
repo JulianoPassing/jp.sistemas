@@ -537,9 +537,10 @@
       const loginText = document.getElementById('loginText');
 
       // Verificar se já está logado
-      if (sessionStorage.getItem('loggedIn') === 'true') {
-        window.location.href = '/painel';
-      }
+      // Removido redirecionamento automático para evitar loop
+      // if (sessionStorage.getItem('loggedIn') === 'true') {
+      //   window.location.href = '/painel';
+      // }
 
       // Função para mostrar loading
       function setLoading(loading) {
