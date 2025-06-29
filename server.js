@@ -520,9 +520,20 @@ app.post('/api/pedidos', async (req, res) => {
     // Normalizar o status
     const statusNormalizado = normalizarStatus(status);
     
+    // Formatar a data para o formato MySQL (YYYY-MM-DD)
+    let dataFormatada = data_pedido;
+    if (data_pedido) {
+      try {
+        const data = new Date(data_pedido);
+        dataFormatada = data.toISOString().split('T')[0]; // Pega apenas a parte da data (YYYY-MM-DD)
+      } catch (error) {
+        console.log('Erro ao formatar data, usando data original:', data_pedido);
+      }
+    }
+    
     const [result] = await connection.execute(
       'INSERT INTO pedidos (cliente_id, data_pedido, status, valor_total, observacoes) VALUES (?, ?, ?, ?, ?)',
-      [cliente_id, data_pedido, statusNormalizado, valor_total, observacoes]
+      [cliente_id, dataFormatada, statusNormalizado, valor_total, observacoes]
     );
     await connection.end();
     res.status(201).json({ id: result.insertId, message: 'Pedido criado com sucesso' });
@@ -577,10 +588,21 @@ app.put('/api/pedidos/:id', async (req, res) => {
     // Normalizar o status
     const statusNormalizado = normalizarStatus(status);
     
+    // Formatar a data para o formato MySQL (YYYY-MM-DD)
+    let dataFormatada = data_pedido;
+    if (data_pedido) {
+      try {
+        const data = new Date(data_pedido);
+        dataFormatada = data.toISOString().split('T')[0]; // Pega apenas a parte da data (YYYY-MM-DD)
+      } catch (error) {
+        console.log('Erro ao formatar data, usando data original:', data_pedido);
+      }
+    }
+    
     console.log('Atualizando pedido com dados:', {
       id,
       cliente_id,
-      data_pedido,
+      data_pedido: dataFormatada,
       status: statusNormalizado,
       valor_total,
       observacoes
@@ -588,7 +610,7 @@ app.put('/api/pedidos/:id', async (req, res) => {
     
     await connection.execute(
       'UPDATE pedidos SET cliente_id=?, data_pedido=?, status=?, valor_total=?, observacoes=? WHERE id=?',
-      [cliente_id, data_pedido, statusNormalizado, valor_total, observacoes, id]
+      [cliente_id, dataFormatada, statusNormalizado, valor_total, observacoes, id]
     );
     
     console.log('Pedido atualizado com sucesso');
