@@ -1859,7 +1859,7 @@
       try {
         console.log('Enviando pedido para API:', pedidoData);
         
-        const response = await fetch('/api/pedidos?dev=true', {
+        const response = await fetch('/api/dev/pedidos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(pedidoData)

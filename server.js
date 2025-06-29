@@ -1343,6 +1343,49 @@ app.delete('/api/dev/pedidos/:id', async (req, res) => {
   }
 });
 
+app.post('/api/dev/produtos', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_admin',
+      charset: 'utf8mb4'
+    });
+    
+    const { nome, categoria, preco_custo, preco_venda, estoque, fornecedor, codigo, peso, dimensoes, status, descricao } = req.body;
+    
+    console.log('Dados do produto recebidos (dev):', {
+      nome,
+      categoria,
+      preco_custo,
+      preco_venda,
+      estoque,
+      fornecedor,
+      codigo,
+      peso,
+      dimensoes,
+      status,
+      descricao
+    });
+    
+    // Inserir o produto
+    const [result] = await connection.execute(
+      'INSERT INTO produtos (nome, categoria, preco_custo, preco_venda, estoque, fornecedor, codigo, peso, dimensoes, status, descricao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [nome, categoria, preco_custo, preco_venda, estoque, fornecedor, codigo, peso, dimensoes, status, descricao]
+    );
+    
+    await connection.end();
+    res.status(201).json({ 
+      id: result.insertId, 
+      message: 'Produto criado com sucesso (dev)'
+    });
+  } catch (error) {
+    console.error('Erro ao criar produto (dev):', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = app;
 
 // Inicialização do servidor (apenas se executado diretamente)
