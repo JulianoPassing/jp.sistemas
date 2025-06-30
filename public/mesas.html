@@ -731,11 +731,11 @@
           return;
         }
         pedido.nome_cliente = novoNome;
-        // Atualizar backend
+        // Atualizar backend com todos os campos
         await fetch(`/api/pedidos/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nome_cliente: novoNome, itens: pedido.itens })
+          body: JSON.stringify({ ...pedido, nome_cliente: novoNome, itens: pedido.itens })
         });
         await carregarPedidosAbertos();
         fecharModalEditarProdutos();
