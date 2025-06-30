@@ -33,10 +33,18 @@ app.use(cors({
 
 // Configuração de sessão
 const isProduction = process.env.NODE_ENV === 'production';
+const sessionStore = new MySQLStore({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: 'jpsistemas_sessions'
+});
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'SeuSessionSecretMuitoForte123!',
   resave: false,
   saveUninitialized: false,
+  store: sessionStore,
   cookie: {
     secure: isProduction, // true em produção (https), false em dev
     httpOnly: true,
