@@ -906,7 +906,7 @@
     // Função para carregar clientes do banco de dados
     async function carregarClientes() {
       try {
-        const response = await fetch('/api/clientes');
+        const response = await fetch('/api/clientes', { credentials: 'include' });
         if (!response.ok) throw new Error('Erro ao carregar clientes');
         clientes = await response.json();
         atualizarSelectClientes();
@@ -957,7 +957,7 @@
     async function carregarPedidos() {
       try {
         console.log('Carregando pedidos...');
-        const response = await fetch('/api/pedidos');
+        const response = await fetch('/api/pedidos', { credentials: 'include' });
         if (!response.ok) {
           throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
         }

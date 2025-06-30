@@ -671,7 +671,7 @@
     
     async function carregarClientes() {
       try {
-        const resp = await fetch(API_URL);
+        const resp = await fetch(API_URL, { credentials: 'include' });
         if (!resp.ok) throw new Error('Erro ao buscar clientes na API');
         clientes = await resp.json();
         clientesFiltrados = clientes;
@@ -736,7 +736,7 @@
           
           if (confirm(`Tem certeza que deseja remover o cliente "${cliente.razao}"?`)) {
             try {
-              await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+              await fetch(`${API_URL}/${id}`, { method: 'DELETE', credentials: 'include' });
               alert('Cliente removido com sucesso!');
               await carregarClientes();
             } catch (err) {
@@ -1106,14 +1106,16 @@
           await fetch(`${API_URL}/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(cliente)
+            body: JSON.stringify(cliente),
+            credentials: 'include'
           });
           alert('Cliente atualizado com sucesso!');
         } else {
           await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(cliente)
+            body: JSON.stringify(cliente),
+            credentials: 'include'
           });
           alert('Cliente cadastrado com sucesso!');
         }

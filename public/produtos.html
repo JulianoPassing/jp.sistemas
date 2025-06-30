@@ -876,7 +876,7 @@
       // Função para carregar produtos do banco de dados
       async function carregarProdutos() {
         try {
-          const response = await fetch('/api/produtos');
+          const response = await fetch('/api/produtos', { credentials: 'include' });
           if (!response.ok) {
             throw new Error('Erro ao carregar produtos');
           }

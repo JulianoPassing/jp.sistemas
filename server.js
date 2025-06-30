@@ -213,18 +213,24 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Rota pública para listar clientes (exemplo para banco do admin)
-app.get('/api/clientes', async (req, res) => {
+// Middleware para garantir autenticação nas rotas multi-tenant
+function requireUserDb(req, res, next) {
+  if (!req.session.user || !req.session.user.dbName) {
+    return res.status(401).json({ error: 'Não autenticado.' });
+  }
+  next();
+}
+
+// Rotas de clientes (multi-tenant)
+app.get('/api/clientes', requireUserDb, async (req, res) => {
   try {
-    // Conectar ao banco do admin (ajuste para multi-tenant se necessário)
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin', // ou o banco correto do usuário logado
+      database: req.session.user.dbName,
       charset: 'utf8mb4'
     });
-
     const [rows] = await connection.execute('SELECT * FROM clientes ORDER BY razao');
     await connection.end();
     res.json(rows);
@@ -233,24 +239,20 @@ app.get('/api/clientes', async (req, res) => {
   }
 });
 
-// Rota para criar novo cliente
-app.post('/api/clientes', async (req, res) => {
+app.post('/api/clientes', requireUserDb, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin',
+      database: req.session.user.dbName,
       charset: 'utf8mb4'
     });
-
     const { razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs } = req.body;
-    
     const [result] = await connection.execute(
       'INSERT INTO clientes (razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs]
     );
-    
     await connection.end();
     res.status(201).json({ id: result.insertId, message: 'Cliente criado com sucesso' });
   } catch (error) {
@@ -258,25 +260,21 @@ app.post('/api/clientes', async (req, res) => {
   }
 });
 
-// Rota para atualizar cliente
-app.put('/api/clientes/:id', async (req, res) => {
+app.put('/api/clientes/:id', requireUserDb, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin',
+      database: req.session.user.dbName,
       charset: 'utf8mb4'
     });
-
     const { id } = req.params;
     const { razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs } = req.body;
-    
     await connection.execute(
       'UPDATE clientes SET razao = ?, cnpj = ?, ie = ?, endereco = ?, bairro = ?, cidade = ?, estado = ?, cep = ?, email = ?, telefone = ?, transporte = ?, prazo = ?, obs = ? WHERE id = ?',
       [razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs, id]
     );
-    
     await connection.end();
     res.json({ message: 'Cliente atualizado com sucesso' });
   } catch (error) {
@@ -284,21 +282,17 @@ app.put('/api/clientes/:id', async (req, res) => {
   }
 });
 
-// Rota para deletar cliente
-app.delete('/api/clientes/:id', async (req, res) => {
+app.delete('/api/clientes/:id', requireUserDb, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin',
+      database: req.session.user.dbName,
       charset: 'utf8mb4'
     });
-
     const { id } = req.params;
-    
     await connection.execute('DELETE FROM clientes WHERE id = ?', [id]);
-    
     await connection.end();
     res.json({ message: 'Cliente removido com sucesso' });
   } catch (error) {
@@ -306,18 +300,16 @@ app.delete('/api/clientes/:id', async (req, res) => {
   }
 });
 
-// Rotas para Produtos
-// Rota para listar produtos
-app.get('/api/produtos', async (req, res) => {
+// Rotas de produtos (multi-tenant)
+app.get('/api/produtos', requireUserDb, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin',
+      database: req.session.user.dbName,
       charset: 'utf8mb4'
     });
-
     const [rows] = await connection.execute('SELECT * FROM produtos ORDER BY nome');
     await connection.end();
     res.json(rows);
@@ -326,76 +318,42 @@ app.get('/api/produtos', async (req, res) => {
   }
 });
 
-// Rota para criar novo produto
-app.post('/api/produtos', async (req, res) => {
+app.post('/api/produtos', requireUserDb, async (req, res) => {
   try {
-    // Verificar se as variáveis de ambiente estão configuradas
-    if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_PASSWORD) {
-      console.error('Variáveis de ambiente do banco não configuradas');
-      return res.status(500).json({ 
-        error: 'Configuração de banco de dados não encontrada',
-        details: 'Configure as variáveis DB_HOST, DB_USER e DB_PASSWORD no Vercel'
-      });
-    }
-
-    console.log('Tentando conectar ao banco de dados...');
-    console.log('DB_HOST:', process.env.DB_HOST);
-    console.log('DB_USER:', process.env.DB_USER);
-    console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '***' : 'não definida');
-    
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin',
+      database: req.session.user.dbName,
       charset: 'utf8mb4'
     });
-
-    console.log('Conexão estabelecida com sucesso');
-
     const { nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status } = req.body;
-    
-    console.log('Dados recebidos:', { nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status });
-    
     const [result] = await connection.execute(
       'INSERT INTO produtos (nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status]
     );
-    
-    console.log('Produto inserido com sucesso, ID:', result.insertId);
-    
     await connection.end();
     res.status(201).json({ id: result.insertId, message: 'Produto criado com sucesso' });
   } catch (error) {
-    console.error('Erro detalhado ao criar produto:', error);
-    console.error('Stack trace:', error.stack);
-    res.status(500).json({ 
-      error: 'Erro ao criar produto',
-      details: error.message,
-      code: error.code
-    });
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Rota para atualizar produto
-app.put('/api/produtos/:id', async (req, res) => {
+app.put('/api/produtos/:id', requireUserDb, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin',
+      database: req.session.user.dbName,
       charset: 'utf8mb4'
     });
-
     const { id } = req.params;
     const { nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status } = req.body;
-    
     await connection.execute(
       'UPDATE produtos SET nome = ?, descricao = ?, preco_custo = ?, preco_venda = ?, categoria = ?, codigo = ?, estoque = ?, fornecedor = ?, peso = ?, dimensoes = ?, status = ? WHERE id = ?',
       [nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status, id]
     );
-    
     await connection.end();
     res.json({ message: 'Produto atualizado com sucesso' });
   } catch (error) {
@@ -403,21 +361,17 @@ app.put('/api/produtos/:id', async (req, res) => {
   }
 });
 
-// Rota para deletar produto
-app.delete('/api/produtos/:id', async (req, res) => {
+app.delete('/api/produtos/:id', requireUserDb, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin',
+      database: req.session.user.dbName,
       charset: 'utf8mb4'
     });
-
     const { id } = req.params;
-    
     await connection.execute('DELETE FROM produtos WHERE id = ?', [id]);
-    
     await connection.end();
     res.json({ message: 'Produto removido com sucesso' });
   } catch (error) {
@@ -425,15 +379,14 @@ app.delete('/api/produtos/:id', async (req, res) => {
   }
 });
 
-// Rotas para Pedidos
-// Listar pedidos
-app.get('/api/pedidos', async (req, res) => {
+// Rotas de pedidos (multi-tenant)
+app.get('/api/pedidos', requireUserDb, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin',
+      database: req.session.user.dbName,
       charset: 'utf8mb4'
     });
     const [rows] = await connection.execute(`
@@ -442,14 +395,12 @@ app.get('/api/pedidos', async (req, res) => {
       LEFT JOIN clientes c ON p.cliente_id = c.id 
       ORDER BY p.data_pedido DESC, p.id DESC
     `);
-
     // Buscar itens de todos os pedidos
     const [itens] = await connection.execute(`
       SELECT pi.pedido_id, pi.quantidade, pi.preco_unitario, pr.nome as produto, pr.preco_custo, pr.preco_venda
       FROM pedido_itens pi
       LEFT JOIN produtos pr ON pi.produto_id = pr.id
     `);
-
     // Agrupar itens por pedido_id
     const itensPorPedido = {};
     itens.forEach(item => {
@@ -463,13 +414,11 @@ app.get('/api/pedidos', async (req, res) => {
         subtotal: Number(item.preco_unitario) * Number(item.quantidade)
       });
     });
-
     // Adicionar array itens em cada pedido
     const pedidosComItens = rows.map(pedido => ({
       ...pedido,
       itens: itensPorPedido[pedido.id] || []
     }));
-
     await connection.end();
     res.json(pedidosComItens);
   } catch (error) {
@@ -477,60 +426,25 @@ app.get('/api/pedidos', async (req, res) => {
   }
 });
 
-// Buscar pedido individual por ID
-app.get('/api/pedidos/:id', async (req, res) => {
-  try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin',
-      charset: 'utf8mb4'
-    });
-    const { id } = req.params;
-    const [rows] = await connection.execute(`
-      SELECT p.*, c.razao as nome_cliente, c.cnpj, c.telefone, c.email, c.endereco 
-      FROM pedidos p 
-      LEFT JOIN clientes c ON p.cliente_id = c.id 
-      WHERE p.id = ?
-    `, [id]);
-    await connection.end();
-    
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'Pedido não encontrado' });
-    }
-    
-    res.json(rows[0]);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Criar novo pedido
-app.post('/api/pedidos', async (req, res) => {
+app.post('/api/pedidos', requireUserDb, async (req, res) => {
   let connection;
   try {
-    console.log('Recebido novo pedido:', JSON.stringify(req.body, null, 2));
     connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin',
+      database: req.session.user.dbName,
       charset: 'utf8mb4'
     });
     const { cliente_id, data_pedido, status, valor_total, observacoes, itens, nome_cliente } = req.body;
-    
     // Validar itens
     if ((!Array.isArray(itens) || itens.length === 0) && status !== 'Em Aberto') {
       return res.status(400).json({ error: 'O pedido deve conter pelo menos um item.' });
     }
-
     // Normalizar o status
     const statusNormalizado = normalizarStatus(status);
-
     // Iniciar transação
     await connection.beginTransaction();
-
     // Garantir que nenhum valor seja undefined
     const safeClienteId = typeof cliente_id === 'undefined' ? null : cliente_id;
     const safeDataPedido = typeof data_pedido === 'undefined' ? null : data_pedido;
@@ -538,149 +452,81 @@ app.post('/api/pedidos', async (req, res) => {
     const safeValorTotal = typeof valor_total === 'undefined' ? null : valor_total;
     const safeObservacoes = typeof observacoes === 'undefined' ? null : observacoes;
     const safeNomeCliente = typeof nome_cliente === 'undefined' ? null : nome_cliente;
-    console.log('Valores para insert:', { safeClienteId, safeDataPedido, safeStatus, safeValorTotal, safeObservacoes, safeNomeCliente });
     // Inserir pedido
     const [result] = await connection.execute(
       'INSERT INTO pedidos (cliente_id, nome_cliente, data_pedido, status, valor_total, observacoes) VALUES (?, ?, ?, ?, ?, ?)',
       [safeClienteId, safeNomeCliente, safeDataPedido, safeStatus, safeValorTotal, safeObservacoes]
     );
     const pedidoId = result.insertId;
-
-    // Inserir itens do pedido
+    // Inserir itens
     for (const item of itens) {
-      const { produto_id, quantidade, precoUnitario } = item;
-      if (!produto_id || !quantidade || !precoUnitario) {
-        await connection.rollback();
-        return res.status(400).json({ error: 'Cada item deve conter produto_id, quantidade e precoUnitario.' });
-      }
       await connection.execute(
         'INSERT INTO pedido_itens (pedido_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)',
-        [pedidoId, produto_id, quantidade, precoUnitario]
+        [pedidoId, item.produto_id, item.quantidade, item.preco_unitario]
       );
     }
-
-    // Commit da transação
     await connection.commit();
     await connection.end();
     res.status(201).json({ id: pedidoId, message: 'Pedido criado com sucesso' });
   } catch (error) {
-    console.error('Erro ao criar pedido:', error);
-    if (connection) {
-      try { await connection.rollback(); } catch (e) {}
-      try { await connection.end(); } catch (e) {}
-    }
+    if (connection) await connection.rollback();
+    if (connection) await connection.end();
     res.status(500).json({ error: error.message });
   }
 });
 
-// Função para normalizar status do pedido
-function normalizarStatus(status) {
-  if (!status) return 'Em Processamento';
-  
-  const statusNormalizado = status.toString().trim();
-  
-  // Mapear variações para valores padrão
-  const mapeamentoStatus = {
-    'pendente': 'Em Processamento',
-    'Pendente': 'Em Processamento',
-    'PENDENTE': 'Em Processamento',
-    'em processamento': 'Em Processamento',
-    'Em processamento': 'Em Processamento',
-    'EM PROCESSAMENTO': 'Em Processamento',
-    'concluido': 'Concluído',
-    'Concluido': 'Concluído',
-    'CONCLUIDO': 'Concluído',
-    'concluído': 'Concluído',
-    'CONCLUÍDO': 'Concluído',
-    'cancelado': 'Cancelado',
-    'Cancelado': 'Cancelado',
-    'CANCELADO': 'Cancelado'
-  };
-  
-  return mapeamentoStatus[statusNormalizado] || statusNormalizado;
-}
-
-// Editar pedido
-app.put('/api/pedidos/:id', async (req, res) => {
+app.put('/api/pedidos/:id', requireUserDb, async (req, res) => {
   let connection;
   try {
-    console.log('Recebendo requisição PUT para pedido:', req.params.id);
-    console.log('Dados recebidos:', req.body);
-    
     connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin',
+      database: req.session.user.dbName,
       charset: 'utf8mb4'
     });
     const { id } = req.params;
     const { cliente_id, data_pedido, status, valor_total, observacoes, itens, nome_cliente } = req.body;
-    
     // Normalizar o status
     const statusNormalizado = normalizarStatus(status);
-    
-    console.log('Atualizando pedido com dados:', {
-      id,
-      cliente_id,
-      data_pedido,
-      status: statusNormalizado,
-      valor_total,
-      observacoes,
-      nome_cliente
-    });
-
     // Iniciar transação
     await connection.beginTransaction();
-
+    // Atualizar pedido
     await connection.execute(
-      'UPDATE pedidos SET cliente_id=?, nome_cliente=?, data_pedido=?, status=?, valor_total=?, observacoes=? WHERE id=?',
+      'UPDATE pedidos SET cliente_id = ?, nome_cliente = ?, data_pedido = ?, status = ?, valor_total = ?, observacoes = ? WHERE id = ?',
       [cliente_id, nome_cliente, data_pedido, statusNormalizado, valor_total, observacoes, id]
     );
-
-    // Atualizar itens do pedido
-    if (Array.isArray(itens)) {
-      // Deletar itens antigos
-      await connection.execute('DELETE FROM pedido_itens WHERE pedido_id=?', [id]);
-      // Inserir novos itens
-      for (const item of itens) {
-        const { produto_id, quantidade, precoUnitario } = item;
-        if (!produto_id || !quantidade || !precoUnitario) {
-          await connection.rollback();
-          return res.status(400).json({ error: 'Cada item deve conter produto_id, quantidade e precoUnitario.' });
-        }
-        await connection.execute(
-          'INSERT INTO pedido_itens (pedido_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)',
-          [id, produto_id, quantidade, precoUnitario]
-        );
-      }
+    // Remover itens antigos
+    await connection.execute('DELETE FROM pedido_itens WHERE pedido_id = ?', [id]);
+    // Inserir novos itens
+    for (const item of itens) {
+      await connection.execute(
+        'INSERT INTO pedido_itens (pedido_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)',
+        [id, item.produto_id, item.quantidade, item.preco_unitario]
+      );
     }
-
     await connection.commit();
     await connection.end();
     res.json({ message: 'Pedido atualizado com sucesso' });
   } catch (error) {
-    if (connection) {
-      try { await connection.rollback(); } catch (e) {}
-      try { await connection.end(); } catch (e) {}
-    }
-    console.error('Erro ao atualizar pedido:', error);
+    if (connection) await connection.rollback();
+    if (connection) await connection.end();
     res.status(500).json({ error: error.message });
   }
 });
 
-// Excluir pedido
-app.delete('/api/pedidos/:id', async (req, res) => {
+app.delete('/api/pedidos/:id', requireUserDb, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin',
+      database: req.session.user.dbName,
       charset: 'utf8mb4'
     });
     const { id } = req.params;
-    await connection.execute('DELETE FROM pedidos WHERE id=?', [id]);
+    await connection.execute('DELETE FROM pedido_itens WHERE pedido_id = ?', [id]);
+    await connection.execute('DELETE FROM pedidos WHERE id = ?', [id]);
     await connection.end();
     res.json({ message: 'Pedido removido com sucesso' });
   } catch (error) {
