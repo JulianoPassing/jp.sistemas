@@ -600,11 +600,12 @@ function normalizarStatus(status) {
 
 // Editar pedido
 app.put('/api/pedidos/:id', async (req, res) => {
+  let connection;
   try {
     console.log('Recebendo requisição PUT para pedido:', req.params.id);
     console.log('Dados recebidos:', req.body);
     
-    const connection = await mysql.createConnection({
+    connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
@@ -612,7 +613,7 @@ app.put('/api/pedidos/:id', async (req, res) => {
       charset: 'utf8mb4'
     });
     const { id } = req.params;
-    const { cliente_id, data_pedido, status, valor_total, observacoes } = req.body;
+    const { cliente_id, data_pedido, status, valor_total, observacoes, itens } = req.body;
     
     // Normalizar o status
     const statusNormalizado = normalizarStatus(status);
@@ -625,17 +626,41 @@ app.put('/api/pedidos/:id', async (req, res) => {
       valor_total,
       observacoes
     });
-    
+
+    // Iniciar transação
+    await connection.beginTransaction();
+
     await connection.execute(
       'UPDATE pedidos SET cliente_id=?, data_pedido=?, status=?, valor_total=?, observacoes=? WHERE id=?',
       [cliente_id, data_pedido, statusNormalizado, valor_total, observacoes, id]
     );
-    
-    console.log('Pedido atualizado com sucesso');
-    
+
+    // Atualizar itens do pedido
+    if (Array.isArray(itens)) {
+      // Deletar itens antigos
+      await connection.execute('DELETE FROM pedido_itens WHERE pedido_id=?', [id]);
+      // Inserir novos itens
+      for (const item of itens) {
+        const { produto_id, quantidade, precoUnitario } = item;
+        if (!produto_id || !quantidade || !precoUnitario) {
+          await connection.rollback();
+          return res.status(400).json({ error: 'Cada item deve conter produto_id, quantidade e precoUnitario.' });
+        }
+        await connection.execute(
+          'INSERT INTO pedido_itens (pedido_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)',
+          [id, produto_id, quantidade, precoUnitario]
+        );
+      }
+    }
+
+    await connection.commit();
     await connection.end();
     res.json({ message: 'Pedido atualizado com sucesso' });
   } catch (error) {
+    if (connection) {
+      try { await connection.rollback(); } catch (e) {}
+      try { await connection.end(); } catch (e) {}
+    }
     console.error('Erro ao atualizar pedido:', error);
     res.status(500).json({ error: error.message });
   }
