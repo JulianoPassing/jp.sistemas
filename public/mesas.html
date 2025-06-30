@@ -578,7 +578,11 @@
           try {
             const errData = await response.json();
             if (errData && errData.error) msg += ': ' + errData.error;
-          } catch {}
+          } catch (e) {
+            console.warn('Falha ao parsear JSON do erro:', e);
+          }
+        } else {
+          console.warn('Resposta de erro não é JSON. Status:', response.status, 'Content-Type:', contentType);
         }
         throw new Error(msg);
       } catch (e) {
