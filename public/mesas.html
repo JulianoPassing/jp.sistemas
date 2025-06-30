@@ -521,12 +521,12 @@
         });
         if (!response.ok) throw new Error('Erro ao criar mesa/pedido');
         const novoPedido = await response.json();
-        // Se o backend retorna só {id, message}, buscar o pedido completo
         if (novoPedido && novoPedido.id) {
           // Buscar o pedido recém-criado
           const respPedido = await fetch(`/api/pedidos/${novoPedido.id}`);
           if (respPedido.ok) {
             const pedidoCompleto = await respPedido.json();
+            pedidoCompleto.nome_cliente = pedidoCompleto.nome_cliente || nome;
             pedidosAbertos.unshift(pedidoCompleto);
           } else {
             // fallback: adicionar só com nome
@@ -735,7 +735,16 @@
         await fetch(`/api/pedidos/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...pedido, nome_cliente: novoNome, itens: pedido.itens })
+          body: JSON.stringify({
+            ...pedido,
+            nome_cliente: novoNome,
+            itens: pedido.itens,
+            cliente_id: pedido.cliente_id ?? null,
+            data_pedido: pedido.data_pedido ?? null,
+            status: pedido.status ?? 'Em Aberto',
+            valor_total: pedido.valor_total ?? 0,
+            observacoes: pedido.observacoes ?? ''
+          })
         });
         await carregarPedidosAbertos();
         fecharModalEditarProdutos();
