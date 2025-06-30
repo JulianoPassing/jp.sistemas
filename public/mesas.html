@@ -450,7 +450,7 @@
         const response = await fetch('/api/pedidos');
         if (!response.ok) throw new Error('Erro ao buscar pedidos');
         const todos = await response.json();
-        pedidosAbertos = (todos || []).filter(p => p.status === 'Em Aberto' && (p.nome_cliente || p.nome_mesa || 'Mesa/Pessoa'));
+        pedidosAbertos = (todos || []).filter(p => p.status === 'Em Aberto');
         renderMesas();
       } catch (e) {
         pedidosAbertos = [];
