@@ -6,12 +6,17 @@ export default function handler(req, res) {
     res.status(200).json(pedidos);
   } else if (req.method === 'POST') {
     try {
-      if (!req.body || typeof req.body !== 'object') {
+      console.log('BODY RECEBIDO:', req.body);
+      let data = req.body;
+      if (typeof data === 'string') {
+        data = JSON.parse(data);
+      }
+      if (!data || typeof data !== 'object') {
         throw new Error('Body inválido ou ausente');
       }
       const pedido = {
         id: nextId++,
-        ...req.body,
+        ...data,
       };
       pedidos.push(pedido);
       res.status(201).json(pedido);
