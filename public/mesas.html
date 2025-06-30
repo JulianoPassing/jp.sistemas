@@ -668,20 +668,47 @@
       const modal = document.getElementById('modal-editar-produtos');
       const pedido = pedidosAbertos.find(p => p.id === id);
       if (!pedido) return;
-      // Preencher nome da mesa/pessoa
-      modal.querySelector('h3').textContent = `Editar Produtos - ${pedido.nome_cliente || pedido.nome_mesa || 'Mesa/Pessoa'}`;
-      // Campo para editar nome
-      let nomeHtml = `<div style='margin-bottom:12px;'><label style='font-weight:500;'>Nome da Mesa/Pessoa:</label><input id='input-nome-mesa' type='text' value='${pedido.nome_cliente || ''}' style='width:100%;padding:7px 10px;border-radius:7px;border:1.5px solid #e5e7eb;font-size:1em;margin-top:4px;'/></div>`;
-      // Listar produtos já adicionados
-      let itensHtml = '';
-      (pedido.itens||[]).forEach((item, idx) => {
-        itensHtml += `<div style='display:flex;align-items:center;gap:8px;margin-bottom:8px;'>
-          <span style='flex:1;'>${item.produto}</span>
-          <input type='number' min='1' value='${item.quantidade}' data-idx='${idx}' class='input-quantidade' style='width:60px;padding:4px 6px;border-radius:6px;border:1.2px solid #e5e7eb;font-size:1em;' />
-          <button class='btn btn-danger btn-remover-produto' data-idx='${idx}' title='Remover'><i class='fas fa-trash'></i></button>
-        </div>`;
-      });
-      document.getElementById('produtos-mesa-lista').innerHTML = nomeHtml + (itensHtml || '<div style="color:#888;font-size:0.98em;">Nenhum produto adicionado.</div>');
+      // Variáveis locais para edição
+      let itensEdit = JSON.parse(JSON.stringify(pedido.itens || []));
+      let nomeEdit = pedido.nome_cliente || '';
+
+      function renderListaProdutos() {
+        // Campo para editar nome
+        let nomeHtml = `<div style='margin-bottom:12px;'><label style='font-weight:500;'>Nome da Mesa/Pessoa:</label><input id='input-nome-mesa' type='text' value='${nomeEdit}' style='width:100%;padding:7px 10px;border-radius:7px;border:1.5px solid #e5e7eb;font-size:1em;margin-top:4px;'/></div>`;
+        // Listar produtos já adicionados
+        let itensHtml = '';
+        (itensEdit||[]).forEach((item, idx) => {
+          itensHtml += `<div style='display:flex;align-items:center;gap:8px;margin-bottom:8px;'>
+            <span style='flex:1;'>${item.produto}</span>
+            <input type='number' min='1' value='${item.quantidade}' data-idx='${idx}' class='input-quantidade' style='width:60px;padding:4px 6px;border-radius:6px;border:1.2px solid #e5e7eb;font-size:1em;' />
+            <button class='btn btn-danger btn-remover-produto' data-idx='${idx}' title='Remover'><i class='fas fa-trash'></i></button>
+          </div>`;
+        });
+        document.getElementById('produtos-mesa-lista').innerHTML = nomeHtml + (itensHtml || '<div style="color:#888;font-size:0.98em;">Nenhum produto adicionado.</div>');
+        // Atualizar nomeEdit ao digitar
+        document.getElementById('input-nome-mesa').oninput = function() {
+          nomeEdit = this.value;
+        };
+        // Alterar quantidade
+        document.querySelectorAll('.input-quantidade').forEach(input => {
+          input.onchange = function() {
+            const idx = this.getAttribute('data-idx');
+            let val = parseInt(this.value) || 1;
+            if (val < 1) val = 1;
+            itensEdit[idx].quantidade = val;
+            itensEdit[idx].subtotal = val * (itensEdit[idx].precoUnitario||0);
+          };
+        });
+        // Remover produto
+        document.querySelectorAll('.btn-remover-produto').forEach(btn => {
+          btn.onclick = function() {
+            const idx = this.getAttribute('data-idx');
+            itensEdit.splice(idx, 1);
+            renderListaProdutos();
+          };
+        });
+      }
+      renderListaProdutos();
       // Preencher select de produtos
       const select = document.getElementById('select-produto');
       select.innerHTML = '<option value="">Adicionar produto...</option>' + produtos.map(p => `<option value='${p.id}'>${p.nome}</option>`).join('');
@@ -692,62 +719,35 @@
         const prod = produtos.find(p => String(p.id) === String(prodId));
         if (!prod) return;
         // Evitar duplicidade
-        if ((pedido.itens||[]).some(i => String(i.produto_id) === String(prodId))) {
+        if ((itensEdit||[]).some(i => String(i.produto_id) === String(prodId))) {
           alert('Produto já adicionado!');
           return;
         }
-        pedido.itens = pedido.itens || [];
-        pedido.itens.push({
+        itensEdit = itensEdit || [];
+        itensEdit.push({
           produto: prod.nome,
           produto_id: prod.id,
           quantidade: 1,
           precoUnitario: parseFloat(prod.preco_venda) || 0,
           subtotal: parseFloat(prod.preco_venda) || 0
         });
-        window.abrirModalEditarProdutos(id); // reabrir para atualizar
+        renderListaProdutos();
       };
-      // Alterar quantidade
-      document.querySelectorAll('.input-quantidade').forEach(input => {
-        input.onchange = function() {
-          const idx = this.getAttribute('data-idx');
-          let val = parseInt(this.value) || 1;
-          if (val < 1) val = 1;
-          pedido.itens[idx].quantidade = val;
-          pedido.itens[idx].subtotal = val * (pedido.itens[idx].precoUnitario||0);
-        };
-      });
-      // Remover produto
-      document.querySelectorAll('.btn-remover-produto').forEach(btn => {
-        btn.onclick = function() {
-          const idx = this.getAttribute('data-idx');
-          pedido.itens.splice(idx, 1);
-          window.abrirModalEditarProdutos(id);
-        };
-      });
       // Salvar alterações
       document.getElementById('btn-salvar-produtos').onclick = async function() {
-        const novoNome = document.getElementById('input-nome-mesa').value.trim();
+        const novoNome = nomeEdit.trim();
         if (!novoNome) {
           alert('Informe o nome da mesa/pessoa!');
           return;
         }
-        // Atualizar itens com quantidades atuais dos inputs
-        document.querySelectorAll('.input-quantidade').forEach(input => {
-          const idx = input.getAttribute('data-idx');
-          let val = parseInt(input.value) || 1;
-          if (val < 1) val = 1;
-          pedido.itens[idx].quantidade = val;
-          pedido.itens[idx].subtotal = val * (pedido.itens[idx].precoUnitario||0);
-        });
-        pedido.nome_cliente = novoNome;
-        const valor_total = (pedido.itens || []).reduce((sum, i) => sum + (i.subtotal || 0), 0);
+        const valor_total = (itensEdit || []).reduce((sum, i) => sum + (i.subtotal || 0), 0);
         await fetch(`/api/pedidos/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...pedido,
             nome_cliente: novoNome,
-            itens: pedido.itens,
+            itens: itensEdit,
             cliente_id: pedido.cliente_id ?? null,
             data_pedido: (pedido.data_pedido ?? new Date().toISOString().split('T')[0]).split('T')[0],
             status: pedido.status ?? 'Em Aberto',
