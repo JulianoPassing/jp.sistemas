@@ -536,45 +536,49 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(pedido)
         });
-        if (!response.ok) {
-          let msg = 'Erro ao criar mesa/pedido!';
-          try {
-            const errData = await response.json();
-            if (errData && errData.error) msg += ': ' + errData.error;
-          } catch {}
-          throw new Error(msg);
-        }
         let novoPedido = null;
         try {
           novoPedido = await response.json();
         } catch (e) {
           // Se não for JSON, tudo bem, segue
+          console.warn('Resposta não é JSON válido ao criar mesa/pedido:', e);
         }
-        if (novoPedido && novoPedido.id) {
-          // Buscar o pedido recém-criado
-          const respPedido = await fetch(`/api/pedidos/${novoPedido.id}`);
-          if (respPedido.ok) {
-            const pedidoCompleto = await respPedido.json();
-            pedidoCompleto.nome_cliente = pedidoCompleto.nome_cliente || nome;
-            pedidosAbertos.unshift(pedidoCompleto);
+        if (response.ok) {
+          if (novoPedido && novoPedido.id) {
+            // Buscar o pedido recém-criado
+            const respPedido = await fetch(`/api/pedidos/${novoPedido.id}`);
+            if (respPedido.ok) {
+              const pedidoCompleto = await respPedido.json();
+              pedidoCompleto.nome_cliente = pedidoCompleto.nome_cliente || nome;
+              pedidosAbertos.unshift(pedidoCompleto);
+            } else {
+              // fallback: adicionar só com nome
+              pedidosAbertos.unshift({ id: novoPedido.id, nome_cliente: nome, status: 'Em Aberto', itens: [], data_pedido: pedido.data_pedido });
+            }
+            renderMesas();
           } else {
-            // fallback: adicionar só com nome
-            pedidosAbertos.unshift({ id: novoPedido.id, nome_cliente: nome, status: 'Em Aberto', itens: [], data_pedido: pedido.data_pedido });
+            await carregarPedidosAbertos();
           }
-          renderMesas();
-        } else {
-          await carregarPedidosAbertos();
+          nomeInput.value = '';
+          feedback.textContent = 'Mesa criada com sucesso!';
+          feedback.style.color = '#059669';
+          feedback.style.display = 'block';
+          nomeInput.focus();
+          setTimeout(() => { feedback.style.display = 'none'; }, 2000);
+          return;
         }
-        nomeInput.value = '';
-        feedback.textContent = 'Mesa criada com sucesso!';
-        feedback.style.color = '#059669';
-        feedback.style.display = 'block';
-        nomeInput.focus();
-        setTimeout(() => { feedback.style.display = 'none'; }, 2000);
+        // Se chegou aqui, é erro HTTP
+        let msg = 'Erro ao criar mesa/pedido!';
+        try {
+          const errData = await response.json();
+          if (errData && errData.error) msg += ': ' + errData.error;
+        } catch {}
+        throw new Error(msg);
       } catch (e) {
         feedback.textContent = 'Erro ao criar mesa/pedido!';
         feedback.style.color = '#dc2626';
         feedback.style.display = 'block';
+        console.error('Erro real ao criar mesa/pedido:', e);
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-plus"></i> Nova Mesa';
