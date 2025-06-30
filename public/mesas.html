@@ -667,11 +667,79 @@
       const modal = document.getElementById('modal-editar-produtos');
       const pedido = pedidosAbertos.find(p => p.id === id);
       if (!pedido) return;
-      // Exemplo: mostrar nome da mesa no topo
+      // Preencher nome da mesa/pessoa
       modal.querySelector('h3').textContent = `Editar Produtos - ${pedido.nome_cliente || pedido.nome_mesa || 'Mesa/Pessoa'}`;
-      // (Aqui depois será preenchida a lista de produtos)
-      modal.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
+      // Campo para editar nome
+      let nomeHtml = `<div style='margin-bottom:12px;'><label style='font-weight:500;'>Nome da Mesa/Pessoa:</label><input id='input-nome-mesa' type='text' value='${pedido.nome_cliente || ''}' style='width:100%;padding:7px 10px;border-radius:7px;border:1.5px solid #e5e7eb;font-size:1em;margin-top:4px;'/></div>`;
+      // Listar produtos já adicionados
+      let itensHtml = '';
+      (pedido.itens||[]).forEach((item, idx) => {
+        itensHtml += `<div style='display:flex;align-items:center;gap:8px;margin-bottom:8px;'>
+          <span style='flex:1;'>${item.produto}</span>
+          <input type='number' min='1' value='${item.quantidade}' data-idx='${idx}' class='input-quantidade' style='width:60px;padding:4px 6px;border-radius:6px;border:1.2px solid #e5e7eb;font-size:1em;' />
+          <button class='btn btn-danger btn-remover-produto' data-idx='${idx}' title='Remover'><i class='fas fa-trash'></i></button>
+        </div>`;
+      });
+      document.getElementById('produtos-mesa-lista').innerHTML = nomeHtml + (itensHtml || '<div style="color:#888;font-size:0.98em;">Nenhum produto adicionado.</div>');
+      // Preencher select de produtos
+      const select = document.getElementById('select-produto');
+      select.innerHTML = '<option value="">Adicionar produto...</option>' + produtos.map(p => `<option value='${p.id}'>${p.nome}</option>`).join('');
+      // Adicionar produto
+      document.getElementById('btn-add-produto').onclick = function() {
+        const prodId = select.value;
+        if (!prodId) return;
+        const prod = produtos.find(p => String(p.id) === String(prodId));
+        if (!prod) return;
+        // Evitar duplicidade
+        if ((pedido.itens||[]).some(i => String(i.produto_id) === String(prodId))) {
+          alert('Produto já adicionado!');
+          return;
+        }
+        pedido.itens = pedido.itens || [];
+        pedido.itens.push({
+          produto: prod.nome,
+          produto_id: prod.id,
+          quantidade: 1,
+          precoUnitario: parseFloat(prod.preco_venda) || 0,
+          subtotal: parseFloat(prod.preco_venda) || 0
+        });
+        window.abrirModalEditarProdutos(id); // reabrir para atualizar
+      };
+      // Alterar quantidade
+      document.querySelectorAll('.input-quantidade').forEach(input => {
+        input.onchange = function() {
+          const idx = this.getAttribute('data-idx');
+          let val = parseInt(this.value) || 1;
+          if (val < 1) val = 1;
+          pedido.itens[idx].quantidade = val;
+          pedido.itens[idx].subtotal = val * (pedido.itens[idx].precoUnitario||0);
+        };
+      });
+      // Remover produto
+      document.querySelectorAll('.btn-remover-produto').forEach(btn => {
+        btn.onclick = function() {
+          const idx = this.getAttribute('data-idx');
+          pedido.itens.splice(idx, 1);
+          window.abrirModalEditarProdutos(id);
+        };
+      });
+      // Salvar alterações
+      document.getElementById('btn-salvar-produtos').onclick = async function() {
+        const novoNome = document.getElementById('input-nome-mesa').value.trim();
+        if (!novoNome) {
+          alert('Informe o nome da mesa/pessoa!');
+          return;
+        }
+        pedido.nome_cliente = novoNome;
+        // Atualizar backend
+        await fetch(`/api/pedidos/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome_cliente: novoNome, itens: pedido.itens })
+        });
+        await carregarPedidosAbertos();
+        fecharModalEditarProdutos();
+      };
       // Fechar modal
       document.getElementById('btn-fechar-modal-produtos').onclick = fecharModalEditarProdutos;
       document.getElementById('btn-cancelar-produtos').onclick = fecharModalEditarProdutos;
@@ -679,6 +747,8 @@
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
       }
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
     }
     window.abrirModalFinalizarMesa = function(id) {
       const modal = document.getElementById('modal-finalizar-mesa');
