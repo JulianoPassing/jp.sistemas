@@ -199,41 +199,50 @@
       width: 100%;
       border-collapse: collapse;
     }
-    .mesa-itens th, .mesa-itens td {
-      padding: 4px 6px;
-      border-bottom: 1px solid #e5e7eb;
-      font-size: 0.97em;
-    }
     .mesa-itens th {
       background: #f3f4f6;
       color: var(--primary-color);
       font-weight: 600;
+      text-align: right;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .mesa-itens th:first-child {
+      text-align: left;
+    }
+    .mesa-itens td {
+      padding: 8px 6px;
+      font-size: 1.05em;
+      border-bottom: 1px solid #f0f0f0;
+      text-align: right;
+    }
+    .mesa-itens td:first-child {
+      text-align: left;
     }
     .mesa-itens tr:last-child td {
       border-bottom: none;
     }
     .mesa-total {
-      font-size: 1.08em;
+      font-size: 1.18em;
       font-weight: 700;
       color: var(--success-color);
-      margin: 8px 18px 0 18px;
+      margin: 12px 18px 0 0;
       text-align: right;
       letter-spacing: 0.01em;
     }
     .mesa-acoes {
       display: flex;
-      gap: 6px;
-      margin: 12px 12px 0 12px;
+      gap: 10px;
+      margin: 18px 18px 0 0;
       justify-content: flex-end;
       flex-wrap: wrap;
     }
     .mesa-acoes .btn {
-      min-width: 36px;
-      font-size: 1em;
+      min-width: 40px;
+      font-size: 1.15em;
       font-weight: 600;
       box-shadow: 0 2px 8px rgba(37,99,235,0.07);
-      padding: 7px 10px;
-      border-radius: 7px;
+      padding: 8px 12px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -373,6 +382,9 @@
         <button class="btn btn-primary" id="btn-criar-mesa" type="submit" style="height:48px;font-size:1.13em;padding:0 32px;box-shadow:0 4px 16px rgba(37,99,235,0.13);display:flex;align-items:center;gap:10px;">
           <i class="fas fa-plus"></i> Nova Mesa
         </button>
+        <a href="pedidos.html" class="btn btn-secondary" style="height:48px;font-size:1.13em;padding:0 32px;display:flex;align-items:center;gap:10px;text-decoration:none;">
+          <i class="fas fa-list"></i> Voltar para Pedidos
+        </a>
       </form>
       <div class="mesas-grid" id="mesas-grid"></div>
     </div>
