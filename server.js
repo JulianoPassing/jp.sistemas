@@ -12,6 +12,7 @@ const {
   getRootConfig 
 } = require('./database-config');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 const app = express();
@@ -21,6 +22,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Configuração de CORS para aceitar credenciais do frontend
 app.use(cors({
