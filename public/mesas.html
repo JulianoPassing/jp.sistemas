@@ -741,19 +741,21 @@
           return;
         }
         const valor_total = (itensEdit || []).reduce((sum, i) => sum + (i.subtotal || 0), 0);
+        const putBody = {
+          ...pedido,
+          nome_cliente: novoNome || pedido.nome_cliente || pedido.nome_mesa || 'Mesa/Pessoa',
+          itens: itensEdit,
+          cliente_id: pedido.cliente_id ?? null,
+          data_pedido: (pedido.data_pedido ?? new Date().toISOString().split('T')[0]).split('T')[0],
+          status: pedido.status ?? 'Em Aberto',
+          valor_total: valor_total || 0,
+          observacoes: pedido.observacoes ?? ''
+        };
+        console.log('PUT /api/pedidos/' + id, putBody);
         await fetch(`/api/pedidos/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...pedido,
-            nome_cliente: novoNome || pedido.nome_cliente || pedido.nome_mesa || 'Mesa/Pessoa',
-            itens: itensEdit,
-            cliente_id: pedido.cliente_id ?? null,
-            data_pedido: (pedido.data_pedido ?? new Date().toISOString().split('T')[0]).split('T')[0],
-            status: pedido.status ?? 'Em Aberto',
-            valor_total: valor_total || 0,
-            observacoes: pedido.observacoes ?? ''
-          })
+          body: JSON.stringify(putBody)
         });
         await carregarPedidosAbertos();
         fecharModalEditarProdutos();
