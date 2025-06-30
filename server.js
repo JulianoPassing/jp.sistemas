@@ -235,6 +235,7 @@ app.get('/api/clientes', requireUserDb, async (req, res) => {
     await connection.end();
     res.json(rows);
   } catch (error) {
+    console.error('Erro ao listar clientes:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -256,6 +257,7 @@ app.post('/api/clientes', requireUserDb, async (req, res) => {
     await connection.end();
     res.status(201).json({ id: result.insertId, message: 'Cliente criado com sucesso' });
   } catch (error) {
+    console.error('Erro ao cadastrar cliente:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -278,6 +280,7 @@ app.put('/api/clientes/:id', requireUserDb, async (req, res) => {
     await connection.end();
     res.json({ message: 'Cliente atualizado com sucesso' });
   } catch (error) {
+    console.error('Erro ao atualizar cliente:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -296,6 +299,7 @@ app.delete('/api/clientes/:id', requireUserDb, async (req, res) => {
     await connection.end();
     res.json({ message: 'Cliente removido com sucesso' });
   } catch (error) {
+    console.error('Erro ao remover cliente:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -314,6 +318,7 @@ app.get('/api/produtos', requireUserDb, async (req, res) => {
     await connection.end();
     res.json(rows);
   } catch (error) {
+    console.error('Erro ao listar produtos:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -335,6 +340,7 @@ app.post('/api/produtos', requireUserDb, async (req, res) => {
     await connection.end();
     res.status(201).json({ id: result.insertId, message: 'Produto criado com sucesso' });
   } catch (error) {
+    console.error('Erro ao cadastrar produto:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -357,6 +363,7 @@ app.put('/api/produtos/:id', requireUserDb, async (req, res) => {
     await connection.end();
     res.json({ message: 'Produto atualizado com sucesso' });
   } catch (error) {
+    console.error('Erro ao atualizar produto:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -375,6 +382,7 @@ app.delete('/api/produtos/:id', requireUserDb, async (req, res) => {
     await connection.end();
     res.json({ message: 'Produto removido com sucesso' });
   } catch (error) {
+    console.error('Erro ao remover produto:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -422,6 +430,7 @@ app.get('/api/pedidos', requireUserDb, async (req, res) => {
     await connection.end();
     res.json(pedidosComItens);
   } catch (error) {
+    console.error('Erro ao listar pedidos:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -469,6 +478,7 @@ app.post('/api/pedidos', requireUserDb, async (req, res) => {
     await connection.end();
     res.status(201).json({ id: pedidoId, message: 'Pedido criado com sucesso' });
   } catch (error) {
+    console.error('Erro ao cadastrar pedido:', error);
     if (connection) await connection.rollback();
     if (connection) await connection.end();
     res.status(500).json({ error: error.message });
@@ -509,6 +519,7 @@ app.put('/api/pedidos/:id', requireUserDb, async (req, res) => {
     await connection.end();
     res.json({ message: 'Pedido atualizado com sucesso' });
   } catch (error) {
+    console.error('Erro ao atualizar pedido:', error);
     if (connection) await connection.rollback();
     if (connection) await connection.end();
     res.status(500).json({ error: error.message });
@@ -530,6 +541,7 @@ app.delete('/api/pedidos/:id', requireUserDb, async (req, res) => {
     await connection.end();
     res.json({ message: 'Pedido removido com sucesso' });
   } catch (error) {
+    console.error('Erro ao remover pedido:', error);
     res.status(500).json({ error: error.message });
   }
 });
