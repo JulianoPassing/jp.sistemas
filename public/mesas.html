@@ -130,8 +130,8 @@
     }
     .mesas-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 32px;
       margin-top: 18px;
       padding-bottom: 8px;
       overflow-x: auto;
@@ -140,17 +140,18 @@
       background: var(--card-bg);
       border-radius: var(--border-radius);
       box-shadow: 0 4px 18px rgba(37, 99, 235, 0.13);
-      padding: 0 0 18px 0;
+      padding: 0 0 28px 0;
       margin-bottom: 0;
       position: relative;
       border: 2.5px solid #e5e7eb;
       transition: box-shadow 0.3s, border 0.2s, transform 0.2s;
       overflow: hidden;
-      min-width: 240px;
-      max-width: 340px;
+      min-width: 320px;
+      max-width: 480px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      font-size: 1.13em;
     }
     .mesa-card:hover {
       box-shadow: 0 8px 32px rgba(37, 99, 235, 0.18);
@@ -381,7 +382,7 @@
   </footer>
   <!-- Modal de Edição de Produtos da Mesa -->
   <div id="modal-editar-produtos" class="modal" style="display:none;position:fixed;z-index:1000;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
-    <div class="modal-content" style="background:#fff;border-radius:16px;max-width:420px;width:95vw;padding:32px 24px;box-shadow:0 8px 32px rgba(37,99,235,0.18);position:relative;">
+    <div class="modal-content" style="background:#fff;border-radius:16px;max-width:700px;width:97vw;padding:48px 36px;box-shadow:0 8px 32px rgba(37,99,235,0.18);position:relative;">
       <h3 style="margin-bottom:18px;font-size:1.25em;font-weight:600;">Editar Produtos da Mesa</h3>
       <div id="produtos-mesa-lista"></div>
       <div style="margin-top:18px;">
@@ -730,6 +731,14 @@
           alert('Informe o nome da mesa/pessoa!');
           return;
         }
+        // Atualizar itens com quantidades atuais dos inputs
+        document.querySelectorAll('.input-quantidade').forEach(input => {
+          const idx = input.getAttribute('data-idx');
+          let val = parseInt(input.value) || 1;
+          if (val < 1) val = 1;
+          pedido.itens[idx].quantidade = val;
+          pedido.itens[idx].subtotal = val * (pedido.itens[idx].precoUnitario||0);
+        });
         pedido.nome_cliente = novoNome;
         const valor_total = (pedido.itens || []).reduce((sum, i) => sum + (i.subtotal || 0), 0);
         await fetch(`/api/pedidos/${id}`, {
