@@ -749,6 +749,18 @@ app.get('/api/relatorios/estatisticas', async (req, res) => {
   }
 });
 
+// Rota de teste para setar um cookie manualmente
+app.get('/api/test-cookie', (req, res) => {
+  res.cookie('testcookie', 'valor', {
+    secure: true,
+    httpOnly: true,
+    sameSite: 'none',
+    domain: '.jp-sistemas.vercel.app',
+    maxAge: 60000 // 1 minuto
+  });
+  res.json({ ok: true });
+});
+
 // Rotas para servir páginas do painel e principais HTML
 const publicPath = path.join(__dirname, 'public');
 
