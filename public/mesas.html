@@ -553,9 +553,24 @@
             // Buscar o pedido recém-criado
             const respPedido = await fetch(`/api/pedidos/${novoPedido.id}`);
             if (respPedido.ok) {
-              const pedidoCompleto = await respPedido.json();
-              pedidoCompleto.nome_cliente = pedidoCompleto.nome_cliente || nome;
-              pedidosAbertos.unshift(pedidoCompleto);
+              const respPedidoContentType = respPedido.headers.get('content-type') || '';
+              let pedidoCompleto = null;
+              if (respPedidoContentType.includes('application/json')) {
+                try {
+                  pedidoCompleto = await respPedido.json();
+                } catch (e) {
+                  console.warn('Falha ao parsear JSON do pedido recém-criado:', e);
+                }
+              } else {
+                console.warn('Resposta de /api/pedidos/:id não é JSON. Status:', respPedido.status, 'Content-Type:', respPedidoContentType);
+              }
+              if (pedidoCompleto) {
+                pedidoCompleto.nome_cliente = pedidoCompleto.nome_cliente || nome;
+                pedidosAbertos.unshift(pedidoCompleto);
+              } else {
+                // fallback: adicionar só com nome
+                pedidosAbertos.unshift({ id: novoPedido?.id, nome_cliente: nome, status: 'Em Aberto', itens: [], data_pedido: pedido.data_pedido });
+              }
             } else {
               // fallback: adicionar só com nome
               pedidosAbertos.unshift({ id: novoPedido?.id, nome_cliente: nome, status: 'Em Aberto', itens: [], data_pedido: pedido.data_pedido });
