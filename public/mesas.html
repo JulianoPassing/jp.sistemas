@@ -339,6 +339,25 @@
   <footer class="footer" style="width:100%;text-align:center;padding:18px 0 12px 0;color:#000;font-size:15px;background:transparent;font-family:'Inter',sans-serif;letter-spacing:0.02em;">
     © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ola,%20gostaria%20de%20mais%20informacoes%20sobre%20os%20sistemas." target="_blank" style="color: #000; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
   </footer>
+  <!-- Modal de Edição de Produtos da Mesa -->
+  <div id="modal-editar-produtos" class="modal" style="display:none;position:fixed;z-index:1000;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+    <div class="modal-content" style="background:#fff;border-radius:16px;max-width:420px;width:95vw;padding:32px 24px;box-shadow:0 8px 32px rgba(37,99,235,0.18);position:relative;">
+      <h3 style="margin-bottom:18px;font-size:1.25em;font-weight:600;">Editar Produtos da Mesa</h3>
+      <div id="produtos-mesa-lista"></div>
+      <div style="margin-top:18px;">
+        <select id="select-produto" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #e5e7eb;font-size:1em;">
+          <option value="">Adicionar produto...</option>
+        </select>
+        <button id="btn-add-produto" class="btn btn-primary" style="margin-top:10px;width:100%;"><i class="fas fa-plus"></i> Adicionar Produto</button>
+      </div>
+      <div style="margin-top:24px;text-align:right;">
+        <button id="btn-salvar-produtos" class="btn btn-success"><i class="fas fa-save"></i> Salvar</button>
+        <button id="btn-cancelar-produtos" class="btn btn-secondary" style="margin-left:8px;">Cancelar</button>
+      </div>
+      <button id="btn-fechar-modal-produtos" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.5em;color:#888;cursor:pointer;"><i class="fas fa-times"></i></button>
+    </div>
+  </div>
+  <!-- Modal de Finalização com Desconto -->
   <script>
     let produtos = [];
     let pedidosAbertos = [];
@@ -409,9 +428,10 @@
           </div>
           <div class="mesa-total">Total: R$ ${total.toFixed(2).replace('.', ',')}</div>
           <div class="mesa-acoes">
-            <button class="btn btn-secondary" onclick="editarMesa(${pedido.id})"><i class="fas fa-edit"></i> Editar</button>
-            <button class="btn btn-success" onclick="finalizarMesa(${pedido.id})"><i class="fas fa-check"></i> Finalizar</button>
+            <button class="btn btn-secondary" onclick="abrirModalEditarProdutos(${pedido.id})"><i class='fas fa-edit'></i> Editar Produtos</button>
+            <button class="btn btn-success" onclick="abrirModalFinalizarMesa(${pedido.id})"><i class='fas fa-check'></i> Finalizar</button>
             <button class="btn btn-primary" onclick="imprimirComanda(${pedido.id})"><i class='fas fa-print'></i> Imprimir Comanda</button>
+            <button class="btn btn-danger" onclick="excluirMesa(${pedido.id})"><i class='fas fa-trash'></i> Excluir</button>
           </div>
         `;
         grid.appendChild(card);
@@ -446,14 +466,28 @@
           body: JSON.stringify(pedido)
         });
         if (!response.ok) throw new Error('Erro ao criar mesa/pedido');
+        const novoPedido = await response.json();
+        // Se o backend retorna só {id, message}, buscar o pedido completo
+        if (novoPedido && novoPedido.id) {
+          // Buscar o pedido recém-criado
+          const respPedido = await fetch(`/api/pedidos/${novoPedido.id}`);
+          if (respPedido.ok) {
+            const pedidoCompleto = await respPedido.json();
+            pedidosAbertos.unshift(pedidoCompleto);
+          } else {
+            // fallback: adicionar só com nome
+            pedidosAbertos.unshift({ id: novoPedido.id, nome_cliente: nome, status: 'Em Aberto', itens: [], data_pedido: pedido.data_pedido });
+          }
+          renderMesas();
+        } else {
+          await carregarPedidosAbertos();
+        }
         nomeInput.value = '';
         feedback.textContent = 'Mesa criada com sucesso!';
         feedback.style.color = '#059669';
         feedback.style.display = 'block';
         nomeInput.focus();
-        // Animação de destaque
         setTimeout(() => { feedback.style.display = 'none'; }, 2000);
-        await carregarPedidosAbertos();
       } catch (e) {
         feedback.textContent = 'Erro ao criar mesa/pedido!';
         feedback.style.color = '#dc2626';
@@ -562,6 +596,17 @@
       const win = window.open('', '', 'width=320,height=600');
       win.document.write(html);
       win.document.close();
+    }
+    window.excluirMesa = async function(id) {
+      if (!confirm('Tem certeza que deseja excluir esta mesa/pedido?')) return;
+      try {
+        const resp = await fetch(`/api/pedidos/${id}`, { method: 'DELETE' });
+        if (!resp.ok) throw new Error('Erro ao excluir mesa');
+        pedidosAbertos = pedidosAbertos.filter(p => p.id !== id);
+        renderMesas();
+      } catch (e) {
+        alert('Erro ao excluir mesa!');
+      }
     }
   </script>
 </body>
