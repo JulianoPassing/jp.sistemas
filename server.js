@@ -175,16 +175,20 @@ async function createUserDatabase(username) {
   }
 }
 
-// Middleware de autenticação
-function requireAuth(req, res, next) {
-  if (req.session.user) {
+// Middleware de autenticação por JWT
+function requireAuthJWT(req, res, next) {
+  const token = req.cookies.token || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
+  if (!token) return res.status(401).json({ error: 'Token não fornecido.' });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
     next();
-  } else {
-    res.redirect('/');
+  } catch (err) {
+    return res.status(401).json({ error: 'Token inválido ou expirado.' });
   }
 }
 
-// Rotas de autenticação
+// Rota de login usando JWT
 app.post('/api/auth/login', async (req, res) => {
   try {
     console.log('Login iniciado');
@@ -222,62 +226,50 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(500).json({ error: 'Erro interno do servidor' });
     }
 
-    req.session.user = {
+    const userPayload = {
       id: user.id,
       username: user.username,
       email: user.email,
       isAdmin: user.is_admin,
       dbName: `jpsistemas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
     };
-    console.log('Sessão criada após login:', req.session);
+    const token = jwt.sign(userPayload, process.env.JWT_SECRET, { expiresIn: '24h' });
 
-    // Forçar envio do cookie de sessão manualmente
-    res.cookie('connect.sid', req.sessionID, {
-      secure: true,
+    res.cookie('token', token, {
       httpOnly: true,
+      secure: true,
       sameSite: 'none',
       domain: '.jp-sistemas.vercel.app',
       maxAge: 24 * 60 * 60 * 1000
     });
 
-    res.json({ 
-      success: true, 
-      message: 'Login realizado com sucesso',
-      user: {
-        username: user.username,
-        email: user.email,
-        isAdmin: user.is_admin
-      }
-    });
-
+    res.json({ success: true, user: userPayload });
   } catch (error) {
     console.error('Erro no login:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
-// Middleware para garantir autenticação nas rotas multi-tenant
-function requireUserDb(req, res, next) {
-  console.log('typeof req.session:', typeof req.session);
-  console.log('typeof req.sessionID:', typeof req.sessionID);
-  console.log('typeof req.cookies:', typeof req.cookies);
-  if (!req.session || !req.session.user || !req.session.user.dbName) {
-    console.log('Middleware requireUserDb - NÃO AUTENTICADO');
-    return res.status(401).json({ error: 'Não autenticado.' });
-  }
-  next();
-}
+// Rota de logout para limpar o cookie JWT
+app.post('/api/auth/logout', (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    domain: '.jp-sistemas.vercel.app',
+    path: '/'
+  });
+  res.json({ success: true });
+});
 
-// Rotas de clientes (multi-tenant)
-app.get('/api/clientes', requireUserDb, async (req, res) => {
-  console.log('Sessão recebida em /api/clientes:', req.session);
-  console.log('Cookies recebidos em /api/clientes:', req.cookies);
+// Rotas protegidas usando JWT
+app.get('/api/clientes', requireAuthJWT, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: req.session.user.dbName,
+      database: req.user.dbName,
       charset: 'utf8mb4'
     });
     const [rows] = await connection.execute('SELECT * FROM clientes ORDER BY razao');
@@ -289,13 +281,13 @@ app.get('/api/clientes', requireUserDb, async (req, res) => {
   }
 });
 
-app.post('/api/clientes', requireUserDb, async (req, res) => {
+app.post('/api/clientes', requireAuthJWT, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: req.session.user.dbName,
+      database: req.user.dbName,
       charset: 'utf8mb4'
     });
     const { razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs } = req.body;
@@ -311,13 +303,13 @@ app.post('/api/clientes', requireUserDb, async (req, res) => {
   }
 });
 
-app.put('/api/clientes/:id', requireUserDb, async (req, res) => {
+app.put('/api/clientes/:id', requireAuthJWT, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: req.session.user.dbName,
+      database: req.user.dbName,
       charset: 'utf8mb4'
     });
     const { id } = req.params;
@@ -334,13 +326,13 @@ app.put('/api/clientes/:id', requireUserDb, async (req, res) => {
   }
 });
 
-app.delete('/api/clientes/:id', requireUserDb, async (req, res) => {
+app.delete('/api/clientes/:id', requireAuthJWT, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: req.session.user.dbName,
+      database: req.user.dbName,
       charset: 'utf8mb4'
     });
     const { id } = req.params;
@@ -353,14 +345,14 @@ app.delete('/api/clientes/:id', requireUserDb, async (req, res) => {
   }
 });
 
-// Rotas de produtos (multi-tenant)
-app.get('/api/produtos', requireUserDb, async (req, res) => {
+// Rotas de produtos (multi-tenant) protegidas por JWT
+app.get('/api/produtos', requireAuthJWT, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: req.session.user.dbName,
+      database: req.user.dbName,
       charset: 'utf8mb4'
     });
     const [rows] = await connection.execute('SELECT * FROM produtos ORDER BY nome');
@@ -372,13 +364,13 @@ app.get('/api/produtos', requireUserDb, async (req, res) => {
   }
 });
 
-app.post('/api/produtos', requireUserDb, async (req, res) => {
+app.post('/api/produtos', requireAuthJWT, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: req.session.user.dbName,
+      database: req.user.dbName,
       charset: 'utf8mb4'
     });
     const { nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status } = req.body;
@@ -394,13 +386,13 @@ app.post('/api/produtos', requireUserDb, async (req, res) => {
   }
 });
 
-app.put('/api/produtos/:id', requireUserDb, async (req, res) => {
+app.put('/api/produtos/:id', requireAuthJWT, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: req.session.user.dbName,
+      database: req.user.dbName,
       charset: 'utf8mb4'
     });
     const { id } = req.params;
@@ -417,13 +409,13 @@ app.put('/api/produtos/:id', requireUserDb, async (req, res) => {
   }
 });
 
-app.delete('/api/produtos/:id', requireUserDb, async (req, res) => {
+app.delete('/api/produtos/:id', requireAuthJWT, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: req.session.user.dbName,
+      database: req.user.dbName,
       charset: 'utf8mb4'
     });
     const { id } = req.params;
@@ -436,14 +428,14 @@ app.delete('/api/produtos/:id', requireUserDb, async (req, res) => {
   }
 });
 
-// Rotas de pedidos (multi-tenant)
-app.get('/api/pedidos', requireUserDb, async (req, res) => {
+// Rotas de pedidos (multi-tenant) protegidas por JWT
+app.get('/api/pedidos', requireAuthJWT, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: req.session.user.dbName,
+      database: req.user.dbName,
       charset: 'utf8mb4'
     });
     const [rows] = await connection.execute(`
@@ -484,14 +476,14 @@ app.get('/api/pedidos', requireUserDb, async (req, res) => {
   }
 });
 
-app.post('/api/pedidos', requireUserDb, async (req, res) => {
+app.post('/api/pedidos', requireAuthJWT, async (req, res) => {
   let connection;
   try {
     connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: req.session.user.dbName,
+      database: req.user.dbName,
       charset: 'utf8mb4'
     });
     const { cliente_id, data_pedido, status, valor_total, observacoes, itens, nome_cliente } = req.body;
@@ -534,14 +526,14 @@ app.post('/api/pedidos', requireUserDb, async (req, res) => {
   }
 });
 
-app.put('/api/pedidos/:id', requireUserDb, async (req, res) => {
+app.put('/api/pedidos/:id', requireAuthJWT, async (req, res) => {
   let connection;
   try {
     connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: req.session.user.dbName,
+      database: req.user.dbName,
       charset: 'utf8mb4'
     });
     const { id } = req.params;
@@ -575,13 +567,13 @@ app.put('/api/pedidos/:id', requireUserDb, async (req, res) => {
   }
 });
 
-app.delete('/api/pedidos/:id', requireUserDb, async (req, res) => {
+app.delete('/api/pedidos/:id', requireAuthJWT, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: req.session.user.dbName,
+      database: req.user.dbName,
       charset: 'utf8mb4'
     });
     const { id } = req.params;
