@@ -555,6 +555,7 @@ app.post('/api/pedidos', async (req, res) => {
     await connection.end();
     res.status(201).json({ id: pedidoId, message: 'Pedido criado com sucesso' });
   } catch (error) {
+    console.error('Erro ao criar pedido:', error);
     if (connection) {
       try { await connection.rollback(); } catch (e) {}
       try { await connection.end(); } catch (e) {}
