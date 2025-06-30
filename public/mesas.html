@@ -740,7 +740,7 @@
             nome_cliente: novoNome,
             itens: pedido.itens,
             cliente_id: pedido.cliente_id ?? null,
-            data_pedido: pedido.data_pedido ?? new Date().toISOString().split('T')[0],
+            data_pedido: (pedido.data_pedido ?? new Date().toISOString().split('T')[0]).split('T')[0],
             status: pedido.status ?? 'Em Aberto',
             valor_total,
             observacoes: pedido.observacoes ?? ''
