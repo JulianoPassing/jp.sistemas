@@ -324,12 +324,16 @@
         <h2>Mesas / Pedidos em Aberto</h2>
       </div>
       <form class="nova-mesa-form" id="nova-mesa-form" onsubmit="return false;">
-        <div class="form-group">
-          <label for="mesa-nome">Nome da Mesa/Pessoa</label>
-          <input type="text" id="mesa-nome" required placeholder="Ex: Mesa 1, João, Família Silva..." />
+        <div class="form-group" style="position:relative;">
+          <label for="mesa-nome" style="font-weight:600;font-size:1.08em;">Nome da Mesa/Pessoa</label>
+          <span style="position:absolute;left:10px;top:38px;color:#2563eb;font-size:1.2em;"><i class="fas fa-chair"></i></span>
+          <input type="text" id="mesa-nome" required placeholder="Ex: Mesa 1, João, Família Silva..." style="padding-left:36px;height:48px;font-size:1.13em;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 2px 8px rgba(37,99,235,0.07);transition:border 0.2s;outline:none;" />
         </div>
-        <button class="btn btn-primary" type="submit"><i class="fas fa-plus"></i> Nova Mesa</button>
+        <button class="btn btn-primary" id="btn-criar-mesa" type="submit" style="height:48px;font-size:1.13em;padding:0 32px;box-shadow:0 4px 16px rgba(37,99,235,0.13);display:flex;align-items:center;gap:10px;">
+          <i class="fas fa-plus"></i> Nova Mesa
+        </button>
       </form>
+      <div id="mesa-feedback" style="display:none;margin-bottom:18px;text-align:center;font-weight:500;"></div>
       <div class="mesas-grid" id="mesas-grid"></div>
     </div>
   </main>
@@ -355,7 +359,7 @@
       document.getElementById('userDisplay').textContent = username;
       carregarProdutos();
       carregarPedidosAbertos();
-      document.getElementById('nova-mesa-form').onsubmit = criarNovaMesa;
+      document.getElementById('mesa-nome').focus();
     });
 
     async function carregarProdutos() {
@@ -415,16 +419,25 @@
     }
     async function criarNovaMesa(e) {
       e.preventDefault();
-      const nome = document.getElementById('mesa-nome').value.trim();
+      const nomeInput = document.getElementById('mesa-nome');
+      const feedback = document.getElementById('mesa-feedback');
+      const btn = document.getElementById('btn-criar-mesa');
+      const nome = nomeInput.value.trim();
+      feedback.style.display = 'none';
       if (!nome) {
-        alert('Informe o nome da mesa ou pessoa!');
+        feedback.textContent = 'Informe o nome da mesa ou pessoa!';
+        feedback.style.color = '#dc2626';
+        feedback.style.display = 'block';
+        nomeInput.focus();
         return;
       }
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Criando...';
       const pedido = {
         nome_cliente: nome,
         status: 'Em Aberto',
         itens: [],
-        data_pedido: new Date().toISOString()
+        data_pedido: new Date().toISOString().split('T')[0]
       };
       try {
         const response = await fetch('/api/pedidos', {
@@ -433,10 +446,21 @@
           body: JSON.stringify(pedido)
         });
         if (!response.ok) throw new Error('Erro ao criar mesa/pedido');
-        document.getElementById('mesa-nome').value = '';
+        nomeInput.value = '';
+        feedback.textContent = 'Mesa criada com sucesso!';
+        feedback.style.color = '#059669';
+        feedback.style.display = 'block';
+        nomeInput.focus();
+        // Animação de destaque
+        setTimeout(() => { feedback.style.display = 'none'; }, 2000);
         await carregarPedidosAbertos();
       } catch (e) {
-        alert('Erro ao criar mesa/pedido!');
+        feedback.textContent = 'Erro ao criar mesa/pedido!';
+        feedback.style.color = '#dc2626';
+        feedback.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-plus"></i> Nova Mesa';
       }
     }
     window.editarMesa = async function(id) {
