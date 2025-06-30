@@ -450,7 +450,9 @@
         const response = await fetch('/api/pedidos');
         if (!response.ok) throw new Error('Erro ao buscar pedidos');
         const todos = await response.json();
+        console.log('Pedidos recebidos:', todos);
         pedidosAbertos = (todos || []).filter(p => p.status === 'Em Aberto');
+        console.log('Pedidos em aberto:', pedidosAbertos);
         renderMesas();
       } catch (e) {
         pedidosAbertos = [];
@@ -458,6 +460,7 @@
       }
     }
     function renderMesas() {
+      console.log('Renderizando mesas:', pedidosAbertos);
       const grid = document.getElementById('mesas-grid');
       grid.innerHTML = '';
       if (!pedidosAbertos.length) {
