@@ -854,7 +854,8 @@
         // Exibir nome do usuário
         const username = sessionStorage.getItem('username') || 'Usuário';
         document.getElementById('userDisplay').textContent = username;
-        window.logout = function() {
+        window.logout = async function() {
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
             sessionStorage.removeItem('loggedIn');
             sessionStorage.removeItem('username');
             alert('Você saiu do sistema com sucesso.');

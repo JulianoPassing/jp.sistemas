@@ -430,7 +430,8 @@
     let pedidosAbertos = [];
     let username = '';
 
-    function logout() {
+    async function logout() {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       sessionStorage.removeItem('loggedIn');
       sessionStorage.removeItem('username');
       window.location.href = 'index.html';
