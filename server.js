@@ -41,6 +41,7 @@ app.use(session({
     secure: isProduction, // true em produção (https), false em dev
     httpOnly: true,
     sameSite: isProduction ? 'none' : 'lax',
+    domain: isProduction ? '.jp-sistemas.vercel.app' : undefined,
     maxAge: 24 * 60 * 60 * 1000 // 24 horas
   }
 }));
