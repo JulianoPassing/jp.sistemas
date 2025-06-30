@@ -185,28 +185,36 @@ function requireAuth(req, res, next) {
 // Rotas de autenticação
 app.post('/api/auth/login', async (req, res) => {
   try {
+    console.log('Login iniciado');
     const { username, password } = req.body;
     const usersConfig = getUsersConfig();
+    console.log('Config do banco:', usersConfig);
     const connection = await mysql.createConnection(usersConfig);
+    console.log('Conectado ao banco de usuários');
 
     const [users] = await connection.execute(
       'SELECT * FROM users WHERE username = ? AND is_active = TRUE',
       [username]
     );
+    console.log('Consulta de usuário executada');
     await connection.end();
 
     if (users.length === 0) {
+      console.log('Usuário não encontrado');
       return res.status(401).json({ error: 'Usuário não encontrado ou inativo' });
     }
 
     const user = users[0];
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
+      console.log('Senha incorreta');
       return res.status(401).json({ error: 'Senha incorreta' });
     }
 
     try {
+      console.log('Criando banco do usuário...');
       await createUserDatabase(username);
+      console.log('Banco do usuário criado');
     } catch (dbError) {
       console.error('Erro ao criar banco do usuário:', dbError);
       return res.status(500).json({ error: 'Erro interno do servidor' });
