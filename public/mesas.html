@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mesas e Pedidos em Aberto - J.P Sistemas Comercial</title>
+  <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #3b82f6;
+      --secondary-color: #1e40af;
+      --accent-color: #60a5fa;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --background: #f8fafc;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --shadow: rgba(37, 99, 235, 0.1);
+      --shadow-hover: rgba(37, 99, 235, 0.2);
+      --success-color: #059669;
+      --danger-color: #dc2626;
+      --warning-color: #d97706;
+      --light-color: #f9fafb;
+      --dark-color: #111827;
+      --bg-color: #f3f4f6;
+      --card-bg: #ffffff;
+      --border-radius: 16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: var(--text-primary);
+      padding: 0;
+    }
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 20px 0;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo img {
+      width: 150px;
+      height: 67px;
+      object-fit: contain;
+      background: none;
+      box-shadow: none;
+      border-radius: 0;
+      margin: 0;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .user-info span {
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .user-info #userDisplay {
+      font-weight: 700;
+    }
+    .logout-btn {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+    }
+    .main-content {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1);
+      padding: 32px;
+      margin-bottom: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+    .card-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .card-header h2 {
+      font-size: 1.8em;
+      color: var(--dark-color);
+      font-weight: 600;
+      text-align: center;
+      font-family: 'Poppins', sans-serif;
+      background: none;
+    }
+    .mesas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 32px;
+    }
+    .mesa-card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+      padding: 24px;
+      margin-bottom: 24px;
+      position: relative;
+      border: 2px solid var(--primary-light);
+    }
+    .mesa-nome {
+      font-size: 1.2em;
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-bottom: 8px;
+    }
+    .mesa-status {
+      font-size: 1em;
+      font-weight: 500;
+      color: var(--warning-color);
+      margin-bottom: 12px;
+    }
+    .mesa-itens {
+      margin-bottom: 12px;
+    }
+    .mesa-itens table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .mesa-itens th, .mesa-itens td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.98em;
+    }
+    .mesa-itens th {
+      background: var(--primary-light);
+      color: #fff;
+      font-weight: 600;
+    }
+    .mesa-itens tr:last-child td {
+      border-bottom: none;
+    }
+    .mesa-total {
+      font-size: 1.1em;
+      font-weight: 700;
+      color: var(--success-color);
+      margin-top: 8px;
+      text-align: right;
+    }
+    .mesa-acoes {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      font-family: "Poppins", sans-serif;
+      font-weight: 500;
+      font-size: 1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+    }
+    .btn-success {
+      background: linear-gradient(135deg, var(--success-color), #059669);
+      color: white;
+    }
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger-color), #dc2626);
+      color: white;
+    }
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+    }
+    .btn-secondary {
+      background: linear-gradient(135deg, #6b7280, #4b5563);
+      color: white;
+    }
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(107, 114, 128, 0.4);
+    }
+    .nova-mesa-form {
+      margin-bottom: 32px;
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.05);
+      display: flex;
+      gap: 16px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+    .nova-mesa-form .form-group {
+      margin-bottom: 0;
+      flex: 1;
+    }
+    @media (max-width: 900px) {
+      .mesas-grid {
+        grid-template-columns: 1fr;
+      }
+      .nova-mesa-form {
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" />
+      </div>
+      <div class="user-info">
+        <span>Bem-vindo, <span id="userDisplay"></span></span>
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+        <a href="painel.html" class="logout-btn" style="background: var(--primary-light); margin-left: 8px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+      </div>
+    </div>
+  </header>
+  <main class="main-content">
+    <div class="card">
+      <div class="card-header">
+        <h2>Mesas / Pedidos em Aberto</h2>
+      </div>
+      <form class="nova-mesa-form" id="nova-mesa-form" onsubmit="return false;">
+        <div class="form-group">
+          <label for="mesa-nome">Nome da Mesa/Pessoa</label>
+          <input type="text" id="mesa-nome" required placeholder="Ex: Mesa 1, João, Família Silva..." />
+        </div>
+        <button class="btn btn-primary" type="submit"><i class="fas fa-plus"></i> Nova Mesa</button>
+      </form>
+      <div class="mesas-grid" id="mesas-grid"></div>
+    </div>
+  </main>
+  <footer class="footer" style="width:100%;text-align:center;padding:18px 0 12px 0;color:#000;font-size:15px;background:transparent;font-family:'Inter',sans-serif;letter-spacing:0.02em;">
+    © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ola,%20gostaria%20de%20mais%20informacoes%20sobre%20os%20sistemas." target="_blank" style="color: #000; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
+  </footer>
+  <script>
+    let produtos = [];
+    let pedidosAbertos = [];
+    let username = '';
+
+    function logout() {
+      sessionStorage.removeItem('loggedIn');
+      sessionStorage.removeItem('username');
+      window.location.href = 'index.html';
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      if (sessionStorage.getItem('loggedIn') !== 'true') {
+        alert('Acesso negado. Por favor, realize o login.');
+        window.location.href = 'index.html';
+      }
+      username = sessionStorage.getItem('username') || 'Usuário';
+      document.getElementById('userDisplay').textContent = username;
+      carregarProdutos();
+      carregarPedidosAbertos();
+      document.getElementById('nova-mesa-form').onsubmit = criarNovaMesa;
+    });
+
+    async function carregarProdutos() {
+      try {
+        const response = await fetch('/api/produtos');
+        if (!response.ok) throw new Error('Erro ao buscar produtos');
+        produtos = await response.json();
+      } catch (e) {
+        produtos = [];
+      }
+    }
+    async function carregarPedidosAbertos() {
+      try {
+        const response = await fetch('/api/pedidos');
+        if (!response.ok) throw new Error('Erro ao buscar pedidos');
+        const todos = await response.json();
+        pedidosAbertos = (todos || []).filter(p => p.status === 'Em Aberto');
+        renderMesas();
+      } catch (e) {
+        pedidosAbertos = [];
+        renderMesas();
+      }
+    }
+    function renderMesas() {
+      const grid = document.getElementById('mesas-grid');
+      grid.innerHTML = '';
+      if (!pedidosAbertos.length) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#888;font-size:1.1em;">Nenhuma mesa/pedido em aberto.</div>';
+        return;
+      }
+      pedidosAbertos.forEach(pedido => {
+        let total = (pedido.itens||[]).reduce((sum, i) => sum + (i.precoUnitario||0) * (i.quantidade||0), 0);
+        const card = document.createElement('div');
+        card.className = 'mesa-card';
+        card.innerHTML = `
+          <div class="mesa-nome">${pedido.nome_cliente || pedido.nome_mesa || 'Mesa/Pessoa'}</div>
+          <div class="mesa-status">Status: ${pedido.status}</div>
+          <div class="mesa-itens">
+            <table>
+              <thead><tr><th>Produto</th><th>Qtd</th><th>Preço</th><th>Subtotal</th></tr></thead>
+              <tbody>
+                ${(pedido.itens||[]).map(i => `<tr><td>${i.produto}</td><td>${i.quantidade}</td><td>R$ ${(i.precoUnitario||0).toFixed(2).replace('.', ',')}</td><td>R$ ${(i.subtotal||0).toFixed(2).replace('.', ',')}</td></tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="mesa-total">Total: R$ ${total.toFixed(2).replace('.', ',')}</div>
+          <div class="mesa-acoes">
+            <button class="btn btn-secondary" onclick="editarMesa(${pedido.id})"><i class="fas fa-edit"></i> Editar</button>
+            <button class="btn btn-success" onclick="finalizarMesa(${pedido.id})"><i class="fas fa-check"></i> Finalizar</button>
+            <button class="btn btn-primary" onclick="imprimirComanda(${pedido.id})"><i class='fas fa-print'></i> Imprimir Comanda</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+    async function criarNovaMesa(e) {
+      e.preventDefault();
+      const nome = document.getElementById('mesa-nome').value.trim();
+      if (!nome) {
+        alert('Informe o nome da mesa ou pessoa!');
+        return;
+      }
+      const pedido = {
+        nome_cliente: nome,
+        status: 'Em Aberto',
+        itens: [],
+        data_pedido: new Date().toISOString()
+      };
+      try {
+        const response = await fetch('/api/pedidos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(pedido)
+        });
+        if (!response.ok) throw new Error('Erro ao criar mesa/pedido');
+        document.getElementById('mesa-nome').value = '';
+        await carregarPedidosAbertos();
+      } catch (e) {
+        alert('Erro ao criar mesa/pedido!');
+      }
+    }
+    window.editarMesa = async function(id) {
+      const pedido = pedidosAbertos.find(p => p.id === id);
+      if (!pedido) return;
+      const nome = prompt('Editar nome da mesa/pessoa:', pedido.nome_cliente || '');
+      if (nome !== null && nome.trim() !== '' && nome !== pedido.nome_cliente) {
+        pedido.nome_cliente = nome.trim();
+        await fetch(`/api/pedidos/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome_cliente: pedido.nome_cliente })
+        });
+      }
+      // Adicionar produtos
+      let continuar = true;
+      while (continuar) {
+        const prodNome = prompt('Digite o nome/código do produto para adicionar (ou deixe vazio para sair):');
+        if (!prodNome) break;
+        const prod = produtos.find(p => p.nome.toLowerCase().includes(prodNome.toLowerCase()) || String(p.codigo||'').toLowerCase() === prodNome.toLowerCase());
+        if (!prod) {
+          alert('Produto não encontrado!');
+          continue;
+        }
+        const qtd = parseInt(prompt('Quantidade:', '1')) || 1;
+        if (qtd > (prod.estoque ?? 0)) {
+          alert('Quantidade maior que o estoque disponível!');
+          continue;
+        }
+        const item = {
+          produto: prod.nome,
+          produto_id: prod.id,
+          quantidade: qtd,
+          precoUnitario: parseFloat(prod.preco_venda) || 0,
+          subtotal: (parseFloat(prod.preco_venda) || 0) * qtd
+        };
+        pedido.itens = pedido.itens || [];
+        pedido.itens.push(item);
+        await fetch(`/api/pedidos/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ itens: pedido.itens })
+        });
+        await carregarPedidosAbertos();
+        continuar = confirm('Adicionar mais produtos?');
+      }
+      await carregarPedidosAbertos();
+    }
+    window.finalizarMesa = async function(id) {
+      if (!confirm('Finalizar este pedido/mesa?')) return;
+      await fetch(`/api/pedidos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'Concluído', data_finalizacao: new Date().toISOString() })
+      });
+      await carregarPedidosAbertos();
+    }
+    window.imprimirComanda = function(id) {
+      const pedido = pedidosAbertos.find(p => p.id === id);
+      if (!pedido) return;
+      const data = new Date(pedido.data_pedido || Date.now());
+      const dataStr = data.toLocaleString('pt-BR');
+      let total = (pedido.itens||[]).reduce((sum, i) => sum + (i.precoUnitario||0) * (i.quantidade||0), 0);
+      const html = `
+        <html><head><title>Comanda - ${pedido.nome_cliente||''}</title>
+        <style>
+          body { font-family: monospace; font-size: 13px; margin: 0; padding: 0; }
+          .cupom { width: 280px; margin: 0 auto; padding: 10px; }
+          .cupom h2 { text-align: center; font-size: 1.1em; margin: 0 0 8px 0; }
+          .cupom .linha { border-top: 1px dashed #000; margin: 6px 0; }
+          .cupom .info { margin-bottom: 8px; }
+          .cupom table { width: 100%; border-collapse: collapse; }
+          .cupom th, .cupom td { font-size: 13px; padding: 2px 0; text-align: left; }
+          .cupom th { border-bottom: 1px solid #000; }
+          .cupom .total { font-weight: bold; font-size: 1.1em; text-align: right; margin-top: 8px; }
+          .cupom .footer { text-align: center; font-size: 11px; margin-top: 10px; }
+          @media print { body { margin: 0; } .cupom { box-shadow: none; border: none; } }
+        </style></head><body onload='window.print()'>
+        <div class='cupom'>
+          <h2>COMANDA - J.P Sistemas</h2>
+          <div class='info'>
+            <b>Mesa/Pessoa:</b> ${pedido.nome_cliente || pedido.nome_mesa || ''}<br>
+            <b>Data:</b> ${dataStr}<br>
+            <b>Status:</b> ${pedido.status}
+          </div>
+          <div class='linha'></div>
+          <table>
+            <thead><tr><th>Produto</th><th>Qtd</th><th>Vlr</th><th>Sub</th></tr></thead>
+            <tbody>
+              ${(pedido.itens||[]).map(i => `<tr><td>${i.produto}</td><td>${i.quantidade}</td><td>${(i.precoUnitario||0).toFixed(2)}</td><td>${(i.subtotal||0).toFixed(2)}</td></tr>`).join('')}
+            </tbody>
+          </table>
+          <div class='linha'></div>
+          <div class='total'>TOTAL: R$ ${total.toFixed(2).replace('.', ',')}</div>
+          <div class='footer'>Cupom não fiscal - ${new Date().toLocaleString('pt-BR')}<br>Powered by J.P Sistemas</div>
+        </div>
+        </body></html>
+      `;
+      const win = window.open('', '', 'width=320,height=600');
+      win.document.write(html);
+      win.document.close();
+    }
+  </script>
+</body>
+</html> 

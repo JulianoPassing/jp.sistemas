@@ -27,28 +27,17 @@
       --warning-color: #d97706;
       --light-color: #f9fafb;
       --dark-color: #111827;
-      --text-color: #374151;
       --bg-color: #f3f4f6;
-      --card-bg: rgba(255, 255, 255, 0.95);
-      --border-color: rgba(156, 163, 175, 0.2);
-      --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      --card-bg: #ffffff;
       --border-radius: 16px;
-      --border-radius-lg: 24px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      height: 100%;
-      min-height: 100vh;
-    }
     body {
       font-family: 'Inter', sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
       color: var(--text-primary);
       padding: 0;
-      overflow-x: hidden;
-      width: 100vw;
-      height: 100vh;
     }
     .header {
       background: rgba(255, 255, 255, 0.95);
@@ -63,10 +52,6 @@
       padding: 0 20px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-    }
-    .logo {
-      display: flex;
       align-items: center;
     }
     .logo img {
@@ -112,741 +97,124 @@
       box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
     }
     .main-content {
-      width: 100vw;
-      height: calc(100vh - 80px);
-      max-width: 1800px;
-      margin: 0 auto;
-      padding: 32px 24px 0 24px;
-      display: flex;
-      gap: 36px;
-      align-items: stretch;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-    .caixa-left {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: #fff;
-      width: 520px;
-      min-width: 340px;
-      max-width: 600px;
-      border-radius: 32px;
-      box-shadow: 0 12px 48px rgba(37, 99, 235, 0.18);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 0;
-      position: relative;
-      height: 80vh;
-      min-height: 520px;
-      margin-bottom: 32px;
-      text-align: center;
-      overflow: hidden;
-    }
-    .caixa-status {
-      font-size: 1.5rem;
-      font-family: 'Roboto Mono', monospace;
-      letter-spacing: 0.12em;
-      margin-top: 0;
-      color: #fff;
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      padding: 18px 0 10px 0;
-      border-radius: 18px 18px 0 0;
-      font-weight: bold;
-      box-shadow: 0 2px 12px #0002;
-      border: none;
-      min-width: 0;
-      min-height: 0;
-      text-align: center;
-      margin-bottom: 0;
-      text-transform: uppercase;
-      width: 100%;
-      position: sticky;
-      top: 0;
-      z-index: 2;
-    }
-    .caixa-itens-lista {
-      width: 100%;
-      flex: 1 1 auto;
-      margin: 0;
-      background: var(--card-bg);
-      border-radius: 0 0 24px 24px;
-      box-shadow: 0 6px 24px #0002;
-      color: var(--text-primary);
-      padding: 38px 32px 38px 32px;
-      min-height: 0;
-      max-height: none;
-      overflow-y: auto;
-      font-size: 1.18rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-    }
-    .caixa-itens-lista h4 {
-      margin: 0 0 8px 0;
-      font-size: 1.25rem;
-      color: var(--primary-color);
-      font-weight: 700;
-      letter-spacing: 0.01em;
-      text-align: center;
-    }
-    .caixa-item-pedido {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 6px 0;
-      border-bottom: 1px solid #e5e7eb;
-      font-size: 1rem;
-      gap: 8px;
-      width: 100%;
-      max-width: 340px;
-      margin: 0 auto;
-    }
-    .caixa-item-pedido:last-child {
-      border-bottom: none;
-    }
-    .caixa-item-nome {
-      font-weight: 500;
-      color: var(--primary-dark);
-      flex: 1;
-      min-width: 80px;
-    }
-    .caixa-item-qtd, .caixa-item-preco {
-      color: var(--secondary-color);
-      font-weight: 600;
-      margin: 0 8px;
-      min-width: 40px;
-      text-align: center;
-    }
-    .caixa-item-preco {
-      color: var(--success-color);
-    }
-    .caixa-item-btn {
-      background: var(--primary-light);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      padding: 2px 8px;
-      font-size: 1em;
-      margin: 0 2px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .caixa-item-btn:hover {
-      background: var(--primary-dark);
-    }
-    .caixa-item-btn-remove {
-      background: var(--danger-color);
-      color: #fff;
-      margin-left: 6px;
-    }
-    .caixa-item-btn-remove:hover {
-      background: #b91c1c;
-    }
-    .caixa-shortcuts {
-      margin-top: 40px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      width: 100%;
-      align-items: center;
-    }
-    .caixa-shortcut-btn {
-      background: #666;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 18px 24px;
-      font-size: 1.1rem;
-      font-weight: bold;
-      margin-bottom: 8px;
-      cursor: pointer;
-      box-shadow: 0 2px 8px #0003;
-      transition: background 0.2s, transform 0.2s;
-      text-align: left;
-      width: 80%;
-    }
-    .caixa-shortcut-btn:hover {
-      background: #888;
-      transform: translateY(-2px);
-    }
-    .caixa-right {
-      background: var(--card-bg);
-      flex: 1;
-      border-radius: var(--border-radius);
-      box-shadow: 0 8px 32px rgba(37, 99, 235, 0.08);
-      display: flex;
-      flex-direction: column;
-      min-width: 400px;
-      padding: 0;
-      overflow: hidden;
-    }
-    .caixa-top-bar {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: #fff;
-      padding: 18px 32px 10px 32px;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      border-bottom-left-radius: 18px;
-      border-bottom-right-radius: 18px;
-      box-shadow: 0 2px 8px #0002;
-    }
-    .caixa-search-bar {
-      margin-top: 8px;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .caixa-search-bar input {
-      flex: 1;
-      padding: 10px 16px;
-      border-radius: 8px;
-      border: 1.5px solid #bdbdbd;
-      font-size: 1.1rem;
-      outline: none;
-      transition: border 0.2s;
-    }
-    .caixa-search-bar input:focus {
-      border: 1.5px solid var(--primary-color);
-    }
-    .caixa-search-bar button {
-      background: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 1.2rem;
-      color: var(--primary-color);
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .caixa-produtos-lista {
-      flex: 1;
-      overflow-y: auto;
-      margin: 0;
-      padding: 0;
-      background: var(--card-bg);
-    }
-    .caixa-produto-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 32px;
-      border-bottom: 1px solid #e0e0e0;
-      background: #fff;
-      transition: background 0.2s;
-    }
-    .caixa-produto-item:hover {
-      background: #e3fcec;
-    }
-    .caixa-produto-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .caixa-produto-nome {
-      font-weight: bold;
-      font-size: 1.1rem;
-      color: #222;
-    }
-    .caixa-produto-cod {
-      font-size: 0.95rem;
-      color: #888;
-    }
-    .caixa-produto-estoque {
-      color: var(--primary-color);
-      font-weight: bold;
-      font-size: 1.1rem;
-      margin-right: 12px;
-    }
-    .caixa-produto-preco {
-      color: var(--success-color);
-      font-weight: bold;
-      font-size: 1.1rem;
-      margin-right: 12px;
-    }
-    .caixa-produto-add {
-      background: var(--primary-color);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 1.1rem;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .caixa-produto-add:hover {
-      background: var(--secondary-color);
-    }
-    .caixa-bottom-bar {
-      background: #fff;
-      padding: 18px 32px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-top: 1px solid #e0e0e0;
-      box-shadow: 0 -2px 8px #0001;
-    }
-    .caixa-bottom-btns {
-      display: flex;
-      gap: 8px;
-    }
-    .caixa-bottom-btn {
-      padding: 8px 12px;
-      border-radius: 7px;
-      border: none;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      min-width: 0;
-    }
-    .caixa-bottom-btn.cancel {
-      background: var(--danger-color);
-      color: #fff;
-    }
-    .caixa-bottom-btn.open {
-      background: var(--warning-color);
-      color: #fff;
-    }
-    .caixa-bottom-btn.pay {
-      background: var(--primary-color);
-      color: #fff;
-    }
-    .caixa-total {
-      font-size: 1.3rem;
-      font-weight: bold;
-      color: var(--primary-color);
-      margin-left: 12px;
-      white-space: nowrap;
-    }
-    @media (max-width: 1200px) {
-      .main-content { flex-direction: column; gap: 24px; }
-      .caixa-produtos-col, .caixa-pedidos-aberto-col { max-width: 100%; width: 100%; }
-      .caixa-left { width: 100%; min-width: unset; max-width: 100vw; height: auto; min-height: 320px; }
-      .caixa-pedidos-aberto-col { max-height: unset; }
-    }
-    @media (max-width: 900px) {
-      .main-content { flex-direction: column; gap: 18px; padding: 10px 2vw 0 2vw; }
-      .caixa-left, .caixa-produtos-col, .caixa-pedidos-aberto-col { max-width: 100vw; width: 100%; min-width: unset; }
-      .caixa-left, .caixa-produtos-col, .caixa-pedidos-aberto-col { margin-bottom: 18px; }
-      .caixa-left { padding: 32px 0 32px 0; }
-      .caixa-bottom-bar { flex-direction: column; gap: 8px; align-items: stretch; }
-      .caixa-bottom-btns { justify-content: space-between; }
-      .caixa-total { margin-left: 0; }
-    }
-    .footer {
-      width: 100%;
-      text-align: center;
-      padding: 18px 0 12px 0;
-      color: #000;
-      font-size: 15px;
-      background: transparent;
-      font-family: 'Inter', sans-serif;
-      letter-spacing: 0.02em;
-    }
-    /* Lateral de clientes */
-    .caixa-lateral-clientes {
-      position: fixed;
-      top: 0;
-      right: -420px;
-      width: 400px;
-      height: 100vh;
-      background: var(--card-bg);
-      box-shadow: -4px 0 24px #0002;
-      z-index: 2000;
-      transition: right 0.35s cubic-bezier(.4,1.3,.6,1);
-      border-top-left-radius: 24px;
-      border-bottom-left-radius: 24px;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-    }
-    .caixa-lateral-clientes.aberta {
-      right: 0;
-    }
-    .caixa-lateral-header {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: #fff;
-      padding: 24px 24px 12px 24px;
-      border-top-left-radius: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .caixa-lateral-header h3 {
-      margin: 0;
-      font-size: 1.3rem;
-      font-weight: 600;
-    }
-    .caixa-lateral-close {
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 2rem;
-      cursor: pointer;
-      margin-left: 12px;
-      transition: color 0.2s;
-    }
-    .caixa-lateral-close:hover {
-      color: #f87171;
-    }
-    .caixa-lateral-body {
-      padding: 24px;
-      flex: 1;
-      overflow-y: auto;
-    }
-    .caixa-lateral-body label {
-      font-weight: 600;
-      color: var(--primary-color);
-      margin-bottom: 4px;
-      display: block;
-    }
-    .caixa-lateral-body input, .caixa-lateral-body select {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 8px;
-      border: 1.5px solid var(--border-color);
-      font-size: 1rem;
-      margin-bottom: 16px;
-      background: #fff;
-      color: var(--text-primary);
-    }
-    .caixa-lateral-body input:focus, .caixa-lateral-body select:focus {
-      border: 1.5px solid var(--primary-color);
-      outline: none;
-    }
-    .caixa-lateral-body .clientes-select {
-      margin-bottom: 18px;
-    }
-    .caixa-lateral-body .clientes-select option {
-      color: var(--text-primary);
-    }
-    .caixa-lateral-body .btn {
-      width: 100%;
-      margin-top: 10px;
-    }
-    /* Lateral de pedidos em aberto */
-    .caixa-lateral-pedidos {
-      position: static;
-      top: unset;
-      right: unset;
-      width: 100%;
-      height: auto;
-      box-shadow: none;
-      border-radius: var(--border-radius-lg);
-      transition: none;
-      z-index: 1;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      background: var(--card-bg);
-    }
-    .caixa-lateral-header-pedidos {
-      border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: #fff;
-      padding: 28px 32px 18px 32px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      box-shadow: 0 2px 8px #0001;
-    }
-    .caixa-lateral-header-pedidos h3 {
-      margin: 0;
-      font-size: 1.45rem;
-      font-weight: 800;
-      letter-spacing: 0.01em;
-      color: #fff;
-      text-shadow: 0 2px 8px #0002;
-    }
-    .caixa-lateral-body-pedidos {
-      max-height: 600px;
-      overflow-y: auto;
-      padding: 18px 18px 12px 18px;
-      background: var(--card-bg);
-    }
-    .caixa-produtos-col {
-      flex: 1;
-      min-width: 340px;
-      max-width: 600px;
-      display: flex;
-      flex-direction: column;
-      background: var(--card-bg);
-      border-radius: var(--border-radius-lg);
-      box-shadow: 0 8px 32px rgba(37, 99, 235, 0.13);
-      margin: 0 0 0 0;
-      overflow: hidden;
-      height: 100%;
-      max-height: 700px;
-    }
-    .caixa-pedidos-aberto-col {
-      width: 400px;
-      min-width: 260px;
-      background: var(--card-bg);
-      border-radius: var(--border-radius-lg);
-      box-shadow: 0 8px 32px rgba(37, 99, 235, 0.13);
-      margin-left: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      max-height: 700px;
-      overflow: hidden;
-    }
-    .pedido-aberto-card {
-      background: #f8fafc;
-      border-radius: 14px;
-      box-shadow: 0 2px 8px #0001;
-      margin-bottom: 22px;
-      padding: 16px 14px 12px 18px;
-      color: var(--text-primary);
-      position: relative;
-      border: 1.5px solid #e5e7eb;
-      transition: box-shadow 0.2s;
-    }
-    .pedido-aberto-card:hover {
-      box-shadow: 0 6px 24px #2563eb22;
-      border-color: var(--primary-color);
-    }
-    .pedido-aberto-card h4 {
-      margin: 0 0 8px 0;
-      color: var(--primary-color);
-      font-size: 1.13rem;
-      font-weight: 700;
-      letter-spacing: 0.01em;
-    }
-    .pedido-aberto-actions {
-      position: absolute;
-      top: 14px;
-      right: 16px;
-      display: flex;
-      gap: 8px;
-    }
-    .pedido-aberto-btn {
-      background: var(--primary-light);
-      color: #fff;
-      border: none;
-      border-radius: 7px;
-      padding: 4px 14px;
-      font-size: 1em;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background 0.2s;
-      box-shadow: 0 2px 8px #0001;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .pedido-aberto-btn:hover {
-      background: var(--primary-dark);
-    }
-    .pedido-aberto-btn-remove {
-      background: var(--danger-color);
-    }
-    .pedido-aberto-btn-remove:hover {
-      background: #b91c1c;
-    }
-    .pedido-aberto-itens {
-      font-size: 1.04rem;
-      margin-bottom: 6px;
-      color: var(--text-primary);
-    }
-    .pedido-aberto-total {
-      color: var(--success-color);
-      font-weight: 700;
-      font-size: 1.09rem;
-      margin-top: 2px;
-    }
-    .pedidos-em-aberto-header {
-      font-size: 1.5rem;
-      font-family: 'Roboto Mono', monospace;
-      letter-spacing: 0.12em;
-      color: #fff;
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      padding: 18px 0 10px 0;
-      border-radius: 18px 18px 0 0;
-      font-weight: bold;
-      box-shadow: 0 2px 12px #0002;
-      border: none;
-      min-width: 0;
-      min-height: 0;
-      text-align: center;
-      margin-bottom: 0;
-      text-transform: uppercase;
-      width: 100%;
-      position: sticky;
-      top: 0;
-      z-index: 2;
-    }
-    /* Modal Styles */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(5px);
-      animation: fadeIn 0.3s ease;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    .modal-content {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .card {
       background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(15px);
-      margin: 2% auto;
-      padding: 0;
-      border-radius: 16px;
-      width: 98%;
-      max-width: 800px;
-      max-height: 95vh;
-      overflow-y: auto;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--border-color);
-      animation: slideIn 0.3s ease;
-      position: relative;
-    }
-    @keyframes slideIn {
-      from { 
-        transform: translateY(-50px);
-        opacity: 0;
-      }
-      to { 
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
-    .modal-header {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: white;
-      padding: 20px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    .modal-header h3 {
-      margin: 0;
-      font-size: 1.3rem;
-      font-weight: 600;
-    }
-    .close {
-      color: white;
-      font-size: 28px;
-      font-weight: bold;
-      cursor: pointer;
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1);
+      padding: 32px;
+      margin-bottom: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
       transition: all 0.3s ease;
-      width: 32px;
-      height: 32px;
+    }
+    .card-header {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
-    }
-    .close:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: scale(1.1);
-    }
-    .modal-body {
-      padding: 24px;
-    }
-    .form-section {
+      gap: 20px;
       margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e5e7eb;
     }
-    .form-section h4 {
+    .card-header h2 {
+      font-size: 1.8em;
       color: var(--dark-color);
-      font-size: 1.1rem;
       font-weight: 600;
-      margin-bottom: 16px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--primary-color);
+      text-align: center;
+      font-family: 'Poppins', sans-serif;
+      background: none;
     }
-    .form-row {
+    .caixa-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 32px;
+    }
+    @media (max-width: 900px) {
+      .caixa-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .caixa-section {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .section-title {
+      font-size: 1.2em;
+      font-weight: 600;
+      color: var(--primary-color);
       margin-bottom: 16px;
     }
     .form-group {
-      display: flex;
-      flex-direction: column;
+      margin-bottom: 16px;
     }
     .form-group label {
-      font-weight: 600;
-      color: var(--dark-color);
+      font-weight: 500;
+      color: var(--text-primary);
       margin-bottom: 6px;
-      font-size: 0.9rem;
+      display: block;
     }
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      padding: 12px 16px;
-      border: 2px solid var(--border-color);
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 10px 12px;
       border-radius: 8px;
-      font-family: "Poppins", sans-serif;
-      font-size: 0.95rem;
-      transition: all 0.3s ease;
-      background: white;
+      border: 1.5px solid var(--border);
+      font-size: 1em;
+      background: #f9fafb;
+      margin-bottom: 4px;
     }
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
+    .form-group input:focus, .form-group select:focus {
       outline: none;
       border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      background: #fff;
     }
-    .form-group.full-width {
-      grid-column: 1 / -1;
-    }
-    .total-section {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: white;
-      padding: 16px;
+    .produtos-lista {
+      max-height: 250px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
       border-radius: 8px;
-      text-align: right;
+      background: #f9fafb;
+      margin-bottom: 12px;
     }
-    .total-section h3 {
-      margin: 0;
-      font-size: 1.2rem;
+    .produtos-lista table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .produtos-lista th, .produtos-lista td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.98em;
+    }
+    .produtos-lista th {
+      background: var(--primary-light);
+      color: #fff;
       font-weight: 600;
     }
-    .modal-footer {
-      padding: 20px 24px;
-      background: rgba(0, 0, 0, 0.02);
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      position: sticky;
-      bottom: 0;
+    .produtos-lista tr:last-child td {
+      border-bottom: none;
     }
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 12px 20px;
+      padding: 10px 18px;
       border-radius: 8px;
       border: none;
       font-family: "Poppins", sans-serif;
       font-weight: 500;
-      font-size: 0.95em;
+      font-size: 1em;
       cursor: pointer;
       transition: all 0.3s ease;
       text-decoration: none;
+      position: relative;
+      overflow: hidden;
     }
     .btn-primary {
       background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
@@ -854,38 +222,70 @@
     }
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
     }
     .btn-success {
-      background: linear-gradient(135deg, var(--success-color), #20c997);
+      background: linear-gradient(135deg, var(--success-color), #059669);
       color: white;
     }
     .btn-success:hover {
       transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
     }
     .btn-danger {
-      background: linear-gradient(135deg, var(--danger-color), #c82333);
+      background: linear-gradient(135deg, var(--danger-color), #dc2626);
       color: white;
     }
     .btn-danger:hover {
       transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
     }
-    .btn-sm {
-      padding: 8px 12px;
-      font-size: 0.85em;
+    .total {
+      font-size: 1.3em;
+      font-weight: 700;
+      color: var(--success-color);
+      margin-top: 12px;
+      text-align: right;
     }
-    @media (max-width: 768px) {
-      .modal-content {
-        width: 99%;
-        margin: 1% auto;
-        max-width: 99vw;
-        max-height: 98vh;
-      }
-      .form-row {
-        grid-template-columns: 1fr;
-      }
+    .finalizar-btn {
+      width: 100%;
+      margin-top: 18px;
+      font-size: 1.1em;
+      padding: 14px 0;
+    }
+    .cliente-opcoes {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .cliente-opcoes button {
+      flex: 1;
+    }
+    .sugestoes-clientes {
+      position: absolute;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+      z-index: 10;
+      width: 100%;
+      max-height: 180px;
+      overflow-y: auto;
+      display: none;
+    }
+    .sugestoes-clientes.show {
+      display: block;
+    }
+    .sugestoes-clientes li {
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .sugestoes-clientes li:last-child {
+      border-bottom: none;
+    }
+    .sugestoes-clientes li:hover {
+      background: #f3f4f6;
     }
   </style>
 </head>
@@ -893,7 +293,7 @@
   <header class="header">
     <div class="header-content">
       <div class="logo">
-        <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 150px; height: 67px; display: block; object-fit: contain; background: none; box-shadow: none; border-radius: 0; margin: 0;" />
+        <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" />
       </div>
       <div class="user-info">
         <span>Bem-vindo, <span id="userDisplay"></span></span>
@@ -907,745 +307,299 @@
     </div>
   </header>
   <main class="main-content">
-    <div class="caixa-left">
-      <div class="caixa-status">CAIXA LIVRE</div>
-      <div class="caixa-itens-lista" id="caixa-itens-lista">
-        <h4>Itens do Pedido</h4>
-        <div id="caixa-itens-conteudo" style="min-height:24px;color:#888;font-size:0.98em;">Nenhum produto adicionado.</div>
+    <div class="card">
+      <div class="card-header">
+        <h2>Caixa - Atendimento em Loja</h2>
       </div>
-    </div>
-    <div class="caixa-produtos-col">
-      <div class="caixa-top-bar">
-        <div class="caixa-search-bar">
-          <input type="text" id="caixa-busca" placeholder="Use o leitor ou busque por nome ou codigo" />
-          <button><i class="fas fa-camera"></i></button>
-        </div>
-      </div>
-      <div class="caixa-produtos-lista" id="caixa-produtos-lista">
-        <!-- Produtos serão listados aqui -->
-      </div>
-      <div class="caixa-bottom-bar">
-        <div class="caixa-bottom-btns">
-          <button class="caixa-bottom-btn open" id="btn-em-aberto"><i class="fas fa-folder-open"></i> EM ABERTO</button>
-          <button class="caixa-bottom-btn pay" id="btn-ir-pagamento"><i class="fas fa-credit-card"></i> IR PARA O PAGAMENTO</button>
-        </div>
-        <div class="caixa-total">R$ <span id="caixa-total">0,00</span></div>
-      </div>
-    </div>
-    <div class="caixa-pedidos-aberto-col">
-      <div class="caixa-lateral-pedidos" id="caixaLateralPedidos">
-        <div class="pedidos-em-aberto-header">Pedidos em Aberto</div>
-        <div class="caixa-lateral-body-pedidos" id="corpoPedidosAbertos">
-          <!-- Pedidos em aberto serão listados aqui -->
-        </div>
+      <div class="caixa-grid">
+        <!-- Seção Cliente -->
+        <section class="caixa-section" style="position:relative;">
+          <div class="section-title">Cliente</div>
+          <div class="cliente-opcoes">
+            <button class="btn btn-primary" type="button" onclick="mostrarBuscaCliente()">Buscar Cliente</button>
+            <button class="btn btn-secondary" type="button" onclick="mostrarManualCliente()">Preencher Manual</button>
+          </div>
+          <div id="cliente-busca" style="display:none;">
+            <div class="form-group" style="position:relative;">
+              <label for="busca-cliente">Buscar cliente pelo nome, CPF ou CNPJ</label>
+              <input type="text" id="busca-cliente" placeholder="Digite para buscar..." autocomplete="off" />
+              <ul id="sugestoes-clientes" class="sugestoes-clientes"></ul>
+            </div>
+          </div>
+          <form id="cliente-form" style="display:none;">
+            <div class="form-group">
+              <label for="cliente-nome">Nome/Razão Social</label>
+              <input type="text" id="cliente-nome" name="nome" required />
+            </div>
+            <div class="form-group">
+              <label for="cliente-cnpj">CPF/CNPJ</label>
+              <input type="text" id="cliente-cnpj" name="cnpj" />
+            </div>
+            <div class="form-group">
+              <label for="cliente-telefone">Telefone</label>
+              <input type="text" id="cliente-telefone" name="telefone" />
+            </div>
+            <div class="form-group">
+              <label for="cliente-email">E-mail</label>
+              <input type="email" id="cliente-email" name="email" />
+            </div>
+            <div class="form-group">
+              <label for="cliente-endereco">Endereço</label>
+              <input type="text" id="cliente-endereco" name="endereco" />
+            </div>
+          </form>
+          <div id="cliente-resumo" style="display:none;"></div>
+        </section>
+        <!-- Seção Produtos -->
+        <section class="caixa-section">
+          <div class="section-title">Produtos</div>
+          <div class="form-group">
+            <label for="busca-produto">Buscar produto</label>
+            <input type="text" id="busca-produto" placeholder="Digite nome ou código..." autocomplete="off" />
+          </div>
+          <div class="produtos-lista">
+            <table>
+              <thead>
+                <tr>
+                  <th>Produto</th>
+                  <th>Preço</th>
+                  <th>Estoque</th>
+                  <th>Qtd</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+              <tbody id="produtos-tbody"></tbody>
+            </table>
+          </div>
+          <div class="total" id="total-venda">Total: R$ 0,00</div>
+          <button class="btn btn-success finalizar-btn" id="finalizar-venda" type="button">Finalizar Venda</button>
+        </section>
       </div>
     </div>
   </main>
-  <footer class="footer">
+  <footer class="footer" style="width:100%;text-align:center;padding:18px 0 12px 0;color:#000;font-size:15px;background:transparent;font-family:'Inter',sans-serif;letter-spacing:0.02em;">
     © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ola,%20gostaria%20de%20mais%20informacoes%20sobre%20os%20sistemas." target="_blank" style="color: #000; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
   </footer>
-  <div class="caixa-lateral-clientes" id="caixaLateralClientes">
-    <div class="caixa-lateral-header">
-      <h3>Selecionar Cliente</h3>
-      <button class="caixa-lateral-close" id="fecharLateralClientes">&times;</button>
-    </div>
-    <div class="caixa-lateral-body">
-      <label for="cliente-select">Cliente</label>
-      <select id="cliente-select" class="clientes-select">
-        <option value="">Selecione um cliente</option>
-      </select>
-      <label for="cliente-manual">Ou preencha manualmente</label>
-      <input type="text" id="cliente-manual" placeholder="Nome do cliente manual" />
-      <label for="cliente-cnpj">CNPJ</label>
-      <input type="text" id="cliente-cnpj" placeholder="CNPJ" />
-      <label for="cliente-telefone">Telefone</label>
-      <input type="text" id="cliente-telefone" placeholder="Telefone" />
-      <label for="cliente-email">E-mail</label>
-      <input type="email" id="cliente-email" placeholder="E-mail" />
-      <label for="cliente-endereco">Endereco</label>
-      <input type="text" id="cliente-endereco" placeholder="Endereco" />
-      <button class="btn btn-primary" id="btn-salvar-cliente">Salvar Cliente</button>
-    </div>
-  </div>
-  <!-- Modal para Finalizar Pedido -->
-  <div id="finalizarPedidoModal" class="modal" style="display: none;">
-    <div class="modal-content" style="max-width: 600px;">
-      <div class="modal-header">
-        <h3>Finalizar Pedido</h3>
-        <span class="close" id="closeFinalizarPedido">&times;</span>
-      </div>
-      <div class="modal-body">
-        <form id="finalizarPedidoForm">
-          <div class="form-section">
-            <h4>Informações do Cliente</h4>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="clienteFinalizar">Cliente</label>
-                <select id="clienteFinalizar">
-                  <option value="">Cliente não identificado</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="formaPagamentoFinalizar">Forma de Pagamento *</label>
-                <select id="formaPagamentoFinalizar" required>
-                  <option value="">Selecione</option>
-                  <option value="Cartao de Credito">Cartão de Crédito</option>
-                  <option value="Cartao de Debito">Cartão de Débito</option>
-                  <option value="PIX">PIX</option>
-                  <option value="Boleto Bancario">Boleto Bancário</option>
-                  <option value="Dinheiro">Dinheiro</option>
-                  <option value="Transferencia">Transferência</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="telefoneFinalizar">Telefone</label>
-                <input type="tel" id="telefoneFinalizar" placeholder="(11) 99999-9999">
-              </div>
-              <div class="form-group">
-                <label for="emailFinalizar">E-mail</label>
-                <input type="email" id="emailFinalizar" placeholder="cliente@empresa.com">
-              </div>
-            </div>
-            <div class="form-group full-width">
-              <label for="enderecoFinalizar">Endereço</label>
-              <input type="text" id="enderecoFinalizar" placeholder="Rua, número, bairro, cidade/estado">
-            </div>
-          </div>
-
-          <div class="form-section">
-            <h4>Resumo do Pedido</h4>
-            <div id="resumoItens" style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-              <!-- Itens serão listados aqui -->
-            </div>
-            <div class="total-section">
-              <h3>Total: R$ <span id="totalFinalizar">0,00</span></h3>
-            </div>
-          </div>
-
-          <div class="form-section">
-            <h4>Observações</h4>
-            <div class="form-group full-width">
-              <textarea id="observacoesFinalizar" rows="3" placeholder="Observações sobre o pedido, instruções de entrega, etc."></textarea>
-            </div>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" id="confirmarFinalizar">
-          <i class="fas fa-check"></i> Confirmar e Finalizar
-        </button>
-        <button type="button" class="btn btn-danger" id="cancelarFinalizar">
-          <i class="fas fa-times"></i> Cancelar
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal para Pedidos em Aberto -->
-  <div id="pedidosAbertosModal" class="modal" style="display: none;">
-    <div class="modal-content" style="max-width: 800px;">
-      <div class="modal-header">
-        <h3>Pedidos em Aberto</h3>
-        <span class="close" id="closePedidosAbertos">&times;</span>
-      </div>
-      <div class="modal-body">
-        <div id="listaPedidosAbertos">
-          <!-- Pedidos em aberto serão listados aqui -->
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" id="fecharPedidosAbertos">
-          <i class="fas fa-times"></i> Fechar
-        </button>
-      </div>
-    </div>
-  </div>
-
   <script>
-    // Array para armazenar produtos carregados do banco
     let produtos = [];
-    let itensPedido = [];
-    let quantidadeSelecionada = 1;
-    let clientes = []; // Array para armazenar clientes
-    let pedidosEmAberto = []; // Array para pedidos em aberto
-
-    // Função para carregar produtos do banco de dados
-    async function carregarProdutos() {
-      try {
-        const response = await fetch('/api/produtos');
-        if (!response.ok) throw new Error('Erro ao carregar produtos');
-        produtos = await response.json();
-        renderProdutos();
-      } catch (error) {
-        console.error('Erro ao carregar produtos:', error);
-        alert('Erro ao carregar produtos do banco de dados');
-      }
-    }
-
-    // Função para carregar clientes do banco de dados
-    async function carregarClientes() {
-      try {
-        const response = await fetch('/api/clientes');
-        if (!response.ok) throw new Error('Erro ao carregar clientes');
-        clientes = await response.json();
-        atualizarSelectClientes();
-      } catch (error) {
-        console.error('Erro ao carregar clientes:', error);
-      }
-    }
-
-    // Função para atualizar o select de clientes
-    function atualizarSelectClientes() {
-      const select = document.getElementById('clienteFinalizar');
-      if (!select) return;
-      
-      select.innerHTML = '<option value="">Cliente não identificado</option>';
-      
-      if (clientes.length === 0) {
-        select.innerHTML += '<option value="" disabled>Nenhum cliente cadastrado</option>';
-        return;
-      }
-      
-      clientes.forEach(cliente => {
-        const option = document.createElement('option');
-        option.value = cliente.id;
-        option.textContent = `${cliente.razao}${cliente.cnpj ? ` - ${cliente.cnpj}` : ''}`;
-        select.appendChild(option);
-      });
-    }
-
-    // Função para preencher informações do cliente automaticamente
-    function preencherInfoCliente() {
-      const clienteId = document.getElementById('clienteFinalizar').value;
-      const cliente = clientes.find(c => c.id == clienteId);
-      
-      if (cliente) {
-        document.getElementById('telefoneFinalizar').value = cliente.telefone || '';
-        document.getElementById('emailFinalizar').value = cliente.email || '';
-        document.getElementById('enderecoFinalizar').value = `${cliente.endereco || ''}${cliente.bairro ? `, ${cliente.bairro}` : ''}${cliente.cidade ? `, ${cliente.cidade}/${cliente.estado || ''}` : ''}`.trim();
-      } else {
-        document.getElementById('telefoneFinalizar').value = '';
-        document.getElementById('emailFinalizar').value = '';
-        document.getElementById('enderecoFinalizar').value = '';
-      }
-    }
-
-    function renderProdutos(filtro = "") {
-      const lista = document.getElementById('caixa-produtos-lista');
-      lista.innerHTML = "";
-      produtos.filter(p =>
-        p.nome.toLowerCase().includes(filtro.toLowerCase()) ||
-        (p.codigo && p.codigo.toLowerCase().includes(filtro.toLowerCase()))
-      ).forEach((produto, idx) => {
-        const item = document.createElement('div');
-        item.className = 'caixa-produto-item';
-        item.innerHTML = `
-          <div class="caixa-produto-info">
-            <span class="caixa-produto-nome">${produto.nome}</span>
-            <span class="caixa-produto-cod">${produto.codigo || 'Sem código'}</span>
-          </div>
-          <span class="caixa-produto-estoque">${produto.estoque || 0} UN</span>
-          <span class="caixa-produto-preco">R$ ${(produto.preco_venda || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
-          <button class="caixa-produto-add" onclick="adicionarAoPedido(${idx})"><i class="fas fa-plus"></i></button>
-        `;
-        lista.appendChild(item);
-      });
-    }
-
-    function atualizarTotal() {
-      const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.preco_venda || 0) * item.qtd), 0);
-      document.getElementById('caixa-total').textContent = total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-    }
-
-    function renderItensPedido() {
-      const container = document.getElementById('caixa-itens-conteudo');
-      if (!itensPedido.length) {
-        container.innerHTML = 'Nenhum produto adicionado.';
-        return;
-      }
-      container.innerHTML = itensPedido.map((item, idx) => `
-        <div class="caixa-item-pedido">
-          <span class="caixa-item-nome">${item.nome}</span>
-          <button class="caixa-item-btn" onclick="alterarQtdItem(${idx}, -1)">-</button>
-          <input type="number" min="1" value="${item.qtd}" onchange="alterarQtdDireto(${idx}, this.value)" style="width:38px;text-align:center;border-radius:4px;border:1px solid #ddd;">
-          <button class="caixa-item-btn" onclick="alterarQtdItem(${idx}, 1)">+</button>
-          <input type="text" value="R$ ${(item.preco_venda || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}" onchange="alterarPrecoItem(${idx}, this.value)" style="width:70px;text-align:center;border-radius:4px;border:1px solid #ddd;margin-left:8px;">
-          <button class="caixa-item-btn caixa-item-btn-remove" onclick="removerItemPedido(${idx})"><i class="fas fa-trash"></i></button>
-        </div>
-      `).join('');
-    }
-
-    function alterarQtdItem(idx, delta) {
-      if (itensPedido[idx]) {
-        itensPedido[idx].qtd = Math.max(1, itensPedido[idx].qtd + delta);
-        renderItensPedido();
-        atualizarTotal();
-      }
-    }
-
-    function alterarQtdDireto(idx, val) {
-      if (itensPedido[idx]) {
-        const v = parseInt(val);
-        itensPedido[idx].qtd = isNaN(v) || v < 1 ? 1 : v;
-        renderItensPedido();
-        atualizarTotal();
-      }
-    }
-
-    function alterarPrecoItem(idx, val) {
-      if (itensPedido[idx]) {
-        const preco = parseFloat(val.replace('R$ ', '').replace(',', '.')) || 0;
-        itensPedido[idx].preco_venda = preco;
-        renderItensPedido();
-        atualizarTotal();
-      }
-    }
-
-    function removerItemPedido(idx) {
-      itensPedido.splice(idx, 1);
-      renderItensPedido();
-      atualizarTotal();
-    }
-
-    function adicionarAoPedido(idx) {
-      const produto = produtos[idx];
-      const existente = itensPedido.find(i => i.id === produto.id);
-      if (existente) {
-        existente.qtd += quantidadeSelecionada;
-      } else {
-        itensPedido.push({ 
-          id: produto.id,
-          nome: produto.nome,
-          preco_venda: produto.preco_venda || 0,
-          qtd: quantidadeSelecionada,
-          preco_custo: produto.preco_custo || 0
-        });
-      }
-      atualizarTotal();
-      renderItensPedido();
-    }
-
-    // Função para abrir modal de finalização
-    function abrirModalFinalizar() {
-      if (!itensPedido.length) {
-        alert('Adicione produtos ao pedido antes de finalizar.');
-        return;
-      }
-
-      // Carregar clientes se ainda não foram carregados
-      if (clientes.length === 0) {
-        carregarClientes().then(() => {
-          mostrarModalFinalizar();
-        });
-      } else {
-        mostrarModalFinalizar();
-      }
-    }
-
-    function mostrarModalFinalizar() {
-      // Preencher resumo dos itens
-      const resumoItens = document.getElementById('resumoItens');
-      resumoItens.innerHTML = itensPedido.map(item => `
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-          <span>${item.nome} x${item.qtd}</span>
-          <span>R$ ${(item.preco_venda * item.qtd).toFixed(2).replace('.', ',')}</span>
-        </div>
-      `).join('');
-
-      // Atualizar total
-      const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.preco_venda || 0) * item.qtd), 0);
-      document.getElementById('totalFinalizar').textContent = total.toFixed(2).replace('.', ',');
-
-      // Mostrar modal
-      document.getElementById('finalizarPedidoModal').style.display = 'block';
-      document.body.style.overflow = 'hidden';
-    }
-
-    function fecharModalFinalizar() {
-      document.getElementById('finalizarPedidoModal').style.display = 'none';
-      document.body.style.overflow = 'auto';
-      document.getElementById('finalizarPedidoForm').reset();
-    }
-
-    // Função para finalizar pedido e salvar no banco
-    async function confirmarFinalizar() {
-      const clienteId = document.getElementById('clienteFinalizar').value;
-      const formaPagamento = document.getElementById('formaPagamentoFinalizar').value;
-      const telefone = document.getElementById('telefoneFinalizar').value;
-      const email = document.getElementById('emailFinalizar').value;
-      const endereco = document.getElementById('enderecoFinalizar').value;
-      const observacoes = document.getElementById('observacoesFinalizar').value;
-      
-      if (!formaPagamento) {
-        alert('Selecione uma forma de pagamento');
-        return;
-      }
-      
-      const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.preco_venda || 0) * item.qtd), 0);
-      
-      try {
-        // Salvar pedido no banco
-        const pedidoData = {
-          cliente_id: clienteId || null,
-          data_pedido: new Date().toISOString().split('T')[0],
-          status: 'Concluído',
-          valor_total: total,
-          observacoes: `${observacoes}\n\nInformações adicionais:\nTelefone: ${telefone}\nEmail: ${email}\nEndereço: ${endereco}\nForma de Pagamento: ${formaPagamento}`,
-          itens: itensPedido
-        };
-
-        const response = await fetch('/api/pedidos', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(pedidoData)
-        });
-
-        if (!response.ok) throw new Error('Erro ao salvar pedido');
-        
-        const result = await response.json();
-
-        // Registrar pagamento no caixa
-        const caixaResponse = await fetch('/api/caixa', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            tipo: 'entrada',
-            valor: total,
-            descricao: `Venda - Pedido #${result.id} - ${itensPedido.length} itens`,
-            data: new Date().toISOString().split('T')[0],
-            pedido_id: result.id
-          })
-        });
-
-        if (!caixaResponse.ok) throw new Error('Erro ao registrar pagamento');
-
-        // Limpar caixa
-        itensPedido = [];
-        renderItensPedido();
-        atualizarTotal();
-        fecharModalFinalizar();
-
-        alert(`Pedido finalizado com sucesso!\nPedido #${result.id}\nTotal: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
-      } catch (error) {
-        console.error('Erro ao finalizar pedido:', error);
-        alert('Erro ao finalizar pedido');
-      }
-    }
-
-    // Função para carregar pedidos em aberto
-    async function carregarPedidosEmAberto() {
-      try {
-        const response = await fetch('/api/pedidos');
-        if (!response.ok) throw new Error('Erro ao carregar pedidos');
-        const todosPedidos = await response.json();
-        pedidosEmAberto = todosPedidos.filter(p => p.status === 'Em Processamento' || p.status === 'Pendente');
-        renderPedidosEmAberto();
-      } catch (error) {
-        console.error('Erro ao carregar pedidos em aberto:', error);
-      }
-    }
-
-    function renderPedidosEmAberto() {
-      const container = document.getElementById('listaPedidosAbertos');
-      if (!pedidosEmAberto.length) {
-        container.innerHTML = '<div style="color:#888;text-align:center;margin-top:32px;">Nenhum pedido em aberto.</div>';
-        return;
-      }
-      
-      container.innerHTML = pedidosEmAberto.map((pedido, idx) => `
-        <div style="background: #f8f9fa; border-radius: 8px; padding: 16px; margin-bottom: 16px; border: 1px solid #e5e7eb;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h4 style="margin: 0; color: var(--primary-color);">Pedido #${pedido.id}</h4>
-            <span style="background: #f59e0b; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">
-              ${pedido.status}
-            </span>
-          </div>
-          <div style="margin-bottom: 8px;">
-            <strong>Cliente:</strong> ${pedido.cliente_id || 'Não informado'}<br>
-            <strong>Data:</strong> ${pedido.data_pedido || 'Não informada'}<br>
-            <strong>Total:</strong> R$ ${(pedido.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <button class="btn btn-primary btn-sm" onclick="reabrirPedidoAberto(${pedido.id})">
-              <i class="fas fa-edit"></i> Reabrir
-            </button>
-            <button class="btn btn-success btn-sm" onclick="finalizarPedidoAberto(${pedido.id})">
-              <i class="fas fa-check"></i> Finalizar
-            </button>
-            <button class="btn btn-danger btn-sm" onclick="removerPedidoAberto(${pedido.id})">
-              <i class="fas fa-trash"></i> Remover
-            </button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function abrirModalPedidosAbertos() {
-      carregarPedidosEmAberto();
-      document.getElementById('pedidosAbertosModal').style.display = 'block';
-      document.body.style.overflow = 'hidden';
-    }
-
-    function fecharModalPedidosAbertos() {
-      document.getElementById('pedidosAbertosModal').style.display = 'none';
-      document.body.style.overflow = 'auto';
-    }
-
-    // Função para reabrir pedido em aberto
-    async function reabrirPedidoAberto(pedidoId) {
-      const pedido = pedidosEmAberto.find(p => p.id == pedidoId);
-      if (!pedido) return;
-      
-      try {
-        // Buscar detalhes completos do pedido
-        const response = await fetch(`/api/pedidos/${pedidoId}`);
-        if (!response.ok) throw new Error('Erro ao buscar detalhes do pedido');
-        
-        const pedidoDetalhado = await response.json();
-        
-        // Limpar caixa atual
-        itensPedido = [];
-        
-        // Carregar itens do pedido no caixa
-        if (pedidoDetalhado.itens && pedidoDetalhado.itens.length > 0) {
-          itensPedido = pedidoDetalhado.itens.map(item => ({
-            id: item.produto_id || Math.random(),
-            nome: item.produto,
-            preco_venda: item.precoUnitario || 0,
-            qtd: item.quantidade || 1,
-            subtotal: item.subtotal || 0
-          }));
-        }
-        
-        // Atualizar interface
-        renderItensPedido();
-        atualizarTotal();
-        
-        // Preencher informações do cliente se disponível
-        if (pedidoDetalhado.cliente_id) {
-          const cliente = clientes.find(c => c.id == pedidoDetalhado.cliente_id);
-          if (cliente) {
-            // Preencher campos do modal de finalização
-            const selectCliente = document.getElementById('clienteFinalizar');
-            if (selectCliente) {
-              selectCliente.value = cliente.id;
-              preencherInfoCliente();
-            }
-          }
-        }
-        
-        // Fechar modal
-        fecharModalPedidosAbertos();
-        
-        // Mostrar mensagem de sucesso
-        alert(`Pedido #${pedidoId} reaberto com sucesso! Os itens foram carregados no caixa.`);
-        
-      } catch (error) {
-        console.error('Erro ao reabrir pedido:', error);
-        alert('Erro ao reabrir pedido: ' + error.message);
-      }
-    }
-
-    // Função para finalizar pedido em aberto
-    async function finalizarPedidoAberto(pedidoId) {
-      if (!confirm('Confirmar finalização deste pedido?')) return;
-      
-      try {
-        const response = await fetch(`/api/pedidos/${pedidoId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            status: 'Concluído'
-          })
-        });
-
-        if (!response.ok) throw new Error('Erro ao finalizar pedido');
-        
-        // Atualizar lista
-        await carregarPedidosEmAberto();
-        alert('Pedido finalizado com sucesso!');
-      } catch (error) {
-        alert('Erro ao finalizar pedido');
-        console.error(error);
-      }
-    }
-
-    // Função para remover pedido em aberto
-    async function removerPedidoAberto(pedidoId) {
-      if (!confirm('Tem certeza que deseja remover este pedido?')) return;
-      
-      try {
-        const response = await fetch(`/api/pedidos/${pedidoId}`, { method: 'DELETE' });
-        if (!response.ok) throw new Error('Erro ao remover pedido');
-        
-        await carregarPedidosEmAberto();
-        alert('Pedido removido com sucesso!');
-      } catch (error) {
-        alert('Erro ao remover pedido');
-        console.error(error);
-      }
-    }
-
-    // Busca
-    document.getElementById('caixa-busca').addEventListener('input', function() {
-      renderProdutos(this.value);
-    });
-
-    // Login e nome do usuário
-    document.addEventListener('DOMContentLoaded', () => {
-      if (sessionStorage.getItem('loggedIn') !== 'true') {
-        window.location.href = 'index.html';
-      }
-      const username = sessionStorage.getItem('username') || 'Usuário';
-      document.getElementById('userDisplay').textContent = username;
-      
-      // Carregar produtos do banco
-      carregarProdutos();
-      carregarClientes();
-    });
+    let clientes = [];
+    let vendaItens = [];
+    let clienteSelecionado = null;
+    let clienteManual = false;
 
     function logout() {
       sessionStorage.removeItem('loggedIn');
       sessionStorage.removeItem('username');
       window.location.href = 'index.html';
     }
-
-    // Inicialização
-    atualizarTotal();
-    renderItensPedido();
-
-    // Event listeners para os modais
     document.addEventListener('DOMContentLoaded', () => {
-      // Modal de finalização
-      document.getElementById('btn-ir-pagamento').onclick = abrirModalFinalizar;
-      document.getElementById('closeFinalizarPedido').onclick = fecharModalFinalizar;
-      document.getElementById('cancelarFinalizar').onclick = fecharModalFinalizar;
-      document.getElementById('confirmarFinalizar').onclick = confirmarFinalizar;
-      
-      // Event listener para preencher informações do cliente
-      document.getElementById('clienteFinalizar').addEventListener('change', preencherInfoCliente);
-
-      // Modal de pedidos em aberto
-      document.getElementById('btn-em-aberto').onclick = abrirModalPedidosAbertos;
-      document.getElementById('closePedidosAbertos').onclick = fecharModalPedidosAbertos;
-      document.getElementById('fecharPedidosAbertos').onclick = fecharModalPedidosAbertos;
-
-      // Fechar modais ao clicar fora
-      window.addEventListener('click', function(event) {
-        const modalFinalizar = document.getElementById('finalizarPedidoModal');
-        const modalPedidos = document.getElementById('pedidosAbertosModal');
-        
-        if (event.target === modalFinalizar) {
-          fecharModalFinalizar();
-        }
-        if (event.target === modalPedidos) {
-          fecharModalPedidosAbertos();
-        }
-      });
-
-      // Fechar modais com ESC
-      document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-          fecharModalFinalizar();
-          fecharModalPedidosAbertos();
-        }
-      });
+      if (sessionStorage.getItem('loggedIn') !== 'true') {
+        alert('Acesso negado. Por favor, realize o login.');
+        window.location.href = 'index.html';
+      }
+      const username = sessionStorage.getItem('username') || 'Usuário';
+      document.getElementById('userDisplay').textContent = username;
+      carregarProdutos();
+      carregarClientes();
+      document.getElementById('finalizar-venda').onclick = finalizarVenda;
+      document.getElementById('busca-produto').addEventListener('input', filtrarProdutos);
+      document.getElementById('busca-cliente').addEventListener('input', filtrarClientes);
     });
 
-    // LATERAL CLIENTES (mantido para compatibilidade)
-    async function carregarClientesLateral() {
+    async function carregarProdutos() {
       try {
-        const resp = await fetch('/api/clientes');
-        if (!resp.ok) throw new Error('Erro ao buscar clientes na API');
-        const clientes = await resp.json();
-        const select = document.getElementById('cliente-select');
-        select.innerHTML = '<option value="">Selecione um cliente</option>';
-        clientes.forEach(cliente => {
-          const option = document.createElement('option');
-          option.value = cliente.id;
-          option.textContent = `${cliente.razao}${cliente.cnpj ? ` - ${cliente.cnpj}` : ''}`;
-          select.appendChild(option);
-        });
-      } catch (error) {
-        console.error('Erro ao carregar clientes:', error);
+        const response = await fetch('/api/produtos');
+        if (!response.ok) throw new Error('Erro ao buscar produtos');
+        produtos = await response.json();
+        renderProdutos(produtos);
+      } catch (e) {
+        alert('Erro ao carregar produtos.');
       }
     }
-
-    document.getElementById('btn-em-aberto').onclick = function() {
-      document.getElementById('caixaLateralClientes').classList.add('aberta');
-      carregarClientesLateral();
-    };
-
-    document.getElementById('fecharLateralClientes').onclick = function() {
-      document.getElementById('caixaLateralClientes').classList.remove('aberta');
-    };
-
-    // Salvar pedido no banco (mantido para compatibilidade)
-    async function salvarPedidoNoBanco(pedidoData) {
+    async function carregarClientes() {
+      try {
+        const response = await fetch('/api/clientes');
+        if (!response.ok) throw new Error('Erro ao buscar clientes');
+        clientes = await response.json();
+      } catch (e) {
+        clientes = [];
+      }
+    }
+    function renderProdutos(lista) {
+      const tbody = document.getElementById('produtos-tbody');
+      tbody.innerHTML = '';
+      (lista || []).forEach(prod => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${prod.nome}</td>
+          <td>R$ ${(parseFloat(prod.preco_venda) || 0).toFixed(2).replace('.', ',')}</td>
+          <td>${prod.estoque ?? 0}</td>
+          <td><input type="number" min="1" max="${prod.estoque ?? 1}" value="1" style="width:60px;" id="qtd-${prod.id}" /></td>
+          <td><button class="btn btn-primary" type="button" onclick="adicionarItem(${prod.id})"><i class="fas fa-plus"></i> Adicionar</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    function filtrarProdutos() {
+      const termo = document.getElementById('busca-produto').value.trim().toLowerCase();
+      if (!termo) {
+        renderProdutos(produtos);
+        return;
+      }
+      const filtrados = produtos.filter(p =>
+        (p.nome && p.nome.toLowerCase().includes(termo)) ||
+        (p.codigo && String(p.codigo).toLowerCase().includes(termo))
+      );
+      renderProdutos(filtrados);
+    }
+    function adicionarItem(prodId) {
+      const prod = produtos.find(p => p.id === prodId);
+      if (!prod) return;
+      const qtd = parseInt(document.getElementById('qtd-' + prodId).value) || 1;
+      if (qtd > (prod.estoque ?? 0)) {
+        alert('Quantidade maior que o estoque disponível!');
+        return;
+      }
+      const existente = vendaItens.find(i => i.id === prodId);
+      if (existente) {
+        if (existente.qtd + qtd > (prod.estoque ?? 0)) {
+          alert('Quantidade maior que o estoque disponível!');
+          return;
+        }
+        existente.qtd += qtd;
+      } else {
+        vendaItens.push({
+          id: prod.id,
+          nome: prod.nome,
+          preco: parseFloat(prod.preco_venda) || 0,
+          qtd,
+          subtotal: (parseFloat(prod.preco_venda) || 0) * qtd
+        });
+      }
+      atualizarTotal();
+    }
+    function atualizarTotal() {
+      let total = 0;
+      vendaItens.forEach(i => {
+        total += i.preco * i.qtd;
+      });
+      document.getElementById('total-venda').textContent = 'Total: R$ ' + total.toFixed(2).replace('.', ',');
+    }
+    function mostrarBuscaCliente() {
+      clienteManual = false;
+      document.getElementById('cliente-busca').style.display = '';
+      document.getElementById('cliente-form').style.display = 'none';
+      document.getElementById('cliente-resumo').style.display = 'none';
+    }
+    function mostrarManualCliente() {
+      clienteManual = true;
+      document.getElementById('cliente-busca').style.display = 'none';
+      document.getElementById('cliente-form').style.display = '';
+      document.getElementById('cliente-resumo').style.display = 'none';
+    }
+    function filtrarClientes() {
+      const termo = document.getElementById('busca-cliente').value.trim().toLowerCase();
+      const ul = document.getElementById('sugestoes-clientes');
+      if (!termo) {
+        ul.classList.remove('show');
+        ul.innerHTML = '';
+        return;
+      }
+      const filtrados = clientes.filter(cli =>
+        (cli.razao && cli.razao.toLowerCase().includes(termo)) ||
+        (cli.cnpj && String(cli.cnpj).toLowerCase().includes(termo))
+      ).slice(0, 8);
+      ul.innerHTML = filtrados.map(cli =>
+        `<li onclick="selecionarCliente(${cli.id})"><strong>${cli.razao}</strong><br><small>${cli.cnpj} - ${cli.cidade ?? ''}/${cli.estado ?? ''}</small></li>`
+      ).join('');
+      ul.classList.add('show');
+    }
+    function selecionarCliente(id) {
+      const cli = clientes.find(c => c.id === id);
+      if (!cli) return;
+      clienteSelecionado = cli;
+      document.getElementById('cliente-busca').style.display = 'none';
+      document.getElementById('cliente-form').style.display = 'none';
+      document.getElementById('cliente-resumo').style.display = '';
+      document.getElementById('cliente-resumo').innerHTML = `
+        <b>Cliente Selecionado:</b><br>
+        Nome: ${cli.razao}<br>
+        CPF/CNPJ: ${cli.cnpj}<br>
+        Telefone: ${cli.telefone ?? ''}<br>
+        Email: ${cli.email ?? ''}<br>
+        Endereço: ${cli.endereco ?? ''}
+        <br><button class='btn btn-danger' type='button' onclick='removerClienteSelecionado()'>Trocar Cliente</button>
+      `;
+    }
+    function removerClienteSelecionado() {
+      clienteSelecionado = null;
+      document.getElementById('cliente-resumo').style.display = 'none';
+      document.getElementById('cliente-busca').style.display = '';
+    }
+    async function finalizarVenda() {
+      if (vendaItens.length === 0) {
+        alert('Adicione ao menos um produto à venda!');
+        return;
+      }
+      let clienteInfo = {};
+      if (clienteManual) {
+        const form = document.getElementById('cliente-form');
+        if (!form.nome.value.trim()) {
+          alert('Preencha o nome do cliente!');
+          form.nome.focus();
+          return;
+        }
+        clienteInfo = {
+          nome: form.nome.value.trim(),
+          cnpj: form.cnpj.value.trim(),
+          telefone: form.telefone.value.trim(),
+          email: form.email.value.trim(),
+          endereco: form.endereco.value.trim()
+        };
+      } else if (clienteSelecionado) {
+        clienteInfo = {
+          id: clienteSelecionado.id,
+          nome: clienteSelecionado.razao,
+          cnpj: clienteSelecionado.cnpj,
+          telefone: clienteSelecionado.telefone,
+          email: clienteSelecionado.email,
+          endereco: clienteSelecionado.endereco
+        };
+      } else {
+        alert('Selecione ou preencha os dados do cliente!');
+        return;
+      }
+      const pedido = {
+        nome_cliente: clienteInfo.nome,
+        cliente_id: clienteInfo.id || null,
+        cnpj: clienteInfo.cnpj,
+        telefone: clienteInfo.telefone,
+        email: clienteInfo.email,
+        endereco: clienteInfo.endereco,
+        itens: vendaItens.map(i => ({
+          produto: i.nome,
+          produto_id: i.id,
+          quantidade: i.qtd,
+          precoUnitario: i.preco,
+          subtotal: i.preco * i.qtd
+        })),
+        valor_total: vendaItens.reduce((sum, i) => sum + i.preco * i.qtd, 0),
+        status: 'Concluído',
+        data_pedido: new Date().toISOString()
+      };
       try {
         const response = await fetch('/api/pedidos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(pedidoData)
+          body: JSON.stringify(pedido)
         });
-        
-        if (!response.ok) throw new Error('Erro ao salvar pedido');
-        
-        const result = await response.json();
-        return result.id;
-      } catch (error) {
-        console.error('Erro ao salvar pedido:', error);
-        throw error;
+        if (!response.ok) throw new Error('Erro ao registrar pedido');
+        alert('Venda registrada com sucesso!');
+        window.location.reload();
+      } catch (e) {
+        alert('Erro ao registrar venda!');
       }
-    };
-
-    document.getElementById('btn-salvar-cliente').onclick = async function() {
-      const select = document.getElementById('cliente-select');
-      const clienteId = select.value;
-      const clienteNome = select.options[select.selectedIndex]?.text?.split(' - ')[0] || document.getElementById('cliente-manual').value;
-      
-      if (!clienteNome) {
-        alert('Selecione ou preencha o nome do cliente.');
-        return;
-      }
-      
-      if (!itensPedido.length) {
-        alert('Adicione produtos ao pedido antes de salvar.');
-        return;
-      }
-
-      const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.preco_venda || 0) * item.qtd), 0);
-      
-      try {
-        // Salvar pedido no banco
-        const pedidoData = {
-          cliente_id: clienteId || null,
-          data_pedido: new Date().toISOString().split('T')[0],
-          status: 'Em Processamento',
-          valor_total: total,
-          observacoes: `Pedido criado via caixa - ${itensPedido.length} itens`
-        };
-
-        const pedidoId = await salvarPedidoNoBanco(pedidoData);
-
-        // Limpar caixa
-        itensPedido = [];
-        renderItensPedido();
-        atualizarTotal();
-        document.getElementById('caixaLateralClientes').classList.remove('aberta');
-        
-        alert('Pedido salvo com sucesso!');
-      } catch (error) {
-        alert('Erro ao salvar pedido');
-        console.error(error);
-      }
-    };
-
-    document.getElementById('fecharLateralPedidos').onclick = function() {
-      document.getElementById('caixaLateralPedidos').classList.remove('aberta');
-    };
+    }
   </script>
 </body>
-</html>
+</html> 
