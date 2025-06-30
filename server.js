@@ -437,7 +437,7 @@ app.get('/api/pedidos', async (req, res) => {
       charset: 'utf8mb4'
     });
     const [rows] = await connection.execute(`
-      SELECT p.*, c.razao as nome_cliente, c.cnpj, c.telefone, c.email, c.endereco 
+      SELECT p.*, COALESCE(p.nome_cliente, c.razao) as nome_cliente, c.cnpj, c.telefone, c.email, c.endereco 
       FROM pedidos p 
       LEFT JOIN clientes c ON p.cliente_id = c.id 
       ORDER BY p.data_pedido DESC, p.id DESC
@@ -517,7 +517,7 @@ app.post('/api/pedidos', async (req, res) => {
       database: 'jpsistemas_admin',
       charset: 'utf8mb4'
     });
-    const { cliente_id, data_pedido, status, valor_total, observacoes, itens } = req.body;
+    const { cliente_id, data_pedido, status, valor_total, observacoes, itens, nome_cliente } = req.body;
     
     // Validar itens
     if ((!Array.isArray(itens) || itens.length === 0) && status !== 'Em Aberto') {
@@ -536,11 +536,12 @@ app.post('/api/pedidos', async (req, res) => {
     const safeStatus = typeof statusNormalizado === 'undefined' ? null : statusNormalizado;
     const safeValorTotal = typeof valor_total === 'undefined' ? null : valor_total;
     const safeObservacoes = typeof observacoes === 'undefined' ? null : observacoes;
-    console.log('Valores para insert:', { safeClienteId, safeDataPedido, safeStatus, safeValorTotal, safeObservacoes });
+    const safeNomeCliente = typeof nome_cliente === 'undefined' ? null : nome_cliente;
+    console.log('Valores para insert:', { safeClienteId, safeDataPedido, safeStatus, safeValorTotal, safeObservacoes, safeNomeCliente });
     // Inserir pedido
     const [result] = await connection.execute(
-      'INSERT INTO pedidos (cliente_id, data_pedido, status, valor_total, observacoes) VALUES (?, ?, ?, ?, ?)',
-      [safeClienteId, safeDataPedido, safeStatus, safeValorTotal, safeObservacoes]
+      'INSERT INTO pedidos (cliente_id, nome_cliente, data_pedido, status, valor_total, observacoes) VALUES (?, ?, ?, ?, ?, ?)',
+      [safeClienteId, safeNomeCliente, safeDataPedido, safeStatus, safeValorTotal, safeObservacoes]
     );
     const pedidoId = result.insertId;
 
@@ -613,7 +614,7 @@ app.put('/api/pedidos/:id', async (req, res) => {
       charset: 'utf8mb4'
     });
     const { id } = req.params;
-    const { cliente_id, data_pedido, status, valor_total, observacoes, itens } = req.body;
+    const { cliente_id, data_pedido, status, valor_total, observacoes, itens, nome_cliente } = req.body;
     
     // Normalizar o status
     const statusNormalizado = normalizarStatus(status);
@@ -624,15 +625,16 @@ app.put('/api/pedidos/:id', async (req, res) => {
       data_pedido,
       status: statusNormalizado,
       valor_total,
-      observacoes
+      observacoes,
+      nome_cliente
     });
 
     // Iniciar transação
     await connection.beginTransaction();
 
     await connection.execute(
-      'UPDATE pedidos SET cliente_id=?, data_pedido=?, status=?, valor_total=?, observacoes=? WHERE id=?',
-      [cliente_id, data_pedido, statusNormalizado, valor_total, observacoes, id]
+      'UPDATE pedidos SET cliente_id=?, nome_cliente=?, data_pedido=?, status=?, valor_total=?, observacoes=? WHERE id=?',
+      [cliente_id, nome_cliente, data_pedido, statusNormalizado, valor_total, observacoes, id]
     );
 
     // Atualizar itens do pedido
