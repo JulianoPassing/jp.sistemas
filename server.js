@@ -258,10 +258,10 @@ app.post('/api/auth/login', async (req, res) => {
 
 // Middleware para garantir autenticação nas rotas multi-tenant
 function requireUserDb(req, res, next) {
-  console.log('Middleware requireUserDb - session:', req.session);
+  console.log('Middleware requireUserDb - session:', JSON.stringify(req.session));
   console.log('Middleware requireUserDb - sessionID:', req.sessionID);
-  console.log('Middleware requireUserDb - cookies:', req.cookies);
-  if (!req.session.user || !req.session.user.dbName) {
+  console.log('Middleware requireUserDb - cookies:', JSON.stringify(req.cookies));
+  if (!req.session || !req.session.user || !req.session.user.dbName) {
     console.log('Middleware requireUserDb - NÃO AUTENTICADO');
     return res.status(401).json({ error: 'Não autenticado.' });
   }
