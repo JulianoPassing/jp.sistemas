@@ -978,40 +978,6 @@
       background-color: #f8f9fa;
       cursor: not-allowed;
     }
-
-    /* Estilos para campos manuais do cliente */
-    .cliente-manual-section {
-      background: #f8f9fa;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 16px;
-      margin-top: 12px;
-    }
-
-    .cliente-manual-section h5 {
-      color: var(--primary-color);
-      margin-bottom: 12px;
-      font-size: 0.95rem;
-      font-weight: 600;
-    }
-
-    .cliente-manual-section .form-group {
-      margin-bottom: 12px;
-    }
-
-    .cliente-manual-section .form-group:last-child {
-      margin-bottom: 0;
-    }
-
-    .cliente-manual-section input {
-      background: #fff;
-      border: 1px solid #d1d5db;
-    }
-
-    .cliente-manual-section input:focus {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
   </style>
 </head>
 <body>
@@ -1053,7 +1019,6 @@
         <div class="caixa-bottom-btns">
           <button class="caixa-bottom-btn open" id="btn-em-aberto"><i class="fas fa-folder-open"></i> EM ABERTO</button>
           <button class="caixa-bottom-btn pay" id="btn-ir-pagamento"><i class="fas fa-credit-card"></i> IR PARA O PAGAMENTO</button>
-          <button class="caixa-bottom-btn" id="btn-abrir-clientes" style="background: var(--accent-color);"><i class="fas fa-users"></i> CLIENTES</button>
         </div>
         <div class="caixa-total">R$ <span id="caixa-total">0,00</span></div>
       </div>
@@ -1106,7 +1071,7 @@
             <h4>Informações do Cliente</h4>
             <div class="form-row">
               <div class="form-group">
-                <label for="clienteFinalizar">Cliente (Selecionar ou Preencher Manual)</label>
+                <label for="clienteFinalizar">Cliente</label>
                 <select id="clienteFinalizar">
                   <option value="">Cliente não identificado</option>
                 </select>
@@ -1122,19 +1087,6 @@
                   <option value="Dinheiro">Dinheiro</option>
                   <option value="Transferencia">Transferência</option>
                 </select>
-              </div>
-            </div>
-            <div class="cliente-manual-section">
-              <h5><i class="fas fa-edit"></i> Dados do Cliente (Preenchimento Manual)</h5>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="nomeClienteManual">Nome do Cliente</label>
-                  <input type="text" id="nomeClienteManual" placeholder="Digite o nome do cliente">
-                </div>
-                <div class="form-group">
-                  <label for="cnpjClienteManual">CNPJ/CPF</label>
-                  <input type="text" id="cnpjClienteManual" placeholder="Digite CNPJ ou CPF">
-                </div>
               </div>
             </div>
             <div class="form-row">
@@ -1212,21 +1164,10 @@
       <div class="modal-body">
         <form id="formSalvarEmAberto">
           <div class="form-group">
-            <label for="clienteEmAberto">Cliente (Selecionar ou Preencher Manual)</label>
-            <select id="clienteEmAberto">
+            <label for="clienteEmAberto">Cliente *</label>
+            <select id="clienteEmAberto" required>
               <option value="">Carregando clientes...</option>
             </select>
-          </div>
-          <div class="cliente-manual-section">
-            <h5><i class="fas fa-edit"></i> Dados do Cliente (Preenchimento Manual)</h5>
-            <div class="form-group">
-              <label for="nomeClienteManualEmAberto">Nome do Cliente</label>
-              <input type="text" id="nomeClienteManualEmAberto" placeholder="Digite o nome do cliente">
-            </div>
-            <div class="form-group">
-              <label for="cnpjClienteManualEmAberto">CNPJ/CPF</label>
-              <input type="text" id="cnpjClienteManualEmAberto" placeholder="Digite CNPJ ou CPF">
-            </div>
           </div>
           <div class="form-group">
             <label for="telefoneEmAberto">Telefone</label>
@@ -1281,7 +1222,7 @@
     // Função para carregar produtos do banco de dados
     async function carregarProdutos() {
       try {
-        const response = await fetch('/api/dev/produtos');
+        const response = await fetch('/api/produtos');
         if (!response.ok) throw new Error('Erro ao carregar produtos');
         produtos = await response.json();
         renderProdutos();
@@ -1294,7 +1235,7 @@
     // Função para carregar clientes do banco de dados
     async function carregarClientes() {
       try {
-        const response = await fetch('/api/dev/clientes');
+        const response = await fetch('/api/clientes');
         if (!response.ok) throw new Error('Erro ao carregar clientes');
         clientes = await response.json();
         atualizarSelectClientes();
@@ -1329,16 +1270,10 @@
       const cliente = clientes.find(c => c.id == clienteId);
       
       if (cliente) {
-        // Preencher campos manuais com dados do cliente selecionado
-        document.getElementById('nomeClienteManual').value = cliente.razao || '';
-        document.getElementById('cnpjClienteManual').value = cliente.cnpj || '';
         document.getElementById('telefoneFinalizar').value = cliente.telefone || '';
         document.getElementById('emailFinalizar').value = cliente.email || '';
         document.getElementById('enderecoFinalizar').value = `${cliente.endereco || ''}${cliente.bairro ? `, ${cliente.bairro}` : ''}${cliente.cidade ? `, ${cliente.cidade}/${cliente.estado || ''}` : ''}`.trim();
       } else {
-        // Limpar campos se nenhum cliente selecionado
-        document.getElementById('nomeClienteManual').value = '';
-        document.getElementById('cnpjClienteManual').value = '';
         document.getElementById('telefoneFinalizar').value = '';
         document.getElementById('emailFinalizar').value = '';
         document.getElementById('enderecoFinalizar').value = '';
@@ -1485,8 +1420,6 @@
     // Função para finalizar pedido e salvar no banco
     async function confirmarFinalizar() {
       const clienteId = document.getElementById('clienteFinalizar').value;
-      const nomeClienteManual = document.getElementById('nomeClienteManual').value;
-      const cnpjClienteManual = document.getElementById('cnpjClienteManual').value;
       const formaPagamento = document.getElementById('formaPagamentoFinalizar').value;
       const telefone = document.getElementById('telefoneFinalizar').value;
       const email = document.getElementById('emailFinalizar').value;
@@ -1498,17 +1431,6 @@
         return;
       }
       
-      // Determinar informações do cliente
-      let clienteInfo = '';
-      if (clienteId) {
-        const cliente = clientes.find(c => c.id == clienteId);
-        clienteInfo = `Cliente: ${cliente ? cliente.razao : 'ID: ' + clienteId}`;
-      } else if (nomeClienteManual) {
-        clienteInfo = `Cliente Manual: ${nomeClienteManual}${cnpjClienteManual ? ` (${cnpjClienteManual})` : ''}`;
-      } else {
-        clienteInfo = 'Cliente: Não identificado';
-      }
-      
       const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.preco_venda || 0) * item.qtd), 0);
       
       try {
@@ -1518,11 +1440,11 @@
           data_pedido: new Date().toISOString().split('T')[0],
           status: 'Concluído',
           valor_total: total,
-          observacoes: `${observacoes}\n\n${clienteInfo}\nTelefone: ${telefone}\nEmail: ${email}\nEndereço: ${endereco}\nForma de Pagamento: ${formaPagamento}`,
+          observacoes: `${observacoes}\n\nInformações adicionais:\nTelefone: ${telefone}\nEmail: ${email}\nEndereço: ${endereco}\nForma de Pagamento: ${formaPagamento}`,
           itens: itensPedido
         };
 
-        const response = await fetch('/api/dev/pedidos', {
+        const response = await fetch('/api/pedidos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(pedidoData)
@@ -1533,13 +1455,13 @@
         const result = await response.json();
 
         // Registrar pagamento no caixa
-        const caixaResponse = await fetch('/api/dev/caixa', {
+        const caixaResponse = await fetch('/api/caixa', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             tipo: 'entrada',
             valor: total,
-            descricao: `Venda - Pedido #${result.id} - ${itensPedido.length} itens - ${clienteInfo}`,
+            descricao: `Venda - Pedido #${result.id} - ${itensPedido.length} itens`,
             data: new Date().toISOString().split('T')[0],
             pedido_id: result.id
           })
@@ -1553,7 +1475,7 @@
         atualizarTotal();
         fecharModalFinalizar();
 
-        alert(`Pedido finalizado com sucesso!\nPedido #${result.id}\n${clienteInfo}\nTotal: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
+        alert(`Pedido finalizado com sucesso!\nPedido #${result.id}\nTotal: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
       } catch (error) {
         console.error('Erro ao finalizar pedido:', error);
         alert('Erro ao finalizar pedido');
@@ -1563,7 +1485,7 @@
     // Função para carregar pedidos em aberto
     async function carregarPedidosEmAberto() {
       try {
-        const response = await fetch('/api/dev/pedidos');
+        const response = await fetch('/api/pedidos');
         if (!response.ok) throw new Error('Erro ao carregar pedidos');
         const todosPedidos = await response.json();
         pedidosEmAberto = todosPedidos.filter(p => p.status === 'Em Processamento' || p.status === 'Pendente');
@@ -1626,7 +1548,7 @@
       
       try {
         // Buscar detalhes completos do pedido
-        const response = await fetch(`/api/dev/pedidos/${pedidoId}`);
+        const response = await fetch(`/api/pedidos/${pedidoId}`);
         if (!response.ok) throw new Error('Erro ao buscar detalhes do pedido');
         
         const pedidoDetalhado = await response.json();
@@ -1679,7 +1601,7 @@
       if (!confirm('Confirmar finalização deste pedido?')) return;
       
       try {
-        const response = await fetch(`/api/dev/pedidos/${pedidoId}`, {
+        const response = await fetch(`/api/pedidos/${pedidoId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1703,7 +1625,7 @@
       if (!confirm('Tem certeza que deseja remover este pedido?')) return;
       
       try {
-        const response = await fetch(`/api/dev/pedidos/${pedidoId}`, { method: 'DELETE' });
+        const response = await fetch(`/api/pedidos/${pedidoId}`, { method: 'DELETE' });
         if (!response.ok) throw new Error('Erro ao remover pedido');
         
         await carregarPedidosEmAberto();
@@ -1761,10 +1683,6 @@
         // Abrir modal para salvar em aberto
         abrirModalSalvarEmAberto();
       };
-      
-      // Botão para abrir lateral de clientes
-      const btnAbrirClientes = document.getElementById('btn-abrir-clientes');
-      if (btnAbrirClientes) btnAbrirClientes.onclick = abrirLateralClientes;
       
       const closePedidosAbertos = document.getElementById('closePedidosAbertos');
       if (closePedidosAbertos) closePedidosAbertos.onclick = fecharModalPedidosAbertos;
@@ -1832,7 +1750,7 @@
     // LATERAL CLIENTES (mantido para compatibilidade)
     async function carregarClientesLateral() {
       try {
-        const resp = await fetch('/api/dev/clientes');
+        const resp = await fetch('/api/clientes');
         if (!resp.ok) throw new Error('Erro ao buscar clientes na API');
         const clientes = await resp.json();
         const select = document.getElementById('cliente-select');
@@ -1857,25 +1775,15 @@
     // Salvar pedido no banco (mantido para compatibilidade)
     async function salvarPedidoNoBanco(pedidoData) {
       try {
-        console.log('Enviando pedido para API:', pedidoData);
-        
-        const response = await fetch('/api/dev/pedidos', {
+        const response = await fetch('/api/pedidos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(pedidoData)
         });
         
-        console.log('Status da resposta:', response.status);
-        console.log('Headers da resposta:', response.headers);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Erro na resposta:', errorText);
-          throw new Error(`Erro ao salvar pedido: ${response.status} - ${errorText}`);
-        }
+        if (!response.ok) throw new Error('Erro ao salvar pedido');
         
         const result = await response.json();
-        console.log('Resposta da API:', result);
         return result.id;
       } catch (error) {
         console.error('Erro ao salvar pedido:', error);
@@ -1885,15 +1793,9 @@
 
     const btnSalvarCliente = document.getElementById('btn-salvar-cliente');
     if (btnSalvarCliente) btnSalvarCliente.onclick = async function() {
-      console.log('Botão Salvar Cliente clicado');
-      
       const select = document.getElementById('cliente-select');
       const clienteId = select.value;
       const clienteNome = select.options[select.selectedIndex]?.text?.split(' - ')[0] || document.getElementById('cliente-manual').value;
-      
-      console.log('Cliente ID:', clienteId);
-      console.log('Cliente Nome:', clienteNome);
-      console.log('Itens no pedido:', itensPedido.length);
       
       if (!clienteNome) {
         alert('Selecione ou preencha o nome do cliente.');
@@ -1906,42 +1808,30 @@
       }
 
       const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.preco_venda || 0) * item.qtd), 0);
-      console.log('Total do pedido:', total);
       
       try {
-        console.log('Iniciando salvamento do pedido...');
-        
         // Salvar pedido no banco
         const pedidoData = {
           cliente_id: clienteId || null,
           data_pedido: new Date().toISOString().split('T')[0],
           status: 'Em Processamento',
           valor_total: total,
-          observacoes: `Pedido criado via caixa - Cliente: ${clienteNome} - ${itensPedido.length} itens`
+          observacoes: `Pedido criado via caixa - ${itensPedido.length} itens`
         };
 
-        console.log('Dados do pedido:', pedidoData);
-
         const pedidoId = await salvarPedidoNoBanco(pedidoData);
-        console.log('Pedido salvo com ID:', pedidoId);
 
         // Limpar caixa
         itensPedido = [];
         renderItensPedido();
         atualizarTotal();
-        
-        // Fechar lateral
         const caixaLateralClientes = document.getElementById('caixaLateralClientes');
         if (caixaLateralClientes) caixaLateralClientes.classList.remove('aberta');
         
-        alert(`Pedido salvo com sucesso!\nPedido #${pedidoId}\nCliente: ${clienteNome}\nTotal: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
-        
-        // Atualizar lista de pedidos em aberto
-        await carregarPedidosEmAberto();
-        
+        alert('Pedido salvo com sucesso!');
       } catch (error) {
-        console.error('Erro ao salvar pedido:', error);
-        alert('Erro ao salvar pedido: ' + error.message);
+        alert('Erro ao salvar pedido');
+        console.error(error);
       }
     };
 
@@ -2015,16 +1905,10 @@
       const cliente = clientes.find(c => c.id == clienteId);
       
       if (cliente) {
-        // Preencher campos manuais com dados do cliente selecionado
-        document.getElementById('nomeClienteManualEmAberto').value = cliente.razao || '';
-        document.getElementById('cnpjClienteManualEmAberto').value = cliente.cnpj || '';
         document.getElementById('telefoneEmAberto').value = cliente.telefone || '';
         document.getElementById('emailEmAberto').value = cliente.email || '';
         document.getElementById('enderecoEmAberto').value = `${cliente.endereco || ''}${cliente.bairro ? `, ${cliente.bairro}` : ''}${cliente.cidade ? `, ${cliente.cidade}/${cliente.estado || ''}` : ''}`.trim();
       } else {
-        // Limpar campos se nenhum cliente selecionado
-        document.getElementById('nomeClienteManualEmAberto').value = '';
-        document.getElementById('cnpjClienteManualEmAberto').value = '';
         document.getElementById('telefoneEmAberto').value = '';
         document.getElementById('emailEmAberto').value = '';
         document.getElementById('enderecoEmAberto').value = '';
@@ -2034,16 +1918,13 @@
     // Função para confirmar salvar em aberto
     async function confirmarSalvarEmAberto() {
       const clienteId = document.getElementById('clienteEmAberto').value;
-      const nomeClienteManual = document.getElementById('nomeClienteManualEmAberto').value;
-      const cnpjClienteManual = document.getElementById('cnpjClienteManualEmAberto').value;
       const telefone = document.getElementById('telefoneEmAberto').value;
       const email = document.getElementById('emailEmAberto').value;
       const endereco = document.getElementById('enderecoEmAberto').value;
       const observacoes = document.getElementById('observacoesEmAberto').value;
       
-      // Verificar se há cliente selecionado ou dados manuais
-      if (!clienteId && !nomeClienteManual) {
-        alert('Selecione um cliente ou preencha o nome do cliente manualmente');
+      if (!clienteId) {
+        alert('Selecione um cliente');
         return;
       }
       
@@ -2052,29 +1933,20 @@
         return;
       }
       
-      // Determinar informações do cliente
-      let clienteInfo = '';
-      if (clienteId) {
-        const cliente = clientes.find(c => c.id == clienteId);
-        clienteInfo = `Cliente: ${cliente ? cliente.razao : 'ID: ' + clienteId}`;
-      } else if (nomeClienteManual) {
-        clienteInfo = `Cliente Manual: ${nomeClienteManual}${cnpjClienteManual ? ` (${cnpjClienteManual})` : ''}`;
-      }
-      
       const total = itensPedido.reduce((sum, item) => sum + (parseFloat(item.preco_venda || 0) * item.qtd), 0);
       
       try {
         // Preparar dados do pedido
         const pedidoData = {
-          cliente_id: clienteId || null,
+          cliente_id: clienteId,
           data_pedido: new Date().toISOString().split('T')[0],
           status: 'Em Processamento',
           valor_total: total,
-          observacoes: `${observacoes}\n\n${clienteInfo}\nTelefone: ${telefone}\nEmail: ${email}\nEndereço: ${endereco}\nPedido criado via caixa - ${itensPedido.length} itens`
+          observacoes: `${observacoes}\n\nInformações adicionais:\nTelefone: ${telefone}\nEmail: ${email}\nEndereço: ${endereco}\nPedido criado via caixa - ${itensPedido.length} itens`
         };
 
         // Salvar pedido no banco
-        const response = await fetch('/api/dev/pedidos', {
+        const response = await fetch('/api/pedidos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(pedidoData)
@@ -2084,21 +1956,6 @@
         
         const result = await response.json();
         
-        // Registrar pagamento no caixa
-        const caixaResponse = await fetch('/api/dev/caixa', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            tipo: 'entrada',
-            valor: total,
-            descricao: `Venda - Pedido #${result.id} - ${itensPedido.length} itens - ${clienteInfo}`,
-            data: new Date().toISOString().split('T')[0],
-            pedido_id: result.id
-          })
-        });
-
-        if (!caixaResponse.ok) throw new Error('Erro ao registrar pagamento');
-
         // Limpar caixa
         itensPedido = [];
         renderItensPedido();
@@ -2108,7 +1965,7 @@
         fecharModalSalvarEmAberto();
         
         // Mostrar mensagem de sucesso
-        alert(`Pedido #${result.id} salvo em aberto com sucesso!\n${clienteInfo}`);
+        alert(`Pedido #${result.id} salvo em aberto com sucesso!`);
         
         // Atualizar lista de pedidos em aberto na lateral
         await carregarPedidosEmAberto();
@@ -2116,45 +1973,6 @@
       } catch (error) {
         console.error('Erro ao salvar pedido:', error);
         alert('Erro ao salvar pedido: ' + error.message);
-      }
-    }
-
-    // Função para abrir lateral de clientes
-    function abrirLateralClientes() {
-      console.log('Abrindo lateral de clientes...');
-      const lateral = document.getElementById('caixaLateralClientes');
-      if (lateral) {
-        lateral.classList.add('aberta');
-        // Carregar clientes se ainda não foram carregados
-        if (clientes.length === 0) {
-          carregarClientesLateral();
-        }
-      } else {
-        console.error('Lateral de clientes não encontrada');
-      }
-    }
-
-    // Função para carregar clientes na lateral
-    async function carregarClientesLateral() {
-      try {
-        console.log('Carregando clientes para lateral...');
-        const resp = await fetch('/api/dev/clientes');
-        if (!resp.ok) throw new Error('Erro ao buscar clientes na API');
-        const clientesLateral = await resp.json();
-        console.log('Clientes carregados:', clientesLateral.length);
-        
-        const select = document.getElementById('cliente-select');
-        if (select) {
-          select.innerHTML = '<option value="">Selecione um cliente</option>';
-          clientesLateral.forEach(cliente => {
-            const option = document.createElement('option');
-            option.value = cliente.id;
-            option.textContent = `${cliente.razao}${cliente.cnpj ? ` - ${cliente.cnpj}` : ''}`;
-            select.appendChild(option);
-          });
-        }
-      } catch (error) {
-        console.error('Erro ao carregar clientes na lateral:', error);
       }
     }
   </script>

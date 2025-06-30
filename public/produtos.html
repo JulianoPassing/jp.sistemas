@@ -876,7 +876,7 @@
       // Função para carregar produtos do banco de dados
       async function carregarProdutos() {
         try {
-          const response = await fetch('/api/dev/produtos');
+          const response = await fetch('/api/produtos');
           if (!response.ok) {
             throw new Error('Erro ao carregar produtos');
           }
@@ -1333,7 +1333,7 @@
           }
           
           try {
-            const response = await fetch('/api/dev/produtos', {
+            const response = await fetch('/api/produtos', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

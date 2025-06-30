@@ -891,7 +891,7 @@
     // Função para carregar produtos do banco de dados
     async function carregarProdutos() {
       try {
-        const response = await fetch('/api/dev/produtos');
+        const response = await fetch('/api/produtos');
         if (!response.ok) throw new Error('Erro ao carregar produtos');
         produtos = await response.json();
       } catch (error) {
@@ -903,7 +903,7 @@
     // Função para carregar clientes do banco de dados
     async function carregarClientes() {
       try {
-        const response = await fetch('/api/dev/clientes');
+        const response = await fetch('/api/clientes');
         if (!response.ok) throw new Error('Erro ao carregar clientes');
         clientes = await response.json();
         atualizarSelectClientes();
@@ -954,7 +954,7 @@
     async function carregarPedidos() {
       try {
         console.log('Carregando pedidos...');
-        const response = await fetch('/api/dev/pedidos');
+        const response = await fetch('/api/pedidos');
         if (!response.ok) {
           throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
         }
@@ -1070,13 +1070,13 @@
         };
         
         if (editandoId) {
-          response = await fetch(`/api/dev/pedidos/${editandoId}`, {
+          response = await fetch(`/api/pedidos/${editandoId}`, {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(pedidoData)
           });
         } else {
-          response = await fetch('/api/dev/pedidos', {
+          response = await fetch('/api/pedidos', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(pedidoData)
@@ -1097,7 +1097,7 @@
     async function removerPedido(pedidoId) {
       if (!confirm('Tem certeza que deseja remover este pedido?')) return;
       try {
-        const response = await fetch(`/api/dev/pedidos/${pedidoId}`, { method: 'DELETE' });
+        const response = await fetch(`/api/pedidos/${pedidoId}`, { method: 'DELETE' });
         if (!response.ok) throw new Error('Erro ao remover pedido');
         await carregarPedidos();
         alert('Pedido removido com sucesso!');
@@ -1133,7 +1133,7 @@
 
         console.log('Dados para atualização:', pedidoData);
 
-        const response = await fetch(`/api/dev/pedidos/${pedidoId}`, {
+        const response = await fetch(`/api/pedidos/${pedidoId}`, {
           method: 'PUT',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify(pedidoData)
@@ -1167,7 +1167,7 @@
           return;
         }
 
-        const response = await fetch(`/api/dev/pedidos/${pedidoId}`, {
+        const response = await fetch(`/api/pedidos/${pedidoId}`, {
           method: 'PUT',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
@@ -1406,7 +1406,7 @@
 
         console.log('Dados para atualização:', pedidoData);
 
-        const response = await fetch(`/api/dev/pedidos/${pedidoId}`, {
+        const response = await fetch(`/api/pedidos/${pedidoId}`, {
           method: 'PUT',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify(pedidoData)

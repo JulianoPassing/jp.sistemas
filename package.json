@@ -9,7 +9,6 @@
     "build": "echo 'Build completed'",
     "vercel-build": "echo 'Vercel build completed'",
     "init-db": "node scripts/init-db.js",
-    "init-sessions": "node scripts/init-sessions-db.js",
     "init-produtos": "node scripts/init-produtos.js",
     "init-vercel": "node scripts/init-vercel-db.js",
     "backup": "bash scripts/backup.sh",
