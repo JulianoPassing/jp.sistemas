@@ -217,6 +217,7 @@ app.post('/api/auth/login', async (req, res) => {
       isAdmin: user.is_admin,
       dbName: `jpsistemas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
     };
+    console.log('Sessão criada após login:', req.session);
 
     res.json({ 
       success: true, 
@@ -244,6 +245,8 @@ function requireUserDb(req, res, next) {
 
 // Rotas de clientes (multi-tenant)
 app.get('/api/clientes', requireUserDb, async (req, res) => {
+  console.log('Sessão recebida em /api/clientes:', req.session);
+  console.log('Cookies recebidos em /api/clientes:', req.cookies);
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
