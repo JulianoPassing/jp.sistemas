@@ -130,60 +130,78 @@
     }
     .mesas-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 32px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      margin-top: 18px;
+      padding-bottom: 8px;
+      overflow-x: auto;
     }
     .mesa-card {
       background: var(--card-bg);
       border-radius: var(--border-radius);
-      box-shadow: 0 8px 32px rgba(37, 99, 235, 0.13);
-      padding: 0 0 24px 0;
-      margin-bottom: 24px;
+      box-shadow: 0 4px 18px rgba(37, 99, 235, 0.13);
+      padding: 0 0 18px 0;
+      margin-bottom: 0;
       position: relative;
-      border: none;
-      transition: box-shadow 0.3s, transform 0.2s;
+      border: 2.5px solid #e5e7eb;
+      transition: box-shadow 0.3s, border 0.2s, transform 0.2s;
       overflow: hidden;
+      min-width: 240px;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
     .mesa-card:hover {
-      box-shadow: 0 16px 48px rgba(37, 99, 235, 0.18);
-      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 8px 32px rgba(37, 99, 235, 0.18);
+      border: 2.5px solid var(--primary-color);
+      transform: translateY(-2px) scale(1.01);
     }
     .mesa-header {
       background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
       color: #fff;
-      padding: 18px 24px 12px 24px;
+      padding: 14px 18px 10px 18px;
       border-radius: var(--border-radius) var(--border-radius) 0 0;
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
       box-shadow: 0 2px 8px rgba(37,99,235,0.07);
     }
     .mesa-nome {
-      font-size: 1.3em;
+      font-size: 1.15em;
       font-weight: 700;
       color: #fff;
-      margin-bottom: 4px;
       letter-spacing: 0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     .mesa-status {
-      font-size: 1em;
-      font-weight: 500;
+      font-size: 0.98em;
+      font-weight: 600;
       color: #ffe066;
-      margin-bottom: 0;
+      background: rgba(255,224,102,0.13);
+      border-radius: 8px;
+      padding: 2px 10px;
+      margin-left: auto;
       text-shadow: 0 1px 2px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
     .mesa-itens {
-      margin: 18px 0 8px 0;
-      padding: 0 24px;
+      margin: 10px 0 4px 0;
+      padding: 0 12px;
     }
     .mesa-itens table {
       width: 100%;
       border-collapse: collapse;
     }
     .mesa-itens th, .mesa-itens td {
-      padding: 6px 8px;
+      padding: 4px 6px;
       border-bottom: 1px solid #e5e7eb;
-      font-size: 0.98em;
+      font-size: 0.97em;
     }
     .mesa-itens th {
       background: #f3f4f6;
@@ -194,37 +212,48 @@
       border-bottom: none;
     }
     .mesa-total {
-      font-size: 1.2em;
+      font-size: 1.08em;
       font-weight: 700;
       color: var(--success-color);
-      margin: 10px 24px 0 24px;
+      margin: 8px 18px 0 18px;
       text-align: right;
       letter-spacing: 0.01em;
     }
     .mesa-acoes {
       display: flex;
-      gap: 12px;
-      margin: 18px 24px 0 24px;
+      gap: 6px;
+      margin: 12px 12px 0 12px;
       justify-content: flex-end;
+      flex-wrap: wrap;
     }
     .mesa-acoes .btn {
-      min-width: 120px;
+      min-width: 36px;
       font-size: 1em;
       font-weight: 600;
       box-shadow: 0 2px 8px rgba(37,99,235,0.07);
+      padding: 7px 10px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .mesa-acoes .btn-primary {
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-    }
-    .mesa-acoes .btn-success {
-      background: linear-gradient(135deg, #22c55e, #059669);
-    }
-    .mesa-acoes .btn-secondary {
-      background: linear-gradient(135deg, #64748b, #334155);
-    }
-    .mesa-acoes .btn-primary:hover, .mesa-acoes .btn-success:hover, .mesa-acoes .btn-secondary:hover {
-      filter: brightness(1.08);
-      transform: translateY(-2px) scale(1.04);
+    .mesa-acoes .btn i { font-size: 1.08em; }
+    .mesa-acoes .btn[title] { position: relative; }
+    .mesa-acoes .btn[title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #222;
+      color: #fff;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 0.93em;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0.95;
+      z-index: 10;
     }
     .btn {
       display: inline-flex;
@@ -299,6 +328,17 @@
         gap: 10px;
       }
     }
+    @media (max-width: 700px) {
+      .mesas-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        overflow-x: auto;
+        padding-bottom: 12px;
+      }
+      .mesa-card { min-width: 180px; max-width: 98vw; }
+      .mesa-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+      .mesa-status { margin-left: 0; }
+    }
   </style>
 </head>
 <body>
@@ -358,6 +398,20 @@
     </div>
   </div>
   <!-- Modal de Finalização com Desconto -->
+  <div id="modal-finalizar-mesa" class="modal" style="display:none;position:fixed;z-index:1000;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+    <div class="modal-content" style="background:#fff;border-radius:16px;max-width:420px;width:95vw;padding:32px 24px;box-shadow:0 8px 32px rgba(37,99,235,0.18);position:relative;">
+      <h3 style="margin-bottom:18px;font-size:1.25em;font-weight:600;">Finalizar Mesa</h3>
+      <div id="finalizar-info"></div>
+      <div style="margin-top:18px;">
+        <input type="number" id="desconto" placeholder="Desconto (%)">
+      </div>
+      <div style="margin-top:24px;text-align:right;">
+        <button id="btn-fechar-modal-finalizar" class="btn btn-success"><i class="fas fa-save"></i> Finalizar</button>
+        <button id="btn-cancelar-finalizar" class="btn btn-secondary" style="margin-left:8px;">Cancelar</button>
+      </div>
+      <button id="btn-fechar-modal-finalizar" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.5em;color:#888;cursor:pointer;"><i class="fas fa-times"></i></button>
+    </div>
+  </div>
   <script>
     let produtos = [];
     let pedidosAbertos = [];
@@ -416,7 +470,7 @@
         card.innerHTML = `
           <div class="mesa-header">
             <div class="mesa-nome"><i class="fas fa-chair"></i> ${pedido.nome_cliente || pedido.nome_mesa || 'Mesa/Pessoa'}</div>
-            <div class="mesa-status">Status: ${pedido.status}</div>
+            <div class="mesa-status"><i class="fas fa-clock"></i> ${pedido.status}</div>
           </div>
           <div class="mesa-itens">
             <table>
@@ -428,10 +482,10 @@
           </div>
           <div class="mesa-total">Total: R$ ${total.toFixed(2).replace('.', ',')}</div>
           <div class="mesa-acoes">
-            <button class="btn btn-secondary" onclick="abrirModalEditarProdutos(${pedido.id})"><i class='fas fa-edit'></i> Editar Produtos</button>
-            <button class="btn btn-success" onclick="abrirModalFinalizarMesa(${pedido.id})"><i class='fas fa-check'></i> Finalizar</button>
-            <button class="btn btn-primary" onclick="imprimirComanda(${pedido.id})"><i class='fas fa-print'></i> Imprimir Comanda</button>
-            <button class="btn btn-danger" onclick="excluirMesa(${pedido.id})"><i class='fas fa-trash'></i> Excluir</button>
+            <button class="btn btn-secondary" title="Editar Produtos" onclick="abrirModalEditarProdutos(${pedido.id})"><i class='fas fa-edit'></i></button>
+            <button class="btn btn-success" title="Finalizar Mesa" onclick="abrirModalFinalizarMesa(${pedido.id})"><i class='fas fa-check'></i></button>
+            <button class="btn btn-primary" title="Imprimir Comanda" onclick="imprimirComanda(${pedido.id})"><i class='fas fa-print'></i></button>
+            <button class="btn btn-danger" title="Excluir Mesa" onclick="excluirMesa(${pedido.id})"><i class='fas fa-trash'></i></button>
           </div>
         `;
         grid.appendChild(card);
@@ -606,6 +660,43 @@
         renderMesas();
       } catch (e) {
         alert('Erro ao excluir mesa!');
+      }
+    }
+    // Funções para abrir modais de edição e finalização de mesa
+    window.abrirModalEditarProdutos = function(id) {
+      const modal = document.getElementById('modal-editar-produtos');
+      const pedido = pedidosAbertos.find(p => p.id === id);
+      if (!pedido) return;
+      // Exemplo: mostrar nome da mesa no topo
+      modal.querySelector('h3').textContent = `Editar Produtos - ${pedido.nome_cliente || pedido.nome_mesa || 'Mesa/Pessoa'}`;
+      // (Aqui depois será preenchida a lista de produtos)
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      // Fechar modal
+      document.getElementById('btn-fechar-modal-produtos').onclick = fecharModalEditarProdutos;
+      document.getElementById('btn-cancelar-produtos').onclick = fecharModalEditarProdutos;
+      function fecharModalEditarProdutos() {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }
+    }
+    window.abrirModalFinalizarMesa = function(id) {
+      const modal = document.getElementById('modal-finalizar-mesa');
+      const pedido = pedidosAbertos.find(p => p.id === id);
+      if (!pedido) return;
+      // Exemplo: mostrar nome e total
+      const total = (pedido.itens||[]).reduce((sum, i) => sum + (i.precoUnitario||0) * (i.quantidade||0), 0);
+      modal.querySelector('h3').textContent = `Finalizar Mesa - ${pedido.nome_cliente || pedido.nome_mesa || 'Mesa/Pessoa'}`;
+      document.getElementById('finalizar-info').innerHTML = `<div style='margin-bottom:10px;'><b>Total:</b> R$ ${total.toFixed(2).replace('.', ',')}</div>`;
+      document.getElementById('desconto').value = 0;
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      // Fechar modal
+      document.getElementById('btn-fechar-modal-finalizar').onclick = fecharModalFinalizarMesa;
+      document.getElementById('btn-cancelar-finalizar').onclick = fecharModalFinalizarMesa;
+      function fecharModalFinalizarMesa() {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
       }
     }
   </script>
