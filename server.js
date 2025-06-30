@@ -523,7 +523,12 @@ app.post('/api/pedidos', requireAuthJWT, async (req, res) => {
     for (const item of itens) {
       await connection.execute(
         'INSERT INTO pedido_itens (pedido_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)',
-        [pedidoId, item.produto_id, item.quantidade, item.preco_unitario]
+        [
+          pedidoId,
+          typeof item.produto_id === 'undefined' ? null : item.produto_id,
+          typeof item.quantidade === 'undefined' ? null : item.quantidade,
+          typeof item.preco_unitario === 'undefined' ? null : item.preco_unitario
+        ]
       );
     }
     await connection.commit();
