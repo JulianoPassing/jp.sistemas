@@ -11,6 +11,7 @@ const {
   getUserDatabaseConfig, 
   getRootConfig 
 } = require('./database-config');
+const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
@@ -21,14 +22,25 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 
-// Configuração de sessão simplificada (sem banco de dados)
+// Configuração de CORS para aceitar credenciais do frontend
+app.use(cors({
+  origin: [
+    'https://jp-sistemas.vercel.app',
+    'http://localhost:3000'
+  ],
+  credentials: true
+}));
+
+// Configuração de sessão
+const isProduction = process.env.NODE_ENV === 'production';
 app.use(session({
   secret: process.env.SESSION_SECRET || 'SeuSessionSecretMuitoForte123!',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false,
+    secure: isProduction, // true em produção (https), false em dev
     httpOnly: true,
+    sameSite: isProduction ? 'none' : 'lax',
     maxAge: 24 * 60 * 60 * 1000 // 24 horas
   }
 }));
