@@ -175,6 +175,17 @@ async function createUserDatabase(username) {
   }
 }
 
+// Função para normalizar o status do pedido
+function normalizarStatus(status) {
+  if (!status) return '';
+  const s = status.toString().trim().toLowerCase();
+  if (s === 'em aberto') return 'Em Aberto';
+  if (s === 'em processamento') return 'Em Processamento';
+  if (s === 'concluído' || s === 'concluido') return 'Concluído';
+  if (s === 'cancelado') return 'Cancelado';
+  return status;
+}
+
 // Middleware de autenticação por JWT
 function requireAuthJWT(req, res, next) {
   const token = req.cookies.token || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
