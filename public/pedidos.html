@@ -1087,7 +1087,20 @@
           });
         }
         
-        if (!response.ok) throw new Error('Erro ao salvar pedido');
+        if (!response.ok) {
+          let msg = 'Erro ao salvar pedido';
+          try {
+            const errData = await response.json();
+            if (errData && errData.error) msg += ': ' + errData.error;
+          } catch {}
+          throw new Error(msg);
+        }
+        // Tentar ler resposta, mas não exigir JSON
+        try {
+          await response.json();
+        } catch (e) {
+          // Se não for JSON, tudo bem, segue
+        }
         await carregarPedidos();
         fecharModalNovoPedido();
         alert('Pedido salvo com sucesso!');

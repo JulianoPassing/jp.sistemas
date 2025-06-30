@@ -536,8 +536,20 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(pedido)
         });
-        if (!response.ok) throw new Error('Erro ao criar mesa/pedido');
-        const novoPedido = await response.json();
+        if (!response.ok) {
+          let msg = 'Erro ao criar mesa/pedido!';
+          try {
+            const errData = await response.json();
+            if (errData && errData.error) msg += ': ' + errData.error;
+          } catch {}
+          throw new Error(msg);
+        }
+        let novoPedido = null;
+        try {
+          novoPedido = await response.json();
+        } catch (e) {
+          // Se não for JSON, tudo bem, segue
+        }
         if (novoPedido && novoPedido.id) {
           // Buscar o pedido recém-criado
           const respPedido = await fetch(`/api/pedidos/${novoPedido.id}`);
