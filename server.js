@@ -231,6 +231,15 @@ app.post('/api/auth/login', async (req, res) => {
     };
     console.log('Sessão criada após login:', req.session);
 
+    // Forçar envio do cookie de sessão manualmente
+    res.cookie('connect.sid', req.sessionID, {
+      secure: true,
+      httpOnly: true,
+      sameSite: 'none',
+      domain: '.jp-sistemas.vercel.app',
+      maxAge: 24 * 60 * 60 * 1000
+    });
+
     res.json({ 
       success: true, 
       message: 'Login realizado com sucesso',
