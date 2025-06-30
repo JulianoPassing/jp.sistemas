@@ -450,7 +450,7 @@
         const response = await fetch('/api/pedidos');
         if (!response.ok) throw new Error('Erro ao buscar pedidos');
         const todos = await response.json();
-        pedidosAbertos = (todos || []).filter(p => p.status === 'Em Aberto');
+        pedidosAbertos = (todos || []).filter(p => p.status === 'Em Aberto' && (p.nome_cliente || p.nome_mesa || 'Mesa/Pessoa'));
         renderMesas();
       } catch (e) {
         pedidosAbertos = [];
@@ -470,7 +470,7 @@
         card.className = 'mesa-card';
         card.innerHTML = `
           <div class="mesa-header">
-            <div class="mesa-nome"><i class="fas fa-chair"></i> ${pedido.nome_cliente || pedido.nome_mesa || 'Mesa/Pessoa'}</div>
+            <div class="mesa-nome"><i class="fas fa-chair"></i> ${(pedido.nome_cliente && pedido.nome_cliente.trim()) || pedido.nome_mesa || 'Mesa/Pessoa'}</div>
             <div class="mesa-status"><i class="fas fa-clock"></i> ${pedido.status}</div>
           </div>
           <div class="mesa-itens">
