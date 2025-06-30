@@ -731,7 +731,7 @@
           return;
         }
         pedido.nome_cliente = novoNome;
-        // Atualizar backend com todos os campos
+        const valor_total = (pedido.itens || []).reduce((sum, i) => sum + (i.subtotal || 0), 0);
         await fetch(`/api/pedidos/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -740,9 +740,9 @@
             nome_cliente: novoNome,
             itens: pedido.itens,
             cliente_id: pedido.cliente_id ?? null,
-            data_pedido: pedido.data_pedido ?? null,
+            data_pedido: pedido.data_pedido ?? new Date().toISOString().split('T')[0],
             status: pedido.status ?? 'Em Aberto',
-            valor_total: pedido.valor_total ?? 0,
+            valor_total,
             observacoes: pedido.observacoes ?? ''
           })
         });
