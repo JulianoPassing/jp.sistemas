@@ -18,20 +18,21 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// CORS - deve vir antes de qualquer middleware de sessão ou rotas
+const allowedOrigins = [
+  'https://jp-sistemas.vercel.app',
+  'http://localhost:3000'
+];
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
+
 // Middleware
 app.use(express.json());
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
-// Configuração de CORS para aceitar credenciais do frontend
-app.use(cors({
-  origin: [
-    'https://jp-sistemas.vercel.app',
-    'http://localhost:3000'
-  ],
-  credentials: true
-}));
 
 // Configuração de sessão
 const isProduction = process.env.NODE_ENV === 'production';
@@ -43,15 +44,16 @@ const sessionStore = new MySQLStore({
 });
 
 app.use(session({
+  name: 'connect.sid',
   secret: process.env.SESSION_SECRET || 'SeuSessionSecretMuitoForte123!',
   resave: false,
   saveUninitialized: false,
   store: sessionStore,
   cookie: {
-    secure: isProduction, // true em produção (https), false em dev
+    secure: isProduction, // true em produção (https), false em dev/local
     httpOnly: true,
-    sameSite: isProduction ? 'none' : 'lax',
-    domain: isProduction ? '.jp-sistemas.vercel.app' : undefined,
+    sameSite: isProduction ? 'none' : 'lax', // 'none' para cross-domain, 'lax' para local
+    domain: isProduction ? '.jp-sistemas.vercel.app' : undefined, // só seta domínio em produção
     maxAge: 24 * 60 * 60 * 1000 // 24 horas
   }
 }));
