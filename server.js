@@ -507,26 +507,57 @@ app.get('/api/pedidos/:id', async (req, res) => {
 
 // Criar novo pedido
 app.post('/api/pedidos', async (req, res) => {
+  let connection;
   try {
-    const connection = await mysql.createConnection({
+    connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: 'jpsistemas_admin',
       charset: 'utf8mb4'
     });
-    const { cliente_id, data_pedido, status, valor_total, observacoes } = req.body;
+    const { cliente_id, data_pedido, status, valor_total, observacoes, itens } = req.body;
     
+    // Validar itens
+    if (!Array.isArray(itens) || itens.length === 0) {
+      return res.status(400).json({ error: 'O pedido deve conter pelo menos um item.' });
+    }
+
     // Normalizar o status
     const statusNormalizado = normalizarStatus(status);
-    
+
+    // Iniciar transação
+    await connection.beginTransaction();
+
+    // Inserir pedido
     const [result] = await connection.execute(
       'INSERT INTO pedidos (cliente_id, data_pedido, status, valor_total, observacoes) VALUES (?, ?, ?, ?, ?)',
       [cliente_id, data_pedido, statusNormalizado, valor_total, observacoes]
     );
+    const pedidoId = result.insertId;
+
+    // Inserir itens do pedido
+    for (const item of itens) {
+      const { produto_id, quantidade, precoUnitario } = item;
+      if (!produto_id || !quantidade || !precoUnitario) {
+        await connection.rollback();
+        return res.status(400).json({ error: 'Cada item deve conter produto_id, quantidade e precoUnitario.' });
+      }
+      await connection.execute(
+        'INSERT INTO pedido_itens (pedido_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)',
+        [pedidoId, produto_id, quantidade, precoUnitario]
+      );
+    }
+
+    // Commit da transação
+    await connection.commit();
     await connection.end();
-    res.status(201).json({ id: result.insertId, message: 'Pedido criado com sucesso' });
+    res.status(201).json({ id: pedidoId, message: 'Pedido criado com sucesso' });
   } catch (error) {
+    if (connection) {
+      try { await connection.rollback(); } catch (e) {}
+      try { await connection.end(); } catch (e) {}
+    }
     res.status(500).json({ error: error.message });
   }
 });
