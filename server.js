@@ -520,7 +520,7 @@ app.post('/api/pedidos', async (req, res) => {
     const { cliente_id, data_pedido, status, valor_total, observacoes, itens } = req.body;
     
     // Validar itens
-    if (!Array.isArray(itens) || itens.length === 0) {
+    if ((!Array.isArray(itens) || itens.length === 0) && status !== 'Em Aberto') {
       return res.status(400).json({ error: 'O pedido deve conter pelo menos um item.' });
     }
 
