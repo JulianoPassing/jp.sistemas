@@ -459,7 +459,8 @@ app.get('/api/pedidos', async (req, res) => {
         quantidade: item.quantidade,
         precoUnitario: item.preco_unitario,
         preco_custo: item.preco_custo,
-        preco_venda: item.preco_venda
+        preco_venda: item.preco_venda,
+        subtotal: Number(item.preco_unitario) * Number(item.quantidade)
       });
     });
 
