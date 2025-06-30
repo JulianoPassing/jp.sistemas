@@ -6,7 +6,6 @@
     <title>J.P Sistemas - Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
     <style>
       :root {
         --primary-color: #6366f1;
@@ -487,31 +486,30 @@
     <div class="login-container">
       <div class="logo">
         <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 300px; height: 140px; display: block; margin: 0 auto 16px; object-fit: contain; background: none; box-shadow: none; border-radius: 0;" />
-        <p style="color: #000;">Faca login para acessar o painel</p>
+        <p style="color: #000;">Faça login para acessar o painel</p>
       </div>
       
-      <form id="loginForm" class="login-form">
+      <form id="loginForm">
         <div class="form-group">
-          <label for="username">Usuario</label>
-          <div class="input-group">
+          <label for="username">Usuário</label>
+          <div class="input-wrapper">
+            <input type="text" id="username" name="username" placeholder="Digite seu nome de usuário" required>
             <i class="fas fa-user"></i>
-            <input type="text" id="username" name="username" placeholder="Digite seu nome de usuario" required>
           </div>
         </div>
         
         <div class="form-group">
           <label for="password">Senha</label>
-          <div class="input-group">
-            <i class="fas fa-lock"></i>
+          <div class="input-wrapper">
             <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
+            <i class="fas fa-lock"></i>
           </div>
         </div>
         
         <button type="submit" class="login-btn">
-          <span class="btn-text">Entrar</span>
-          <span class="btn-loading" style="display: none;">
-            <i class="fas fa-spinner fa-spin"></i> Entrando...
-          </span>
+          <span class="spinner" id="spinner"></span>
+          <i class="fas fa-sign-in-alt" id="loginIcon"></i>
+          <span id="loginText">Entrar no Sistema</span>
         </button>
       </form>
       
@@ -519,15 +517,12 @@
       <div id="successMessage" class="success-message"></div>
 
       <div class="form-footer">
-        <div class="demo-info">
-          <p><i class="fas fa-info-circle"></i> <strong>Credenciais de Demonstracao:</strong></p>
-          <p>Usuario: <code>admin</code> | Senha: <code>admin123</code></p>
-        </div>
+        <!-- Credenciais de Demonstração removidas -->
       </div>
     </div>
 
     <footer class="footer">
-      © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ola,%20gostaria%20de%20mais%20informacoes%20sobre%20os%20sistemas." target="_blank" style="color: #000; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
+      © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" style="color: #000; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
     </footer>
 
     <script>
@@ -541,10 +536,9 @@
       const loginText = document.getElementById('loginText');
 
       // Verificar se já está logado
-      // Removido redirecionamento automático para evitar loop
-      // if (sessionStorage.getItem('loggedIn') === 'true') {
-      //   window.location.href = '/painel';
-      // }
+      if (sessionStorage.getItem('loggedIn') === 'true') {
+        window.location.href = 'painel.html';
+      }
 
       // Função para mostrar loading
       function setLoading(loading) {
@@ -605,41 +599,25 @@
 
         setLoading(true);
 
-        try {
-          const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username, password })
-          });
-
-          const data = await response.json();
-
-          if (response.ok) {
-            showMessage(successMessage, 'Login realizado com sucesso! Redirecionando...', 'success');
-            
-            // Salvar dados da sessão
-            sessionStorage.setItem('loggedIn', 'true');
-            sessionStorage.setItem('username', username);
-            sessionStorage.setItem('loginTime', new Date().toISOString());
-            
-            // Redirecionar após delay
-            setTimeout(() => {
-              window.location.href = '/painel';
-            }, 1500);
-          } else {
-            setLoading(false);
-            showMessage(errorMessage, data.error || 'Erro no login. Verifique suas credenciais.');
-            
-            // Limpar senha e focar no usuário
-            passwordInput.value = '';
-            usernameInput.focus();
-          }
-        } catch (error) {
+        // Simular delay de rede
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Validação das credenciais
+        if (username === 'admin' && password === 'admin') {
+          showMessage(successMessage, 'Login realizado com sucesso! Redirecionando...', 'success');
+          
+          // Salvar dados da sessão
+          sessionStorage.setItem('loggedIn', 'true');
+          sessionStorage.setItem('username', username);
+          sessionStorage.setItem('loginTime', new Date().toISOString());
+          
+          // Redirecionar após delay
+          setTimeout(() => {
+            window.location.href = 'painel.html';
+          }, 1500);
+        } else {
           setLoading(false);
-          console.error('Erro na requisição:', error);
-          showMessage(errorMessage, 'Erro de conexão. Verifique sua internet e tente novamente.');
+          showMessage(errorMessage, 'Usuário ou senha incorretos. Verifique suas credenciais.');
           
           // Limpar senha e focar no usuário
           passwordInput.value = '';
