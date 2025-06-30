@@ -537,11 +537,16 @@
           body: JSON.stringify(pedido)
         });
         let novoPedido = null;
-        try {
-          novoPedido = await response.json();
-        } catch (e) {
-          // Se não for JSON, tudo bem, segue
-          console.warn('Resposta não é JSON válido ao criar mesa/pedido:', e);
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          try {
+            novoPedido = await response.json();
+          } catch (e) {
+            console.warn('Falha ao parsear JSON da resposta:', e);
+          }
+        } else if (response.ok) {
+          // Resposta não é JSON, mas status é sucesso
+          console.warn('Resposta não é JSON, mas status é sucesso. Mesa criada, mas resposta inesperada.');
         }
         if (response.ok) {
           if (novoPedido && novoPedido.id) {
@@ -553,14 +558,14 @@
               pedidosAbertos.unshift(pedidoCompleto);
             } else {
               // fallback: adicionar só com nome
-              pedidosAbertos.unshift({ id: novoPedido.id, nome_cliente: nome, status: 'Em Aberto', itens: [], data_pedido: pedido.data_pedido });
+              pedidosAbertos.unshift({ id: novoPedido?.id, nome_cliente: nome, status: 'Em Aberto', itens: [], data_pedido: pedido.data_pedido });
             }
             renderMesas();
           } else {
             await carregarPedidosAbertos();
           }
           nomeInput.value = '';
-          feedback.textContent = 'Mesa criada com sucesso!';
+          feedback.textContent = contentType.includes('application/json') ? 'Mesa criada com sucesso!' : 'Mesa criada! (resposta inesperada, atualize a página se não aparecer)';
           feedback.style.color = '#059669';
           feedback.style.display = 'block';
           nomeInput.focus();
@@ -569,10 +574,12 @@
         }
         // Se chegou aqui, é erro HTTP
         let msg = 'Erro ao criar mesa/pedido!';
-        try {
-          const errData = await response.json();
-          if (errData && errData.error) msg += ': ' + errData.error;
-        } catch {}
+        if (contentType.includes('application/json')) {
+          try {
+            const errData = await response.json();
+            if (errData && errData.error) msg += ': ' + errData.error;
+          } catch {}
+        }
         throw new Error(msg);
       } catch (e) {
         feedback.textContent = 'Erro ao criar mesa/pedido!';
