@@ -584,7 +584,7 @@
         })),
         valor_total: vendaItens.reduce((sum, i) => sum + i.preco * i.qtd, 0),
         status: 'Concluído',
-        data_pedido: new Date().toISOString()
+        data_pedido: new Date().toISOString().split('T')[0]
       };
       try {
         const response = await fetch('/api/pedidos', {
