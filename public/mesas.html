@@ -136,26 +136,45 @@
     .mesa-card {
       background: var(--card-bg);
       border-radius: var(--border-radius);
-      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
-      padding: 24px;
+      box-shadow: 0 8px 32px rgba(37, 99, 235, 0.13);
+      padding: 0 0 24px 0;
       margin-bottom: 24px;
       position: relative;
-      border: 2px solid var(--primary-light);
+      border: none;
+      transition: box-shadow 0.3s, transform 0.2s;
+      overflow: hidden;
+    }
+    .mesa-card:hover {
+      box-shadow: 0 16px 48px rgba(37, 99, 235, 0.18);
+      transform: translateY(-4px) scale(1.01);
+    }
+    .mesa-header {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+      color: #fff;
+      padding: 18px 24px 12px 24px;
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.07);
     }
     .mesa-nome {
-      font-size: 1.2em;
-      font-weight: 600;
-      color: var(--primary-color);
-      margin-bottom: 8px;
+      font-size: 1.3em;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+      letter-spacing: 0.01em;
     }
     .mesa-status {
       font-size: 1em;
       font-weight: 500;
-      color: var(--warning-color);
-      margin-bottom: 12px;
+      color: #ffe066;
+      margin-bottom: 0;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.08);
     }
     .mesa-itens {
-      margin-bottom: 12px;
+      margin: 18px 0 8px 0;
+      padding: 0 24px;
     }
     .mesa-itens table {
       width: 100%;
@@ -167,24 +186,45 @@
       font-size: 0.98em;
     }
     .mesa-itens th {
-      background: var(--primary-light);
-      color: #fff;
+      background: #f3f4f6;
+      color: var(--primary-color);
       font-weight: 600;
     }
     .mesa-itens tr:last-child td {
       border-bottom: none;
     }
     .mesa-total {
-      font-size: 1.1em;
+      font-size: 1.2em;
       font-weight: 700;
       color: var(--success-color);
-      margin-top: 8px;
+      margin: 10px 24px 0 24px;
       text-align: right;
+      letter-spacing: 0.01em;
     }
     .mesa-acoes {
       display: flex;
-      gap: 10px;
-      margin-top: 10px;
+      gap: 12px;
+      margin: 18px 24px 0 24px;
+      justify-content: flex-end;
+    }
+    .mesa-acoes .btn {
+      min-width: 120px;
+      font-size: 1em;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.07);
+    }
+    .mesa-acoes .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
+    .mesa-acoes .btn-success {
+      background: linear-gradient(135deg, #22c55e, #059669);
+    }
+    .mesa-acoes .btn-secondary {
+      background: linear-gradient(135deg, #64748b, #334155);
+    }
+    .mesa-acoes .btn-primary:hover, .mesa-acoes .btn-success:hover, .mesa-acoes .btn-secondary:hover {
+      filter: brightness(1.08);
+      transform: translateY(-2px) scale(1.04);
     }
     .btn {
       display: inline-flex;
@@ -351,8 +391,10 @@
         const card = document.createElement('div');
         card.className = 'mesa-card';
         card.innerHTML = `
-          <div class="mesa-nome">${pedido.nome_cliente || pedido.nome_mesa || 'Mesa/Pessoa'}</div>
-          <div class="mesa-status">Status: ${pedido.status}</div>
+          <div class="mesa-header">
+            <div class="mesa-nome"><i class="fas fa-chair"></i> ${pedido.nome_cliente || pedido.nome_mesa || 'Mesa/Pessoa'}</div>
+            <div class="mesa-status">Status: ${pedido.status}</div>
+          </div>
           <div class="mesa-itens">
             <table>
               <thead><tr><th>Produto</th><th>Qtd</th><th>Preço</th><th>Subtotal</th></tr></thead>
