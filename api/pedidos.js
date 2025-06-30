@@ -5,12 +5,19 @@ export default function handler(req, res) {
   if (req.method === 'GET') {
     res.status(200).json(pedidos);
   } else if (req.method === 'POST') {
-    const pedido = {
-      id: nextId++,
-      ...req.body,
-    };
-    pedidos.push(pedido);
-    res.status(201).json(pedido);
+    try {
+      if (!req.body || typeof req.body !== 'object') {
+        throw new Error('Body inválido ou ausente');
+      }
+      const pedido = {
+        id: nextId++,
+        ...req.body,
+      };
+      pedidos.push(pedido);
+      res.status(201).json(pedido);
+    } catch (error) {
+      res.status(400).json({ error: 'Erro ao processar pedido', details: error.message });
+    }
   } else if (req.method === 'PUT') {
     const { id } = req.query;
     const idx = pedidos.findIndex(p => String(p.id) === String(id));
