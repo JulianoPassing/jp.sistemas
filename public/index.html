@@ -599,29 +599,34 @@
 
         setLoading(true);
 
-        // Simular delay de rede
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Validação das credenciais
-        if (username === 'admin' && password === 'admin') {
-          showMessage(successMessage, 'Login realizado com sucesso! Redirecionando...', 'success');
-          
-          // Salvar dados da sessão
-          sessionStorage.setItem('loggedIn', 'true');
-          sessionStorage.setItem('username', username);
-          sessionStorage.setItem('loginTime', new Date().toISOString());
-          
-          // Redirecionar após delay
-          setTimeout(() => {
-            window.location.href = 'painel.html';
-          }, 1500);
-        } else {
+        try {
+          const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            showMessage(successMessage, 'Login realizado com sucesso! Redirecionando...', 'success');
+            sessionStorage.setItem('loggedIn', 'true');
+            sessionStorage.setItem('username', username);
+            sessionStorage.setItem('loginTime', new Date().toISOString());
+            setTimeout(() => {
+              window.location.href = 'painel.html';
+            }, 1200);
+          } else {
+            setLoading(false);
+            showMessage(errorMessage, data.error || 'Usuário ou senha incorretos. Verifique suas credenciais.');
+            passwordInput.value = '';
+            usernameInput.focus();
+          }
+        } catch (err) {
           setLoading(false);
-          showMessage(errorMessage, 'Usuário ou senha incorretos. Verifique suas credenciais.');
-          
-          // Limpar senha e focar no usuário
-          passwordInput.value = '';
-          usernameInput.focus();
+          showMessage(errorMessage, 'Erro ao conectar ao servidor. Tente novamente.');
         }
       });
 
