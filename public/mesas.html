@@ -746,12 +746,12 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...pedido,
-            nome_cliente: novoNome,
+            nome_cliente: novoNome || pedido.nome_cliente || pedido.nome_mesa || 'Mesa/Pessoa',
             itens: itensEdit,
             cliente_id: pedido.cliente_id ?? null,
             data_pedido: (pedido.data_pedido ?? new Date().toISOString().split('T')[0]).split('T')[0],
             status: pedido.status ?? 'Em Aberto',
-            valor_total,
+            valor_total: valor_total || 0,
             observacoes: pedido.observacoes ?? ''
           })
         });
