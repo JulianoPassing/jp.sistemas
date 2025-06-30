@@ -456,16 +456,8 @@
       const prod = produtos.find(p => p.id === prodId);
       if (!prod) return;
       const qtd = parseInt(document.getElementById('qtd-' + prodId).value) || 1;
-      if (qtd > (prod.estoque ?? 0)) {
-        alert('Quantidade maior que o estoque disponível!');
-        return;
-      }
       const existente = vendaItens.find(i => i.id === prodId);
       if (existente) {
-        if (existente.qtd + qtd > (prod.estoque ?? 0)) {
-          alert('Quantidade maior que o estoque disponível!');
-          return;
-        }
         existente.qtd += qtd;
       } else {
         vendaItens.push({
@@ -477,6 +469,7 @@
         });
       }
       atualizarTotal();
+      atualizarEstoqueVisual(prodId, qtd);
     }
     function atualizarTotal() {
       let total = 0;
@@ -484,6 +477,12 @@
         total += i.preco * i.qtd;
       });
       document.getElementById('total-venda').textContent = 'Total: R$ ' + total.toFixed(2).replace('.', ',');
+    }
+    function atualizarEstoqueVisual(prodId, qtdVendida) {
+      const prod = produtos.find(p => p.id === prodId);
+      if (!prod) return;
+      prod.estoque = (prod.estoque ?? 0) - qtdVendida;
+      renderProdutos(produtos);
     }
     function mostrarBuscaCliente() {
       clienteManual = false;
