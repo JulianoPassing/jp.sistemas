@@ -577,10 +577,10 @@
         endereco: clienteInfo.endereco,
         itens: vendaItens.map(i => ({
           produto: i.nome,
-          produto_id: i.id,
-          quantidade: i.qtd,
-          precoUnitario: i.preco,
-          subtotal: i.preco * i.qtd
+          produto_id: Number(i.id),
+          quantidade: Number(i.qtd),
+          precoUnitario: Number(i.preco),
+          subtotal: Number(i.preco) * Number(i.qtd)
         })),
         valor_total: vendaItens.reduce((sum, i) => sum + i.preco * i.qtd, 0),
         status: 'Concluído',

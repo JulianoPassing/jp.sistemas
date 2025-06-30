@@ -509,6 +509,7 @@ app.get('/api/pedidos/:id', async (req, res) => {
 app.post('/api/pedidos', async (req, res) => {
   let connection;
   try {
+    console.log('Recebido novo pedido:', JSON.stringify(req.body, null, 2));
     connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
