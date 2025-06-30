@@ -6,7 +6,6 @@ export default function handler(req, res) {
     res.status(200).json(pedidos);
   } else if (req.method === 'POST') {
     try {
-      console.log('BODY RECEBIDO:', req.body);
       let data = req.body;
       if (typeof data === 'string') {
         data = JSON.parse(data);
@@ -14,12 +13,7 @@ export default function handler(req, res) {
       if (!data || typeof data !== 'object') {
         throw new Error('Body inválido ou ausente');
       }
-      const pedido = {
-        id: nextId++,
-        ...data,
-      };
-      pedidos.push(pedido);
-      res.status(201).json(pedido);
+      return res.status(200).json({ debug: true, body: data });
     } catch (error) {
       res.status(400).json({ error: 'Erro ao processar pedido', details: error.message });
     }
