@@ -530,10 +530,17 @@ app.post('/api/pedidos', async (req, res) => {
     // Iniciar transação
     await connection.beginTransaction();
 
+    // Garantir que nenhum valor seja undefined
+    const safeClienteId = typeof cliente_id === 'undefined' ? null : cliente_id;
+    const safeDataPedido = typeof data_pedido === 'undefined' ? null : data_pedido;
+    const safeStatus = typeof statusNormalizado === 'undefined' ? null : statusNormalizado;
+    const safeValorTotal = typeof valor_total === 'undefined' ? null : valor_total;
+    const safeObservacoes = typeof observacoes === 'undefined' ? null : observacoes;
+    console.log('Valores para insert:', { safeClienteId, safeDataPedido, safeStatus, safeValorTotal, safeObservacoes });
     // Inserir pedido
     const [result] = await connection.execute(
       'INSERT INTO pedidos (cliente_id, data_pedido, status, valor_total, observacoes) VALUES (?, ?, ?, ?, ?)',
-      [cliente_id, data_pedido, statusNormalizado, valor_total, observacoes]
+      [safeClienteId, safeDataPedido, safeStatus, safeValorTotal, safeObservacoes]
     );
     const pedidoId = result.insertId;
 
