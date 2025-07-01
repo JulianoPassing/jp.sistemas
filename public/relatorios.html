@@ -1110,6 +1110,7 @@
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 15;
+      const rodapeHeight = 18;
       let y = margin;
 
       // Cores
@@ -1202,7 +1203,7 @@
           // Rodapé em cada página
           const pageH = doc.internal.pageSize.getHeight();
           doc.setFillColor(240, 240, 240);
-          doc.rect(0, pageH - 18, pageWidth, 18, 'F');
+          doc.rect(0, pageH - rodapeHeight, pageWidth, rodapeHeight, 'F');
           doc.setTextColor(100, 100, 100);
           doc.setFontSize(8);
           doc.setFont('helvetica', 'normal');
@@ -1212,7 +1213,26 @@
       });
       y = doc.lastAutoTable.finalY + 8;
 
+      // Função para garantir espaço antes de cada bloco
+      function garantirEspaco(alturaBloco) {
+        if (y + alturaBloco > pageHeight - rodapeHeight - margin) {
+          doc.addPage();
+          // Repetir cabeçalho do relatório na nova página
+          doc.setFillColor(...primaryColor);
+          doc.rect(0, 0, pageWidth, headerHeight, 'F');
+          doc.setTextColor(255, 255, 255);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(20);
+          doc.text('RELATÓRIO EXECUTIVO', pageWidth / 2, margin + 5, { align: 'center', baseline: 'top' });
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')} - Período: ${mesNome}`, pageWidth / 2, margin + 13, { align: 'center' });
+          y = headerHeight + 8;
+        }
+      }
+
       // Bloco de lucro total do mês
+      garantirEspaco(12);
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...successColor);
@@ -1221,6 +1241,16 @@
       y += 10;
 
       // Bloco de análise de rentabilidade
+      const analise = [
+        `Margem de Lucro (Mês - Concluídos): ${dados.pedidosMes > 0 && parseFloat(dados.vendasMes) > 0 ? ((parseFloat(dados.lucroMes) / parseFloat(dados.vendasMes)) * 100).toFixed(1) : '0.0'}%`,
+        `Ticket Médio (Mês - Concluídos): R$ ${dados.pedidosMes > 0 ? (parseFloat(dados.vendasMes) / dados.pedidosMes).toFixed(2) : '0.00'}`,
+        `Lucro Médio por Pedido (Mês - Concluídos): R$ ${dados.pedidosMes > 0 ? (parseFloat(dados.lucroMes) / dados.pedidosMes).toFixed(2) : '0.00'}`,
+        '',
+        `Margem de Lucro (Mês - Em Processamento): ${dados.pedidosMesProcessamento > 0 && parseFloat(dados.vendasMesProcessamento || 0) > 0 ? ((parseFloat(dados.lucroMesProcessamento || 0) / parseFloat(dados.vendasMesProcessamento || 0)) * 100).toFixed(1) : '0.0'}%`,
+        `Ticket Médio (Mês - Em Processamento): R$ ${dados.pedidosMesProcessamento > 0 ? (parseFloat(dados.vendasMesProcessamento || 0) / dados.pedidosMesProcessamento).toFixed(2) : '0.00'}`,
+        `Lucro Médio por Pedido (Mês - Em Processamento): R$ ${dados.pedidosMesProcessamento > 0 ? (parseFloat(dados.lucroMesProcessamento || 0) / dados.pedidosMesProcessamento).toFixed(2) : '0.00'}`
+      ];
+      garantirEspaco(analise.length * 7 + 12);
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
@@ -1228,28 +1258,10 @@
       y += 8;
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      const vendasMes = parseFloat(dados.vendasMes);
-      const lucroMes = parseFloat(dados.lucroMes);
-      const margemLucro = vendasMes > 0 ? ((lucroMes / vendasMes) * 100).toFixed(1) : '0.0';
-      const ticketMedio = dados.pedidosMes > 0 ? (vendasMes / dados.pedidosMes).toFixed(2) : '0.00';
-      const lucroMedio = dados.pedidosMes > 0 ? (lucroMes / dados.pedidosMes).toFixed(2) : '0.00';
-      const vendasMesProcessamento = parseFloat(dados.vendasMesProcessamento || 0);
-      const lucroMesProcessamento = parseFloat(dados.lucroMesProcessamento || 0);
-      const margemLucroProcessamento = vendasMesProcessamento > 0 ? ((lucroMesProcessamento / vendasMesProcessamento) * 100).toFixed(1) : '0.0';
-      const ticketMedioProcessamento = dados.pedidosMesProcessamento > 0 ? (vendasMesProcessamento / dados.pedidosMesProcessamento).toFixed(2) : '0.00';
-      const lucroMedioProcessamento = dados.pedidosMesProcessamento > 0 ? (lucroMesProcessamento / dados.pedidosMesProcessamento).toFixed(2) : '0.00';
-      const analise = [
-        `Margem de Lucro (Mês - Concluídos): ${margemLucro}%`,
-        `Ticket Médio (Mês - Concluídos): R$ ${ticketMedio}`,
-        `Lucro Médio por Pedido (Mês - Concluídos): R$ ${lucroMedio}`,
-        '',
-        `Margem de Lucro (Mês - Em Processamento): ${margemLucroProcessamento}%`,
-        `Ticket Médio (Mês - Em Processamento): R$ ${ticketMedioProcessamento}`,
-        `Lucro Médio por Pedido (Mês - Em Processamento): R$ ${lucroMedioProcessamento}`
-      ];
       analise.forEach(linha => {
         if (linha) {
           const split = doc.splitTextToSize(linha, pageWidth - 2 * margin);
+          garantirEspaco(split.length * 6 + 2);
           doc.text(split, pageWidth / 2, y, { align: 'center' });
           y += split.length * 6;
         } else {
