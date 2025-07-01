@@ -1818,11 +1818,11 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(13);
         doc.setFont('helvetica', 'bold');
-        doc.text('Pedidos e Vendas', 15, 40);
+        doc.text('Pedidos e Vendas', 15, 44);
         doc.setFontSize(11);
         doc.setFont('helvetica', 'normal');
-        doc.text(`Total de Pedidos: ${pedidos.length}`, 15, 48);
-        doc.text(`Período: ${new Date().toLocaleDateString('pt-BR')}`, 15, 54);
+        doc.text(`Total de Pedidos: ${pedidos.length}`, 15, 52);
+        doc.text(`Período: ${new Date().toLocaleDateString('pt-BR')}`, 15, 58);
 
         // Tabela de pedidos
         const tableData = pedidos.map(pedido => [
@@ -1837,7 +1837,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
         ]);
 
         doc.autoTable({
-          startY: 60,
+          startY: 64,
           head: [['ID', 'Cliente', 'Data', 'Status', 'Valor Total']],
           body: tableData,
           theme: 'grid',
@@ -1873,7 +1873,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
           },
           tableLineColor: borderColor,
           tableLineWidth: 0.2,
-          margin: { top: 60, right: 10, bottom: 20, left: 10 },
+          margin: { top: 64, right: 10, bottom: 20, left: 10 },
           tableWidth: 'auto',
           didParseCell: function (data) {
             // Colorir status
