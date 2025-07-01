@@ -2280,6 +2280,12 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
 
     function formatarData(dataISO) {
       if (!dataISO) return '';
+      // Se vier no formato YYYY-MM-DD, trata como UTC
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dataISO)) {
+        const [ano, mes, dia] = dataISO.split('-');
+        return `${dia}/${mes}/${ano}`;
+      }
+      // Caso contrário, tenta converter normalmente
       const data = new Date(dataISO);
       if (isNaN(data.getTime())) return dataISO;
       return data.toLocaleDateString('pt-BR', {
