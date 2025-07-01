@@ -16,10 +16,19 @@ module.exports = async (req, res) => {
         email, telefone, transporte, prazo, obs
       } = req.body;
 
+      // Função utilitária para converter undefined para null
+      function safeValue(value) {
+        return value === undefined ? null : value;
+      }
+
+      function safeValues(values) {
+        return values.map(value => safeValue(value));
+      }
+
       const [result] = await connection.execute(
         `INSERT INTO clientes (razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs]
+        safeValues([razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs])
       );
       res.status(201).json({ id: result.insertId, message: 'Cliente cadastrado com sucesso!' });
       return;

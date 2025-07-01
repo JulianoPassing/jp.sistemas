@@ -25,11 +25,20 @@ module.exports = async function empresaHandler(req, res) {
       if (!nome_fantasia || !razao_social || !cnpj) {
         return res.status(400).json({ error: 'Campos obrigatórios não preenchidos.' });
       }
+      // Função utilitária para converter undefined para null
+      function safeValue(value) {
+        return value === undefined ? null : value;
+      }
+
+      function safeValues(values) {
+        return values.map(value => safeValue(value));
+      }
+
       await connection.execute(
         `INSERT INTO empresa (id, nome_fantasia, razao_social, cnpj, endereco, email, telefone)
          VALUES (1, ?, ?, ?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE nome_fantasia=VALUES(nome_fantasia), razao_social=VALUES(razao_social), cnpj=VALUES(cnpj), endereco=VALUES(endereco), email=VALUES(email), telefone=VALUES(telefone)`,
-        [nome_fantasia, razao_social, cnpj, endereco, email, telefone]
+        safeValues([nome_fantasia, razao_social, cnpj, endereco, email, telefone])
       );
       return res.json({ success: true });
     } else {

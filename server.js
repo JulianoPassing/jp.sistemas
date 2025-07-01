@@ -15,6 +15,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const empresaHandler = require('./api/empresa');
 require('dotenv').config();
+const fs = require('fs').promises;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -60,6 +61,16 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000 // 24 horas
   }
 }));
+
+// Função utilitária para converter undefined para null
+function safeValue(value) {
+  return value === undefined ? null : value;
+}
+
+// Função utilitária para converter array de valores
+function safeValues(values) {
+  return values.map(value => safeValue(value));
+}
 
 // Função para criar conexão com banco de dados específico do usuário
 async function createUserDatabaseConnection(username) {
@@ -307,7 +318,7 @@ app.post('/api/clientes', requireAuthJWT, async (req, res) => {
     const { razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs } = req.body;
     const [result] = await connection.execute(
       'INSERT INTO clientes (razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs]
+      safeValues([razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs])
     );
     await connection.end();
     res.status(201).json({ id: result.insertId, message: 'Cliente criado com sucesso' });
@@ -330,7 +341,7 @@ app.put('/api/clientes/:id', requireAuthJWT, async (req, res) => {
     const { razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs } = req.body;
     await connection.execute(
       'UPDATE clientes SET razao = ?, cnpj = ?, ie = ?, endereco = ?, bairro = ?, cidade = ?, estado = ?, cep = ?, email = ?, telefone = ?, transporte = ?, prazo = ?, obs = ? WHERE id = ?',
-      [razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs, id]
+      [...safeValues([razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs]), id]
     );
     await connection.end();
     res.json({ message: 'Cliente atualizado com sucesso' });
@@ -390,7 +401,7 @@ app.post('/api/produtos', requireAuthJWT, async (req, res) => {
     const { nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status } = req.body;
     const [result] = await connection.execute(
       'INSERT INTO produtos (nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status]
+      safeValues([nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status])
     );
     await connection.end();
     res.status(201).json({ id: result.insertId, message: 'Produto criado com sucesso' });
@@ -413,7 +424,7 @@ app.put('/api/produtos/:id', requireAuthJWT, async (req, res) => {
     const { nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status } = req.body;
     await connection.execute(
       'UPDATE produtos SET nome = ?, descricao = ?, preco_custo = ?, preco_venda = ?, categoria = ?, codigo = ?, estoque = ?, fornecedor = ?, peso = ?, dimensoes = ?, status = ? WHERE id = ?',
-      [nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status, id]
+      [...safeValues([nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status]), id]
     );
     await connection.end();
     res.json({ message: 'Produto atualizado com sucesso' });
@@ -509,29 +520,17 @@ app.post('/api/pedidos', requireAuthJWT, async (req, res) => {
     const statusNormalizado = normalizarStatus(status);
     // Iniciar transação
     await connection.beginTransaction();
-    // Garantir que nenhum valor seja undefined
-    const safeClienteId = typeof cliente_id === 'undefined' ? null : cliente_id;
-    const safeDataPedido = typeof data_pedido === 'undefined' ? null : data_pedido;
-    const safeStatus = typeof statusNormalizado === 'undefined' ? null : statusNormalizado;
-    const safeValorTotal = typeof valor_total === 'undefined' ? null : valor_total;
-    const safeObservacoes = typeof observacoes === 'undefined' ? null : observacoes;
-    const safeNomeCliente = typeof nome_cliente === 'undefined' ? null : nome_cliente;
     // Inserir pedido
     const [result] = await connection.execute(
       'INSERT INTO pedidos (cliente_id, nome_cliente, data_pedido, status, valor_total, observacoes) VALUES (?, ?, ?, ?, ?, ?)',
-      [safeClienteId, safeNomeCliente, safeDataPedido, safeStatus, safeValorTotal, safeObservacoes]
+      safeValues([cliente_id, nome_cliente, data_pedido, statusNormalizado, valor_total, observacoes])
     );
     const pedidoId = result.insertId;
     // Inserir itens
     for (const item of itens) {
       await connection.execute(
         'INSERT INTO pedido_itens (pedido_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)',
-        [
-          pedidoId,
-          item.produto_id === undefined ? null : item.produto_id,
-          item.quantidade === undefined ? null : item.quantidade,
-          item.preco_unitario === undefined ? null : item.preco_unitario
-        ]
+        [pedidoId, ...safeValues([item.produto_id, item.quantidade, item.preco_unitario])]
       );
     }
     await connection.commit();
@@ -564,7 +563,7 @@ app.put('/api/pedidos/:id', requireAuthJWT, async (req, res) => {
     // Atualizar pedido
     await connection.execute(
       'UPDATE pedidos SET cliente_id = ?, nome_cliente = ?, data_pedido = ?, status = ?, valor_total = ?, observacoes = ? WHERE id = ?',
-      [cliente_id, nome_cliente, data_pedido, statusNormalizado, valor_total, observacoes, id]
+      [...safeValues([cliente_id, nome_cliente, data_pedido, statusNormalizado, valor_total, observacoes]), id]
     );
     // Remover itens antigos
     await connection.execute('DELETE FROM pedido_itens WHERE pedido_id = ?', [id]);
@@ -572,12 +571,7 @@ app.put('/api/pedidos/:id', requireAuthJWT, async (req, res) => {
     for (const item of itens) {
       await connection.execute(
         'INSERT INTO pedido_itens (pedido_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)',
-        [
-          id, 
-          item.produto_id === undefined ? null : item.produto_id, 
-          item.quantidade === undefined ? null : item.quantidade, 
-          item.preco_unitario === undefined ? null : item.preco_unitario
-        ]
+        [id, ...safeValues([item.produto_id, item.quantidade, item.preco_unitario])]
       );
     }
     await connection.commit();
@@ -643,7 +637,7 @@ app.post('/api/caixa', async (req, res) => {
     const { tipo, valor, descricao, data, pedido_id } = req.body;
     const [result] = await connection.execute(
       'INSERT INTO caixa (tipo, valor, descricao, data, pedido_id) VALUES (?, ?, ?, ?, ?)',
-      [tipo, valor, descricao, data, pedido_id]
+      safeValues([tipo, valor, descricao, data, pedido_id])
     );
     await connection.end();
     res.status(201).json({ id: result.insertId, message: 'Lançamento registrado com sucesso' });
