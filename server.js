@@ -522,6 +522,9 @@ app.post('/api/pedidos', requireAuthJWT, async (req, res) => {
     }
     // Normalizar o status
     const statusNormalizado = normalizarStatus(status);
+    // Verificar se o pedido está sendo criado como "Concluído"
+    const estaConcluindo = statusNormalizado === 'Concluído';
+    
     // Iniciar transação
     await connection.beginTransaction();
     // Inserir pedido
@@ -530,13 +533,37 @@ app.post('/api/pedidos', requireAuthJWT, async (req, res) => {
       safeValues([cliente_id, nome_cliente, data_pedido, statusNormalizado, valor_total, observacoes])
     );
     const pedidoId = result.insertId;
+    
     // Inserir itens
     for (const item of itens) {
       await connection.execute(
         'INSERT INTO pedido_itens (pedido_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)',
         [pedidoId, ...safeValues([item.produto_id, item.quantidade, item.preco_unitario])]
       );
+      
+      // Se o pedido está sendo criado como "Concluído", atualizar estoque
+      if (estaConcluindo && item.produto_id && item.quantidade) {
+        // Buscar estoque atual do produto
+        const [produtoResult] = await connection.execute(
+          'SELECT estoque FROM produtos WHERE id = ?',
+          [item.produto_id]
+        );
+        
+        if (produtoResult.length > 0) {
+          const estoqueAtual = produtoResult[0].estoque || 0;
+          const novaQuantidade = estoqueAtual - item.quantidade;
+          
+          // Atualizar estoque (permitir valores negativos)
+          await connection.execute(
+            'UPDATE produtos SET estoque = ? WHERE id = ?',
+            [novaQuantidade, item.produto_id]
+          );
+          
+          console.log(`Estoque atualizado: Produto ID ${item.produto_id}, estoque anterior: ${estoqueAtual}, quantidade vendida: ${item.quantidade}, novo estoque: ${novaQuantidade}`);
+        }
+      }
     }
+    
     await connection.commit();
     await connection.end();
     res.status(201).json({ id: pedidoId, message: 'Pedido criado com sucesso' });
@@ -560,17 +587,53 @@ app.put('/api/pedidos/:id', requireAuthJWT, async (req, res) => {
     });
     const { id } = req.params;
     const { cliente_id, data_pedido, status, valor_total, observacoes, itens, nome_cliente } = req.body;
+    
     // Normalizar o status
     const statusNormalizado = normalizarStatus(status);
+    
+    // Verificar se o status está sendo alterado para "Concluído"
+    const [pedidoAtual] = await connection.execute('SELECT status FROM pedidos WHERE id = ?', [id]);
+    const statusAnterior = pedidoAtual[0]?.status;
+    const estaConcluindo = statusNormalizado === 'Concluído' && statusAnterior !== 'Concluído';
+    
     // Iniciar transação
     await connection.beginTransaction();
+    
     // Atualizar pedido
     await connection.execute(
       'UPDATE pedidos SET cliente_id = ?, nome_cliente = ?, data_pedido = ?, status = ?, valor_total = ?, observacoes = ? WHERE id = ?',
       [...safeValues([cliente_id, nome_cliente, data_pedido, statusNormalizado, valor_total, observacoes]), id]
     );
+    
+    // Se está concluindo o pedido, atualizar estoque
+    if (estaConcluindo && itens && Array.isArray(itens)) {
+      for (const item of itens) {
+        if (item.produto_id && item.quantidade) {
+          // Buscar estoque atual do produto
+          const [produtoResult] = await connection.execute(
+            'SELECT estoque FROM produtos WHERE id = ?',
+            [item.produto_id]
+          );
+          
+          if (produtoResult.length > 0) {
+            const estoqueAtual = produtoResult[0].estoque || 0;
+            const novaQuantidade = estoqueAtual - item.quantidade;
+            
+            // Atualizar estoque (permitir valores negativos)
+            await connection.execute(
+              'UPDATE produtos SET estoque = ? WHERE id = ?',
+              [novaQuantidade, item.produto_id]
+            );
+            
+            console.log(`Estoque atualizado: Produto ID ${item.produto_id}, estoque anterior: ${estoqueAtual}, quantidade vendida: ${item.quantidade}, novo estoque: ${novaQuantidade}`);
+          }
+        }
+      }
+    }
+    
     // Remover itens antigos
     await connection.execute('DELETE FROM pedido_itens WHERE pedido_id = ?', [id]);
+    
     // Inserir novos itens
     for (const item of itens) {
       await connection.execute(
@@ -578,6 +641,7 @@ app.put('/api/pedidos/:id', requireAuthJWT, async (req, res) => {
         [id, ...safeValues([item.produto_id, item.quantidade, item.preco_unitario])]
       );
     }
+    
     await connection.commit();
     await connection.end();
     res.json({ message: 'Pedido atualizado com sucesso' });
