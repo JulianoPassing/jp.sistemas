@@ -105,6 +105,12 @@ Estoque atualizado: Produto ID 456, estoque anterior: 5, quantidade vendida: 8, 
   - Suporte a desconto incluído
   - Feedback visual para o usuário
 
+#### Correção de Formato de Data
+- **Problema**: Erro de formato de data (ISO string vs YYYY-MM-DD)
+- **Solução**: Função `normalizarData()` implementada para converter qualquer formato para YYYY-MM-DD
+- **Benefício**: Elimina erros de banco de dados relacionados a formato de data
+- **Compatibilidade**: Funciona com datas ISO, objetos Date e strings YYYY-MM-DD
+
 #### Estrutura dos Itens
 - **Formatação**: Os itens são formatados para incluir `produto_id`, `quantidade` e `preco_unitario`
 - **Compatibilidade**: Garante compatibilidade total com a API do servidor
@@ -122,7 +128,7 @@ Para testar:
 
 ## Arquivos Modificados
 
-- `server.js`: APIs de pedidos atualizadas com controle de estoque
+- `server.js`: APIs de pedidos atualizadas com controle de estoque e correção de formato de data
 - `public/mesas.html`: Função `finalizarMesa` melhorada para enviar dados completos do pedido
 - `CONTROLE-ESTOQUE.md`: Esta documentação
 

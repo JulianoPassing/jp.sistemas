@@ -798,6 +798,12 @@
             <button class="btn btn-success" id="btn-exportar-excel">
               <i class="fas fa-file-excel"></i> Exportar Excel
             </button>
+            <button class="btn btn-warning" id="btn-download-modelo">
+              <i class="fas fa-download"></i> Baixar Modelo
+            </button>
+            <button class="btn btn-info" id="btn-importar-planilha">
+              <i class="fas fa-upload"></i> Importar Planilha
+            </button>
           </div>
         </div>
         
@@ -829,6 +835,9 @@
         </div>
       </div>
     </main>
+    
+    <!-- Input oculto para importação de arquivo -->
+    <input type="file" id="input-importar" accept=".xlsx,.xls,.csv" style="display: none;" />
     <footer class="footer">
       © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" style="color: #000; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
     </footer>
@@ -856,6 +865,11 @@
         
         // Carregar produtos do banco de dados
         carregarProdutos();
+        
+        // Event listeners para importação
+        document.getElementById('btn-download-modelo').onclick = downloadModeloPlanilha;
+        document.getElementById('btn-importar-planilha').onclick = () => document.getElementById('input-importar').click();
+        document.getElementById('input-importar').onchange = importarPlanilha;
       });
 
       // Busca em tempo real
@@ -1609,6 +1623,182 @@
             removerProduto(id);
           };
         });
+      }
+
+      // Função para download do modelo de planilha de produtos
+      function downloadModeloPlanilha() {
+        // Dados do modelo
+        const dados = [
+          ['Nome do Produto', 'Descrição', 'Preço de Custo', 'Preço de Venda', 'Categoria', 'Código', 'Estoque', 'Fornecedor', 'Peso', 'Dimensões', 'Status'],
+          ['Notebook Dell Inspiron', 'Notebook para trabalho e estudos', '2500.00', '3200.00', 'Informática', 'NB001', '10', 'Dell Brasil', '2.5kg', '35x24x2cm', 'Ativo'],
+          ['Mouse Gamer RGB', 'Mouse com iluminação RGB', '45.00', '89.90', 'Informática', 'MG002', '25', 'Logitech', '120g', '12x6x4cm', 'Ativo'],
+          ['', '', '', '', '', '', '', '', '', '', '']
+        ];
+
+        // Criar workbook
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(dados);
+
+        // Ajustar largura das colunas
+        const colWidths = [
+          { wch: 25 }, // Nome do Produto
+          { wch: 30 }, // Descrição
+          { wch: 15 }, // Preço de Custo
+          { wch: 15 }, // Preço de Venda
+          { wch: 15 }, // Categoria
+          { wch: 12 }, // Código
+          { wch: 10 }, // Estoque
+          { wch: 20 }, // Fornecedor
+          { wch: 10 }, // Peso
+          { wch: 15 }, // Dimensões
+          { wch: 10 }  // Status
+        ];
+        ws['!cols'] = colWidths;
+
+        // Adicionar planilha ao workbook
+        XLSX.utils.book_append_sheet(wb, ws, 'Modelo Produtos');
+
+        // Download do arquivo
+        XLSX.writeFile(wb, 'modelo_produtos.xlsx');
+      }
+
+      // Função para importar planilha de produtos
+      async function importarPlanilha(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        try {
+          // Mostrar loading
+          const btn = document.getElementById('btn-importar-planilha');
+          const originalText = btn.innerHTML;
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
+          btn.disabled = true;
+
+          const data = await readExcelFile(file);
+          
+          if (!data || data.length === 0) {
+            alert('Nenhum dado encontrado na planilha.');
+            return;
+          }
+
+          // Validar cabeçalhos
+          const headers = data[0];
+          const expectedHeaders = ['Nome do Produto', 'Descrição', 'Preço de Custo', 'Preço de Venda', 'Categoria', 'Código', 'Estoque', 'Fornecedor', 'Peso', 'Dimensões', 'Status'];
+          
+          if (!validateHeaders(headers, expectedHeaders)) {
+            alert('Formato da planilha inválido. Use o modelo fornecido.');
+            return;
+          }
+
+          // Processar dados
+          const produtosParaImportar = [];
+          for (let i = 1; i < data.length; i++) {
+            const row = data[i];
+            if (row[0] && row[0].trim()) { // Verificar se tem nome do produto
+              const produto = {
+                nome: row[0]?.trim() || '',
+                descricao: row[1]?.trim() || '',
+                preco_custo: parseFloat(row[2]) || 0,
+                preco_venda: parseFloat(row[3]) || 0,
+                categoria: row[4]?.trim() || '',
+                codigo: row[5]?.trim() || '',
+                estoque: parseInt(row[6]) || 0,
+                fornecedor: row[7]?.trim() || '',
+                peso: row[8]?.trim() || '',
+                dimensoes: row[9]?.trim() || '',
+                status: row[10]?.trim() || 'Ativo'
+              };
+              produtosParaImportar.push(produto);
+            }
+          }
+
+          if (produtosParaImportar.length === 0) {
+            alert('Nenhum produto válido encontrado na planilha.');
+            return;
+          }
+
+          // Confirmar importação
+          const confirmacao = confirm(`Encontrados ${produtosParaImportar.length} produtos para importar. Deseja continuar?`);
+          if (!confirmacao) return;
+
+          // Importar produtos
+          let sucessos = 0;
+          let erros = 0;
+
+          for (const produto of produtosParaImportar) {
+            try {
+              const response = await fetch('/api/produtos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(produto),
+                credentials: 'include'
+              });
+
+              if (!response.ok) {
+                throw new Error(`Erro HTTP: ${response.status}`);
+              }
+
+              sucessos++;
+            } catch (error) {
+              console.error('Erro ao importar produto:', produto.nome, error);
+              erros++;
+            }
+          }
+
+          // Mostrar resultado
+          alert(`Importação concluída!\nSucessos: ${sucessos}\nErros: ${erros}`);
+          
+          // Recarregar lista de produtos
+          await carregarProdutos();
+
+        } catch (error) {
+          console.error('Erro ao processar planilha:', error);
+          alert('Erro ao processar a planilha. Verifique se o arquivo está no formato correto.');
+        } finally {
+          // Restaurar botão
+          const btn = document.getElementById('btn-importar-planilha');
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          
+          // Limpar input
+          event.target.value = '';
+        }
+      }
+
+      // Função para ler arquivo Excel
+      function readExcelFile(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            try {
+              const data = new Uint8Array(e.target.result);
+              const workbook = XLSX.read(data, { type: 'array' });
+              const sheetName = workbook.SheetNames[0];
+              const worksheet = workbook.Sheets[sheetName];
+              const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+              resolve(jsonData);
+            } catch (error) {
+              reject(error);
+            }
+          };
+          reader.onerror = reject;
+          reader.readAsArrayBuffer(file);
+        });
+      }
+
+      // Função para validar cabeçalhos
+      function validateHeaders(headers, expectedHeaders) {
+        if (!headers || headers.length < expectedHeaders.length) {
+          return false;
+        }
+        
+        for (let i = 0; i < expectedHeaders.length; i++) {
+          if (!headers[i] || headers[i].toString().trim() !== expectedHeaders[i]) {
+            return false;
+          }
+        }
+        
+        return true;
       }
     </script>
   </body>

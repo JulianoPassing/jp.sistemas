@@ -200,6 +200,28 @@ function normalizarStatus(status) {
   return status;
 }
 
+// Função para normalizar data para formato MySQL
+function normalizarData(data) {
+  if (!data) return null;
+  
+  // Se já é uma string no formato YYYY-MM-DD, retorna como está
+  if (typeof data === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data)) {
+    return data;
+  }
+  
+  // Se é uma data ISO ou outro formato, converte para YYYY-MM-DD
+  try {
+    const dataObj = new Date(data);
+    if (isNaN(dataObj.getTime())) {
+      return null; // Data inválida
+    }
+    return dataObj.toISOString().split('T')[0]; // Retorna YYYY-MM-DD
+  } catch (error) {
+    console.warn('Erro ao normalizar data:', data, error);
+    return null;
+  }
+}
+
 // Middleware de autenticação por JWT
 function requireAuthJWT(req, res, next) {
   const token = req.cookies.token || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
@@ -520,8 +542,9 @@ app.post('/api/pedidos', requireAuthJWT, async (req, res) => {
     if ((!Array.isArray(itens) || itens.length === 0) && status !== 'Em Aberto') {
       return res.status(400).json({ error: 'O pedido deve conter pelo menos um item.' });
     }
-    // Normalizar o status
+    // Normalizar o status e a data
     const statusNormalizado = normalizarStatus(status);
+    const dataNormalizada = normalizarData(data_pedido);
     // Verificar se o pedido está sendo criado como "Concluído"
     const estaConcluindo = statusNormalizado === 'Concluído';
     
@@ -530,7 +553,7 @@ app.post('/api/pedidos', requireAuthJWT, async (req, res) => {
     // Inserir pedido
     const [result] = await connection.execute(
       'INSERT INTO pedidos (cliente_id, nome_cliente, data_pedido, status, valor_total, observacoes) VALUES (?, ?, ?, ?, ?, ?)',
-      safeValues([cliente_id, nome_cliente, data_pedido, statusNormalizado, valor_total, observacoes])
+      safeValues([cliente_id, nome_cliente, dataNormalizada, statusNormalizado, valor_total, observacoes])
     );
     const pedidoId = result.insertId;
     
@@ -588,8 +611,9 @@ app.put('/api/pedidos/:id', requireAuthJWT, async (req, res) => {
     const { id } = req.params;
     const { cliente_id, data_pedido, status, valor_total, observacoes, itens, nome_cliente } = req.body;
     
-    // Normalizar o status
+    // Normalizar o status e a data
     const statusNormalizado = normalizarStatus(status);
+    const dataNormalizada = normalizarData(data_pedido);
     
     // Verificar se o status está sendo alterado para "Concluído"
     const [pedidoAtual] = await connection.execute('SELECT status FROM pedidos WHERE id = ?', [id]);
@@ -602,7 +626,7 @@ app.put('/api/pedidos/:id', requireAuthJWT, async (req, res) => {
     // Atualizar pedido
     await connection.execute(
       'UPDATE pedidos SET cliente_id = ?, nome_cliente = ?, data_pedido = ?, status = ?, valor_total = ?, observacoes = ? WHERE id = ?',
-      [...safeValues([cliente_id, nome_cliente, data_pedido, statusNormalizado, valor_total, observacoes]), id]
+      [...safeValues([cliente_id, nome_cliente, dataNormalizada, statusNormalizado, valor_total, observacoes]), id]
     );
     
     // Se está concluindo o pedido, atualizar estoque

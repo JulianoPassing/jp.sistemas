@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     :root {
               --primary-color: #005a9f;
@@ -631,6 +632,12 @@
           <button class="btn btn-success" id="btn-exportar-excel">
             <i class="fas fa-file-excel"></i> Baixar Excel
           </button>
+          <button class="btn btn-warning" id="btn-download-modelo">
+            <i class="fas fa-download"></i> Baixar Modelo
+          </button>
+          <button class="btn btn-info" id="btn-importar-planilha">
+            <i class="fas fa-upload"></i> Importar Planilha
+          </button>
       </div>
       </div>
       
@@ -657,8 +664,11 @@
           <tbody id="clientes-tbody"></tbody>
         </table>
       </div>
+          </div>
     </div>
-    </div>
+    
+    <!-- Input oculto para importação de arquivo -->
+    <input type="file" id="input-importar" accept=".xlsx,.xls,.csv" style="display: none;" />
   </main>
   <footer class="footer">
     © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ola,%20gostaria%20de%20mais%20informacoes%20sobre%20os%20sistemas." target="_blank" style="color: #000; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
@@ -799,6 +809,9 @@
       carregarClientes();
       document.getElementById('btn-exportar-pdf').onclick = exportarClientesPDF;
       document.getElementById('btn-exportar-excel').onclick = exportarClientesExcel;
+      document.getElementById('btn-download-modelo').onclick = downloadModeloPlanilha;
+      document.getElementById('btn-importar-planilha').onclick = () => document.getElementById('input-importar').click();
+      document.getElementById('input-importar').onchange = importarPlanilha;
       
       document.getElementById('busca-cliente').addEventListener('input', function() {
         filtrarClientes(this.value);
@@ -1249,6 +1262,181 @@
       
       // Se tem mais de 14 digitos, nao e valido
       return false;
+    }
+
+    // Função para download do modelo de planilha
+    function downloadModeloPlanilha() {
+      // Dados do modelo
+      const dados = [
+        ['Razão Social', 'CPF/CNPJ', 'Inscrição Estadual', 'Endereço', 'Bairro', 'Cidade', 'Estado', 'CEP', 'Email', 'Telefone', 'Transporte', 'Prazo', 'Observações'],
+        ['Empresa Exemplo Ltda', '12.345.678/0001-90', '123456789', 'Rua das Flores, 123', 'Centro', 'São Paulo', 'SP', '01234-567', 'contato@empresa.com', '(11) 99999-9999', 'Transportadora ABC', '30 dias', 'Cliente preferencial'],
+        ['João Silva', '123.456.789-00', '', 'Av. Principal, 456', 'Jardim', 'Rio de Janeiro', 'RJ', '20000-000', 'joao@email.com', '(21) 88888-8888', 'Correios', '15 dias', ''],
+        ['', '', '', '', '', '', '', '', '', '', '', '', '']
+      ];
+
+      // Criar workbook
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(dados);
+
+      // Ajustar largura das colunas
+      const colWidths = [
+        { wch: 25 }, // Razão Social
+        { wch: 18 }, // CPF/CNPJ
+        { wch: 15 }, // IE
+        { wch: 30 }, // Endereço
+        { wch: 15 }, // Bairro
+        { wch: 15 }, // Cidade
+        { wch: 5 },  // Estado
+        { wch: 10 }, // CEP
+        { wch: 25 }, // Email
+        { wch: 15 }, // Telefone
+        { wch: 20 }, // Transporte
+        { wch: 10 }, // Prazo
+        { wch: 30 }  // Observações
+      ];
+      ws['!cols'] = colWidths;
+
+      // Adicionar planilha ao workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Modelo Clientes');
+
+      // Download do arquivo
+      XLSX.writeFile(wb, 'modelo_clientes.xlsx');
+    }
+
+    // Função para importar planilha
+    async function importarPlanilha(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      try {
+        // Mostrar loading
+        const btn = document.getElementById('btn-importar-planilha');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
+        btn.disabled = true;
+
+        const data = await readExcelFile(file);
+        
+        if (!data || data.length === 0) {
+          alert('Nenhum dado encontrado na planilha.');
+          return;
+        }
+
+        // Validar cabeçalhos
+        const headers = data[0];
+        const expectedHeaders = ['Razão Social', 'CPF/CNPJ', 'Inscrição Estadual', 'Endereço', 'Bairro', 'Cidade', 'Estado', 'CEP', 'Email', 'Telefone', 'Transporte', 'Prazo', 'Observações'];
+        
+        if (!validateHeaders(headers, expectedHeaders)) {
+          alert('Formato da planilha inválido. Use o modelo fornecido.');
+          return;
+        }
+
+        // Processar dados
+        const clientesParaImportar = [];
+        for (let i = 1; i < data.length; i++) {
+          const row = data[i];
+          if (row[0] && row[0].trim()) { // Verificar se tem razão social
+            const cliente = {
+              razao: row[0]?.trim() || '',
+              cnpj: row[1]?.trim() || '',
+              ie: row[2]?.trim() || '',
+              endereco: row[3]?.trim() || '',
+              bairro: row[4]?.trim() || '',
+              cidade: row[5]?.trim() || '',
+              estado: row[6]?.trim() || '',
+              cep: row[7]?.trim() || '',
+              email: row[8]?.trim() || '',
+              telefone: row[9]?.trim() || '',
+              transporte: row[10]?.trim() || '',
+              prazo: row[11]?.trim() || '',
+              obs: row[12]?.trim() || ''
+            };
+            clientesParaImportar.push(cliente);
+          }
+        }
+
+        if (clientesParaImportar.length === 0) {
+          alert('Nenhum cliente válido encontrado na planilha.');
+          return;
+        }
+
+        // Confirmar importação
+        const confirmacao = confirm(`Encontrados ${clientesParaImportar.length} clientes para importar. Deseja continuar?`);
+        if (!confirmacao) return;
+
+        // Importar clientes
+        let sucessos = 0;
+        let erros = 0;
+
+        for (const cliente of clientesParaImportar) {
+          try {
+            await fetch(API_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(cliente),
+              credentials: 'include'
+            });
+            sucessos++;
+          } catch (error) {
+            console.error('Erro ao importar cliente:', cliente.razao, error);
+            erros++;
+          }
+        }
+
+        // Mostrar resultado
+        alert(`Importação concluída!\nSucessos: ${sucessos}\nErros: ${erros}`);
+        
+        // Recarregar lista de clientes
+        await carregarClientes();
+
+      } catch (error) {
+        console.error('Erro ao processar planilha:', error);
+        alert('Erro ao processar a planilha. Verifique se o arquivo está no formato correto.');
+      } finally {
+        // Restaurar botão
+        const btn = document.getElementById('btn-importar-planilha');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        // Limpar input
+        event.target.value = '';
+      }
+    }
+
+    // Função para ler arquivo Excel
+    function readExcelFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            resolve(jsonData);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    // Função para validar cabeçalhos
+    function validateHeaders(headers, expectedHeaders) {
+      if (!headers || headers.length < expectedHeaders.length) {
+        return false;
+      }
+      
+      for (let i = 0; i < expectedHeaders.length; i++) {
+        if (!headers[i] || headers[i].toString().trim() !== expectedHeaders[i]) {
+          return false;
+        }
+      }
+      
+      return true;
     }
 
     // Adicionar event listener para formatacao automatica
