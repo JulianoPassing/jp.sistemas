@@ -712,6 +712,57 @@
       transform: translateY(-2px);
       box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
     }
+
+    /* Modal maior e informações do cliente melhoradas */
+    #visualizarPedidoModal .modal-content {
+      max-width: 1100px !important;
+      width: 95vw;
+      min-width: 350px;
+    }
+    .info-grid {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .info-section {
+      background: #f8fafc;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,90,159,0.04);
+      padding: 22px 28px 18px 28px;
+      flex: 1 1 350px;
+      min-width: 320px;
+      margin-bottom: 0;
+    }
+    .info-section h4 {
+      color: #005a9f;
+      font-size: 1.15em;
+      margin-bottom: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .info-item {
+      display: flex;
+      margin-bottom: 10px;
+      align-items: flex-start;
+    }
+    .info-label {
+      font-weight: 600;
+      color: #022656;
+      min-width: 110px;
+      display: inline-block;
+    }
+    .info-value {
+      color: #1f2937;
+      word-break: break-word;
+      flex: 1;
+    }
+    @media (max-width: 900px) {
+      .info-grid { flex-direction: column; gap: 16px; }
+      .info-section { min-width: 0; padding: 16px 10px; }
+    }
   </style>
 </head>
 <body>
@@ -838,7 +889,7 @@
 
   <!-- Modal de Visualização do Pedido -->
   <div id="visualizarPedidoModal" class="modal">
-    <div class="modal-content" style="max-width: 800px;">
+    <div class="modal-content">
       <div class="modal-header">
         <h3><i class="fas fa-eye"></i> Visualizar Pedido</h3>
         <span class="close" id="closeVisualizarPedido">&times;</span>
@@ -2139,31 +2190,31 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             // Só criar tabela se houver dados
             if (tableData.length > 0) {
               doc.autoTable({
-              startY: yBase + 95,
-              head: [['Produto', 'Qtd', 'Preco Unit.', 'Subtotal']],
-              body: tableData,
-              theme: 'grid',
-              tableWidth: 170, // Largura total da tabela (210 - 40 de margem)
-              headStyles: {
-                fillColor: primaryColor,
-                textColor: [255, 255, 255],
-                fontStyle: 'bold',
-                fontSize: 10
-              },
-              styles: {
-                fontSize: 9,
-                cellPadding: 3, // Reduzido de 4 para 3
-                lineColor: [200, 200, 200],
-                lineWidth: 0.1
-              },
-              columnStyles: {
-                0: { cellWidth: 'auto' }, // Produto - largura automática
-                1: { halign: 'center', cellWidth: 20 }, // Quantidade - fixa
-                2: { halign: 'right', cellWidth: 30 }, // Preço Unit. - fixa
-                3: { halign: 'right', cellWidth: 30 } // Subtotal - fixa
-              },
-              margin: { left: 20, right: 20 }
-            });
+                startY: yBase + 95,
+                head: [['Produto', 'Qtd', 'Preco Unit.', 'Subtotal']],
+                body: tableData,
+                theme: 'grid',
+                tableWidth: 170, // Largura total da tabela (210 - 40 de margem)
+                headStyles: {
+                  fillColor: primaryColor,
+                  textColor: [255, 255, 255],
+                  fontStyle: 'bold',
+                  fontSize: 10
+                },
+                styles: {
+                  fontSize: 9,
+                  cellPadding: 3, // Reduzido de 4 para 3
+                  lineColor: [200, 200, 200],
+                  lineWidth: 0.1
+                },
+                columnStyles: {
+                  0: { cellWidth: 'auto' }, // Produto - largura automática
+                  1: { halign: 'center', cellWidth: 20 }, // Quantidade - fixa
+                  2: { halign: 'right', cellWidth: 30 }, // Preço Unit. - fixa
+                  3: { halign: 'right', cellWidth: 30 } // Subtotal - fixa
+                },
+                margin: { left: 20, right: 20 }
+              });
             }
             // Total
             const finalY = tableData.length > 0 ? doc.lastAutoTable.finalY + 10 : yBase + 95;
@@ -2189,12 +2240,24 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             doc.setFont('helvetica', 'normal');
             doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 20, { align: 'center' });
             doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, pageHeight - 15, { align: 'center' });
-            // Salvar PDF
-            doc.save(`Pedido_${pedido.id}_${limparCaracteres(pedido.nome_cliente || pedido.cliente_id).replace(/\s+/g, '_')}.pdf`);
+            
+            // Abrir janela de impressão
+            const pdfBlob = doc.output('blob');
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            const printWindow = window.open(pdfUrl, '_blank');
+            
+            if (printWindow) {
+              printWindow.onload = function() {
+                printWindow.print();
+              };
+            } else {
+              // Fallback: baixar o PDF
+              doc.save(`Pedido_${pedido.id}_${limparCaracteres(pedido.nome_cliente || pedido.cliente_id).replace(/\s+/g, '_')}.pdf`);
+            }
           });
         } catch (error) {
-          console.error('Erro ao gerar PDF do pedido:', error);
-          alert('Erro ao gerar PDF do pedido: ' + error.message);
+          console.error('Erro ao imprimir pedido:', error);
+          alert('Erro ao imprimir pedido: ' + error.message);
         }
       }).catch(error => {
         console.error('Erro ao buscar dados da empresa:', error);
@@ -2202,116 +2265,6 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
       });
     }
 
-    // Função para gerar Excel com todos os pedidos
-    function gerarExcelTodosPedidos() {
-      // Verificar se há pedidos para exportar
-      if (!pedidos || pedidos.length === 0) {
-        alert('Não há pedidos para exportar. Crie alguns pedidos primeiro.');
-        return;
-      }
-
-      try {
-        // Criar conteúdo CSV
-        let csvContent = "ID,Cliente,Data,Status,Valor Total,Forma Pagamento,Telefone,Email\n";
-        
-        pedidos.forEach(pedido => {
-          // Extrair informações adicionais das observações
-          const observacoes = pedido.observacoes || '';
-          const telefone = extrairInfo(observacoes, 'Telefone:') || 'Não informado';
-          const email = extrairInfo(observacoes, 'Email:') || 'Não informado';
-          const formaPagamento = extrairInfo(observacoes, 'Forma de Pagamento:') || 'Não informado';
-
-          // Função auxiliar para extrair informações
-          function extrairInfo(texto, chave) {
-            const textoLimpo = texto.replace(/•/g, '').replace(/\s+/g, ' ');
-            const regex = new RegExp(`${chave}\\s*([^\\n]+)`, 'i');
-            const match = textoLimpo.match(regex);
-            return match ? match[1].trim() : null;
-          }
-
-          csvContent += `${pedido.id},"${pedido.nome_cliente || pedido.cliente_id || 'N/A'}","${pedido.data_pedido || 'N/A'}","${pedido.status || 'N/A'}","${Number(pedido.valor_total) || 0}","${formaPagamento}","${telefone}","${email}"\n`;
-        });
-
-        // Criar e baixar arquivo
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", `Relatorio_Pedidos_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } catch (error) {
-        console.error('Erro ao gerar Excel:', error);
-        alert('Erro ao gerar Excel: ' + error.message);
-      }
-    }
-
-    // Função auxiliar para carregar imagem base64
-    function carregarImagemBase64(url, callback) {
-      const img = new Image();
-      img.crossOrigin = 'Anonymous';
-      img.onload = function() {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.height = this.naturalHeight;
-        canvas.width = this.naturalWidth;
-        ctx.drawImage(this, 0, 0);
-        const dataURL = canvas.toDataURL('image/png');
-        callback(dataURL);
-      };
-      img.onerror = function() {
-        // Se não conseguir carregar a imagem, continua sem ela
-        callback(null);
-      };
-      img.src = url;
-    }
-
-    function formatarDataHora(dataISO) {
-      if (!dataISO) return '';
-      const data = new Date(dataISO);
-      if (isNaN(data.getTime())) return dataISO;
-      return data.toLocaleString('pt-BR', {
-        day: '2-digit', month: '2-digit', year: 'numeric',
-        hour: '2-digit', minute: '2-digit'
-      });
-    }
-
-    function formatarData(dataISO) {
-      if (!dataISO) return '';
-      // Se vier no formato YYYY-MM-DD, trata como UTC
-      if (/^\d{4}-\d{2}-\d{2}$/.test(dataISO)) {
-        const [ano, mes, dia] = dataISO.split('-');
-        return `${dia}/${mes}/${ano}`;
-      }
-      // Se vier no formato ISO (YYYY-MM-DDTHH:mm:ss.sssZ), trata como UTC
-      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(dataISO)) {
-        const data = new Date(dataISO);
-        const ano = data.getUTCFullYear();
-        const mes = String(data.getUTCMonth() + 1).padStart(2, '0');
-        const dia = String(data.getUTCDate()).padStart(2, '0');
-        return `${dia}/${mes}/${ano}`;
-      }
-      // Caso contrário, tenta converter normalmente
-      const data = new Date(dataISO);
-      if (isNaN(data.getTime())) return dataISO;
-      return data.toLocaleDateString('pt-BR', {
-        day: '2-digit', month: '2-digit', year: 'numeric'
-      });
-    }
-
-    // Função utilitária para limpar undefined de objetos aninhados
-    function limparUndefinedDeep(obj) {
-      if (Array.isArray(obj)) {
-        return obj.map(limparUndefinedDeep);
-      } else if (obj && typeof obj === 'object') {
-        return Object.fromEntries(
-          Object.entries(obj).map(([k, v]) => [k, v === undefined ? null : limparUndefinedDeep(v)])
-        );
-      }
-      return obj;
-    }
-  </script>
-</body>
-</html> 
+    // ... existing code ...
+-             doc.text(`
+// ... existing code ...
