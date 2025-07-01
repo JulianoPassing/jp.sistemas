@@ -290,9 +290,8 @@ app.post('/api/auth/login', async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      domain: '.jp-sistemas.vercel.app',
+      secure: false,
+      sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000
     });
 
@@ -307,9 +306,8 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/auth/logout', (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    domain: '.jp-sistemas.vercel.app',
+    secure: false,
+    sameSite: 'lax',
     path: '/'
   });
   res.json({ success: true });
