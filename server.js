@@ -203,19 +203,21 @@ function normalizarStatus(status) {
 // Função para normalizar data para formato MySQL
 function normalizarData(data) {
   if (!data) return null;
-  
   // Se já é uma string no formato YYYY-MM-DD, retorna como está
   if (typeof data === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data)) {
     return data;
   }
-  
-  // Se é uma data ISO ou outro formato, converte para YYYY-MM-DD
+  // Se é uma data ISO ou outro formato, converte para YYYY-MM-DD considerando o fuso horário local do Brasil (UTC-3)
   try {
     const dataObj = new Date(data);
     if (isNaN(dataObj.getTime())) {
       return null; // Data inválida
     }
-    return dataObj.toISOString().split('T')[0]; // Retorna YYYY-MM-DD
+    // Ajustar para o horário local do Brasil (UTC-3)
+    const ano = dataObj.getFullYear();
+    const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
+    const dia = String(dataObj.getDate()).padStart(2, '0');
+    return `${ano}-${mes}-${dia}`;
   } catch (error) {
     console.warn('Erro ao normalizar data:', data, error);
     return null;
