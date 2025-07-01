@@ -2331,8 +2331,8 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
               doc.text('OBSERVAÇÕES:', 20, finalY + 20);
               doc.setFontSize(10);
               doc.setFont('helvetica', 'normal');
-              const obsLimpa = doc.splitTextToSize(limparCaracteres(pedido.observacoes), 170);
-              doc.text(obsLimpa, 20, finalY + 28);
+              const obsFormatada = doc.splitTextToSize(pedido.observacoes, 170);
+              doc.text(obsFormatada, 20, finalY + 28);
             }
             // Rodapé
             const pageHeight = doc.internal.pageSize.height;
