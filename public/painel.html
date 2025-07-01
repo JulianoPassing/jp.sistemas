@@ -39,15 +39,15 @@
       .header {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px);
-        padding: 18px 0;
-        box-shadow: 0 3.6px 18px rgba(0, 90, 159, 0.1);
+        padding: 20px 0;
+        box-shadow: 0 4px 20px rgba(0, 90, 159, 0.1);
         border-bottom: 1px solid rgba(255, 255, 255, 0.2);
       }
 
       .header-content {
-        max-width: 1080px;
+        max-width: 1200px;
         margin: 0 auto;
-        padding: 0 18px;
+        padding: 0 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -55,20 +55,20 @@
 
       .logo h1 {
         color: var(--primary-color);
-        font-size: 21.6px;
+        font-size: 24px;
         font-weight: 700;
       }
 
       .user-info {
         display: flex;
         align-items: center;
-        gap: 10.8px;
+        gap: 12px;
       }
 
       .user-info span {
         color: var(--text-primary);
         font-family: 'Inter', sans-serif;
-        font-size: 14.4px;
+        font-size: 16px;
         font-weight: 500;
       }
 
@@ -80,63 +80,63 @@
         background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
         color: white;
         border: none;
-        padding: 7.2px 14.4px;
-        border-radius: 7.2px;
+        padding: 8px 16px;
+        border-radius: 8px;
         cursor: pointer;
-        font-size: 12.6px;
+        font-size: 14px;
         font-weight: 500;
         transition: all 0.3s ease;
       }
 
       .logout-btn:hover {
-        transform: translateY(-1.8px);
-        box-shadow: 0 7.2px 18px rgba(0, 90, 159, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 90, 159, 0.3);
       }
 
       .main-content {
-        max-width: 1080px;
-        margin: 36px auto;
-        padding: 0 18px;
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
       }
 
       .welcome-section {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px);
-        border-radius: 18px;
-        padding: 28.8px;
-        margin-bottom: 28.8px;
-        box-shadow: 0 9px 27px rgba(0, 90, 159, 0.1);
+        border-radius: 20px;
+        padding: 32px;
+        margin-bottom: 32px;
+        box-shadow: 0 10px 30px rgba(0, 90, 159, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
         text-align: center;
       }
 
       .welcome-section h2 {
         color: var(--primary-color);
-        font-size: 25.2px;
+        font-size: 28px;
         font-weight: 700;
-        margin-bottom: 10.8px;
+        margin-bottom: 12px;
       }
 
       .welcome-section p {
         color: var(--text-secondary);
-        font-size: 14.4px;
+        font-size: 16px;
         line-height: 1.6;
       }
 
       .menu-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(252px, 1fr));
-        gap: 21.6px;
-        margin-top: 28.8px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+        margin-top: 32px;
       }
 
       .menu-card {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px);
-        border-radius: 14.4px;
-        padding: 28.8px;
+        border-radius: 16px;
+        padding: 32px;
         text-align: center;
-        box-shadow: 0 7.2px 22.5px rgba(0, 90, 159, 0.1);
+        box-shadow: 0 8px 25px rgba(0, 90, 159, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
         transition: all 0.3s ease;
         cursor: pointer;
@@ -145,14 +145,14 @@
       }
 
       .menu-card:hover {
-        transform: translateY(-7.2px);
-        box-shadow: 0 18px 36px rgba(0, 90, 159, 0.2);
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 90, 159, 0.2);
       }
 
       .menu-card i {
-        font-size: 43.2px;
+        font-size: 48px;
         color: var(--primary-color);
-        margin-bottom: 18px;
+        margin-bottom: 20px;
         transition: transform 0.3s ease;
       }
 
@@ -162,21 +162,21 @@
 
       .menu-card h3 {
         color: var(--text-primary);
-        font-size: 18px;
+        font-size: 20px;
         font-weight: 600;
-        margin-bottom: 10.8px;
+        margin-bottom: 12px;
       }
 
       .menu-card p {
         color: var(--text-secondary);
-        font-size: 12.6px;
+        font-size: 14px;
         line-height: 1.5;
       }
 
       @media (max-width: 768px) {
         .header-content {
           flex-direction: column;
-          gap: 14.4px;
+          gap: 16px;
         }
 
         .menu-grid {
@@ -184,16 +184,16 @@
         }
 
         .welcome-section {
-          padding: 21.6px;
+          padding: 24px;
         }
       }
 
       .footer {
         width: 100%;
         text-align: center;
-        padding: 16.2px 0 10.8px 0;
+        padding: 18px 0 12px 0;
         color: #fff;
-        font-size: 13.5px;
+        font-size: 15px;
         background: transparent;
         font-family: 'Inter', sans-serif;
         letter-spacing: 0.02em;
@@ -204,7 +204,7 @@
     <header class="header">
       <div class="header-content">
         <div class="logo">
-          <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 135px; height: 60.3px; display: block; object-fit: contain; background: none; box-shadow: none; border-radius: 0; margin: 0;" />
+          <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 150px; height: 67px; display: block; object-fit: contain; background: none; box-shadow: none; border-radius: 0; margin: 0;" />
         </div>
         <div class="user-info">
           <span>Bem-vindo, <span id="userDisplay"></span></span>
