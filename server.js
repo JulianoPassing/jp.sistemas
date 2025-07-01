@@ -19,6 +19,7 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(express.json());
 app.all('/api/empresa', empresaHandler);
 
 // CORS - deve vir antes de qualquer middleware de sessão ou rotas
@@ -32,7 +33,6 @@ app.use(cors({
 }));
 
 // Middleware
-app.use(express.json());
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
