@@ -737,7 +737,12 @@
         let nomeHtml = `<div style='margin-bottom:16px;'><label style='font-weight:500;color:#374151;'>Nome da Mesa/Pessoa:</label><input id='input-nome-mesa' type='text' value='${nomeEdit}' style='width:100%;padding:10px 12px;border-radius:8px;border:2px solid #e5e7eb;font-size:1em;margin-top:6px;transition:border 0.2s;outline:none;' onfocus='this.style.borderColor="#005a9f"' onblur='this.style.borderColor="#e5e7eb"'/></div>`;
         
         // Calcular total
-        const total = (itensEdit||[]).reduce((sum, item) => sum + (item.subtotal || 0), 0);
+        const total = (itensEdit||[]).reduce((sum, item) => {
+          const precoUnitario = parseFloat(item.precoUnitario || item.preco_unitario || 0);
+          const quantidade = parseInt(item.quantidade || 0);
+          const subtotal = quantidade * precoUnitario;
+          return sum + subtotal;
+        }, 0);
         
         // Listar produtos já adicionados
         let itensHtml = '';
@@ -758,13 +763,15 @@
                   </thead>
                   <tbody>
                     ${(itensEdit||[]).map((item, idx) => {
-                      const subtotal = (item.quantidade || 0) * (item.precoUnitario || 0);
+                      const precoUnitario = parseFloat(item.precoUnitario || item.preco_unitario || 0);
+                      const quantidade = parseInt(item.quantidade || 0);
+                      const subtotal = quantidade * precoUnitario;
                       return `<tr style='border-bottom:1px solid #f0f0f0;'>
                         <td style='padding:8px 4px;font-weight:500;color:#374151;'>${item.produto}</td>
                         <td style='text-align:center;padding:8px 4px;'>
-                          <input type='number' min='1' value='${item.quantidade}' data-idx='${idx}' class='input-quantidade' style='width:50px;padding:4px 6px;border-radius:6px;border:1.5px solid #e5e7eb;font-size:0.9em;text-align:center;' />
+                          <input type='number' min='1' value='${quantidade}' data-idx='${idx}' class='input-quantidade' style='width:50px;padding:4px 6px;border-radius:6px;border:1.5px solid #e5e7eb;font-size:0.9em;text-align:center;' />
                         </td>
-                        <td style='text-align:right;padding:8px 4px;color:#6b7280;'>R$ ${(item.precoUnitario || 0).toFixed(2).replace('.', ',')}</td>
+                        <td style='text-align:right;padding:8px 4px;color:#6b7280;'>R$ ${precoUnitario.toFixed(2).replace('.', ',')}</td>
                         <td style='text-align:right;padding:8px 4px;font-weight:600;color:#059669;'>R$ ${subtotal.toFixed(2).replace('.', ',')}</td>
                         <td style='text-align:center;padding:8px 4px;'>
                           <button class='btn btn-danger btn-remover-produto' data-idx='${idx}' title='Remover' style='padding:4px 8px;font-size:0.85em;'><i class='fas fa-trash'></i></button>
@@ -796,7 +803,8 @@
             let val = parseInt(this.value) || 1;
             if (val < 1) val = 1;
             itensEdit[idx].quantidade = val;
-            itensEdit[idx].subtotal = val * (itensEdit[idx].precoUnitario||0);
+            const precoUnitario = parseFloat(itensEdit[idx].precoUnitario || itensEdit[idx].preco_unitario || 0);
+            itensEdit[idx].subtotal = val * precoUnitario;
             renderListaProdutos(); // Re-renderizar para atualizar subtotais
           };
         });
@@ -904,7 +912,12 @@
           alert('Informe o nome da mesa/pessoa!');
           return;
         }
-        const valor_total = (itensEdit || []).reduce((sum, i) => sum + (i.subtotal || 0), 0);
+        const valor_total = (itensEdit || []).reduce((sum, i) => {
+          const precoUnitario = parseFloat(i.precoUnitario || i.preco_unitario || 0);
+          const quantidade = parseInt(i.quantidade || 0);
+          const subtotal = quantidade * precoUnitario;
+          return sum + subtotal;
+        }, 0);
         const putBody = {
           ...pedido,
           nome_cliente: novoNome || pedido.nome_cliente || pedido.nome_mesa || 'Mesa/Pessoa',
@@ -942,7 +955,11 @@
       const pedido = pedidosAbertos.find(p => p.id === id);
       if (!pedido) return;
       
-      const total = (pedido.itens||[]).reduce((sum, i) => sum + (i.precoUnitario||0) * (i.quantidade||0), 0);
+      const total = (pedido.itens||[]).reduce((sum, i) => {
+        const precoUnitario = parseFloat(i.precoUnitario || i.preco_unitario || 0);
+        const quantidade = parseInt(i.quantidade || 0);
+        return sum + (precoUnitario * quantidade);
+      }, 0);
       
       modal.querySelector('h3').textContent = `Finalizar Mesa - ${pedido.nome_cliente || pedido.nome_mesa || 'Mesa/Pessoa'}`;
       
