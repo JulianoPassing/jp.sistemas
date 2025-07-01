@@ -1283,18 +1283,14 @@
           return;
         }
 
-        const putBody = {
-          cliente_id: pedido.cliente_id === undefined ? null : pedido.cliente_id,
-          data_pedido: pedido.data_pedido === undefined ? null : pedido.data_pedido,
+        const putBody = limparUndefinedDeep({
+          cliente_id: pedido.cliente_id,
+          data_pedido: pedido.data_pedido,
           status: 'Cancelado',
-          valor_total: pedido.valor_total === undefined ? null : pedido.valor_total,
-          observacoes: pedido.observacoes === undefined ? null : pedido.observacoes,
-          itens: Array.isArray(pedido.itens) ? pedido.itens.map(i => ({
-            ...i,
-            precoUnitario: i.precoUnitario === undefined ? null : i.precoUnitario,
-            subtotal: i.subtotal === undefined ? null : i.subtotal
-          })) : []
-        };
+          valor_total: pedido.valor_total,
+          observacoes: pedido.observacoes,
+          itens: pedido.itens
+        });
         const response = await fetch(`/api/pedidos/${pedidoId}`, {
           method: 'PUT',
           headers: {'Content-Type': 'application/json'},
