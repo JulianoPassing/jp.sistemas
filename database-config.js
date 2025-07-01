@@ -55,10 +55,10 @@ const databaseConfigs = {
 
   // Local/Desenvolvimento
   local: {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'jpsistemas',
-    password: process.env.DB_PASSWORD || 'SuaSenhaForte123!',
-    port: process.env.DB_PORT || 3306,
+    host: process.env.DB_HOST ?? 'localhost',
+    user: process.env.DB_USER ?? 'jpsistemas',
+    password: process.env.DB_PASSWORD ?? 'SuaSenhaForte123!',
+    port: process.env.DB_PORT ?? 3306,
     charset: 'utf8mb4'
   }
 };
