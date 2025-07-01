@@ -528,9 +528,9 @@ app.post('/api/pedidos', requireAuthJWT, async (req, res) => {
         'INSERT INTO pedido_itens (pedido_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)',
         [
           pedidoId,
-          typeof item.produto_id === 'undefined' ? null : item.produto_id,
-          typeof item.quantidade === 'undefined' ? null : item.quantidade,
-          typeof item.preco_unitario === 'undefined' ? null : item.preco_unitario
+          item.produto_id === undefined ? null : item.produto_id,
+          item.quantidade === undefined ? null : item.quantidade,
+          item.preco_unitario === undefined ? null : item.preco_unitario
         ]
       );
     }
@@ -572,7 +572,12 @@ app.put('/api/pedidos/:id', requireAuthJWT, async (req, res) => {
     for (const item of itens) {
       await connection.execute(
         'INSERT INTO pedido_itens (pedido_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)',
-        [id, item.produto_id, item.quantidade, item.preco_unitario]
+        [
+          id, 
+          item.produto_id === undefined ? null : item.produto_id, 
+          item.quantidade === undefined ? null : item.quantidade, 
+          item.preco_unitario === undefined ? null : item.preco_unitario
+        ]
       );
     }
     await connection.commit();
