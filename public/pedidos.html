@@ -1790,34 +1790,39 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
       const doc = new jsPDF();
       const primaryColor = [0, 90, 159];
       const secondaryColor = [0, 55, 102];
+      const bgRow = [248, 249, 250];
+      const borderColor = [220, 220, 220];
 
       carregarImagemBase64('https://i.imgur.com/2jT2EPD.png', function(logoBase64) {
-        // Logo centralizada
-        const logoWidth = 50;
-        const logoHeight = 22;
+        // Logo centralizada e maior
+        const logoWidth = 60;
+        const logoHeight = 28;
         const logoX = (210 - logoWidth) / 2;
-        const logoY = 8;
+        const logoY = 10;
         doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
 
-        // Cabeçalho
+        // Cabeçalho destacado
         doc.setFillColor(...primaryColor);
-        doc.rect(0, 0, 210, 40, 'F');
+        doc.rect(0, 0, 210, 45, 'F');
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(16);
+        doc.setFontSize(20);
         doc.setFont('helvetica', 'bold');
-        doc.text('RELATÓRIO DE PEDIDOS', 105, 35, { align: 'center' });
-        doc.setFontSize(10);
+        doc.text('RELATÓRIO DE PEDIDOS', 105, 38, { align: 'center' });
+
+        // Subtítulo
+        doc.setFontSize(11);
         doc.setFont('helvetica', 'normal');
-        doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, 45, { align: 'center' });
+        doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, 47, { align: 'center' });
 
         // Informações do relatório
         doc.setTextColor(0, 0, 0);
-        doc.setFontSize(14);
+        doc.setFontSize(13);
         doc.setFont('helvetica', 'bold');
-        doc.text('Pedidos e Vendas', 20, 60);
-        doc.setFontSize(12);
+        doc.text('Pedidos e Vendas', 15, 62);
+        doc.setFontSize(11);
         doc.setFont('helvetica', 'normal');
-        doc.text(`Total de Pedidos: ${pedidos.length}`, 20, 70);
+        doc.text(`Total de Pedidos: ${pedidos.length}`, 15, 70);
+        doc.text(`Período: ${new Date().toLocaleDateString('pt-BR')}`, 15, 76);
 
         // Tabela de pedidos
         const tableData = pedidos.map(pedido => [
@@ -1829,7 +1834,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
         ]);
 
         doc.autoTable({
-          startY: 80,
+          startY: 85,
           head: [['ID', 'Cliente', 'Data', 'Status', 'Valor Total']],
           body: tableData,
           theme: 'grid',
@@ -1837,48 +1842,69 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             fillColor: primaryColor,
             textColor: [255, 255, 255],
             fontStyle: 'bold',
-            fontSize: 10
+            fontSize: 11,
+            halign: 'center',
+            valign: 'middle',
+            lineWidth: 0.5,
+            lineColor: borderColor
           },
           styles: {
-            fontSize: 9,
-            cellPadding: 4,
-            lineColor: [200, 200, 200],
-            lineWidth: 0.1
+            fontSize: 10,
+            cellPadding: 3.5,
+            lineColor: borderColor,
+            lineWidth: 0.2,
+            valign: 'middle',
+            overflow: 'linebreak',
+            halign: 'center',
+            minCellHeight: 8
           },
           columnStyles: {
-            0: { cellWidth: 20, halign: 'center' },
-            1: { cellWidth: 55, halign: 'left' },
-            2: { cellWidth: 30, halign: 'center' },
-            3: { cellWidth: 30, halign: 'center' },
-            4: { cellWidth: 40, halign: 'right' }
+            0: { cellWidth: 18, halign: 'center' }, // ID
+            1: { cellWidth: 60, halign: 'left' },   // Cliente
+            2: { cellWidth: 32, halign: 'center' }, // Data
+            3: { cellWidth: 35, halign: 'center' }, // Status
+            4: { cellWidth: 35, halign: 'right' }   // Valor Total
           },
           alternateRowStyles: {
-            fillColor: [248, 249, 250]
+            fillColor: bgRow
           },
-          margin: { top: 80, right: 10, bottom: 10, left: 10 }
+          tableLineColor: borderColor,
+          tableLineWidth: 0.2,
+          margin: { top: 85, right: 10, bottom: 20, left: 10 },
+          didDrawPage: function (data) {
+            // Rodapé elegante
+            const pageHeight = doc.internal.pageSize.height;
+            doc.setFillColor(240, 240, 240);
+            doc.rect(0, pageHeight - 22, 210, 22, 'F');
+            doc.setTextColor(100, 100, 100);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 12, { align: 'center' });
+            doc.text(`Total de pedidos: ${pedidos.length}`, 105, pageHeight - 6, { align: 'center' });
+          }
         });
 
         // Estatísticas por status
-        const finalY = doc.lastAutoTable.finalY + 15;
-        doc.setFontSize(14);
+        let finalY = doc.lastAutoTable.finalY + 12;
+        doc.setFontSize(13);
         doc.setFont('helvetica', 'bold');
-        doc.text('Distribuição por Status:', 20, finalY);
+        doc.text('Distribuição por Status:', 15, finalY);
         const statusMap = {};
         pedidos.forEach(pedido => {
           const status = (pedido.status || 'Não informado').replace(/[^\w\s\-\.]/g, '');
           statusMap[status] = (statusMap[status] || 0) + 1;
         });
-        let yPos = finalY + 10;
+        let yPos = finalY + 7;
         let coluna = 0;
         const colunas = 2;
         const larguraColuna = 80;
         Object.entries(statusMap).forEach(([status, count], index) => {
-          if (yPos > 250) {
+          if (yPos > 270) {
             doc.addPage();
             yPos = 20;
             coluna = 0;
           }
-          const xPos = 25 + (coluna * larguraColuna);
+          const xPos = 20 + (coluna * larguraColuna);
           doc.setFontSize(10);
           doc.setFont('helvetica', 'normal');
           doc.text(`${status}: ${count} pedido(s)`, xPos, yPos);
@@ -1888,16 +1914,6 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             yPos += 8;
           }
         });
-
-        // Rodapé
-        const pageHeight = doc.internal.pageSize.height;
-        doc.setFillColor(240, 240, 240);
-        doc.rect(0, pageHeight - 30, 210, 30, 'F');
-        doc.setTextColor(100, 100, 100);
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'normal');
-        doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 20, { align: 'center' });
-        doc.text(`Total de pedidos: ${pedidos.length}`, 105, pageHeight - 15, { align: 'center' });
 
         // Salvar PDF
         const hoje = new Date();
