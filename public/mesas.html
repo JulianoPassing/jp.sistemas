@@ -493,7 +493,7 @@
             <table>
               <thead><tr><th>Produto</th><th>Qtd</th><th>Preço</th><th>Subtotal</th></tr></thead>
               <tbody>
-                ${(pedido.itens||[]).map(i => `<tr><td>${i.produto}</td><td>${i.quantidade}</td><td>R$ ${(Number(i.precoUnitario)||0).toFixed(2).replace('.', ',')}</td><td>R$ ${(Number(i.subtotal)||0).toFixed(2).replace('.', ',')}</td></tr>`).join('')}
+                ${(pedido.itens||[]).map(i => `<tr><td>${i.produto}</td><td>${i.quantidade}</td><td>R$ ${(Number(i.precoUnitario ?? i.preco_unitario) || 0).toFixed(2)}</td><td>R$ ${(Number(i.subtotal) || 0).toFixed(2)}</td></tr>`).join('')}
               </tbody>
             </table>
           </div>
@@ -697,7 +697,7 @@
           <table>
             <thead><tr><th>Produto</th><th>Qtd</th><th>Vlr</th><th>Sub</th></tr></thead>
             <tbody>
-              ${(pedido.itens||[]).map(i => `<tr><td>${i.produto}</td><td>${i.quantidade}</td><td>${(i.precoUnitario||0).toFixed(2)}</td><td>${(i.subtotal||0).toFixed(2)}</td></tr>`).join('')}
+              ${(pedido.itens||[]).map(i => `<tr><td>${i.produto}</td><td>${i.quantidade}</td><td>${(Number(i.precoUnitario ?? i.preco_unitario) || 0).toFixed(2)}</td><td>${(Number(i.subtotal) || 0).toFixed(2)}</td></tr>`).join('')}
             </tbody>
           </table>
           <div class='linha'></div>
