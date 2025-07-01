@@ -1359,44 +1359,40 @@
     // Função para carregar estatísticas do banco de dados
     async function carregarEstatisticas(mesAno = null) {
       try {
+        // LOG: valor do mês enviado
+        console.log('[LOG] Valor enviado para API:', mesAno);
         let url = '/api/relatorios/estatisticas';
         if (mesAno) {
           url += `?mes=${mesAno}`;
         }
-        
+        // LOG: URL da requisição
+        console.log('[LOG] URL da requisição:', url);
         const response = await fetch(url);
         if (!response.ok) throw new Error('Erro ao carregar estatísticas');
-        
         const dados = await response.json();
-        
+        // LOG: resposta da API
+        console.log('[LOG] Resposta da API:', dados);
         // Animar os valores com delay
         setTimeout(() => {
           animarNumero(document.getElementById('total-clientes'), dados.totalClientes);
         }, 200);
-        
         setTimeout(() => {
           animarNumero(document.getElementById('total-produtos'), dados.totalProdutos);
         }, 400);
-        
         setTimeout(() => {
           animarNumero(document.getElementById('pedidos-mes'), dados.pedidosMes);
         }, 600);
-        
         setTimeout(() => {
           animarValorMonetario(document.getElementById('vendas-mes'), `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
         }, 800);
-        
         setTimeout(() => {
           animarValorMonetario(document.getElementById('lucro-mes'), `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
         }, 1000);
-        
         setTimeout(() => {
           animarNumero(document.getElementById('total-pedidos'), dados.totalPedidos);
         }, 1200);
-        
         // Armazenar dados para uso nos relatórios
         window.dadosEstatisticas = dados;
-        
       } catch (error) {
         console.error('Erro ao carregar estatísticas:', error);
         // Em caso de erro, mostrar valores padrão
