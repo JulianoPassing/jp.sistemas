@@ -919,6 +919,13 @@
 
     // Função para inicializar gráficos
     function inicializarGraficos() {
+      // Destruir gráficos antigos se existirem
+      if (window.salesChartInstance) {
+        window.salesChartInstance.destroy();
+      }
+      if (window.evolutionChartInstance) {
+        window.evolutionChartInstance.destroy();
+      }
       const dados = window.dadosEstatisticas || {
         totalClientes: 0,
         totalProdutos: 0,
@@ -932,7 +939,7 @@
 
       // Gráfico de pizza - Distribuição de Vendas
       const ctxPie = document.getElementById('salesChart').getContext('2d');
-      new Chart(ctxPie, {
+      window.salesChartInstance = new Chart(ctxPie, {
         type: 'doughnut',
         data: {
           labels: ['Vendas Concluidas do Mes', 'Vendas Anteriores (Concluidas)', 'Lucro do Mes (Concluidos)', 'Vendas Em Processamento do Mes', 'Vendas Anteriores (Em Processamento)', 'Lucro do Mes (Em Processamento)'],
@@ -1002,7 +1009,7 @@
 
       // Gráfico de barras - Evolução Mensal
       const ctxBar = document.getElementById('evolutionChart').getContext('2d');
-      new Chart(ctxBar, {
+      window.evolutionChartInstance = new Chart(ctxBar, {
         type: 'bar',
         data: {
           labels: ['Clientes', 'Produtos', 'Pedidos Concluidos', 'Pedidos Em Processamento', 'Vendas Concluidas (R$)', 'Vendas Em Processamento (R$)', 'Lucro Concluidos (R$)', 'Lucro Em Processamento (R$)'],
@@ -1055,7 +1062,6 @@
                 label: function(context) {
                   const label = context.label || '';
                   const value = context.parsed.y;
-                  
                   if (label.includes('Vendas Concluidas') || label.includes('Vendas Em Processamento') || label.includes('Lucro Concluidos') || label.includes('Lucro Em Processamento')) {
                     return `${label}: R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
                   }
