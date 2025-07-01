@@ -6,9 +6,10 @@ const { getDatabaseConfig } = require('../database-config');
 
 module.exports = async function empresaHandler(req, res) {
   const dbConfig = getDatabaseConfig();
+  const { provider, ...dbConfigSemProvider } = dbConfig;
   let connection;
   try {
-    connection = await mysql.createConnection({ ...dbConfig, database: 'jpsistemas_users' });
+    connection = await mysql.createConnection({ ...dbConfigSemProvider, database: 'jpsistemas_users' });
     if (req.method === 'GET') {
       const [rows] = await connection.execute('SELECT nome_fantasia, razao_social, cnpj, endereco, email, telefone FROM empresa WHERE id = 1');
       if (rows.length === 0) return res.status(404).json({ error: 'Informações da empresa não encontradas.' });
