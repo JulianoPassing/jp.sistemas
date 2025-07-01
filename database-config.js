@@ -66,14 +66,21 @@ const databaseConfigs = {
 // Determinar qual configuração usar
 function getDatabaseConfig() {
   const provider = process.env.DATABASE_PROVIDER || 'local';
-  
+  console.log('getDatabaseConfig provider:', provider);
+  console.log('databaseConfigs[provider]:', databaseConfigs[provider]);
+  console.log('Bloco local:', {
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
+    charset: 'utf8mb4'
+  });
   if (databaseConfigs[provider]) {
     return {
       ...databaseConfigs[provider],
       provider
     };
   }
-  
   console.warn(`Provedor ${provider} não encontrado, usando configuração local`);
   return {
     ...databaseConfigs.local,
