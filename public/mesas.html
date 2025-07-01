@@ -802,7 +802,10 @@
         const putBody = {
           ...pedido,
           nome_cliente: novoNome || pedido.nome_cliente || pedido.nome_mesa || 'Mesa/Pessoa',
-          itens: itensEdit,
+          itens: (itensEdit || []).map(i => ({
+            ...i,
+            preco_unitario: i.precoUnitario ?? i.preco_unitario ?? 0
+          })),
           cliente_id: pedido.cliente_id ?? null,
           data_pedido: (pedido.data_pedido ?? new Date().toISOString().split('T')[0]).split('T')[0],
           status: pedido.status ?? 'Em Aberto',
