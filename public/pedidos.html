@@ -2285,6 +2285,14 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
         const [ano, mes, dia] = dataISO.split('-');
         return `${dia}/${mes}/${ano}`;
       }
+      // Se vier no formato ISO (YYYY-MM-DDTHH:mm:ss.sssZ), trata como UTC
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(dataISO)) {
+        const data = new Date(dataISO);
+        const ano = data.getUTCFullYear();
+        const mes = String(data.getUTCMonth() + 1).padStart(2, '0');
+        const dia = String(data.getUTCDate()).padStart(2, '0');
+        return `${dia}/${mes}/${ano}`;
+      }
       // Caso contrário, tenta converter normalmente
       const data = new Date(dataISO);
       if (isNaN(data.getTime())) return dataISO;
