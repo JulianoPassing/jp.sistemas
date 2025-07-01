@@ -348,6 +348,7 @@
         if (res.ok) {
           document.getElementById('empresaMsg').textContent = 'Informações salvas com sucesso!';
           document.getElementById('empresaMsg').style.color = 'green';
+          await carregarEmpresa();
         } else {
           document.getElementById('empresaMsg').textContent = data.error || 'Erro ao salvar.';
           document.getElementById('empresaMsg').style.color = 'red';
