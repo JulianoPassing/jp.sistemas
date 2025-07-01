@@ -99,6 +99,12 @@ function getSessionConfig() {
 // Configuração para banco de usuários
 function getUsersConfig() {
   const config = getDatabaseConfig();
+  console.log('getUsersConfig:', {
+    host: config.host,
+    user: config.user,
+    password: config.password,
+    database: process.env.DB_USERS_DATABASE || 'jpsistemas_users'
+  });
   return {
     host: config.host,
     port: config.port || 3306,
