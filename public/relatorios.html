@@ -1119,12 +1119,10 @@
       // Cabeçalho
       doc.setFillColor(...primaryColor);
       doc.rect(0, 0, 210, 30, 'F');
-      
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
       doc.text('RELATÓRIO EXECUTIVO', 105, 15, { align: 'center' });
-      
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')} - Período: ${mesNome}`, 105, 25, { align: 'center' });
@@ -1189,18 +1187,33 @@
         }
       });
 
+      // Posição Y após a tabela
+      let y = doc.lastAutoTable.finalY + 15;
+      const pageHeight = doc.internal.pageSize.height;
+
+      // Função para pular página se necessário
+      function checkPageSpace(extra = 0) {
+        if (y + extra > pageHeight - 30) { // 30 para o rodapé
+          doc.addPage();
+          y = 20;
+        }
+      }
+
       // Destaque do lucro
-      const finalY = doc.lastAutoTable.finalY + 15;
+      checkPageSpace(10);
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...successColor);
-      doc.text(`LUCRO TOTAL DO MES: R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 105, finalY, { align: 'center' });
+      doc.text(`LUCRO TOTAL DO MES: R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 105, y, { align: 'center' });
+      y += 15;
 
       // Análise de rentabilidade
+      checkPageSpace(60);
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.text('ANALISE DE RENTABILIDADE (Concluidos e Em Processamento)', 20, finalY + 20);
+      doc.text('ANALISE DE RENTABILIDADE (Concluidos e Em Processamento)', 20, y);
+      y += 10;
 
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
@@ -1208,38 +1221,43 @@
       const lucroMes = parseFloat(dados.lucroMes);
       const vendasTotal = parseFloat(dados.totalVendas);
       const lucroTotal = parseFloat(dados.lucroTotal);
-      
+
       const vendasMesProcessamento = parseFloat(dados.vendasMesProcessamento || 0);
       const lucroMesProcessamento = parseFloat(dados.lucroMesProcessamento || 0);
-      const vendasTotalProcessamento = parseFloat(dados.totalVendasProcessamento || 0);
-      const lucroTotalProcessamento = parseFloat(dados.lucroTotalProcessamento || 0);
-      
+
       const margemLucro = vendasMes > 0 ? ((lucroMes / vendasMes) * 100).toFixed(1) : '0.0';
       const ticketMedio = dados.pedidosMes > 0 ? (vendasMes / dados.pedidosMes).toFixed(2) : '0.00';
       const lucroMedio = dados.pedidosMes > 0 ? (lucroMes / dados.pedidosMes).toFixed(2) : '0.00';
-      
+
       const margemLucroProcessamento = vendasMesProcessamento > 0 ? ((lucroMesProcessamento / vendasMesProcessamento) * 100).toFixed(1) : '0.0';
       const ticketMedioProcessamento = dados.pedidosMesProcessamento > 0 ? (vendasMesProcessamento / dados.pedidosMesProcessamento).toFixed(2) : '0.00';
       const lucroMedioProcessamento = dados.pedidosMesProcessamento > 0 ? (lucroMesProcessamento / dados.pedidosMesProcessamento).toFixed(2) : '0.00';
-      
-      doc.text(`Margem de Lucro (Mes - Concluidos): ${margemLucro}%`, 20, finalY + 30);
-      doc.text(`Ticket Medio (Mes - Concluidos): R$ ${ticketMedio}`, 20, finalY + 37);
-      doc.text(`Lucro Medio por Pedido (Mes - Concluidos): R$ ${lucroMedio}`, 20, finalY + 44);
-      doc.text(``, 20, finalY + 51);
-      doc.text(`Margem de Lucro (Mes - Em Processamento): ${margemLucroProcessamento}%`, 20, finalY + 58);
-      doc.text(`Ticket Medio (Mes - Em Processamento): R$ ${ticketMedioProcessamento}`, 20, finalY + 65);
-      doc.text(`Lucro Medio por Pedido (Mes - Em Processamento): R$ ${lucroMedioProcessamento}`, 20, finalY + 72);
 
-      // Rodapé
-      const pageHeight = doc.internal.pageSize.height;
-      doc.setFillColor(240, 240, 240);
-      doc.rect(0, pageHeight - 30, 210, 30, 'F');
-      
-      doc.setTextColor(100, 100, 100);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 20, { align: 'center' });
-      doc.text(`Relatorio de Rentabilidade - ${new Date().toLocaleDateString('pt-BR')}`, 105, pageHeight - 15, { align: 'center' });
+      doc.text(`Margem de Lucro (Mes - Concluidos): ${margemLucro}%`, 20, y); y += 7;
+      doc.text(`Ticket Medio (Mes - Concluidos): R$ ${ticketMedio}`, 20, y); y += 7;
+      doc.text(`Lucro Medio por Pedido (Mes - Concluidos): R$ ${lucroMedio}`, 20, y); y += 10;
+      doc.text(`Margem de Lucro (Mes - Em Processamento): ${margemLucroProcessamento}%`, 20, y); y += 7;
+      doc.text(`Ticket Medio (Mes - Em Processamento): R$ ${ticketMedioProcessamento}`, 20, y); y += 7;
+      doc.text(`Lucro Medio por Pedido (Mes - Em Processamento): R$ ${lucroMedioProcessamento}`, 20, y); y += 10;
+
+      // Rodapé sempre no final da página
+      function addFooter() {
+        const pageHeight = doc.internal.pageSize.height;
+        doc.setFillColor(240, 240, 240);
+        doc.rect(0, pageHeight - 30, 210, 30, 'F');
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 20, { align: 'center' });
+        doc.text(`Relatorio de Rentabilidade - ${new Date().toLocaleDateString('pt-BR')}`, 105, pageHeight - 15, { align: 'center' });
+      }
+
+      // Adiciona rodapé em todas as páginas
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        addFooter();
+      }
 
       // Salvar PDF
       const hoje = new Date();
