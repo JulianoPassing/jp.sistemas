@@ -1387,17 +1387,27 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
       // Extrair informações adicionais das observações
       const observacoes = pedido.observacoes || '';
       // Extrair cada campo separadamente, sem repetições ou concatenação
-      function extrairInfoSimples(texto, chave) {
+      function extrairInfoSimples(texto, chave, chavesPossiveis) {
         const textoLimpo = texto.replace(/•/g, '').replace(/\s+/g, ' ');
-        const regex = new RegExp(`${chave}\\s*([^\n\r;]+)`, 'i');
-        const match = textoLimpo.match(regex);
-        return match ? match[1].trim() : '';
+        const idxInicio = textoLimpo.indexOf(chave);
+        if (idxInicio === -1) return '';
+        const inicio = idxInicio + chave.length;
+        let fim = textoLimpo.length;
+        for (const outraChave of chavesPossiveis) {
+          if (outraChave === chave) continue;
+          const idx = textoLimpo.indexOf(outraChave, inicio);
+          if (idx !== -1 && idx < fim) fim = idx;
+        }
+        return textoLimpo.substring(inicio, fim).replace(/[:;]/g, '').trim();
       }
-      const telefone = extrairInfoSimples(observacoes, 'Telefone:') || 'Não informado';
-      const email = extrairInfoSimples(observacoes, 'Email:') || 'Não informado';
-      const endereco = extrairInfoSimples(observacoes, 'Endereço:') || 'Não informado';
-      const formaPagamento = extrairInfoSimples(observacoes, 'Forma de Pagamento:') || 'Não informado';
-      const cpfCnpj = extrairInfoSimples(observacoes, 'CPF/CNPJ:') || 'Não informado';
+      const chaves = [
+        'Telefone:', 'Email:', 'Endereço:', 'Forma de Pagamento:', 'CPF/CNPJ:'
+      ];
+      const telefone = extrairInfoSimples(observacoes, 'Telefone:', chaves) || 'Não informado';
+      const email = extrairInfoSimples(observacoes, 'Email:', chaves) || 'Não informado';
+      const endereco = extrairInfoSimples(observacoes, 'Endereço:', chaves) || 'Não informado';
+      const formaPagamento = extrairInfoSimples(observacoes, 'Forma de Pagamento:', chaves) || 'Não informado';
+      const cpfCnpj = extrairInfoSimples(observacoes, 'CPF/CNPJ:', chaves) || 'Não informado';
 
       // Determinar nome do cliente
       let nomeCliente = 'Cliente não identificado';
