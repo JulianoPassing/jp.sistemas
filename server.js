@@ -14,7 +14,11 @@ const {
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const empresaHandler = require('./api/empresa');
-require('dotenv').config();
+require('dotenv').config({ path: __dirname + '/.env' });
+console.log('DB_HOST:', process.env.DB_HOST);
+console.log('DB_USER:', process.env.DB_USER);
+console.log('DB_PASSWORD:', process.env.DB_PASSWORD);
+console.log('DATABASE_PROVIDER:', process.env.DATABASE_PROVIDER);
 const fs = require('fs').promises;
 
 const app = express();
