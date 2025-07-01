@@ -662,12 +662,49 @@
     }
     window.finalizarMesa = async function(id) {
       if (!confirm('Finalizar este pedido/mesa?')) return;
-      await fetch(`/api/pedidos/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'Concluído', data_finalizacao: new Date().toISOString() })
-      });
-      await carregarPedidosAbertos();
+      
+      try {
+        // Buscar dados completos do pedido
+        const pedido = pedidosAbertos.find(p => p.id === id);
+        if (!pedido) {
+          alert('Pedido não encontrado!');
+          return;
+        }
+
+        // Preparar dados para atualização incluindo todos os itens
+        const itensFormatados = (pedido.itens || []).map(item => ({
+          produto_id: item.produto_id,
+          quantidade: item.quantidade,
+          preco_unitario: item.precoUnitario || item.preco_unitario || 0
+        }));
+
+        const dadosAtualizacao = {
+          cliente_id: pedido.cliente_id,
+          nome_cliente: pedido.nome_cliente,
+          data_pedido: pedido.data_pedido,
+          status: 'Concluído',
+          valor_total: pedido.valor_total,
+          observacoes: pedido.observacoes,
+          itens: itensFormatados
+        };
+
+        // Fazer a requisição para atualizar o pedido
+        const response = await fetch(`/api/pedidos/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dadosAtualizacao)
+        });
+
+        if (!response.ok) {
+          throw new Error('Erro ao finalizar mesa');
+        }
+
+        await carregarPedidosAbertos();
+        alert('Mesa finalizada com sucesso!');
+      } catch (error) {
+        console.error('Erro ao finalizar mesa:', error);
+        alert('Erro ao finalizar mesa: ' + error.message);
+      }
     }
     window.imprimirComanda = function(id) {
       const pedido = pedidosAbertos.find(p => p.id === id);

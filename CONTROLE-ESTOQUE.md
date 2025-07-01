@@ -32,6 +32,7 @@ O controle de estoque é ativado nos seguintes momentos:
 
 #### Via Mesas (`mesas.html`)
 - Quando uma mesa é finalizada (status "Concluído" é definido automaticamente)
+- **Melhorado**: Agora envia todos os dados do pedido incluindo itens para garantir atualização correta do estoque
 
 ### 3. APIs Modificadas
 
@@ -92,6 +93,18 @@ Estoque atualizado: Produto ID 456, estoque anterior: 5, quantidade vendida: 8, 
 4. **Integração**: Funciona perfeitamente com todos os módulos existentes
 5. **Segurança**: Transações garantem consistência dos dados
 
+### 8. Melhorias Implementadas
+
+#### Funcionalidade de Mesas
+- **Antes**: A função `finalizarMesa` enviava apenas o status "Concluído"
+- **Depois**: Agora envia todos os dados do pedido incluindo itens formatados corretamente
+- **Benefício**: Garante que o controle de estoque funcione corretamente ao finalizar mesas
+
+#### Estrutura dos Itens
+- **Formatação**: Os itens são formatados para incluir `produto_id`, `quantidade` e `preco_unitario`
+- **Compatibilidade**: Garante compatibilidade total com a API do servidor
+- **Logs**: Inclui logs detalhados para debug e rastreabilidade
+
 ## Teste da Funcionalidade
 
 Para testar:
@@ -105,6 +118,7 @@ Para testar:
 ## Arquivos Modificados
 
 - `server.js`: APIs de pedidos atualizadas com controle de estoque
+- `public/mesas.html`: Função `finalizarMesa` melhorada para enviar dados completos do pedido
 - `CONTROLE-ESTOQUE.md`: Esta documentação
 
 ## Status
