@@ -1062,7 +1062,7 @@
           <td>${nomeCliente}</td>
           <td>${formatarDataHora(pedido.data_pedido)}</td>
           <td><span style="color: ${pedido.status === 'Concluído' ? 'var(--success-color)' : pedido.status === 'Cancelado' ? 'var(--danger-color)' : '#f59e0b'}; font-weight: bold;">${pedido.status || ''}</span></td>
-          <td>R$ ${(pedido.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+          <td>R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}</td>
           <td>R$ ${calcularLucroPedido(pedido).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
           <td>
             <button class="btn btn-primary btn-sm" onclick="visualizarPedido('${pedido.id}')"><i class="fas fa-eye"></i></button>
@@ -1425,7 +1425,7 @@
               </div>
               <div class="info-item">
                 <span class="info-label">Valor Total:</span>
-                <span class="info-value">R$ ${(pedido.valor_total || 0).toFixed(2).replace('.', ',')}</span>
+                <span class="info-value">R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}</span>
               </div>
             </div>
           </div>
@@ -1454,7 +1454,7 @@
           </div>
           
           <div class="total-section-visualizacao">
-            Total: R$ ${(pedido.valor_total || 0).toFixed(2).replace('.', ',')}
+            Total: R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}
           </div>
           
           ${pedido.observacoes ? `
@@ -1731,7 +1731,7 @@
         limparCaracteres(pedido.nome_cliente || pedido.cliente_id || 'N/A'),
         pedido.data_pedido || 'N/A',
         limparCaracteres(pedido.status || 'N/A'),
-        `R$ ${(pedido.valor_total || 0).toFixed(2).replace('.', ',')}`
+        `R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}`
       ]);
 
       // Rest of the function remains unchanged
@@ -1746,153 +1746,157 @@
         return;
       }
 
-      try {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+      // Buscar informações da empresa antes de gerar o PDF
+      fetch('/api/empresa').then(res => res.json()).then(empresa => {
+        try {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
 
-        // Configurações de cores
-        const primaryColor = [102, 126, 234];
-        const secondaryColor = [118, 75, 162];
-        const successColor = [40, 167, 69];
-        const dangerColor = [220, 53, 69];
+          // Configurações de cores
+          const primaryColor = [0, 90, 159]; // #005a9f
+          const secondaryColor = [0, 55, 102]; // #003766
+          const successColor = [40, 167, 69];
+          const dangerColor = [220, 53, 69];
 
-        // Função para limpar caracteres especiais
-        function limparCaracteres(texto) {
-          if (!texto) return '';
-          return texto.toString()
-            .replace(/[^\w\s\-.,()@]/g, '')
-            .replace(/\s+/g, ' ')
-            .trim();
-        }
-
-        // Inserir logo no lugar do texto
-        carregarImagemBase64('https://i.imgur.com/2jT2EPD.png', function(logoBase64) {
-          // Logo centralizada
-          const logoWidth = 50;
-          const logoHeight = 22;
-          const logoX = (210 - logoWidth) / 2;
-          const logoY = 8;
-          doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
-
-          // Título do relatório
-          doc.setTextColor(0, 0, 0);
-          doc.setFontSize(16);
-          doc.setFont('helvetica', 'bold');
-          doc.text('PEDIDO DE VENDA', 105, 35, { align: 'center' });
-          
-          doc.setFontSize(10);
-          doc.setFont('helvetica', 'normal');
-          doc.text(`Data: ${pedido.data_pedido || 'N/A'}`, 105, 42, { align: 'center' });
-
-          // Informações do pedido
-          doc.setFontSize(14);
-          doc.setFont('helvetica', 'bold');
-          doc.text(`PEDIDO #${pedido.id}`, 20, 55);
-          
-          doc.setFontSize(12);
-          doc.setFont('helvetica', 'normal');
-          doc.text('Status:', 20, 65);
-          
-          // Status colorido
-          if (pedido.status === 'Concluído') {
-            doc.setTextColor(...successColor);
-          } else if (pedido.status === 'Cancelado') {
-            doc.setTextColor(...dangerColor);
-          } else {
-            doc.setTextColor(245, 158, 11); // Amarelo para em processamento
+          // Função para limpar caracteres especiais
+          function limparCaracteres(texto) {
+            if (!texto) return '';
+            return texto.toString()
+              .replace(/[^\w\s\-.,()@]/g, '')
+              .replace(/\s+/g, ' ')
+              .trim();
           }
-          doc.setFont('helvetica', 'bold');
-          doc.text(limparCaracteres(pedido.status || 'N/A'), 45, 65);
-          
-          doc.setTextColor(0, 0, 0);
-          doc.setFont('helvetica', 'normal');
 
-          // Informações do cliente
-          doc.setFontSize(14);
-          doc.setFont('helvetica', 'bold');
-          doc.text('INFORMACOES DO CLIENTE', 20, 85);
-          
-          doc.setFontSize(10);
-          doc.setFont('helvetica', 'normal');
-          doc.text(`Cliente: ${limparCaracteres(pedido.nome_cliente || pedido.cliente_id || 'N/A')}`, 20, 95);
-          doc.text(`Endereco: ${limparCaracteres(pedido.endereco || 'Nao informado')}`, 20, 102);
-          doc.text(`Telefone: ${limparCaracteres(pedido.telefone || 'Nao informado')}`, 20, 109);
-          doc.text(`E-mail: ${limparCaracteres(pedido.email || 'Nao informado')}`, 20, 116);
-          doc.text(`Forma de Pagamento: ${limparCaracteres(pedido.formaPagamento || 'Nao informado')}`, 20, 123);
+          carregarImagemBase64('https://i.imgur.com/2jT2EPD.png', function(logoBase64) {
+            // Logo centralizada
+            const logoWidth = 50;
+            const logoHeight = 22;
+            const logoX = (210 - logoWidth) / 2;
+            const logoY = 8;
+            doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
 
-          // Itens do pedido
-          doc.setFontSize(14);
-          doc.setFont('helvetica', 'bold');
-          doc.text('ITENS DO PEDIDO', 20, 145);
-          
-          // Tabela de itens
-          const tableData = pedido.itens ? pedido.itens.map(item => [
-            limparCaracteres(item.produto || 'N/A'),
-            item.quantidade || 0,
-            `R$ ${(item.precoUnitario || 0).toFixed(2).replace('.', ',')}`,
-            `R$ ${(item.subtotal || 0).toFixed(2).replace('.', ',')}`
-          ]) : [];
-          
-          doc.autoTable({
-            startY: 150,
-            head: [['Produto', 'Qtd', 'Preco Unit.', 'Subtotal']],
-            body: tableData,
-            theme: 'grid',
-            headStyles: {
-              fillColor: primaryColor,
-              textColor: [255, 255, 255],
-              fontStyle: 'bold',
-              fontSize: 10
-            },
-            styles: {
-              fontSize: 9,
-              cellPadding: 4,
-              lineColor: [200, 200, 200],
-              lineWidth: 0.1
-            },
-            columnStyles: {
-              0: { cellWidth: 80 },
-              1: { halign: 'center', cellWidth: 20 },
-              2: { halign: 'right', cellWidth: 30 },
-              3: { halign: 'right', cellWidth: 30 }
-            },
-            margin: { left: 20, right: 20 }
-          });
-
-          // Total
-          const finalY = doc.lastAutoTable.finalY + 10;
-          doc.setFontSize(12);
-          doc.setFont('helvetica', 'bold');
-          doc.text(`Valor Total: R$ ${(pedido.valor_total || 0).toFixed(2).replace('.', ',')}`, 150, finalY);
-
-          // Observações
-          if (pedido.observacoes) {
+            // --- INFORMAÇÕES DA EMPRESA NO TOPO ---
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text('OBSERVACOES:', 20, finalY + 20);
+            doc.text(limparCaracteres(empresa.nome_fantasia || ''), 105, 35, { align: 'center' });
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            const observacoes = doc.splitTextToSize(limparCaracteres(pedido.observacoes), 170);
-            doc.text(observacoes, 20, finalY + 28);
-          }
+            doc.text(`Razão Social: ${limparCaracteres(empresa.razao_social || '')}`, 105, 41, { align: 'center' });
+            doc.text(`CNPJ: ${limparCaracteres(empresa.cnpj || '')}`, 105, 46, { align: 'center' });
+            doc.text(`Endereço: ${limparCaracteres(empresa.endereco || '')}`, 105, 51, { align: 'center' });
+            doc.text(`E-mail: ${limparCaracteres(empresa.email || '')}`, 105, 56, { align: 'center' });
+            doc.text(`Telefone: ${limparCaracteres(empresa.telefone || '')}`, 105, 61, { align: 'center' });
 
-          // Rodapé
-          const pageHeight = doc.internal.pageSize.height;
-          doc.setFillColor(240, 240, 240);
-          doc.rect(0, pageHeight - 30, 210, 30, 'F');
-          doc.setTextColor(100, 100, 100);
-          doc.setFontSize(8);
-          doc.setFont('helvetica', 'normal');
-          doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 20, { align: 'center' });
-          doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, pageHeight - 15, { align: 'center' });
+            // Título do relatório
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('PEDIDO DE VENDA', 105, 70, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Data: ${pedido.data_pedido || 'N/A'}`, 105, 77, { align: 'center' });
 
-          // Salvar PDF
-          doc.save(`Pedido_${pedido.id}_${limparCaracteres(pedido.nome_cliente || pedido.cliente_id).replace(/\s+/g, '_')}.pdf`);
-        });
-      } catch (error) {
-        console.error('Erro ao gerar PDF do pedido:', error);
-        alert('Erro ao gerar PDF do pedido: ' + error.message);
-      }
+            // Informações do pedido
+            let yBase = 90;
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`PEDIDO #${pedido.id}`, 20, yBase);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Status:', 20, yBase + 10);
+            // Status colorido
+            if (pedido.status === 'Concluído') {
+              doc.setTextColor(...successColor);
+            } else if (pedido.status === 'Cancelado') {
+              doc.setTextColor(...dangerColor);
+            } else {
+              doc.setTextColor(245, 158, 11); // Amarelo para em processamento
+            }
+            doc.setFont('helvetica', 'bold');
+            doc.text(limparCaracteres(pedido.status || 'N/A'), 45, yBase + 10);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont('helvetica', 'normal');
+
+            // Informações do cliente
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('INFORMACOES DO CLIENTE', 20, yBase + 30);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Cliente: ${limparCaracteres(pedido.nome_cliente || pedido.cliente_id || 'N/A')}`, 20, yBase + 40);
+            doc.text(`Endereco: ${limparCaracteres(pedido.endereco || 'Nao informado')}`, 20, yBase + 47);
+            doc.text(`Telefone: ${limparCaracteres(pedido.telefone || 'Nao informado')}`, 20, yBase + 54);
+            doc.text(`E-mail: ${limparCaracteres(pedido.email || 'Nao informado')}`, 20, yBase + 61);
+            doc.text(`Forma de Pagamento: ${limparCaracteres(pedido.formaPagamento || 'Nao informado')}`, 20, yBase + 68);
+
+            // Itens do pedido
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('ITENS DO PEDIDO', 20, yBase + 90);
+            // Tabela de itens
+            const tableData = pedido.itens ? pedido.itens.map(item => [
+              limparCaracteres(item.produto || 'N/A'),
+              item.quantidade || 0,
+              `R$ ${(item.precoUnitario || 0).toFixed(2).replace('.', ',')}`,
+              `R$ ${(item.subtotal || 0).toFixed(2).replace('.', ',')}`
+            ]) : [];
+            doc.autoTable({
+              startY: yBase + 95,
+              head: [['Produto', 'Qtd', 'Preco Unit.', 'Subtotal']],
+              body: tableData,
+              theme: 'grid',
+              headStyles: {
+                fillColor: primaryColor,
+                textColor: [255, 255, 255],
+                fontStyle: 'bold',
+                fontSize: 10
+              },
+              styles: {
+                fontSize: 9,
+                cellPadding: 4,
+                lineColor: [200, 200, 200],
+                lineWidth: 0.1
+              },
+              columnStyles: {
+                0: { cellWidth: 80 },
+                1: { halign: 'center', cellWidth: 20 },
+                2: { halign: 'right', cellWidth: 30 },
+                3: { halign: 'right', cellWidth: 30 }
+              },
+              margin: { left: 20, right: 20 }
+            });
+            // Total
+            const finalY = doc.lastAutoTable.finalY + 10;
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Valor Total: R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}`, 150, finalY);
+            // Observações
+            if (pedido.observacoes) {
+              doc.setFontSize(12);
+              doc.setFont('helvetica', 'bold');
+              doc.text('OBSERVACOES:', 20, finalY + 20);
+              doc.setFontSize(10);
+              doc.setFont('helvetica', 'normal');
+              const observacoes = doc.splitTextToSize(limparCaracteres(pedido.observacoes), 170);
+              doc.text(observacoes, 20, finalY + 28);
+            }
+            // Rodapé
+            const pageHeight = doc.internal.pageSize.height;
+            doc.setFillColor(240, 240, 240);
+            doc.rect(0, pageHeight - 30, 210, 30, 'F');
+            doc.setTextColor(100, 100, 100);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 20, { align: 'center' });
+            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, pageHeight - 15, { align: 'center' });
+            // Salvar PDF
+            doc.save(`Pedido_${pedido.id}_${limparCaracteres(pedido.nome_cliente || pedido.cliente_id).replace(/\s+/g, '_')}.pdf`);
+          });
+        } catch (error) {
+          console.error('Erro ao gerar PDF do pedido:', error);
+          alert('Erro ao gerar PDF do pedido: ' + error.message);
+        }
+      });
     }
 
     // Função para gerar Excel com todos os pedidos
@@ -1921,7 +1925,7 @@
             return match ? match[1].trim() : null;
           }
 
-          csvContent += `${pedido.id},"${pedido.nome_cliente || pedido.cliente_id || 'N/A'}","${pedido.data_pedido || 'N/A'}","${pedido.status || 'N/A'}","${pedido.valor_total || 0}","${formaPagamento}","${telefone}","${email}"\n`;
+          csvContent += `${pedido.id},"${pedido.nome_cliente || pedido.cliente_id || 'N/A'}","${pedido.data_pedido || 'N/A'}","${pedido.status || 'N/A'}","${Number(pedido.valor_total) || 0}","${formaPagamento}","${telefone}","${email}"\n`;
         });
 
         // Criar e baixar arquivo

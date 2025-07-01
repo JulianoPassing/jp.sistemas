@@ -671,7 +671,9 @@
       const data = new Date(pedido.data_pedido || Date.now());
       const dataStr = data.toLocaleString('pt-BR');
       let total = (pedido.itens||[]).reduce((sum, i) => sum + (i.precoUnitario||0) * (i.quantidade||0), 0);
-      const html = `
+      // Buscar informações da empresa antes de imprimir
+      fetch('/api/empresa').then(res => res.json()).then(empresa => {
+        const html = `
         <html><head><title>Comanda - ${pedido.nome_cliente||''}</title>
         <style>
           body { font-family: monospace; font-size: 13px; margin: 0; padding: 0; }
@@ -687,7 +689,14 @@
           @media print { body { margin: 0; } .cupom { box-shadow: none; border: none; } }
         </style></head><body onload='window.print()'>
         <div class='cupom'>
-          <h2>COMANDA - J.P Sistemas</h2>
+          <h2>COMANDA - ${empresa.nome_fantasia || 'J.P Sistemas'}</h2>
+          <div style='text-align:center;font-size:12px;margin-bottom:6px;'>
+            <div><b>${empresa.razao_social || ''}</b></div>
+            <div>CNPJ: ${empresa.cnpj || ''}</div>
+            <div>${empresa.endereco || ''}</div>
+            <div>${empresa.email || ''}</div>
+            <div>${empresa.telefone || ''}</div>
+          </div>
           <div class='info'>
             <b>Mesa/Pessoa:</b> ${pedido.nome_cliente || pedido.nome_mesa || ''}<br>
             <b>Data:</b> ${dataStr}<br>
@@ -709,6 +718,7 @@
       const win = window.open('', '', 'width=320,height=600');
       win.document.write(html);
       win.document.close();
+      });
     }
     window.excluirMesa = async function(id) {
       if (!confirm('Tem certeza que deseja excluir esta mesa/pedido?')) return;
