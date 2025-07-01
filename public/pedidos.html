@@ -1445,8 +1445,8 @@
                   <tr>
                     <td>${item.produto || 'N/A'}</td>
                     <td style="text-align: center;">${item.quantidade || 0}</td>
-                    <td style="text-align: right;">R$ ${(item.precoUnitario || 0).toFixed(2).replace('.', ',')}
-                    <td style="text-align: right;">R$ ${(item.subtotal || 0).toFixed(2).replace('.', ',')}</td>
+                    <td style="text-align: right;">R$ ${(Number(item.precoUnitario) || 0).toFixed(2).replace('.', ',')}
+                    <td style="text-align: right;">R$ ${(Number(item.subtotal) || 0).toFixed(2).replace('.', ',')}</td>
                   </tr>
                 `).join('') : '<tr><td colspan="4" style="text-align: center;">Nenhum item encontrado</td></tr>'}
               </tbody>
@@ -1837,8 +1837,8 @@
             const tableData = pedido.itens ? pedido.itens.map(item => [
               limparCaracteres(item.produto || 'N/A'),
               item.quantidade || 0,
-              `R$ ${(item.precoUnitario || 0).toFixed(2).replace('.', ',')}`,
-              `R$ ${(item.subtotal || 0).toFixed(2).replace('.', ',')}`
+              `R$ ${(Number(item.precoUnitario) || 0).toFixed(2).replace('.', ',')}`,
+              `R$ ${(Number(item.subtotal) || 0).toFixed(2).replace('.', ',')}`
             ]) : [];
             doc.autoTable({
               startY: yBase + 95,
