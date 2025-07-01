@@ -1028,6 +1028,7 @@
         }
         pedidos = await response.json();
         console.log('Pedidos carregados:', pedidos);
+        console.log('Tipos de ID dos pedidos:', pedidos.map(p => ({ id: p.id, tipo: typeof p.id })));
         renderTabelaPedidos();
       } catch (error) {
         console.error('Erro ao carregar pedidos:', error);
@@ -1741,14 +1742,39 @@
 
     // Função para gerar PDF do pedido individual
     function gerarPDFPedido(pedidoId) {
-      const pedido = pedidos.find(p => p.id === pedidoId);
+      console.log('Gerando PDF para pedido ID:', pedidoId, 'Tipo:', typeof pedidoId);
+      console.log('Pedidos disponíveis:', pedidos.map(p => ({ id: p.id, tipo: typeof p.id })));
+      
+      const pedido = pedidos.find(p => p.id == pedidoId);
       if (!pedido) {
+        console.error('Pedido não encontrado. ID buscado:', pedidoId);
         alert('Pedido não encontrado!');
+        return;
+      }
+      
+      console.log('Pedido encontrado:', pedido);
+
+      // Verificar se o pedido tem itens
+      console.log('Itens do pedido:', pedido.itens);
+      if (!pedido.itens || pedido.itens.length === 0) {
+        console.warn('Pedido sem itens:', pedido);
+        alert('Este pedido não possui itens. Não é possível gerar o PDF.');
+        return;
+      }
+
+      // Verificar se jsPDF está disponível
+      if (typeof window.jspdf === 'undefined') {
+        alert('Erro: Biblioteca jsPDF não carregada. Verifique sua conexão com a internet.');
         return;
       }
 
       // Buscar informações da empresa antes de gerar o PDF
-      fetch('/api/empresa').then(res => res.json()).then(empresa => {
+      fetch('/api/empresa').then(res => {
+        if (!res.ok) {
+          throw new Error(`Erro ao buscar dados da empresa: ${res.status}`);
+        }
+        return res.json();
+      }).then(empresa => {
         try {
           const { jsPDF } = window.jspdf;
           const doc = new jsPDF();
@@ -1897,6 +1923,9 @@
           console.error('Erro ao gerar PDF do pedido:', error);
           alert('Erro ao gerar PDF do pedido: ' + error.message);
         }
+      }).catch(error => {
+        console.error('Erro ao buscar dados da empresa:', error);
+        alert('Erro ao buscar dados da empresa: ' + error.message);
       });
     }
 
