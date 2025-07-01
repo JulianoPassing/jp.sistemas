@@ -1124,13 +1124,16 @@
       doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(20);
-      doc.text('RELATÓRIO EXECUTIVO', pageWidth / 2, y + 5, { align: 'center', baseline: 'top' });
+      // Centralizar verticalmente o título na faixa azul
+      doc.text('RELATÓRIO EXECUTIVO', pageWidth / 2, headerHeight / 2 + 7, { align: 'center', baseline: 'middle' });
+      // Texto 'Gerado em' logo abaixo da faixa azul
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
       const mesSelecionado = document.getElementById('monthYear').value;
       const mesNome = mesSelecionado ? new Date(mesSelecionado + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : 'Mês Atual';
-      doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')} - Período: ${mesNome}`, pageWidth / 2, y + 13, { align: 'center' });
-      y = headerHeight + 8;
+      doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')} - Período: ${mesNome}`, pageWidth / 2, headerHeight + 7, { align: 'center' });
+      y = headerHeight + 15;
 
       // Título do relatório
       doc.setTextColor(0, 0, 0);
@@ -1223,11 +1226,12 @@
           doc.setTextColor(255, 255, 255);
           doc.setFont('helvetica', 'bold');
           doc.setFontSize(20);
-          doc.text('RELATÓRIO EXECUTIVO', pageWidth / 2, margin + 5, { align: 'center', baseline: 'top' });
+          doc.text('RELATÓRIO EXECUTIVO', pageWidth / 2, headerHeight / 2 + 7, { align: 'center', baseline: 'middle' });
           doc.setFontSize(10);
           doc.setFont('helvetica', 'normal');
-          doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')} - Período: ${mesNome}`, pageWidth / 2, margin + 13, { align: 'center' });
-          y = headerHeight + 8;
+          doc.setTextColor(0, 0, 0);
+          doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')} - Período: ${mesNome}`, pageWidth / 2, headerHeight + 7, { align: 'center' });
+          y = headerHeight + 15;
         }
       }
 
