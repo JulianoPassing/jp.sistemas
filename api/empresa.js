@@ -11,8 +11,14 @@ module.exports = async function empresaHandler(req, res) {
   try {
     connection = await mysql.createConnection({ ...dbConfigSemProvider, database: 'jpsistemas_users' });
     if (req.method === 'GET') {
-      const [rows] = await connection.execute('SELECT nome_fantasia, razao_social, cnpj, endereco, email, telefone FROM empresa WHERE id = 1');
-      if (rows.length === 0) return res.status(404).json({ error: 'Informações da empresa não encontradas.' });
+      let [rows] = await connection.execute('SELECT nome_fantasia, razao_social, cnpj, endereco, email, telefone FROM empresa WHERE id = 1');
+      if (rows.length === 0) {
+        // Se não existir, cria um registro vazio e retorna
+        await connection.execute(
+          'INSERT INTO empresa (id, nome_fantasia, razao_social, cnpj, endereco, email, telefone) VALUES (1, \'\', \'\', \'\', \'\', \'\', \'\') ON DUPLICATE KEY UPDATE id = id'
+        );
+        [rows] = await connection.execute('SELECT nome_fantasia, razao_social, cnpj, endereco, email, telefone FROM empresa WHERE id = 1');
+      }
       return res.json(rows[0]);
     } else if (req.method === 'POST') {
       const { nome_fantasia, razao_social, cnpj, endereco, email, telefone } = req.body;
