@@ -700,6 +700,18 @@
       transform: translateY(-2px);
       box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
     }
+    
+    .btn-print {
+      background: linear-gradient(135deg, #f59e0b, #fbbf24) !important;
+      color: white !important;
+      border: none !important;
+    }
+    
+    .btn-print:hover {
+      background: linear-gradient(135deg, #d97706, #f59e0b) !important;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -1066,14 +1078,15 @@
           <td>R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}</td>
           <td>R$ ${calcularLucroPedido(pedido).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
           <td>
-            <button class="btn btn-primary btn-sm" onclick="visualizarPedido('${pedido.id}')"><i class="fas fa-eye"></i></button>
-            <button class="btn btn-success btn-sm" onclick="editarPedido('${pedido.id}')"><i class="fas fa-edit"></i></button>
-            <button class="btn btn-danger btn-sm" onclick="removerPedido('${pedido.id}')"><i class="fas fa-trash"></i></button>
+            <button class="btn btn-primary btn-sm" onclick="visualizarPedido('${pedido.id}')" title="Visualizar"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-success btn-sm" onclick="editarPedido('${pedido.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-print" onclick="imprimirPedido('${pedido.id}')" title="Imprimir"><i class="fas fa-print"></i></button>
+            <button class="btn btn-danger btn-sm" onclick="removerPedido('${pedido.id}')" title="Remover"><i class="fas fa-trash"></i></button>
             ${pedido.status !== 'Concluído' && pedido.status !== 'Cancelado' ? `
-              <button class="btn btn-sm btn-concluir" onclick="concluirPedido('${pedido.id}')">
+              <button class="btn btn-sm btn-concluir" onclick="concluirPedido('${pedido.id}')" title="Concluir">
                 <i class="fas fa-check"></i>
               </button>
-              <button class="btn btn-sm btn-cancelar" onclick="cancelarPedido('${pedido.id}')">
+              <button class="btn btn-sm btn-cancelar" onclick="cancelarPedido('${pedido.id}')" title="Cancelar">
                 <i class="fas fa-times"></i>
               </button>
             ` : ''}
@@ -1169,7 +1182,12 @@
           data_pedido,
           status,
           valor_total,
-          observacoes: `${observacoes}\n\nInformações adicionais:\nTipo de Cliente: ${tipoCliente === 'existente' ? 'Cliente Existente' : 'Novo Cliente'}\n${tipoCliente === 'novo' ? `Nome: ${nomeCliente}\nCPF/CNPJ: ${cpfCnpj}\n` : ''}Telefone: ${telefone}\nEmail: ${email}\nEndereço: ${endereco}\nForma de Pagamento: ${formaPagamento}`,
+          observacoes: `${observacoes ? observacoes + '\n\n' : ''}INFORMAÇÕES ADICIONAIS:
+• Tipo de Cliente: ${tipoCliente === 'existente' ? 'Cliente Existente' : 'Novo Cliente'}
+${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n` : ''}• Telefone: ${telefone || 'Não informado'}
+• Email: ${email || 'Não informado'}
+• Endereço: ${endereco || 'Não informado'}
+• Forma de Pagamento: ${formaPagamento || 'Não informado'}`,
           itens: novoPedidoItens
         };
         
@@ -1357,8 +1375,10 @@
 
       // Função auxiliar para extrair informações
       function extrairInfo(texto, chave) {
+        // Remove os bullets (•) e procura pela chave
+        const textoLimpo = texto.replace(/•/g, '').replace(/\s+/g, ' ');
         const regex = new RegExp(`${chave}\\s*([^\\n]+)`, 'i');
-        const match = texto.match(regex);
+        const match = textoLimpo.match(regex);
         return match ? match[1].trim() : null;
       }
 
@@ -1462,7 +1482,7 @@
           ${pedido.observacoes ? `
             <div class="observacoes-section">
               <h4><i class="fas fa-sticky-note"></i> Observações</h4>
-              <div class="observacoes-texto">${pedido.observacoes}</div>
+              <div class="observacoes-texto">${pedido.observacoes.replace(/\n/g, '<br>')}</div>
             </div>
           ` : ''}
         </div>
@@ -1740,9 +1760,9 @@
       // ...
     }
 
-    // Função para gerar PDF do pedido individual
-    function gerarPDFPedido(pedidoId) {
-      console.log('Gerando PDF para pedido ID:', pedidoId, 'Tipo:', typeof pedidoId);
+    // Função para imprimir pedido
+    function imprimirPedido(pedidoId) {
+      console.log('Imprimindo pedido ID:', pedidoId, 'Tipo:', typeof pedidoId);
       console.log('Pedidos disponíveis:', pedidos.map(p => ({ id: p.id, tipo: typeof p.id })));
       
       const pedido = pedidos.find(p => p.id == pedidoId);
@@ -1758,7 +1778,7 @@
       console.log('Itens do pedido:', pedido.itens);
       if (!pedido.itens || pedido.itens.length === 0) {
         console.warn('Pedido sem itens:', pedido);
-        alert('Este pedido não possui itens. Não é possível gerar o PDF.');
+        alert('Este pedido não possui itens. Não é possível imprimir.');
         return;
       }
 
@@ -1789,9 +1809,10 @@
           function limparCaracteres(texto) {
             if (!texto) return '';
             return texto.toString()
-              .replace(/[^\w\s\-.,()@]/g, '')
+              .replace(/[^\w\s\-.,()@\n]/g, '')
               .replace(/\s+/g, ' ')
-              .trim();
+              .trim()
+              .substring(0, 50); // Limita a 50 caracteres para evitar overflow
           }
 
           carregarImagemBase64('https://i.imgur.com/2jT2EPD.png', function(logoBase64) {
@@ -1850,11 +1871,26 @@
             doc.text('INFORMACOES DO CLIENTE', 20, yBase + 30);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
+            // Extrair informações das observações para o PDF
+            const observacoes = pedido.observacoes || '';
+            const telefonePDF = extrairInfoPDF(observacoes, 'Telefone:') || 'Não informado';
+            const emailPDF = extrairInfoPDF(observacoes, 'Email:') || 'Não informado';
+            const enderecoPDF = extrairInfoPDF(observacoes, 'Endereço:') || 'Não informado';
+            const formaPagamentoPDF = extrairInfoPDF(observacoes, 'Forma de Pagamento:') || 'Não informado';
+
+            // Função auxiliar para extrair informações no PDF
+            function extrairInfoPDF(texto, chave) {
+              const textoLimpo = texto.replace(/•/g, '').replace(/\s+/g, ' ');
+              const regex = new RegExp(`${chave}\\s*([^\\n]+)`, 'i');
+              const match = textoLimpo.match(regex);
+              return match ? match[1].trim() : null;
+            }
+
             doc.text(`Cliente: ${limparCaracteres(pedido.nome_cliente || pedido.cliente_id || 'N/A')}`, 20, yBase + 40);
-            doc.text(`Endereco: ${limparCaracteres(pedido.endereco || 'Nao informado')}`, 20, yBase + 47);
-            doc.text(`Telefone: ${limparCaracteres(pedido.telefone || 'Nao informado')}`, 20, yBase + 54);
-            doc.text(`E-mail: ${limparCaracteres(pedido.email || 'Nao informado')}`, 20, yBase + 61);
-            doc.text(`Forma de Pagamento: ${limparCaracteres(pedido.formaPagamento || 'Nao informado')}`, 20, yBase + 68);
+            doc.text(`Endereco: ${limparCaracteres(enderecoPDF)}`, 20, yBase + 47);
+            doc.text(`Telefone: ${limparCaracteres(telefonePDF)}`, 20, yBase + 54);
+            doc.text(`E-mail: ${limparCaracteres(emailPDF)}`, 20, yBase + 61);
+            doc.text(`Forma de Pagamento: ${limparCaracteres(formaPagamentoPDF)}`, 20, yBase + 68);
 
             // Itens do pedido
             doc.setFontSize(14);
@@ -1863,15 +1899,241 @@
             // Tabela de itens
             const tableData = pedido.itens ? pedido.itens.map(item => [
               limparCaracteres(item.produto || 'N/A'),
-              item.quantidade || 0,
+              String(item.quantidade || 0),
               `R$ ${(Number(item.precoUnitario) || 0).toFixed(2).replace('.', ',')}`,
               `R$ ${(Number(item.subtotal) || 0).toFixed(2).replace('.', ',')}`
             ]) : [];
-            doc.autoTable({
+            
+            // Só criar tabela se houver dados
+            if (tableData.length > 0) {
+              doc.autoTable({
+                startY: yBase + 95,
+                head: [['Produto', 'Qtd', 'Preco Unit.', 'Subtotal']],
+                body: tableData,
+                theme: 'grid',
+                tableWidth: 170, // Largura total da tabela (210 - 40 de margem)
+                headStyles: {
+                  fillColor: primaryColor,
+                  textColor: [255, 255, 255],
+                  fontStyle: 'bold',
+                  fontSize: 10
+                },
+                styles: {
+                  fontSize: 9,
+                  cellPadding: 3, // Reduzido de 4 para 3
+                  lineColor: [200, 200, 200],
+                  lineWidth: 0.1
+                },
+                columnStyles: {
+                  0: { cellWidth: 'auto' }, // Produto - largura automática
+                  1: { halign: 'center', cellWidth: 20 }, // Quantidade - fixa
+                  2: { halign: 'right', cellWidth: 30 }, // Preço Unit. - fixa
+                  3: { halign: 'right', cellWidth: 30 } // Subtotal - fixa
+                },
+                margin: { left: 20, right: 20 }
+              });
+            }
+            // Total
+            const finalY = tableData.length > 0 ? doc.lastAutoTable.finalY + 10 : yBase + 95;
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Valor Total: R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}`, 150, finalY);
+            // Observações
+            if (pedido.observacoes) {
+              doc.setFontSize(12);
+              doc.setFont('helvetica', 'bold');
+              doc.text('OBSERVACOES:', 20, finalY + 20);
+              doc.setFontSize(10);
+              doc.setFont('helvetica', 'normal');
+              const observacoes = doc.splitTextToSize(limparCaracteres(pedido.observacoes), 170);
+              doc.text(observacoes, 20, finalY + 28);
+            }
+            // Rodapé
+            const pageHeight = doc.internal.pageSize.height;
+            doc.setFillColor(240, 240, 240);
+            doc.rect(0, pageHeight - 30, 210, 30, 'F');
+            doc.setTextColor(100, 100, 100);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 20, { align: 'center' });
+            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, pageHeight - 15, { align: 'center' });
+            
+            // Abrir janela de impressão
+            const pdfBlob = doc.output('blob');
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            const printWindow = window.open(pdfUrl, '_blank');
+            
+            if (printWindow) {
+              printWindow.onload = function() {
+                printWindow.print();
+              };
+            } else {
+              // Fallback: baixar o PDF
+              doc.save(`Pedido_${pedido.id}_${limparCaracteres(pedido.nome_cliente || pedido.cliente_id).replace(/\s+/g, '_')}.pdf`);
+            }
+          });
+        } catch (error) {
+          console.error('Erro ao imprimir pedido:', error);
+          alert('Erro ao imprimir pedido: ' + error.message);
+        }
+      }).catch(error => {
+        console.error('Erro ao buscar dados da empresa:', error);
+        alert('Erro ao buscar dados da empresa: ' + error.message);
+      });
+    }
+
+    // Função para gerar PDF do pedido individual
+    function gerarPDFPedido(pedidoId) {
+      console.log('Gerando PDF para pedido ID:', pedidoId, 'Tipo:', typeof pedidoId);
+      console.log('Pedidos disponíveis:', pedidos.map(p => ({ id: p.id, tipo: typeof p.id })));
+      
+      const pedido = pedidos.find(p => p.id == pedidoId);
+      if (!pedido) {
+        console.error('Pedido não encontrado. ID buscado:', pedidoId);
+        alert('Pedido não encontrado!');
+        return;
+      }
+      
+      console.log('Pedido encontrado:', pedido);
+
+      // Verificar se o pedido tem itens
+      console.log('Itens do pedido:', pedido.itens);
+      if (!pedido.itens || pedido.itens.length === 0) {
+        console.warn('Pedido sem itens:', pedido);
+        alert('Este pedido não possui itens. Não é possível gerar o PDF.');
+        return;
+      }
+
+      // Verificar se jsPDF está disponível
+      if (typeof window.jspdf === 'undefined') {
+        alert('Erro: Biblioteca jsPDF não carregada. Verifique sua conexão com a internet.');
+        return;
+      }
+
+      // Buscar informações da empresa antes de gerar o PDF
+      fetch('/api/empresa').then(res => {
+        if (!res.ok) {
+          throw new Error(`Erro ao buscar dados da empresa: ${res.status}`);
+        }
+        return res.json();
+      }).then(empresa => {
+        try {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+
+          // Configurações de cores
+          const primaryColor = [0, 90, 159]; // #005a9f
+          const secondaryColor = [0, 55, 102]; // #003766
+          const successColor = [40, 167, 69];
+          const dangerColor = [220, 53, 69];
+
+          // Função para limpar caracteres especiais
+          function limparCaracteres(texto) {
+            if (!texto) return '';
+            return texto.toString()
+              .replace(/[^\w\s\-.,()@\n]/g, '')
+              .replace(/\s+/g, ' ')
+              .trim()
+              .substring(0, 50); // Limita a 50 caracteres para evitar overflow
+          }
+
+          carregarImagemBase64('https://i.imgur.com/2jT2EPD.png', function(logoBase64) {
+            // Logo centralizada
+            const logoWidth = 50;
+            const logoHeight = 22;
+            const logoX = (210 - logoWidth) / 2;
+            const logoY = 8;
+            doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
+
+            // --- INFORMAÇÕES DA EMPRESA NO TOPO ---
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text(limparCaracteres(empresa.nome_fantasia || ''), 105, 35, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Razão Social: ${limparCaracteres(empresa.razao_social || '')}`, 105, 41, { align: 'center' });
+            doc.text(`CNPJ: ${limparCaracteres(empresa.cnpj || '')}`, 105, 46, { align: 'center' });
+            doc.text(`Endereço: ${limparCaracteres(empresa.endereco || '')}`, 105, 51, { align: 'center' });
+            doc.text(`E-mail: ${limparCaracteres(empresa.email || '')}`, 105, 56, { align: 'center' });
+            doc.text(`Telefone: ${limparCaracteres(empresa.telefone || '')}`, 105, 61, { align: 'center' });
+
+            // Título do relatório
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('PEDIDO DE VENDA', 105, 70, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Data: ${pedido.data_pedido || 'N/A'}`, 105, 77, { align: 'center' });
+
+            // Informações do pedido
+            let yBase = 90;
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`PEDIDO #${pedido.id}`, 20, yBase);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Status:', 20, yBase + 10);
+            // Status colorido
+            if (pedido.status === 'Concluído') {
+              doc.setTextColor(...successColor);
+            } else if (pedido.status === 'Cancelado') {
+              doc.setTextColor(...dangerColor);
+            } else {
+              doc.setTextColor(245, 158, 11); // Amarelo para em processamento
+            }
+            doc.setFont('helvetica', 'bold');
+            doc.text(limparCaracteres(pedido.status || 'N/A'), 45, yBase + 10);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont('helvetica', 'normal');
+
+            // Informações do cliente
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('INFORMACOES DO CLIENTE', 20, yBase + 30);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            // Extrair informações das observações para o PDF
+            const observacoes = pedido.observacoes || '';
+            const telefonePDF = extrairInfoPDF(observacoes, 'Telefone:') || 'Não informado';
+            const emailPDF = extrairInfoPDF(observacoes, 'Email:') || 'Não informado';
+            const enderecoPDF = extrairInfoPDF(observacoes, 'Endereço:') || 'Não informado';
+            const formaPagamentoPDF = extrairInfoPDF(observacoes, 'Forma de Pagamento:') || 'Não informado';
+
+            // Função auxiliar para extrair informações no PDF
+            function extrairInfoPDF(texto, chave) {
+              const textoLimpo = texto.replace(/•/g, '').replace(/\s+/g, ' ');
+              const regex = new RegExp(`${chave}\\s*([^\\n]+)`, 'i');
+              const match = textoLimpo.match(regex);
+              return match ? match[1].trim() : null;
+            }
+
+            doc.text(`Cliente: ${limparCaracteres(pedido.nome_cliente || pedido.cliente_id || 'N/A')}`, 20, yBase + 40);
+            doc.text(`Endereco: ${limparCaracteres(enderecoPDF)}`, 20, yBase + 47);
+            doc.text(`Telefone: ${limparCaracteres(telefonePDF)}`, 20, yBase + 54);
+            doc.text(`E-mail: ${limparCaracteres(emailPDF)}`, 20, yBase + 61);
+            doc.text(`Forma de Pagamento: ${limparCaracteres(formaPagamentoPDF)}`, 20, yBase + 68);
+
+            // Itens do pedido
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('ITENS DO PEDIDO', 20, yBase + 90);
+            // Tabela de itens
+            const tableData = pedido.itens ? pedido.itens.map(item => [
+              limparCaracteres(item.produto || 'N/A'),
+              String(item.quantidade || 0),
+              `R$ ${(Number(item.precoUnitario) || 0).toFixed(2).replace('.', ',')}`,
+              `R$ ${(Number(item.subtotal) || 0).toFixed(2).replace('.', ',')}`
+            ]) : [];
+            
+            // Só criar tabela se houver dados
+            if (tableData.length > 0) {
+              doc.autoTable({
               startY: yBase + 95,
               head: [['Produto', 'Qtd', 'Preco Unit.', 'Subtotal']],
               body: tableData,
               theme: 'grid',
+              tableWidth: 170, // Largura total da tabela (210 - 40 de margem)
               headStyles: {
                 fillColor: primaryColor,
                 textColor: [255, 255, 255],
@@ -1880,20 +2142,21 @@
               },
               styles: {
                 fontSize: 9,
-                cellPadding: 4,
+                cellPadding: 3, // Reduzido de 4 para 3
                 lineColor: [200, 200, 200],
                 lineWidth: 0.1
               },
               columnStyles: {
-                0: { cellWidth: 80 },
-                1: { halign: 'center', cellWidth: 20 },
-                2: { halign: 'right', cellWidth: 30 },
-                3: { halign: 'right', cellWidth: 30 }
+                0: { cellWidth: 'auto' }, // Produto - largura automática
+                1: { halign: 'center', cellWidth: 20 }, // Quantidade - fixa
+                2: { halign: 'right', cellWidth: 30 }, // Preço Unit. - fixa
+                3: { halign: 'right', cellWidth: 30 } // Subtotal - fixa
               },
               margin: { left: 20, right: 20 }
             });
+            }
             // Total
-            const finalY = doc.lastAutoTable.finalY + 10;
+            const finalY = tableData.length > 0 ? doc.lastAutoTable.finalY + 10 : yBase + 95;
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             doc.text(`Valor Total: R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}`, 150, finalY);
@@ -1950,8 +2213,9 @@
 
           // Função auxiliar para extrair informações
           function extrairInfo(texto, chave) {
+            const textoLimpo = texto.replace(/•/g, '').replace(/\s+/g, ' ');
             const regex = new RegExp(`${chave}\\s*([^\\n]+)`, 'i');
-            const match = texto.match(regex);
+            const match = textoLimpo.match(regex);
             return match ? match[1].trim() : null;
           }
 
