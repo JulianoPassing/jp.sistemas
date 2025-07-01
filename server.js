@@ -207,16 +207,16 @@ function normalizarData(data) {
   if (typeof data === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data)) {
     return data;
   }
-  // Se é uma data ISO ou outro formato, converte para YYYY-MM-DD considerando o fuso horário local do Brasil (UTC-3)
+  // Se é uma data ISO ou outro formato, converte para YYYY-MM-DD usando UTC
   try {
     const dataObj = new Date(data);
     if (isNaN(dataObj.getTime())) {
       return null; // Data inválida
     }
-    // Ajustar para o horário local do Brasil (UTC-3)
-    const ano = dataObj.getFullYear();
-    const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
-    const dia = String(dataObj.getDate()).padStart(2, '0');
+    // Extrair ano, mês e dia em UTC
+    const ano = dataObj.getUTCFullYear();
+    const mes = String(dataObj.getUTCMonth() + 1).padStart(2, '0');
+    const dia = String(dataObj.getUTCDate()).padStart(2, '0');
     return `${ano}-${mes}-${dia}`;
   } catch (error) {
     console.warn('Erro ao normalizar data:', data, error);
