@@ -15,10 +15,11 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const empresaHandler = require('./api/empresa');
 require('dotenv').config();
-app.all('/api/empresa', empresaHandler);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.all('/api/empresa', empresaHandler);
 
 // CORS - deve vir antes de qualquer middleware de sessão ou rotas
 const allowedOrigins = [
@@ -816,8 +817,6 @@ app.get('/ajuda', (req, res) => {
 app.get('*', (req, res) => {
   res.sendFile(path.join(publicPath, 'index.html'));
 });
-
-
 
 module.exports = app;
 
