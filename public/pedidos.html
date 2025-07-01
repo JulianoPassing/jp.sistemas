@@ -717,9 +717,11 @@
             <h4>Informacoes do Cliente</h4>
             <div class="form-row">
               <div class="form-group">
-                <label for="cliente">Cliente *</label>
-                <select id="cliente" required>
-                  <option value="">Carregando clientes...</option>
+                <label for="tipoCliente">Tipo de Cliente *</label>
+                <select id="tipoCliente" required onchange="toggleTipoCliente()">
+                  <option value="">Selecione</option>
+                  <option value="existente">Cliente Existente</option>
+                  <option value="novo">Novo Cliente</option>
                 </select>
               </div>
               <div class="form-group">
@@ -735,6 +737,33 @@
                 </select>
               </div>
             </div>
+            
+            <!-- Campos para cliente existente -->
+            <div id="clienteExistenteSection" style="display: none;">
+              <div class="form-row">
+                <div class="form-group full-width">
+                  <label for="cliente">Selecionar Cliente *</label>
+                  <select id="cliente">
+                    <option value="">Carregando clientes...</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Campos para novo cliente -->
+            <div id="novoClienteSection" style="display: none;">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="nomeCliente">Nome/Razão Social *</label>
+                  <input type="text" id="nomeCliente" placeholder="Nome completo ou razão social">
+                </div>
+                <div class="form-group">
+                  <label for="cpfCnpj">CPF/CNPJ</label>
+                  <input type="text" id="cpfCnpj" placeholder="000.000.000-00 ou 00.000.000/0000-00">
+                </div>
+              </div>
+            </div>
+            
             <div class="form-row">
               <div class="form-group">
                 <label for="telefone">Telefone</label>
@@ -755,6 +784,14 @@
           <div class="form-section">
             <h4>Itens do Pedido</h4>
             <div class="items-section">
+              <!-- Cabeçalho dos campos dos itens -->
+              <div class="item-row" style="background:transparent; border:none; margin-bottom:0; font-weight:600;">
+                <div style="padding-left:2px;">Descrição</div>
+                <div>Quantidade</div>
+                <div>Valor</div>
+                <div>Subtotal</div>
+                <div></div>
+              </div>
               <div id="itensContainer">
                 <!-- Itens serão adicionados aqui dinamicamente -->
               </div>
@@ -936,6 +973,34 @@
       });
     }
 
+    // Função para alternar entre cliente existente e novo cliente
+    function toggleTipoCliente() {
+      const tipoCliente = document.getElementById('tipoCliente').value;
+      const clienteExistenteSection = document.getElementById('clienteExistenteSection');
+      const novoClienteSection = document.getElementById('novoClienteSection');
+      
+      if (tipoCliente === 'existente') {
+        clienteExistenteSection.style.display = 'block';
+        novoClienteSection.style.display = 'none';
+        // Limpar campos do novo cliente
+        document.getElementById('nomeCliente').value = '';
+        document.getElementById('cpfCnpj').value = '';
+      } else if (tipoCliente === 'novo') {
+        clienteExistenteSection.style.display = 'none';
+        novoClienteSection.style.display = 'block';
+        // Limpar seleção de cliente existente
+        document.getElementById('cliente').value = '';
+      } else {
+        clienteExistenteSection.style.display = 'none';
+        novoClienteSection.style.display = 'none';
+      }
+      
+      // Limpar campos de contato
+      document.getElementById('telefone').value = '';
+      document.getElementById('email').value = '';
+      document.getElementById('endereco').value = '';
+    }
+
     // Função para preencher informações do cliente automaticamente
     function preencherInfoCliente() {
       const clienteId = document.getElementById('cliente').value;
@@ -982,10 +1047,19 @@
         return texto.includes(filtro.toLowerCase());
       });
       filtrados.forEach(pedido => {
+        // Determinar nome do cliente
+        let nomeCliente = 'Cliente não identificado';
+        if (pedido.nome_cliente) {
+          nomeCliente = pedido.nome_cliente;
+        } else if (pedido.cliente_id) {
+          const cliente = clientes.find(c => c.id == pedido.cliente_id);
+          nomeCliente = cliente ? cliente.razao : `Cliente ID: ${pedido.cliente_id}`;
+        }
+        
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${pedido.id}</td>
-          <td>${pedido.nome_cliente || pedido.cliente_id || 'Cliente não identificado'}</td>
+          <td>${nomeCliente}</td>
           <td>${formatarDataHora(pedido.data_pedido)}</td>
           <td><span style="color: ${pedido.status === 'Concluído' ? 'var(--success-color)' : pedido.status === 'Cancelado' ? 'var(--danger-color)' : '#f59e0b'}; font-weight: bold;">${pedido.status || ''}</span></td>
           <td>R$ ${(pedido.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
@@ -1034,15 +1108,28 @@
     // Função para salvar pedido (criar ou editar)
     async function salvarPedido() {
       atualizarNovoPedidoItens(); // <-- Garante que novoPedidoItens está atualizado
+      const tipoCliente = document.getElementById('tipoCliente').value;
       const cliente_id = document.getElementById('cliente').value;
+      const nomeCliente = document.getElementById('nomeCliente').value;
+      const cpfCnpj = document.getElementById('cpfCnpj').value;
       const formaPagamento = document.getElementById('formaPagamento').value;
       const telefone = document.getElementById('telefone').value;
       const email = document.getElementById('email').value;
       const endereco = document.getElementById('endereco').value;
       const observacoes = document.getElementById('observacoes').value;
       
-      if (!cliente_id) {
-        alert('Selecione um cliente');
+      if (!tipoCliente) {
+        alert('Selecione o tipo de cliente');
+        return;
+      }
+      
+      if (tipoCliente === 'existente' && !cliente_id) {
+        alert('Selecione um cliente existente');
+        return;
+      }
+      
+      if (tipoCliente === 'novo' && !nomeCliente) {
+        alert('Digite o nome do cliente');
         return;
       }
       
@@ -1064,12 +1151,24 @@
       
       try {
         let response;
+        
+        // Preparar dados do cliente
+        let clienteInfo = '';
+        if (tipoCliente === 'existente') {
+          const cliente = clientes.find(c => c.id == cliente_id);
+          clienteInfo = cliente ? cliente.razao : 'Cliente não identificado';
+        } else {
+          clienteInfo = nomeCliente;
+        }
+        
         const pedidoData = {
-          cliente_id,
+          cliente_id: tipoCliente === 'existente' ? cliente_id : null,
+          nome_cliente: tipoCliente === 'novo' ? nomeCliente : null,
+          cpf_cnpj: tipoCliente === 'novo' ? cpfCnpj : null,
           data_pedido,
           status,
           valor_total,
-          observacoes: `${observacoes}\n\nInformações adicionais:\nTelefone: ${telefone}\nEmail: ${email}\nEndereço: ${endereco}\nForma de Pagamento: ${formaPagamento}`,
+          observacoes: `${observacoes}\n\nInformações adicionais:\nTipo de Cliente: ${tipoCliente === 'existente' ? 'Cliente Existente' : 'Novo Cliente'}\n${tipoCliente === 'novo' ? `Nome: ${nomeCliente}\nCPF/CNPJ: ${cpfCnpj}\n` : ''}Telefone: ${telefone}\nEmail: ${email}\nEndereço: ${endereco}\nForma de Pagamento: ${formaPagamento}`,
           itens: novoPedidoItens
         };
         
@@ -1218,12 +1317,24 @@
       }
       
       abrirModalNovoPedido();
-      document.getElementById('cliente').value = pedido.cliente_id || '';
+      
+      // Determinar se é cliente existente ou novo
+      if (pedido.cliente_id) {
+        // Cliente existente
+        document.getElementById('tipoCliente').value = 'existente';
+        toggleTipoCliente();
+        document.getElementById('cliente').value = pedido.cliente_id || '';
+        preencherInfoCliente();
+      } else if (pedido.nome_cliente) {
+        // Novo cliente
+        document.getElementById('tipoCliente').value = 'novo';
+        toggleTipoCliente();
+        document.getElementById('nomeCliente').value = pedido.nome_cliente || '';
+        document.getElementById('cpfCnpj').value = pedido.cpf_cnpj || '';
+      }
+      
       document.getElementById('observacoes').value = pedido.observacoes || '';
       document.getElementById('salvarPedido').setAttribute('data-editando', pedidoId);
-      
-      // Preencher informações do cliente se disponível
-      preencherInfoCliente();
     }
 
     // Função para visualizar pedido
@@ -1240,12 +1351,22 @@
       const email = extrairInfo(observacoes, 'Email:') || 'Não informado';
       const endereco = extrairInfo(observacoes, 'Endereço:') || 'Não informado';
       const formaPagamento = extrairInfo(observacoes, 'Forma de Pagamento:') || 'Não informado';
+      const cpfCnpj = extrairInfo(observacoes, 'CPF/CNPJ:') || 'Não informado';
 
       // Função auxiliar para extrair informações
       function extrairInfo(texto, chave) {
         const regex = new RegExp(`${chave}\\s*([^\\n]+)`, 'i');
         const match = texto.match(regex);
         return match ? match[1].trim() : null;
+      }
+
+      // Determinar nome do cliente
+      let nomeCliente = 'Cliente não identificado';
+      if (pedido.nome_cliente) {
+        nomeCliente = pedido.nome_cliente;
+      } else if (pedido.cliente_id) {
+        const cliente = clientes.find(c => c.id == pedido.cliente_id);
+        nomeCliente = cliente ? cliente.razao : `Cliente ID: ${pedido.cliente_id}`;
       }
 
       // Determinar classe do status
@@ -1266,8 +1387,14 @@
               <h4><i class="fas fa-user"></i> Informações do Cliente</h4>
               <div class="info-item">
                 <span class="info-label">Cliente:</span>
-                <span class="info-value">${pedido.nome_cliente || pedido.cliente_id || 'N/A'}</span>
+                <span class="info-value">${nomeCliente}</span>
               </div>
+              ${pedido.nome_cliente ? `
+                <div class="info-item">
+                  <span class="info-label">CPF/CNPJ:</span>
+                  <span class="info-value">${cpfCnpj}</span>
+                </div>
+              ` : ''}
               <div class="info-item">
                 <span class="info-label">Telefone:</span>
                 <span class="info-value">${telefone}</span>
@@ -1422,6 +1549,10 @@
       novoPedidoItens = [];
       itemCounter = 0;
       atualizarTotalPedido();
+      
+      // Ocultar seções de cliente
+      document.getElementById('clienteExistenteSection').style.display = 'none';
+      document.getElementById('novoClienteSection').style.display = 'none';
       
       // Remover atributo de edição se existir
       document.getElementById('salvarPedido').removeAttribute('data-editando');
