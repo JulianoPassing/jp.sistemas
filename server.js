@@ -13,6 +13,7 @@ const {
 } = require('./database-config');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const empresaHandler = require('./api/empresa');
 require('dotenv').config();
 
 const app = express();
@@ -814,6 +815,8 @@ app.get('/ajuda', (req, res) => {
 app.get('*', (req, res) => {
   res.sendFile(path.join(publicPath, 'index.html'));
 });
+
+app.all('/api/empresa', empresaHandler);
 
 module.exports = app;
 

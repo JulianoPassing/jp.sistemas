@@ -264,6 +264,31 @@
           </div>
         </div>
       </div>
+      <div class="config-area" id="empresa-config-area">
+        <form id="empresaForm" style="max-width: 500px; margin: 0 auto;">
+          <h3>Informações da Empresa</h3>
+          <label for="nome_fantasia">Nome Fantasia</label>
+          <input type="text" id="nome_fantasia" name="nome_fantasia" required />
+
+          <label for="razao_social">Razão Social</label>
+          <input type="text" id="razao_social" name="razao_social" required />
+
+          <label for="cnpj">CNPJ</label>
+          <input type="text" id="cnpj" name="cnpj" required maxlength="18" />
+
+          <label for="endereco">Endereço</label>
+          <input type="text" id="endereco" name="endereco" />
+
+          <label for="email">E-mail</label>
+          <input type="text" id="email" name="email" />
+
+          <label for="telefone">Telefone</label>
+          <input type="text" id="telefone" name="telefone" />
+
+          <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Salvar Informações</button>
+          <div id="empresaMsg" style="margin-top: 10px;"></div>
+        </form>
+      </div>
     </div>
   </main>
   <footer class="footer">
@@ -287,6 +312,52 @@
       sessionStorage.removeItem('username');
       window.location.href = 'index.html';
     }
+
+    // --- Empresa: carregar e salvar informações ---
+    async function carregarEmpresa() {
+      try {
+        const res = await fetch('/api/empresa');
+        if (!res.ok) return;
+        const data = await res.json();
+        document.getElementById('nome_fantasia').value = data.nome_fantasia || '';
+        document.getElementById('razao_social').value = data.razao_social || '';
+        document.getElementById('cnpj').value = data.cnpj || '';
+        document.getElementById('endereco').value = data.endereco || '';
+        document.getElementById('email').value = data.email || '';
+        document.getElementById('telefone').value = data.telefone || '';
+      } catch (e) {}
+    }
+    document.getElementById('empresaForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const body = {
+        nome_fantasia: form.nome_fantasia.value,
+        razao_social: form.razao_social.value,
+        cnpj: form.cnpj.value,
+        endereco: form.endereco.value,
+        email: form.email.value,
+        telefone: form.telefone.value
+      };
+      try {
+        const res = await fetch('/api/empresa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('empresaMsg').textContent = 'Informações salvas com sucesso!';
+          document.getElementById('empresaMsg').style.color = 'green';
+        } else {
+          document.getElementById('empresaMsg').textContent = data.error || 'Erro ao salvar.';
+          document.getElementById('empresaMsg').style.color = 'red';
+        }
+      } catch (e) {
+        document.getElementById('empresaMsg').textContent = 'Erro ao salvar.';
+        document.getElementById('empresaMsg').style.color = 'red';
+      }
+    });
+    carregarEmpresa();
   </script>
 </body>
 </html> 
