@@ -829,7 +829,10 @@
               <label style='font-weight:500;color:#6b7280;font-size:0.9em;margin-bottom:4px;display:block;'>Selecionar Produto:</label>
               <select id='select-produto' style='width:100%;padding:10px 12px;border-radius:8px;border:2px solid #e5e7eb;font-size:1em;background:#fff;transition:border 0.2s;outline:none;' onfocus='this.style.borderColor="#005a9f"' onblur='this.style.borderColor="#e5e7eb"'>
                 <option value="">Escolha um produto...</option>
-                ${produtos.map(p => `<option value='${p.id}' data-preco='${p.preco_venda || 0}'>${p.nome} - R$ ${(p.preco_venda || 0).toFixed(2).replace('.', ',')}</option>`).join('')}
+                ${produtos.map(p => {
+                  const preco = parseFloat(p.preco_venda || 0);
+                  return `<option value='${p.id}' data-preco='${preco}'>${p.nome} - R$ ${preco.toFixed(2).replace('.', ',')}</option>`;
+                }).join('')}
               </select>
             </div>
             <div style='min-width:120px;'>
@@ -856,7 +859,8 @@
         if (prodId) {
           const prod = produtos.find(p => String(p.id) === String(prodId));
           if (prod) {
-            infoDiv.innerHTML = `<i class="fas fa-info-circle"></i> <strong>${prod.nome}</strong> - Preço: R$ ${(prod.preco_venda || 0).toFixed(2).replace('.', ',')} | Estoque: ${prod.estoque || 0} unidades`;
+            const preco = parseFloat(prod.preco_venda || 0);
+            infoDiv.innerHTML = `<i class="fas fa-info-circle"></i> <strong>${prod.nome}</strong> - Preço: R$ ${preco.toFixed(2).replace('.', ',')} | Estoque: ${prod.estoque || 0} unidades`;
             infoDiv.style.display = 'block';
           }
         } else {
