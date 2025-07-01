@@ -1073,7 +1073,7 @@
         tr.innerHTML = `
           <td>${pedido.id}</td>
           <td>${nomeCliente}</td>
-          <td>${formatarDataHora(pedido.data_pedido)}</td>
+          <td>${formatarData(pedido.data_pedido)}</td>
           <td><span style="color: ${pedido.status === 'Concluído' ? 'var(--success-color)' : pedido.status === 'Cancelado' ? 'var(--danger-color)' : '#f59e0b'}; font-weight: bold;">${pedido.status || ''}</span></td>
           <td>R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}</td>
           <td>R$ ${calcularLucroPedido(pedido).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
@@ -1842,7 +1842,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             doc.text('PEDIDO DE VENDA', 105, 70, { align: 'center' });
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            doc.text(`Data: ${pedido.data_pedido || 'N/A'}`, 105, 77, { align: 'center' });
+            doc.text(`Data: ${formatarData(pedido.data_pedido) || 'N/A'}`, 105, 77, { align: 'center' });
 
             // Informações do pedido
             let yBase = 90;
@@ -2064,7 +2064,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             doc.text('PEDIDO DE VENDA', 105, 70, { align: 'center' });
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            doc.text(`Data: ${pedido.data_pedido || 'N/A'}`, 105, 77, { align: 'center' });
+            doc.text(`Data: ${formatarData(pedido.data_pedido) || 'N/A'}`, 105, 77, { align: 'center' });
 
             // Informações do pedido
             let yBase = 90;
@@ -2265,6 +2265,15 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
       return data.toLocaleString('pt-BR', {
         day: '2-digit', month: '2-digit', year: 'numeric',
         hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    function formatarData(dataISO) {
+      if (!dataISO) return '';
+      const data = new Date(dataISO);
+      if (isNaN(data.getTime())) return dataISO;
+      return data.toLocaleDateString('pt-BR', {
+        day: '2-digit', month: '2-digit', year: 'numeric'
       });
     }
 
