@@ -433,10 +433,13 @@
       const tbody = document.getElementById('produtos-tbody');
       tbody.innerHTML = '';
       (lista || []).forEach(prod => {
+        console.log('Produto sendo renderizado:', prod);
+        const precoVenda = parseFloat(prod.preco_venda || 0);
+        console.log('Preço de venda:', prod.preco_venda, 'Convertido:', precoVenda);
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${prod.nome}</td>
-          <td>R$ ${(parseFloat(prod.preco_venda) || 0).toFixed(2).replace('.', ',')}</td>
+          <td>R$ ${precoVenda.toFixed(2).replace('.', ',')}</td>
           <td>${prod.estoque ?? 0}</td>
           <td><input type="number" min="1" max="${prod.estoque ?? 1}" value="1" style="width:60px;" id="qtd-${prod.id}" /></td>
           <td><button class="btn btn-primary" type="button" onclick="adicionarItem(${prod.id})"><i class="fas fa-plus"></i> Adicionar</button></td>
@@ -459,18 +462,24 @@
     function adicionarItem(prodId) {
       const prod = produtos.find(p => p.id === prodId);
       if (!prod) return;
+      console.log('Produto encontrado para adicionar:', prod);
       const qtd = parseInt(document.getElementById('qtd-' + prodId).value) || 1;
+      const preco = parseFloat(prod.preco_venda || 0);
+      console.log('Quantidade:', qtd, 'Preço:', prod.preco_venda, 'Preço convertido:', preco);
       const existente = vendaItens.find(i => i.id === prodId);
       if (existente) {
         existente.qtd += qtd;
+        console.log('Item existente atualizado:', existente);
       } else {
-        vendaItens.push({
+        const novoItem = {
           id: prod.id,
           nome: prod.nome,
-          preco: parseFloat(prod.preco_venda) || 0,
+          preco: preco,
           qtd,
-          subtotal: (parseFloat(prod.preco_venda) || 0) * qtd
-        });
+          subtotal: preco * qtd
+        };
+        vendaItens.push(novoItem);
+        console.log('Novo item adicionado:', novoItem);
       }
       atualizarTotal();
       atualizarEstoqueVisual(prodId, qtd);
@@ -579,13 +588,17 @@
         telefone: clienteInfo.telefone,
         email: clienteInfo.email,
         endereco: clienteInfo.endereco,
-        itens: vendaItens.map(i => ({
-          produto: i.nome,
-          produto_id: Number(i.id),
-          quantidade: Number(i.qtd),
-          precoUnitario: Number(i.preco),
-          subtotal: Number(i.preco) * Number(i.qtd)
-        })),
+        itens: vendaItens.map(i => {
+          const item = {
+            produto: i.nome,
+            produto_id: Number(i.id),
+            quantidade: Number(i.qtd),
+            precoUnitario: Number(i.preco),
+            subtotal: Number(i.preco) * Number(i.qtd)
+          };
+          console.log('Item sendo enviado:', item);
+          return item;
+        }),
         valor_total: vendaItens.reduce((sum, i) => sum + i.preco * i.qtd, 0),
         status: 'Concluído',
         data_pedido: new Date().toISOString().split('T')[0]

@@ -381,6 +381,7 @@ app.get('/api/produtos', requireAuthJWT, async (req, res) => {
       charset: 'utf8mb4'
     });
     const [rows] = await connection.execute('SELECT * FROM produtos ORDER BY nome');
+    console.log('Produtos retornados pela API:', rows);
     await connection.end();
     res.json(rows);
   } catch (error) {
@@ -399,9 +400,12 @@ app.post('/api/produtos', requireAuthJWT, async (req, res) => {
       charset: 'utf8mb4'
     });
     const { nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status } = req.body;
+    console.log('Dados recebidos para criar produto:', { nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status });
+    const valores = safeValues([nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status]);
+    console.log('Valores processados:', valores);
     const [result] = await connection.execute(
       'INSERT INTO produtos (nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      safeValues([nome, descricao, preco_custo, preco_venda, categoria, codigo, estoque, fornecedor, peso, dimensoes, status])
+      valores
     );
     await connection.end();
     res.status(201).json({ id: result.insertId, message: 'Produto criado com sucesso' });

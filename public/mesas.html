@@ -458,6 +458,7 @@
         console.log('Pedidos recebidos:', todos);
         pedidosAbertos = (todos || []).filter(p => p.status === 'Em Aberto');
         console.log('Pedidos em aberto:', pedidosAbertos);
+        console.log('Itens dos pedidos:', pedidosAbertos.map(p => ({ id: p.id, itens: p.itens })));
         renderMesas();
       } catch (e) {
         console.error('Erro ao buscar pedidos:', e);
@@ -473,7 +474,12 @@
         return;
       }
       pedidosAbertos.forEach(pedido => {
-        let total = (pedido.itens||[]).reduce((sum, i) => sum + (i.precoUnitario||0) * (i.quantidade||0), 0);
+        console.log('Renderizando pedido:', pedido.id, 'Itens:', pedido.itens);
+        let total = (pedido.itens||[]).reduce((sum, i) => {
+          const precoUnitario = parseFloat(i.precoUnitario || i.preco_unitario || 0);
+          const quantidade = parseInt(i.quantidade || 0);
+          return sum + (precoUnitario * quantidade);
+        }, 0);
         const card = document.createElement('div');
         card.className = 'mesa-card';
         card.innerHTML = `
@@ -485,7 +491,13 @@
             <table>
               <thead><tr><th>Produto</th><th>Qtd</th><th>Preço</th><th>Subtotal</th></tr></thead>
               <tbody>
-                ${(pedido.itens||[]).map(i => `<tr><td>${i.produto}</td><td>${i.quantidade}</td><td>R$ ${(Number(i.precoUnitario ?? i.preco_unitario) || 0).toFixed(2)}</td><td>R$ ${(Number(i.subtotal) || 0).toFixed(2)}</td></tr>`).join('')}
+                ${(pedido.itens||[]).map(i => {
+                  const produtoNome = i.produto || i.nome_produto || 'Produto não identificado';
+                  const quantidade = parseInt(i.quantidade || 0);
+                  const precoUnitario = parseFloat(i.precoUnitario || i.preco_unitario || 0);
+                  const subtotal = parseFloat(i.subtotal || 0);
+                  return `<tr><td>${produtoNome}</td><td>${quantidade}</td><td>R$ ${precoUnitario.toFixed(2).replace('.', ',')}</td><td>R$ ${subtotal.toFixed(2).replace('.', ',')}</td></tr>`;
+                }).join('')}
               </tbody>
             </table>
           </div>
@@ -926,8 +938,11 @@
           ...pedido,
           nome_cliente: novoNome || pedido.nome_cliente || pedido.nome_mesa || 'Mesa/Pessoa',
           itens: (itensEdit || []).map(i => ({
-            ...i,
-            preco_unitario: i.precoUnitario ?? i.preco_unitario ?? 0
+            produto: i.produto || 'Produto não identificado',
+            produto_id: i.produto_id,
+            quantidade: parseInt(i.quantidade || 0),
+            preco_unitario: parseFloat(i.precoUnitario || i.preco_unitario || 0),
+            subtotal: parseFloat(i.subtotal || 0)
           })),
           cliente_id: pedido.cliente_id ?? null,
           data_pedido: (pedido.data_pedido ?? new Date().toISOString().split('T')[0]).split('T')[0],
@@ -936,6 +951,7 @@
           observacoes: pedido.observacoes ?? ''
         };
         console.log('PUT /api/pedidos/' + id, putBody);
+        console.log('Itens sendo enviados:', putBody.itens);
         await fetch(`/api/pedidos/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
