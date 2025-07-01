@@ -54,20 +54,24 @@ const databaseConfigs = {
   },
 
   // Local/Desenvolvimento
-  local: {
+  local: () => ({
     host: process.env.DB_HOST ?? 'localhost',
     user: process.env.DB_USER ?? 'jpsistemas',
     password: process.env.DB_PASSWORD ?? 'SuaSenhaForte123!',
     port: process.env.DB_PORT ?? 3306,
     charset: 'utf8mb4'
-  }
+  }),
 };
 
 // Determinar qual configuração usar
 function getDatabaseConfig() {
   const provider = process.env.DATABASE_PROVIDER || 'local';
   console.log('getDatabaseConfig provider:', provider);
-  console.log('databaseConfigs[provider]:', databaseConfigs[provider]);
+  let config = databaseConfigs[provider];
+  if (typeof config === 'function') {
+    config = config();
+  }
+  console.log('databaseConfigs[provider]:', config);
   console.log('Bloco local:', {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -75,15 +79,16 @@ function getDatabaseConfig() {
     port: process.env.DB_PORT,
     charset: 'utf8mb4'
   });
-  if (databaseConfigs[provider]) {
+  if (config) {
     return {
-      ...databaseConfigs[provider],
+      ...config,
       provider
     };
   }
   console.warn(`Provedor ${provider} não encontrado, usando configuração local`);
+  const fallback = typeof databaseConfigs.local === 'function' ? databaseConfigs.local() : databaseConfigs.local;
   return {
-    ...databaseConfigs.local,
+    ...fallback,
     provider: 'local'
   };
 }
