@@ -10,18 +10,18 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     :root {
-      --primary-color: #2563eb;
-      --primary-dark: #1d4ed8;
-      --primary-light: #3b82f6;
-      --secondary-color: #1e40af;
-      --accent-color: #60a5fa;
+              --primary-color: #005a9f;
+      --primary-dark: #003766;
+      --primary-light: #0077cc;
+      --secondary-color: #022656;
+      --accent-color: #1e4a8a;
       --text-primary: #1f2937;
       --text-secondary: #6b7280;
       --background: #f8fafc;
       --surface: #ffffff;
       --border: #e5e7eb;
-      --shadow: rgba(37, 99, 235, 0.1);
-      --shadow-hover: rgba(37, 99, 235, 0.2);
+      --shadow: rgba(0, 90, 159, 0.1);
+      --shadow-hover: rgba(0, 90, 159, 0.2);
       --success-color: #059669;
       --danger-color: #dc2626;
       --warning-color: #d97706;
@@ -34,7 +34,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #005a9f 0%, #003766 100%);
       min-height: 100vh;
       color: var(--text-primary);
       padding: 0;
@@ -43,7 +43,7 @@
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(20px);
       padding: 20px 0;
-      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.1);
+      box-shadow: 0 4px 20px rgba(0, 90, 159, 0.1);
       border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     }
     .header-content {
@@ -94,7 +94,7 @@
     }
     .logout-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+      box-shadow: 0 8px 20px rgba(0, 90, 159, 0.3);
     }
     .main-content {
       max-width: 1200px;
@@ -105,7 +105,7 @@
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(20px);
       border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1);
+      box-shadow: 0 10px 30px rgba(0, 90, 159, 0.1);
       padding: 32px;
       margin-bottom: 32px;
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -139,7 +139,7 @@
     .mesa-card {
       background: var(--card-bg);
       border-radius: var(--border-radius);
-      box-shadow: 0 4px 18px rgba(37, 99, 235, 0.13);
+      box-shadow: 0 4px 18px rgba(0, 90, 159, 0.13);
       padding: 0 0 28px 0;
       margin-bottom: 0;
       position: relative;
@@ -154,7 +154,7 @@
       font-size: 1.13em;
     }
     .mesa-card:hover {
-      box-shadow: 0 8px 32px rgba(37, 99, 235, 0.18);
+      box-shadow: 0 8px 32px rgba(0, 90, 159, 0.18);
       border: 2.5px solid var(--primary-color);
       transform: translateY(-2px) scale(1.01);
     }
@@ -167,7 +167,7 @@
       flex-direction: row;
       align-items: center;
       gap: 10px;
-      box-shadow: 0 2px 8px rgba(37,99,235,0.07);
+              box-shadow: 0 2px 8px rgba(0,90,159,0.07);
     }
     .mesa-nome {
       font-size: 1.15em;
@@ -319,7 +319,7 @@
       background: #f9fafb;
       border-radius: 12px;
       padding: 20px;
-      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.05);
+      box-shadow: 0 2px 8px rgba(0, 90, 159, 0.05);
       display: flex;
       gap: 16px;
       align-items: flex-end;
@@ -376,10 +376,10 @@
       <div id="mesa-feedback" style="display:none;margin-bottom:18px;text-align:center;font-weight:500;"></div>
       <form class="nova-mesa-form" id="nova-mesa-form">
         <div class="form-group" style="position:relative;display:flex;align-items:center;flex:1;">
-          <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#2563eb;font-size:1.3em;"><i class="fas fa-chair"></i></span>
-          <input type="text" id="mesa-nome" required placeholder="Ex: Mesa 1, João, Família Silva..." style="padding-left:40px;height:48px;font-size:1.13em;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 2px 8px rgba(37,99,235,0.07);transition:border 0.2s;outline:none;width:100%;" />
+          <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#005a9f;font-size:1.3em;"><i class="fas fa-chair"></i></span>
+          <input type="text" id="mesa-nome" required placeholder="Ex: Mesa 1, João, Família Silva..." style="padding-left:40px;height:48px;font-size:1.13em;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,90,159,0.07);transition:border 0.2s;outline:none;width:100%;" />
         </div>
-        <button class="btn btn-primary" id="btn-criar-mesa" type="submit" style="height:48px;font-size:1.13em;padding:0 32px;box-shadow:0 4px 16px rgba(37,99,235,0.13);display:flex;align-items:center;gap:10px;">
+        <button class="btn btn-primary" id="btn-criar-mesa" type="submit" style="height:48px;font-size:1.13em;padding:0 32px;box-shadow:0 4px 16px rgba(0,90,159,0.13);display:flex;align-items:center;gap:10px;">
           <i class="fas fa-plus"></i> Nova Mesa
         </button>
         <a href="pedidos.html" class="btn btn-secondary" style="height:48px;font-size:1.13em;padding:0 32px;display:flex;align-items:center;gap:10px;text-decoration:none;">
@@ -394,7 +394,7 @@
   </footer>
   <!-- Modal de Edição de Produtos da Mesa -->
   <div id="modal-editar-produtos" class="modal" style="display:none;position:fixed;z-index:1000;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
-    <div class="modal-content" style="background:#fff;border-radius:16px;max-width:700px;width:97vw;padding:48px 36px;box-shadow:0 8px 32px rgba(37,99,235,0.18);position:relative;">
+    <div class="modal-content" style="background:#fff;border-radius:16px;max-width:700px;width:97vw;padding:48px 36px;box-shadow:0 8px 32px rgba(0,90,159,0.18);position:relative;">
       <h3 style="margin-bottom:18px;font-size:1.25em;font-weight:600;">Editar Produtos da Mesa</h3>
       <div id="produtos-mesa-lista"></div>
       <div style="margin-top:18px;">
@@ -412,7 +412,7 @@
   </div>
   <!-- Modal de Finalização com Desconto -->
   <div id="modal-finalizar-mesa" class="modal" style="display:none;position:fixed;z-index:1000;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
-    <div class="modal-content" style="background:#fff;border-radius:16px;max-width:420px;width:95vw;padding:32px 24px;box-shadow:0 8px 32px rgba(37,99,235,0.18);position:relative;">
+    <div class="modal-content" style="background:#fff;border-radius:16px;max-width:420px;width:95vw;padding:32px 24px;box-shadow:0 8px 32px rgba(0,90,159,0.18);position:relative;">
       <h3 style="margin-bottom:18px;font-size:1.25em;font-weight:600;">Finalizar Mesa</h3>
       <div id="finalizar-info"></div>
       <div style="margin-top:18px;">
