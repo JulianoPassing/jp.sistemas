@@ -411,7 +411,7 @@
       <h3 style="margin-bottom:18px;font-size:1.25em;font-weight:600;">Finalizar Mesa</h3>
       <div id="finalizar-info"></div>
       <div style="margin-top:24px;text-align:right;">
-        <button id="btn-fechar-modal-finalizar" class="btn btn-success"><i class="fas fa-save"></i> Finalizar</button>
+        <button id="btn-finalizar-mesa" class="btn btn-success"><i class="fas fa-check"></i> Finalizar Mesa</button>
         <button id="btn-cancelar-finalizar" class="btn btn-secondary" style="margin-left:8px;">Cancelar</button>
       </div>
       <button id="btn-fechar-modal-finalizar" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.5em;color:#888;cursor:pointer;"><i class="fas fa-times"></i></button>
@@ -1067,6 +1067,57 @@
       
       modal.style.display = 'flex';
       document.body.style.overflow = 'hidden';
+      
+      // Botão de finalizar mesa
+      document.getElementById('btn-finalizar-mesa').onclick = async function() {
+        try {
+          const descontoPercent = parseFloat(document.getElementById('desconto').value) || 0;
+          const valorDesconto = total * (descontoPercent / 100);
+          const totalFinal = total - valorDesconto;
+          
+          // Buscar dados completos do pedido
+          const pedido = pedidosAbertos.find(p => p.id === id);
+          if (!pedido) {
+            alert('Pedido não encontrado!');
+            return;
+          }
+
+          // Preparar dados para atualização incluindo todos os itens
+          const itensFormatados = (pedido.itens || []).map(item => ({
+            produto_id: item.produto_id,
+            quantidade: item.quantidade,
+            preco_unitario: item.precoUnitario || item.preco_unitario || 0
+          }));
+
+          const dadosAtualizacao = {
+            cliente_id: pedido.cliente_id,
+            nome_cliente: pedido.nome_cliente,
+            data_pedido: pedido.data_pedido,
+            status: 'Concluído',
+            valor_total: totalFinal,
+            observacoes: pedido.observacoes || '',
+            itens: itensFormatados
+          };
+
+          // Fazer a requisição para atualizar o pedido
+          const response = await fetch(`/api/pedidos/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dadosAtualizacao)
+          });
+
+          if (!response.ok) {
+            throw new Error('Erro ao finalizar mesa');
+          }
+
+          await carregarPedidosAbertos();
+          fecharModalFinalizarMesa();
+          alert('Mesa finalizada com sucesso!');
+        } catch (error) {
+          console.error('Erro ao finalizar mesa:', error);
+          alert('Erro ao finalizar mesa: ' + error.message);
+        }
+      };
       
       // Fechar modal
       document.getElementById('btn-fechar-modal-finalizar').onclick = fecharModalFinalizarMesa;

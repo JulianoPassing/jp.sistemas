@@ -96,9 +96,14 @@ Estoque atualizado: Produto ID 456, estoque anterior: 5, quantidade vendida: 8, 
 ### 8. Melhorias Implementadas
 
 #### Funcionalidade de Mesas
-- **Antes**: A função `finalizarMesa` enviava apenas o status "Concluído"
-- **Depois**: Agora envia todos os dados do pedido incluindo itens formatados corretamente
+- **Antes**: A função `finalizarMesa` enviava apenas o status "Concluído" e o modal não tinha funcionalidade
+- **Depois**: Modal corrigido com botão funcional que envia todos os dados do pedido incluindo itens formatados corretamente
 - **Benefício**: Garante que o controle de estoque funcione corretamente ao finalizar mesas
+- **Correções**: 
+  - Botão do modal corrigido (ID correto)
+  - Funcionalidade de finalização implementada no modal
+  - Suporte a desconto incluído
+  - Feedback visual para o usuário
 
 #### Estrutura dos Itens
 - **Formatação**: Os itens são formatados para incluir `produto_id`, `quantidade` e `preco_unitario`
