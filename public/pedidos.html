@@ -1859,11 +1859,11 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             minCellHeight: 8
           },
           columnStyles: {
-            0: { cellWidth: 18, halign: 'center' }, // ID
-            1: { cellWidth: 60, halign: 'left' },   // Cliente
-            2: { cellWidth: 32, halign: 'center' }, // Data
-            3: { cellWidth: 35, halign: 'center' }, // Status
-            4: { cellWidth: 35, halign: 'right' }   // Valor Total
+            0: { cellWidth: 14, halign: 'center' }, // ID
+            1: { cellWidth: 'auto', halign: 'left' },   // Cliente
+            2: { cellWidth: 28, halign: 'center' }, // Data
+            3: { cellWidth: 28, halign: 'center' }, // Status
+            4: { cellWidth: 28, halign: 'right' }   // Valor Total
           },
           alternateRowStyles: {
             fillColor: bgRow
@@ -1871,6 +1871,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
           tableLineColor: borderColor,
           tableLineWidth: 0.2,
           margin: { top: 85, right: 10, bottom: 20, left: 10 },
+          tableWidth: 'auto',
           didDrawPage: function (data) {
             // Rodapé elegante
             const pageHeight = doc.internal.pageSize.height;
