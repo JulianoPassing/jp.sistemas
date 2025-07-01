@@ -1829,7 +1829,10 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
           pedido.id,
           limparCaracteres(pedido.nome_cliente || pedido.cliente_id || 'N/A'),
           formatarData(pedido.data_pedido) || 'N/A',
-          limparCaracteres(pedido.status || 'N/A'),
+          // Padronizar status para exibição
+          (pedido.status || '').toLowerCase().includes('conclu') ? 'Concluído' :
+          (pedido.status || '').toLowerCase().includes('canc') ? 'Cancelado' :
+          'Em Processamento',
           `R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}`
         ]);
 
@@ -1862,7 +1865,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             0: { cellWidth: 14, halign: 'center' }, // ID
             1: { cellWidth: 'auto', halign: 'left' },   // Cliente
             2: { cellWidth: 28, halign: 'center' }, // Data
-            3: { cellWidth: 28, halign: 'center' }, // Status
+            3: { cellWidth: 38, halign: 'center', fontStyle: 'bold', wordBreak: 'none' }, // Status (maior e sem quebra)
             4: { cellWidth: 28, halign: 'right' }   // Valor Total
           },
           alternateRowStyles: {
@@ -1872,6 +1875,20 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
           tableLineWidth: 0.2,
           margin: { top: 85, right: 10, bottom: 20, left: 10 },
           tableWidth: 'auto',
+          didParseCell: function (data) {
+            // Colorir status
+            if (data.section === 'body' && data.column.index === 3) {
+              const status = data.cell.raw;
+              data.cell.styles.fontStyle = 'bold';
+              if (status === 'Concluído') {
+                data.cell.styles.textColor = [40, 167, 69]; // verde
+              } else if (status === 'Cancelado') {
+                data.cell.styles.textColor = [220, 53, 69]; // vermelho
+              } else {
+                data.cell.styles.textColor = [245, 158, 11]; // laranja
+              }
+            }
+          },
           didDrawPage: function (data) {
             // Rodapé elegante
             const pageHeight = doc.internal.pageSize.height;
@@ -1890,31 +1907,22 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
         doc.setFontSize(13);
         doc.setFont('helvetica', 'bold');
         doc.text('Distribuição por Status:', 15, finalY);
-        const statusMap = {};
+        // Contar status padronizados
+        let countConcluidos = 0, countProcessando = 0, countCancelados = 0;
         pedidos.forEach(pedido => {
-          const status = (pedido.status || 'Não informado').replace(/[^\w\s\-\.]/g, '');
-          statusMap[status] = (statusMap[status] || 0) + 1;
+          const status = (pedido.status || '').toLowerCase();
+          if (status.includes('conclu')) countConcluidos++;
+          else if (status.includes('canc')) countCancelados++;
+          else countProcessando++;
         });
         let yPos = finalY + 7;
-        let coluna = 0;
-        const colunas = 2;
-        const larguraColuna = 80;
-        Object.entries(statusMap).forEach(([status, count], index) => {
-          if (yPos > 270) {
-            doc.addPage();
-            yPos = 20;
-            coluna = 0;
-          }
-          const xPos = 20 + (coluna * larguraColuna);
-          doc.setFontSize(10);
-          doc.setFont('helvetica', 'normal');
-          doc.text(`${status}: ${count} pedido(s)`, xPos, yPos);
-          coluna++;
-          if (coluna >= colunas) {
-            coluna = 0;
-            yPos += 8;
-          }
-        });
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Concluídos: ${countConcluidos} pedido(s)`, 20, yPos);
+        yPos += 8;
+        doc.text(`Em Processamento: ${countProcessando} pedido(s)`, 20, yPos);
+        yPos += 8;
+        doc.text(`Cancelados: ${countCancelados} pedido(s)`, 20, yPos);
 
         // Salvar PDF
         const hoje = new Date();
