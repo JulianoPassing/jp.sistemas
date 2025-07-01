@@ -112,7 +112,7 @@
       filter: brightness(0) invert(1);
       opacity: 0.9;
     }
-    .card { 
+e    .card { 
       background-color: var(--card-bg); 
       border-radius: var(--border-radius); 
       box-shadow: var(--shadow); 
@@ -319,13 +319,16 @@
         const res = await fetch('/api/empresa');
         if (!res.ok) return;
         const data = await res.json();
-        document.getElementById('nome_fantasia').value = data.nome_fantasia || '';
-        document.getElementById('razao_social').value = data.razao_social || '';
-        document.getElementById('cnpj').value = data.cnpj || '';
-        document.getElementById('endereco').value = data.endereco || '';
-        document.getElementById('email').value = data.email || '';
-        document.getElementById('telefone').value = data.telefone || '';
-      } catch (e) {}
+        // Garante que data é um objeto e preenche os campos com string vazia se não existir
+        document.getElementById('nome_fantasia').value = data?.nome_fantasia ?? '';
+        document.getElementById('razao_social').value = data?.razao_social ?? '';
+        document.getElementById('cnpj').value = data?.cnpj ?? '';
+        document.getElementById('endereco').value = data?.endereco ?? '';
+        document.getElementById('email').value = data?.email ?? '';
+        document.getElementById('telefone').value = data?.telefone ?? '';
+      } catch (e) {
+        console.error('Erro ao carregar empresa:', e);
+      }
     }
     document.getElementById('empresaForm').addEventListener('submit', async function(e) {
       e.preventDefault();
