@@ -2155,49 +2155,30 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
 
     // Função para gerar PDF do pedido individual
     function gerarPDFPedido(pedidoId) {
-      console.log('Gerando PDF para pedido ID:', pedidoId, 'Tipo:', typeof pedidoId);
-      console.log('Pedidos disponíveis:', pedidos.map(p => ({ id: p.id, tipo: typeof p.id })));
-      
       const pedido = pedidos.find(p => p.id == pedidoId);
       if (!pedido) {
-        console.error('Pedido não encontrado. ID buscado:', pedidoId);
         alert('Pedido não encontrado!');
         return;
       }
-      
-      console.log('Pedido encontrado:', pedido);
-
-      // Verificar se o pedido tem itens
-      console.log('Itens do pedido:', pedido.itens);
       if (!pedido.itens || pedido.itens.length === 0) {
-        console.warn('Pedido sem itens:', pedido);
         alert('Este pedido não possui itens. Não é possível gerar o PDF.');
         return;
       }
-
-      // Verificar se jsPDF está disponível
       if (typeof window.jspdf === 'undefined') {
         alert('Erro: Biblioteca jsPDF não carregada. Verifique sua conexão com a internet.');
         return;
       }
-
-      // Buscar informações da empresa antes de gerar o PDF
       fetch('/api/empresa').then(res => {
-        if (!res.ok) {
-          throw new Error(`Erro ao buscar dados da empresa: ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`Erro ao buscar dados da empresa: ${res.status}`);
         return res.json();
       }).then(empresa => {
         try {
           const { jsPDF } = window.jspdf;
           const doc = new jsPDF();
-
-          // Configurações de cores
-          const primaryColor = [0, 90, 159]; // #005a9f
-          const secondaryColor = [0, 55, 102]; // #003766
+          const primaryColor = [0, 90, 159];
+          const secondaryColor = [0, 55, 102];
           const successColor = [40, 167, 69];
           const dangerColor = [220, 53, 69];
-
           // Função para limpar caracteres especiais
           function limparCaracteres(texto) {
             if (!texto) return '';
@@ -2205,9 +2186,8 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
               .replace(/[^\w\s\-.,()@\n]/g, '')
               .replace(/\s+/g, ' ')
               .trim()
-              .substring(0, 50); // Limita a 50 caracteres para evitar overflow
+              .substring(0, 50);
           }
-
           carregarImagemBase64('https://i.imgur.com/2jT2EPD.png', function(logoBase64) {
             // Logo centralizada
             const logoWidth = 50;
@@ -2215,7 +2195,6 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             const logoX = (210 - logoWidth) / 2;
             const logoY = 8;
             doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
-
             // --- INFORMAÇÕES DA EMPRESA NO TOPO ---
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
@@ -2227,7 +2206,6 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             doc.text(`Endereço: ${limparCaracteres(empresa.endereco || '')}`, 105, 51, { align: 'center' });
             doc.text(`E-mail: ${limparCaracteres(empresa.email || '')}`, 105, 56, { align: 'center' });
             doc.text(`Telefone: ${limparCaracteres(empresa.telefone || '')}`, 105, 61, { align: 'center' });
-
             // Título do relatório
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(16);
@@ -2236,7 +2214,6 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.text(`Data: ${formatarData(pedido.data_pedido) || 'N/A'}`, 105, 77, { align: 'center' });
-
             // Informações do pedido
             let yBase = 90;
             doc.setFontSize(14);
@@ -2246,49 +2223,67 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             doc.setFont('helvetica', 'normal');
             doc.text('Status:', 20, yBase + 10);
             // Status colorido
-            if (pedido.status === 'Concluído') {
+            if ((pedido.status || '').toLowerCase().includes('conclu')) {
               doc.setTextColor(...successColor);
-            } else if (pedido.status === 'Cancelado') {
+              doc.setFont('helvetica', 'bold');
+              doc.text('Concluído', 45, yBase + 10);
+            } else if ((pedido.status || '').toLowerCase().includes('canc')) {
               doc.setTextColor(...dangerColor);
+              doc.setFont('helvetica', 'bold');
+              doc.text('Cancelado', 45, yBase + 10);
             } else {
-              doc.setTextColor(245, 158, 11); // Amarelo para em processamento
+              doc.setTextColor(245, 158, 11);
+              doc.setFont('helvetica', 'bold');
+              doc.text('Em Processamento', 45, yBase + 10);
             }
-            doc.setFont('helvetica', 'bold');
-            doc.text(limparCaracteres(pedido.status || 'N/A'), 45, yBase + 10);
             doc.setTextColor(0, 0, 0);
             doc.setFont('helvetica', 'normal');
-
-            // Informações do cliente
+            // Informações do cliente (priorizar campos do pedido)
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
-            doc.text('INFORMACOES DO CLIENTE', 20, yBase + 30);
+            doc.text('INFORMAÇÕES DO CLIENTE', 20, yBase + 30);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            // Extrair informações das observações para o PDF
-            const observacoes = pedido.observacoes || '';
-            const telefonePDF = extrairInfoPDF(observacoes, 'Telefone:') || 'Não informado';
-            const emailPDF = extrairInfoPDF(observacoes, 'Email:') || 'Não informado';
-            const enderecoPDF = extrairInfoPDF(observacoes, 'Endereço:') || 'Não informado';
-            const formaPagamentoPDF = extrairInfoPDF(observacoes, 'Forma de Pagamento:') || 'Não informado';
-
-            // Função auxiliar para extrair informações no PDF
-            function extrairInfoPDF(texto, chave) {
-              const textoLimpo = texto.replace(/•/g, '').replace(/\s+/g, ' ');
-              const regex = new RegExp(`${chave}\\s*([^\\n]+)`, 'i');
-              const match = textoLimpo.match(regex);
-              return match ? match[1].trim() : null;
+            let yInfo = yBase + 40;
+            // Cliente
+            doc.text(`Cliente: ${limparCaracteres(pedido.nome_cliente) || 'N/A'}`, 20, yInfo);
+            yInfo += 7;
+            // Endereço
+            let endereco = pedido.endereco;
+            if (!endereco && pedido.observacoes) {
+              const match = pedido.observacoes.match(/Endere[cç]o:([^\n]+)/i);
+              endereco = match ? match[1].trim() : '';
             }
-
-            doc.text(`Cliente: ${limparCaracteres(pedido.nome_cliente || pedido.cliente_id || 'N/A')}`, 20, yBase + 40);
-            doc.text(`Endereco: ${limparCaracteres(enderecoPDF)}`, 20, yBase + 47);
-            doc.text(`Telefone: ${limparCaracteres(telefonePDF)}`, 20, yBase + 54);
-            doc.text(`E-mail: ${limparCaracteres(emailPDF)}`, 20, yBase + 61);
-            doc.text(`Forma de Pagamento: ${limparCaracteres(formaPagamentoPDF)}`, 20, yBase + 68);
-
+            doc.text(`Endereço: ${limparCaracteres(endereco) || 'N/A'}`, 20, yInfo);
+            yInfo += 7;
+            // Telefone
+            let telefone = pedido.telefone;
+            if (!telefone && pedido.observacoes) {
+              const match = pedido.observacoes.match(/Telefone:([^\n]+)/i);
+              telefone = match ? match[1].trim() : '';
+            }
+            doc.text(`Telefone: ${limparCaracteres(telefone) || 'N/A'}`, 20, yInfo);
+            yInfo += 7;
+            // E-mail
+            let email = pedido.email;
+            if (!email && pedido.observacoes) {
+              const match = pedido.observacoes.match(/E-?mail:([^\n]+)/i);
+              email = match ? match[1].trim() : '';
+            }
+            doc.text(`E-mail: ${limparCaracteres(email) || 'N/A'}`, 20, yInfo);
+            yInfo += 7;
+            // Forma de Pagamento
+            let formaPagamento = pedido.forma_pagamento;
+            if (!formaPagamento && pedido.observacoes) {
+              const match = pedido.observacoes.match(/Forma de Pagamento:([^\n]+)/i);
+              formaPagamento = match ? match[1].trim() : '';
+            }
+            doc.text(`Forma de Pagamento: ${limparCaracteres(formaPagamento) || 'N/A'}`, 20, yInfo);
+            yInfo += 10;
             // Itens do pedido
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
-            doc.text('ITENS DO PEDIDO', 20, yBase + 90);
+            doc.text('ITENS DO PEDIDO', 20, yInfo);
             // Tabela de itens
             const tableData = pedido.itens ? pedido.itens.map(item => [
               limparCaracteres(item.produto || 'N/A'),
@@ -2296,50 +2291,48 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
               `R$ ${(Number(item.precoUnitario) || 0).toFixed(2).replace('.', ',')}`,
               `R$ ${(Number(item.subtotal) || 0).toFixed(2).replace('.', ',')}`
             ]) : [];
-            
-            // Só criar tabela se houver dados
             if (tableData.length > 0) {
               doc.autoTable({
-              startY: yBase + 95,
-              head: [['Produto', 'Qtd', 'Preco Unit.', 'Subtotal']],
-              body: tableData,
-              theme: 'grid',
-              tableWidth: 170, // Largura total da tabela (210 - 40 de margem)
-              headStyles: {
-                fillColor: primaryColor,
-                textColor: [255, 255, 255],
-                fontStyle: 'bold',
-                fontSize: 10
-              },
-              styles: {
-                fontSize: 9,
-                cellPadding: 3, // Reduzido de 4 para 3
-                lineColor: [200, 200, 200],
-                lineWidth: 0.1
-              },
-              columnStyles: {
-                0: { cellWidth: 'auto' }, // Produto - largura automática
-                1: { halign: 'center', cellWidth: 20 }, // Quantidade - fixa
-                2: { halign: 'right', cellWidth: 30 }, // Preço Unit. - fixa
-                3: { halign: 'right', cellWidth: 30 } // Subtotal - fixa
-              },
-              margin: { left: 20, right: 20 }
-            });
+                startY: yInfo + 5,
+                head: [['Produto', 'Qtd', 'Preço Unit.', 'Subtotal']],
+                body: tableData,
+                theme: 'grid',
+                tableWidth: 170,
+                headStyles: {
+                  fillColor: primaryColor,
+                  textColor: [255, 255, 255],
+                  fontStyle: 'bold',
+                  fontSize: 10
+                },
+                styles: {
+                  fontSize: 9,
+                  cellPadding: 3,
+                  lineColor: [200, 200, 200],
+                  lineWidth: 0.1
+                },
+                columnStyles: {
+                  0: { cellWidth: 'auto' },
+                  1: { halign: 'center', cellWidth: 20 },
+                  2: { halign: 'right', cellWidth: 30 },
+                  3: { halign: 'right', cellWidth: 30 }
+                },
+                margin: { left: 20, right: 20 }
+              });
             }
             // Total
-            const finalY = tableData.length > 0 ? doc.lastAutoTable.finalY + 10 : yBase + 95;
+            const finalY = tableData.length > 0 ? doc.lastAutoTable.finalY + 10 : yInfo + 15;
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             doc.text(`Valor Total: R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}`, 150, finalY);
-            // Observações
+            // Observações (apenas se houver e não for duplicada)
             if (pedido.observacoes) {
               doc.setFontSize(12);
               doc.setFont('helvetica', 'bold');
-              doc.text('OBSERVACOES:', 20, finalY + 20);
+              doc.text('OBSERVAÇÕES:', 20, finalY + 20);
               doc.setFontSize(10);
               doc.setFont('helvetica', 'normal');
-              const observacoes = doc.splitTextToSize(limparCaracteres(pedido.observacoes), 170);
-              doc.text(observacoes, 20, finalY + 28);
+              const obsLimpa = doc.splitTextToSize(limparCaracteres(pedido.observacoes), 170);
+              doc.text(obsLimpa, 20, finalY + 28);
             }
             // Rodapé
             const pageHeight = doc.internal.pageSize.height;
