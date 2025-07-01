@@ -1386,20 +1386,18 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
 
       // Extrair informações adicionais das observações
       const observacoes = pedido.observacoes || '';
-      const telefone = extrairInfo(observacoes, 'Telefone:') || 'Não informado';
-      const email = extrairInfo(observacoes, 'Email:') || 'Não informado';
-      const endereco = extrairInfo(observacoes, 'Endereço:') || 'Não informado';
-      const formaPagamento = extrairInfo(observacoes, 'Forma de Pagamento:') || 'Não informado';
-      const cpfCnpj = extrairInfo(observacoes, 'CPF/CNPJ:') || 'Não informado';
-
-      // Função auxiliar para extrair informações
-      function extrairInfo(texto, chave) {
-        // Remove os bullets (•) e procura pela chave
+      // Extrair cada campo separadamente, sem repetições ou concatenação
+      function extrairInfoSimples(texto, chave) {
         const textoLimpo = texto.replace(/•/g, '').replace(/\s+/g, ' ');
-        const regex = new RegExp(`${chave}\\s*([^\\n]+)`, 'i');
+        const regex = new RegExp(`${chave}\\s*([^\n\r;]+)`, 'i');
         const match = textoLimpo.match(regex);
-        return match ? match[1].trim() : null;
+        return match ? match[1].trim() : '';
       }
+      const telefone = extrairInfoSimples(observacoes, 'Telefone:') || 'Não informado';
+      const email = extrairInfoSimples(observacoes, 'Email:') || 'Não informado';
+      const endereco = extrairInfoSimples(observacoes, 'Endereço:') || 'Não informado';
+      const formaPagamento = extrairInfoSimples(observacoes, 'Forma de Pagamento:') || 'Não informado';
+      const cpfCnpj = extrairInfoSimples(observacoes, 'CPF/CNPJ:') || 'Não informado';
 
       // Determinar nome do cliente
       let nomeCliente = 'Cliente não identificado';
@@ -1430,12 +1428,10 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
                 <span class="info-label">Cliente:</span>
                 <span class="info-value">${nomeCliente}</span>
               </div>
-              ${pedido.nome_cliente ? `
-                <div class="info-item">
-                  <span class="info-label">CPF/CNPJ:</span>
-                  <span class="info-value">${cpfCnpj}</span>
-                </div>
-              ` : ''}
+              <div class="info-item">
+                <span class="info-label">CPF/CNPJ:</span>
+                <span class="info-value">${cpfCnpj}</span>
+              </div>
               <div class="info-item">
                 <span class="info-label">Telefone:</span>
                 <span class="info-value">${telefone}</span>
@@ -1447,6 +1443,10 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
               <div class="info-item">
                 <span class="info-label">Endereço:</span>
                 <span class="info-value">${endereco}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Forma de Pagamento:</span>
+                <span class="info-value">${formaPagamento}</span>
               </div>
             </div>
             
@@ -1486,7 +1486,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
                   <tr>
                     <td>${item.produto || 'N/A'}</td>
                     <td style="text-align: center;">${item.quantidade || 0}</td>
-                    <td style="text-align: right;">R$ ${(Number(item.precoUnitario) || 0).toFixed(2).replace('.', ',')}
+                    <td style="text-align: right;">R$ ${(Number(item.precoUnitario) || 0).toFixed(2).replace('.', ',')}</td>
                     <td style="text-align: right;">R$ ${(Number(item.subtotal) || 0).toFixed(2).replace('.', ',')}</td>
                   </tr>
                 `).join('') : '<tr><td colspan="4" style="text-align: center;">Nenhum item encontrado</td></tr>'}
