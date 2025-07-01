@@ -669,7 +669,7 @@
       const pedido = pedidosAbertos.find(p => p.id === id);
       if (!pedido) return;
       const data = new Date(pedido.data_pedido || Date.now());
-      const dataStr = data.toLocaleString('pt-BR');
+      const dataStr = data.toLocaleDateString('pt-BR');
       let total = (pedido.itens||[]).reduce((sum, i) => sum + (i.precoUnitario||0) * (i.quantidade||0), 0);
       // Buscar informações da empresa antes de imprimir
       fetch('/api/empresa').then(res => res.json()).then(empresa => {
