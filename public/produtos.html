@@ -1665,14 +1665,16 @@
       // Função para importar planilha de produtos
       async function importarPlanilha(event) {
         const file = event.target.files[0];
+        const btn = document.getElementById('btn-importar-planilha');
+        let originalText = btn ? btn.innerHTML : '';
         if (!file) return;
 
         try {
           // Mostrar loading
-          const btn = document.getElementById('btn-importar-planilha');
-          const originalText = btn.innerHTML;
-          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
-          btn.disabled = true;
+          if (btn) {
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
+            btn.disabled = true;
+          }
 
           const data = await readExcelFile(file);
           
@@ -1756,10 +1758,10 @@
           alert('Erro ao processar a planilha. Verifique se o arquivo está no formato correto.');
         } finally {
           // Restaurar botão
-          const btn = document.getElementById('btn-importar-planilha');
-          btn.innerHTML = originalText;
-          btn.disabled = false;
-          
+          if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          }
           // Limpar input
           event.target.value = '';
         }

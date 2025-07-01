@@ -1306,14 +1306,16 @@
     // Função para importar planilha
     async function importarPlanilha(event) {
       const file = event.target.files[0];
+      const btn = document.getElementById('btn-importar-planilha');
+      let originalText = btn ? btn.innerHTML : '';
       if (!file) return;
 
       try {
         // Mostrar loading
-        const btn = document.getElementById('btn-importar-planilha');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
-        btn.disabled = true;
+        if (btn) {
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
+          btn.disabled = true;
+        }
 
         const data = await readExcelFile(file);
         
@@ -1335,21 +1337,21 @@
         const clientesParaImportar = [];
         for (let i = 1; i < data.length; i++) {
           const row = data[i];
-          if (row[0] && row[0].trim()) { // Verificar se tem razão social
+          if (row[0] && String(row[0]).trim()) { // Verificar se tem razão social
             const cliente = {
-              razao: row[0]?.trim() || '',
-              cnpj: row[1]?.trim() || '',
-              ie: row[2]?.trim() || '',
-              endereco: row[3]?.trim() || '',
-              bairro: row[4]?.trim() || '',
-              cidade: row[5]?.trim() || '',
-              estado: row[6]?.trim() || '',
-              cep: row[7]?.trim() || '',
-              email: row[8]?.trim() || '',
-              telefone: row[9]?.trim() || '',
-              transporte: row[10]?.trim() || '',
-              prazo: row[11]?.trim() || '',
-              obs: row[12]?.trim() || ''
+              razao: (row[0] != null ? String(row[0]).trim() : ''),
+              cnpj: (row[1] != null ? String(row[1]).trim() : ''),
+              ie: (row[2] != null ? String(row[2]).trim() : ''),
+              endereco: (row[3] != null ? String(row[3]).trim() : ''),
+              bairro: (row[4] != null ? String(row[4]).trim() : ''),
+              cidade: (row[5] != null ? String(row[5]).trim() : ''),
+              estado: (row[6] != null ? String(row[6]).trim() : ''),
+              cep: (row[7] != null ? String(row[7]).trim() : ''),
+              email: (row[8] != null ? String(row[8]).trim() : ''),
+              telefone: (row[9] != null ? String(row[9]).trim() : ''),
+              transporte: (row[10] != null ? String(row[10]).trim() : ''),
+              prazo: (row[11] != null ? String(row[11]).trim() : ''),
+              obs: (row[12] != null ? String(row[12]).trim() : '')
             };
             clientesParaImportar.push(cliente);
           }
@@ -1394,10 +1396,10 @@
         alert('Erro ao processar a planilha. Verifique se o arquivo está no formato correto.');
       } finally {
         // Restaurar botão
-        const btn = document.getElementById('btn-importar-planilha');
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-        
+        if (btn) {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        }
         // Limpar input
         event.target.value = '';
       }
