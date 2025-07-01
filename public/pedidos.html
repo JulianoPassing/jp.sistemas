@@ -1978,6 +1978,18 @@
         hour: '2-digit', minute: '2-digit'
       });
     }
+
+    // Função utilitária para limpar undefined de objetos aninhados
+    function limparUndefinedDeep(obj) {
+      if (Array.isArray(obj)) {
+        return obj.map(limparUndefinedDeep);
+      } else if (obj && typeof obj === 'object') {
+        return Object.fromEntries(
+          Object.entries(obj).map(([k, v]) => [k, v === undefined ? null : limparUndefinedDeep(v)])
+        );
+      }
+      return obj;
+    }
   </script>
 </body>
 </html> 
