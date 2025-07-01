@@ -1106,34 +1106,41 @@
     // Função para gerar relatório PDF
     function gerarRelatorioPDF() {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 15;
+      let y = margin;
 
-      // Configurações de cores
+      // Cores
       const primaryColor = [0, 90, 159];
       const successColor = [40, 167, 69];
+      const headerHeight = 25;
 
-      // Obter mês selecionado
-      const mesSelecionado = document.getElementById('monthYear').value;
-      const mesNome = mesSelecionado ? new Date(mesSelecionado + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : 'Mês Atual';
-
-      // Cabeçalho
+      // Cabeçalho azul
       doc.setFillColor(...primaryColor);
-      doc.rect(0, 0, 210, 30, 'F');
+      doc.rect(0, 0, pageWidth, headerHeight, 'F');
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
-      doc.text('RELATÓRIO EXECUTIVO', 105, 15, { align: 'center' });
+      doc.setFontSize(20);
+      doc.text('RELATÓRIO EXECUTIVO', pageWidth / 2, y + 5, { align: 'center', baseline: 'top' });
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')} - Período: ${mesNome}`, 105, 25, { align: 'center' });
+      const mesSelecionado = document.getElementById('monthYear').value;
+      const mesNome = mesSelecionado ? new Date(mesSelecionado + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : 'Mês Atual';
+      doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')} - Período: ${mesNome}`, pageWidth / 2, y + 13, { align: 'center' });
+      y = headerHeight + 8;
+
+      // Título do relatório
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      const titulo = `RESUMO EXECUTIVO - ${mesNome.toUpperCase()} (Pedidos Concluídos e Em Processamento)`;
+      const splitTitulo = doc.splitTextToSize(titulo, pageWidth - 2 * margin);
+      doc.text(splitTitulo, pageWidth / 2, y, { align: 'center' });
+      y += splitTitulo.length * 7 + 2;
 
       // Dados do relatório
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`RESUMO EXECUTIVO - ${mesNome.toUpperCase()} (Pedidos Concluidos e Em Processamento)`, 20, 45);
-
-      // Usar dados reais se disponíveis, senão usar valores padrão
       const dados = window.dadosEstatisticas || {
         totalClientes: 0,
         totalProdutos: 0,
@@ -1152,112 +1159,103 @@
         ['', ''],
         ['PEDIDOS CONCLUÍDOS:', ''],
         ['Total de Pedidos Concluidos', dados.totalPedidos.toString()],
-        ['Pedidos Concluidos do Mes', dados.pedidosMes.toString()],
-        ['Vendas Totais (Geral - Concluidos)', `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Vendas Concluidas do Mes', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Lucro Total (Geral - Concluidos)', `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Lucro do Mes (Concluidos)', `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Pedidos Concluidos do Mês', dados.pedidosMes.toString()],
+        ['Vendas Totais (Geral - Concluídos)', `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Vendas Concluídas do Mês', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro Total (Geral - Concluídos)', `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro do Mês (Concluídos)', `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
         ['', ''],
         ['PEDIDOS EM PROCESSAMENTO:', ''],
         ['Total de Pedidos em Processamento', dados.totalPedidosProcessamento ? dados.totalPedidosProcessamento.toString() : '0'],
-        ['Pedidos em Processamento do Mes', dados.pedidosMesProcessamento ? dados.pedidosMesProcessamento.toString() : '0'],
+        ['Pedidos em Processamento do Mês', dados.pedidosMesProcessamento ? dados.pedidosMesProcessamento.toString() : '0'],
         ['Vendas Totais (Geral - Em Processamento)', `R$ ${parseFloat(dados.totalVendasProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Vendas em Processamento do Mes', `R$ ${parseFloat(dados.vendasMesProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Vendas em Processamento do Mês', `R$ ${parseFloat(dados.vendasMesProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
         ['Lucro Total (Geral - Em Processamento)', `R$ ${parseFloat(dados.lucroTotalProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Lucro do Mes (Em Processamento)', `R$ ${parseFloat(dados.lucroMesProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`]
+        ['Lucro do Mês (Em Processamento)', `R$ ${parseFloat(dados.lucroMesProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`]
       ];
 
+      // Tabela
       doc.autoTable({
-        startY: 55,
+        startY: y,
         head: [['Indicador', 'Valor']],
         body: estatisticas,
         theme: 'grid',
+        margin: { left: margin, right: margin },
+        tableWidth: pageWidth - 2 * margin,
         headStyles: {
           fillColor: primaryColor,
           textColor: [255, 255, 255],
-          fontStyle: 'bold'
+          fontStyle: 'bold',
+          halign: 'center',
+          fontSize: 11
         },
         styles: {
           fontSize: 10,
-          cellPadding: 5
+          cellPadding: 4,
+          valign: 'middle',
         },
         columnStyles: {
-          0: { fontStyle: 'bold' },
-          1: { halign: 'right' }
+          0: { fontStyle: 'bold', cellWidth: (pageWidth - 2 * margin) * 0.6 },
+          1: { halign: 'right', cellWidth: (pageWidth - 2 * margin) * 0.4 }
+        },
+        didDrawPage: function (data) {
+          // Rodapé em cada página
+          const pageH = doc.internal.pageSize.getHeight();
+          doc.setFillColor(240, 240, 240);
+          doc.rect(0, pageH - 18, pageWidth, 18, 'F');
+          doc.setTextColor(100, 100, 100);
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'normal');
+          doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', pageWidth / 2, pageH - 10, { align: 'center' });
+          doc.text(`Relatório de Rentabilidade - ${new Date().toLocaleDateString('pt-BR')}`, pageWidth / 2, pageH - 5, { align: 'center' });
         }
       });
+      y = doc.lastAutoTable.finalY + 8;
 
-      // Posição Y após a tabela
-      let y = doc.lastAutoTable.finalY + 15;
-      const pageHeight = doc.internal.pageSize.height;
-
-      // Função para pular página se necessário
-      function checkPageSpace(extra = 0) {
-        if (y + extra > pageHeight - 30) { // 30 para o rodapé
-          doc.addPage();
-          y = 20;
-        }
-      }
-
-      // Destaque do lucro
-      checkPageSpace(10);
+      // Bloco de lucro total do mês
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...successColor);
-      doc.text(`LUCRO TOTAL DO MES: R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 105, y, { align: 'center' });
-      y += 15;
+      doc.text(`LUCRO TOTAL DO MÊS: R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
+        pageWidth / 2, y, { align: 'center' });
+      y += 10;
 
-      // Análise de rentabilidade
-      checkPageSpace(60);
+      // Bloco de análise de rentabilidade
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.text('ANALISE DE RENTABILIDADE (Concluidos e Em Processamento)', 20, y);
-      y += 10;
-
+      doc.text('ANÁLISE DE RENTABILIDADE (Concluídos e Em Processamento)', pageWidth / 2, y, { align: 'center' });
+      y += 8;
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       const vendasMes = parseFloat(dados.vendasMes);
       const lucroMes = parseFloat(dados.lucroMes);
-      const vendasTotal = parseFloat(dados.totalVendas);
-      const lucroTotal = parseFloat(dados.lucroTotal);
-
-      const vendasMesProcessamento = parseFloat(dados.vendasMesProcessamento || 0);
-      const lucroMesProcessamento = parseFloat(dados.lucroMesProcessamento || 0);
-
       const margemLucro = vendasMes > 0 ? ((lucroMes / vendasMes) * 100).toFixed(1) : '0.0';
       const ticketMedio = dados.pedidosMes > 0 ? (vendasMes / dados.pedidosMes).toFixed(2) : '0.00';
       const lucroMedio = dados.pedidosMes > 0 ? (lucroMes / dados.pedidosMes).toFixed(2) : '0.00';
-
+      const vendasMesProcessamento = parseFloat(dados.vendasMesProcessamento || 0);
+      const lucroMesProcessamento = parseFloat(dados.lucroMesProcessamento || 0);
       const margemLucroProcessamento = vendasMesProcessamento > 0 ? ((lucroMesProcessamento / vendasMesProcessamento) * 100).toFixed(1) : '0.0';
       const ticketMedioProcessamento = dados.pedidosMesProcessamento > 0 ? (vendasMesProcessamento / dados.pedidosMesProcessamento).toFixed(2) : '0.00';
       const lucroMedioProcessamento = dados.pedidosMesProcessamento > 0 ? (lucroMesProcessamento / dados.pedidosMesProcessamento).toFixed(2) : '0.00';
-
-      doc.text(`Margem de Lucro (Mes - Concluidos): ${margemLucro}%`, 20, y); y += 7;
-      doc.text(`Ticket Medio (Mes - Concluidos): R$ ${ticketMedio}`, 20, y); y += 7;
-      doc.text(`Lucro Medio por Pedido (Mes - Concluidos): R$ ${lucroMedio}`, 20, y); y += 10;
-      doc.text(`Margem de Lucro (Mes - Em Processamento): ${margemLucroProcessamento}%`, 20, y); y += 7;
-      doc.text(`Ticket Medio (Mes - Em Processamento): R$ ${ticketMedioProcessamento}`, 20, y); y += 7;
-      doc.text(`Lucro Medio por Pedido (Mes - Em Processamento): R$ ${lucroMedioProcessamento}`, 20, y); y += 10;
-
-      // Rodapé sempre no final da página
-      function addFooter() {
-        const pageHeight = doc.internal.pageSize.height;
-        doc.setFillColor(240, 240, 240);
-        doc.rect(0, pageHeight - 30, 210, 30, 'F');
-        doc.setTextColor(100, 100, 100);
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'normal');
-        doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 20, { align: 'center' });
-        doc.text(`Relatorio de Rentabilidade - ${new Date().toLocaleDateString('pt-BR')}`, 105, pageHeight - 15, { align: 'center' });
-      }
-
-      // Adiciona rodapé em todas as páginas
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        addFooter();
-      }
+      const analise = [
+        `Margem de Lucro (Mês - Concluídos): ${margemLucro}%`,
+        `Ticket Médio (Mês - Concluídos): R$ ${ticketMedio}`,
+        `Lucro Médio por Pedido (Mês - Concluídos): R$ ${lucroMedio}`,
+        '',
+        `Margem de Lucro (Mês - Em Processamento): ${margemLucroProcessamento}%`,
+        `Ticket Médio (Mês - Em Processamento): R$ ${ticketMedioProcessamento}`,
+        `Lucro Médio por Pedido (Mês - Em Processamento): R$ ${lucroMedioProcessamento}`
+      ];
+      analise.forEach(linha => {
+        if (linha) {
+          const split = doc.splitTextToSize(linha, pageWidth - 2 * margin);
+          doc.text(split, pageWidth / 2, y, { align: 'center' });
+          y += split.length * 6;
+        } else {
+          y += 3;
+        }
+      });
 
       // Salvar PDF
       const hoje = new Date();
@@ -1308,27 +1306,27 @@
         ['PEDIDOS CONCLUÍDOS:', ''],
         ['Total de Pedidos Concluidos', dados.totalPedidos],
         ['Pedidos Concluidos do Mes', dados.pedidosMes],
-        ['Vendas Totais (Geral - Concluidos)', `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Vendas Concluidas do Mes', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Lucro Total (Geral - Concluidos)', `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Lucro do Mes (Concluidos)', `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Vendas Totais (Geral - Concluídos)', `R$ ${parseFloat(dados.totalVendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Vendas Concluídas do Mês', `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro Total (Geral - Concluídos)', `R$ ${parseFloat(dados.lucroTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro do Mês (Concluídos)', `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
         ['', ''],
         ['PEDIDOS EM PROCESSAMENTO:', ''],
         ['Total de Pedidos em Processamento', dados.totalPedidosProcessamento || 0],
-        ['Pedidos em Processamento do Mes', dados.pedidosMesProcessamento || 0],
+        ['Pedidos em Processamento do Mês', dados.pedidosMesProcessamento || 0],
         ['Vendas Totais (Geral - Em Processamento)', `R$ ${parseFloat(dados.totalVendasProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Vendas em Processamento do Mes', `R$ ${parseFloat(dados.vendasMesProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Vendas em Processamento do Mês', `R$ ${parseFloat(dados.vendasMesProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
         ['Lucro Total (Geral - Em Processamento)', `R$ ${parseFloat(dados.lucroTotalProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
-        ['Lucro do Mes (Em Processamento)', `R$ ${parseFloat(dados.lucroMesProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Lucro do Mês (Em Processamento)', `R$ ${parseFloat(dados.lucroMesProcessamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
         ['', ''],
-        ['ANALISE DE RENTABILIDADE'],
-        ['Margem de Lucro (Mes - Concluidos)', `${margemLucro}%`],
-        ['Ticket Medio (Mes - Concluidos)', `R$ ${ticketMedio}`],
-        ['Lucro Medio por Pedido (Mes - Concluidos)', `R$ ${lucroMedio}`],
+        ['ANÁLISE DE RENTABILIDADE'],
+        ['Margem de Lucro (Mês - Concluídos)', `${margemLucro}%`],
+        ['Ticket Médio (Mês - Concluídos)', `R$ ${ticketMedio}`],
+        ['Lucro Médio por Pedido (Mês - Concluídos)', `R$ ${lucroMedio}`],
         ['', ''],
-        ['Margem de Lucro (Mes - Em Processamento)', `${margemLucroProcessamento}%`],
-        ['Ticket Medio (Mes - Em Processamento)', `R$ ${ticketMedioProcessamento}`],
-        ['Lucro Medio por Pedido (Mes - Em Processamento)', `R$ ${lucroMedioProcessamento}`],
+        ['Margem de Lucro (Mês - Em Processamento)', `${margemLucroProcessamento}%`],
+        ['Ticket Médio (Mês - Em Processamento)', `R$ ${ticketMedioProcessamento}`],
+        ['Lucro Médio por Pedido (Mês - Em Processamento)', `R$ ${lucroMedioProcessamento}`],
         ['', ''],
         ['DETALHAMENTO POR PERIODO'],
         ['Status', 'Periodo', 'Vendas', 'Lucro', 'Margem'],
