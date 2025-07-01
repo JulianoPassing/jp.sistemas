@@ -1774,19 +1774,136 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
       return `R$ ${valor.toFixed(2).replace('.', ',')}`;
     }
 
+    // Função para limpar caracteres especiais (global, para uso em todo o arquivo)
+    function limparCaracteres(texto) {
+      if (!texto) return '';
+      return texto.toString()
+        .replace(/[^\w\s\-.,()@\n]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .substring(0, 50); // Limita a 50 caracteres para evitar overflow
+    }
+
     // Função para gerar PDF de todos os pedidos
     function gerarPDFTodosPedidos() {
-      // Tabela de pedidos
-      const tableData = pedidos.map(pedido => [
-        pedido.id,
-        limparCaracteres(pedido.nome_cliente || pedido.cliente_id || 'N/A'),
-        pedido.data_pedido || 'N/A',
-        limparCaracteres(pedido.status || 'N/A'),
-        `R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}`
-      ]);
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const primaryColor = [0, 90, 159];
+      const secondaryColor = [0, 55, 102];
 
-      // Rest of the function remains unchanged
-      // ...
+      carregarImagemBase64('https://i.imgur.com/2jT2EPD.png', function(logoBase64) {
+        // Logo centralizada
+        const logoWidth = 50;
+        const logoHeight = 22;
+        const logoX = (210 - logoWidth) / 2;
+        const logoY = 8;
+        doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
+
+        // Cabeçalho
+        doc.setFillColor(...primaryColor);
+        doc.rect(0, 0, 210, 40, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('RELATÓRIO DE PEDIDOS', 105, 35, { align: 'center' });
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, 45, { align: 'center' });
+
+        // Informações do relatório
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Pedidos e Vendas', 20, 60);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Total de Pedidos: ${pedidos.length}`, 20, 70);
+
+        // Tabela de pedidos
+        const tableData = pedidos.map(pedido => [
+          pedido.id,
+          limparCaracteres(pedido.nome_cliente || pedido.cliente_id || 'N/A'),
+          formatarData(pedido.data_pedido) || 'N/A',
+          limparCaracteres(pedido.status || 'N/A'),
+          `R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}`
+        ]);
+
+        doc.autoTable({
+          startY: 80,
+          head: [['ID', 'Cliente', 'Data', 'Status', 'Valor Total']],
+          body: tableData,
+          theme: 'grid',
+          headStyles: {
+            fillColor: primaryColor,
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            fontSize: 10
+          },
+          styles: {
+            fontSize: 9,
+            cellPadding: 4,
+            lineColor: [200, 200, 200],
+            lineWidth: 0.1
+          },
+          columnStyles: {
+            0: { cellWidth: 20, halign: 'center' },
+            1: { cellWidth: 55, halign: 'left' },
+            2: { cellWidth: 30, halign: 'center' },
+            3: { cellWidth: 30, halign: 'center' },
+            4: { cellWidth: 40, halign: 'right' }
+          },
+          alternateRowStyles: {
+            fillColor: [248, 249, 250]
+          },
+          margin: { top: 80, right: 10, bottom: 10, left: 10 }
+        });
+
+        // Estatísticas por status
+        const finalY = doc.lastAutoTable.finalY + 15;
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Distribuição por Status:', 20, finalY);
+        const statusMap = {};
+        pedidos.forEach(pedido => {
+          const status = (pedido.status || 'Não informado').replace(/[^\w\s\-\.]/g, '');
+          statusMap[status] = (statusMap[status] || 0) + 1;
+        });
+        let yPos = finalY + 10;
+        let coluna = 0;
+        const colunas = 2;
+        const larguraColuna = 80;
+        Object.entries(statusMap).forEach(([status, count], index) => {
+          if (yPos > 250) {
+            doc.addPage();
+            yPos = 20;
+            coluna = 0;
+          }
+          const xPos = 25 + (coluna * larguraColuna);
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          doc.text(`${status}: ${count} pedido(s)`, xPos, yPos);
+          coluna++;
+          if (coluna >= colunas) {
+            coluna = 0;
+            yPos += 8;
+          }
+        });
+
+        // Rodapé
+        const pageHeight = doc.internal.pageSize.height;
+        doc.setFillColor(240, 240, 240);
+        doc.rect(0, pageHeight - 30, 210, 30, 'F');
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 20, { align: 'center' });
+        doc.text(`Total de pedidos: ${pedidos.length}`, 105, pageHeight - 15, { align: 'center' });
+
+        // Salvar PDF
+        const hoje = new Date();
+        const dataAtual = `${hoje.getDate().toString().padStart(2, '0')}-${(hoje.getMonth() + 1).toString().padStart(2, '0')}-${hoje.getFullYear()}`;
+        doc.save(`Relatorio_Pedidos_${dataAtual}.pdf`);
+      });
     }
 
     // Função para imprimir pedido
