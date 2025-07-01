@@ -1157,7 +1157,16 @@
         return;
       }
       
-      const data_pedido = new Date().toISOString().split('T')[0];
+      // Função para pegar a data de hoje no fuso horário local (BR)
+      function getDataHojeBR() {
+        const hoje = new Date();
+        const ano = hoje.getFullYear();
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        const dia = String(hoje.getDate()).padStart(2, '0');
+        return `${ano}-${mes}-${dia}`;
+      }
+      // Substituir UTC por local
+      const data_pedido = getDataHojeBR();
       const status = 'Em Processamento';
       const valor_total = novoPedidoItens.reduce((sum, item) => sum + item.subtotal, 0);
       
@@ -1263,7 +1272,8 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
           data_pedido: pedido.data_pedido,
           status: 'Concluído',
           valor_total: pedido.valor_total,
-          observacoes: pedido.observacoes
+          observacoes: pedido.observacoes,
+          itens: pedido.itens // <-- Adicionado para evitar erro de itens is not iterable
         };
 
         console.log('Dados para atualização:', pedidoData);

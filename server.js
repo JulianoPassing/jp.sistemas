@@ -765,11 +765,11 @@ app.get('/api/relatorios/estatisticas', async (req, res) => {
       anoFiltro = hoje.getFullYear();
     }
 
-    // Buscar total de clientes
+    // Buscar total de clientes (sempre geral)
     const [clientesResult] = await connection.execute('SELECT COUNT(*) as total FROM clientes');
     const totalClientes = clientesResult[0].total;
 
-    // Buscar total de produtos
+    // Buscar total de produtos (sempre geral)
     const [produtosResult] = await connection.execute('SELECT COUNT(*) as total FROM produtos');
     const totalProdutos = produtosResult[0].total;
 

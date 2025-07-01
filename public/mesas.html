@@ -532,7 +532,7 @@
         nome_cliente: nome,
         status: 'Em Aberto',
         itens: [],
-        data_pedido: new Date().toISOString().split('T')[0]
+        data_pedido: getDataHojeBR()
       };
       try {
         const response = await fetch('/api/pedidos', {
@@ -982,7 +982,7 @@
             subtotal: parseFloat(i.subtotal || 0)
           })),
           cliente_id: pedido.cliente_id ?? null,
-          data_pedido: (pedido.data_pedido ?? new Date().toISOString().split('T')[0]).split('T')[0],
+          data_pedido: getDataHojeBR(),
           status: pedido.status ?? 'Em Aberto',
           valor_total: valor_total || 0,
           observacoes: pedido.observacoes ?? ''
@@ -1127,6 +1127,14 @@
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
       }
+    }
+    // Adicionar função utilitária para data local BR
+    function getDataHojeBR() {
+      const hoje = new Date();
+      const ano = hoje.getFullYear();
+      const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+      const dia = String(hoje.getDate()).padStart(2, '0');
+      return `${ano}-${mes}-${dia}`;
     }
   </script>
 </body>
