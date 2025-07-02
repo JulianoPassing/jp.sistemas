@@ -154,6 +154,7 @@ async function createUserDatabase(username) {
       CREATE TABLE IF NOT EXISTS pedidos (
         id INT AUTO_INCREMENT PRIMARY KEY,
         cliente_id INT,
+        nome_cliente VARCHAR(255),
         data_pedido DATE,
         status VARCHAR(50) DEFAULT 'pendente',
         valor_total DECIMAL(10,2),
