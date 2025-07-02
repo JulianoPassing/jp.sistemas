@@ -1,21 +1,10 @@
 /**
- * Script para Atualizar Estrutura da Tabela Pedidos
+ * Script para Atualizar Estrutura da Tabela Pedidos (Versão Corrigida)
  * Adiciona a coluna nome_cliente em bancos existentes
  */
 
 const mysql = require('mysql2/promise');
 require('dotenv').config();
-
-// Função para conectar ao banco de usuários
-async function getUsersConnection() {
-  return await mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'jpsistemas',
-    password: process.env.DB_PASSWORD || 'SuaSenhaForte123!',
-    database: 'jpsistemas_users',
-    charset: 'utf8mb4'
-  });
-}
 
 // Função para listar todos os bancos de usuários
 async function getUserDatabases() {
@@ -32,11 +21,16 @@ async function getUserDatabases() {
     
     // Filtrar apenas bancos de usuários (excluir bancos principais)
     const mainDatabases = ['jpsistemas_users', 'jpsistemas_sessions', 'jpsistemas_admin'];
-    const userDatabases = databases
-      .map(db => db.Database)
-      .filter(dbName => dbName && !mainDatabases.includes(dbName));
+    const userDatabases = [];
     
-    console.log('Bancos encontrados:', userDatabases);
+    for (const db of databases) {
+      const dbName = db.Database || db['Database (jpsistemas_%)'];
+      if (dbName && !mainDatabases.includes(dbName)) {
+        userDatabases.push(dbName);
+      }
+    }
+    
+    console.log('Bancos de usuários encontrados:', userDatabases);
     return userDatabases;
   } catch (error) {
     console.error('❌ Erro ao listar bancos:', error.message);
@@ -101,8 +95,8 @@ async function addNomeClienteColumn(dbName) {
 
 // Função principal
 async function main() {
-  console.log('🔧 Atualizando Estrutura da Tabela Pedidos');
-  console.log('=========================================');
+  console.log('🔧 Atualizando Estrutura da Tabela Pedidos (Versão Corrigida)');
+  console.log('===========================================================');
   console.log('');
   
   try {
@@ -124,6 +118,11 @@ async function main() {
     
     // Processar cada banco
     for (const dbName of userDatabases) {
+      if (!dbName) {
+        console.log('⚠️  Nome de banco inválido, pulando...');
+        continue;
+      }
+      
       console.log(`🔍 Verificando ${dbName}...`);
       
       // Verificar se a coluna já existe
