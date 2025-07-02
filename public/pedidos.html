@@ -1755,7 +1755,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       sessionStorage.removeItem('loggedIn');
       sessionStorage.removeItem('username');
-      window.location.href = 'index.html';
+      window.location.href = 'sistema.html';
     }
 
     // Função para calcular o lucro de um pedido
