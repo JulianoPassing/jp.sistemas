@@ -367,6 +367,72 @@
           padding: 18px 0 12px 0;
         }
       }
+
+      .dashboard-rapido .dashboard-card {
+        position: relative;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 18px var(--shadow);
+        padding: 18px 0 12px 0;
+        text-align: center;
+        border: 1.5px solid #e5e7eb;
+        transition: box-shadow 0.3s, transform 0.2s;
+        cursor: pointer;
+        min-width: 0;
+        overflow: visible;
+      }
+      .dashboard-rapido .dashboard-card:hover {
+        box-shadow: 0 12px 32px var(--shadow-hover);
+        transform: translateY(-4px) scale(1.035);
+        z-index: 2;
+      }
+      .dashboard-rapido .dashboard-indicator {
+        height: 6px;
+        border-radius: 16px 16px 0 0;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      .dashboard-rapido .dashboard-indicator.clientes {
+        background: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+      }
+      .dashboard-rapido .dashboard-indicator.produtos {
+        background: linear-gradient(90deg, #7c3aed 60%, #a78bfa 100%);
+      }
+      .dashboard-rapido .dashboard-indicator.pedidos {
+        background: linear-gradient(90deg, #0ea5e9 60%, #38bdf8 100%);
+      }
+      .dashboard-rapido .dashboard-indicator.vendas {
+        background: linear-gradient(90deg, #059669 60%, #34d399 100%);
+      }
+      .dashboard-rapido .dashboard-card i {
+        font-size: 28px;
+        margin-bottom: 10px;
+        margin-top: 8px;
+        color: var(--primary-color);
+        transition: transform 0.3s;
+      }
+      .dashboard-rapido .dashboard-card.vendas i {
+        color: #059669;
+      }
+      .dashboard-rapido .dashboard-card:hover i {
+        transform: scale(1.13) rotate(-4deg);
+      }
+      .dashboard-rapido .dashboard-value {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--primary-dark);
+        margin-bottom: 6px;
+        letter-spacing: 0.01em;
+        text-shadow: 0 2px 8px #e5e7eb88;
+      }
+      .dashboard-rapido .dashboard-label {
+        font-size: 14px;
+        color: var(--text-secondary);
+        font-weight: 600;
+        letter-spacing: 0.01em;
+      }
     </style>
   </head>
   <body>
@@ -391,23 +457,27 @@
       </div>
 
       <!-- Dashboard Pequeno -->
-      <div class="dashboard-grid">
-        <div class="dashboard-card">
+      <div class="dashboard-grid dashboard-rapido">
+        <div class="dashboard-card clientes" title="Total de clientes cadastrados.">
+          <div class="dashboard-indicator clientes"></div>
           <i class="fas fa-users"></i>
           <div class="dashboard-value" id="dashboardClientes">--</div>
           <div class="dashboard-label">Clientes</div>
         </div>
-        <div class="dashboard-card">
+        <div class="dashboard-card produtos" title="Total de produtos cadastrados.">
+          <div class="dashboard-indicator produtos"></div>
           <i class="fas fa-box"></i>
           <div class="dashboard-value" id="dashboardProdutos">--</div>
           <div class="dashboard-label">Produtos</div>
         </div>
-        <div class="dashboard-card">
+        <div class="dashboard-card pedidos" title="Total de pedidos realizados no mês.">
+          <div class="dashboard-indicator pedidos"></div>
           <i class="fas fa-shopping-cart"></i>
           <div class="dashboard-value" id="dashboardPedidos">--</div>
           <div class="dashboard-label">Pedidos</div>
         </div>
-        <div class="dashboard-card">
+        <div class="dashboard-card vendas" title="Valor total das vendas concluídas no mês.">
+          <div class="dashboard-indicator vendas"></div>
           <i class="fas fa-coins"></i>
           <div class="dashboard-value" id="dashboardVendas">--</div>
           <div class="dashboard-label">Vendas do mês</div>
