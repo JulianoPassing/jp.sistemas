@@ -927,7 +927,8 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(publicPath, 'index.html'));
 });
 
-module.exports = app;
+// Exporta o middleware JWT para uso em outros módulos
+module.exports.requireAuthJWT = requireAuthJWT;
 
 // Inicialização do servidor (apenas se executado diretamente)
 if (require.main === module) {
