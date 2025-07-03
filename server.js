@@ -294,14 +294,20 @@ app.post('/api/auth/login', async (req, res) => {
     };
     const token = jwt.sign(userPayload, process.env.JWT_SECRET, { expiresIn: '24h' });
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000
+    req.session.save((err) => {
+      if (err) {
+        console.error('Erro ao salvar sessão:', err);
+        return res.status(500).json({ error: 'Erro ao salvar sessão' });
+      }
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        domain: '.jp-sistemas.com',
+        maxAge: 24 * 60 * 60 * 1000
+      });
+      res.json({ success: true, user: userPayload });
     });
-
-    res.json({ success: true, user: userPayload });
   } catch (error) {
     console.error('Erro no login:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
