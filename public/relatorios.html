@@ -1436,21 +1436,39 @@
       const contasReceber = window.contasReceber || [];
       // Contas a Pagar
       garantirEspaco(12);
-      doc.setFontSize(12);
+      doc.setFontSize(13);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(220, 38, 38);
       doc.text('CONTAS A PAGAR', pageWidth / 2, y, { align: 'center' });
       y += 8;
+      // Calcular totais
+      let totalPagar = 0, totalPagarAberto = 0, totalPagarVencido = 0, totalPagarPago = 0;
+      contasPagar.forEach(c => {
+        const valor = parseFloat(c.valor);
+        totalPagar += valor;
+        if (c.status === 'pago') totalPagarPago += valor;
+        else {
+          const hoje = new Date();
+          const dataVenc = new Date(c.data_vencimento);
+          dataVenc.setHours(0,0,0,0);
+          hoje.setHours(0,0,0,0);
+          if (dataVenc < hoje) totalPagarVencido += valor;
+          else totalPagarAberto += valor;
+        }
+      });
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(0, 0, 0);
+      doc.setTextColor(0,0,0);
+      doc.text(`Total de contas: R$ ${totalPagar.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin, y);
+      doc.text(`Em aberto: R$ ${totalPagarAberto.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 70, y);
+      doc.text(`Vencidas: R$ ${totalPagarVencido.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 140, y);
+      doc.text(`Pagas: R$ ${totalPagarPago.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 210, y);
+      y += 7;
       if (contasPagar.length > 0) {
         const contasPagarTable = contasPagar.map(c => {
           let statusLabel = 'Em aberto';
-          if (c.status === 'pago') {
-            statusLabel = 'Pago';
-          } else {
-            // Verificar vencimento
+          if (c.status === 'pago') statusLabel = 'Pago';
+          else {
             const hoje = new Date();
             const dataVenc = new Date(c.data_vencimento);
             dataVenc.setHours(0,0,0,0);
@@ -1478,30 +1496,48 @@
             halign: 'center',
             fontSize: 10
           },
-          styles: { fontSize: 9, cellPadding: 3, valign: 'middle' },
+          styles: { fontSize: 9, cellPadding: 3, valign: 'middle' }
         });
-        y = doc.lastAutoTable.finalY + 8;
+        y = doc.lastAutoTable.finalY + 10;
       } else {
         doc.text('Nenhuma conta a pagar cadastrada.', pageWidth / 2, y, { align: 'center' });
-        y += 8;
+        y += 10;
       }
       // Contas a Receber
       garantirEspaco(12);
-      doc.setFontSize(12);
+      doc.setFontSize(13);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(40, 167, 69);
       doc.text('CONTAS A RECEBER', pageWidth / 2, y, { align: 'center' });
       y += 8;
+      // Calcular totais
+      let totalReceber = 0, totalReceberAberto = 0, totalReceberVencido = 0, totalReceberPago = 0;
+      contasReceber.forEach(c => {
+        const valor = parseFloat(c.valor);
+        totalReceber += valor;
+        if (c.status === 'pago') totalReceberPago += valor;
+        else {
+          const hoje = new Date();
+          const dataVenc = new Date(c.data_vencimento);
+          dataVenc.setHours(0,0,0,0);
+          hoje.setHours(0,0,0,0);
+          if (dataVenc < hoje) totalReceberVencido += valor;
+          else totalReceberAberto += valor;
+        }
+      });
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(0, 0, 0);
+      doc.setTextColor(0,0,0);
+      doc.text(`Total de contas: R$ ${totalReceber.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin, y);
+      doc.text(`Em aberto: R$ ${totalReceberAberto.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 70, y);
+      doc.text(`Vencidas: R$ ${totalReceberVencido.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 140, y);
+      doc.text(`Pagas: R$ ${totalReceberPago.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 210, y);
+      y += 7;
       if (contasReceber.length > 0) {
         const contasReceberTable = contasReceber.map(c => {
           let statusLabel = 'Em aberto';
-          if (c.status === 'pago') {
-            statusLabel = 'Pago';
-          } else {
-            // Verificar vencimento
+          if (c.status === 'pago') statusLabel = 'Pago';
+          else {
             const hoje = new Date();
             const dataVenc = new Date(c.data_vencimento);
             dataVenc.setHours(0,0,0,0);
@@ -1529,12 +1565,12 @@
             halign: 'center',
             fontSize: 10
           },
-          styles: { fontSize: 9, cellPadding: 3, valign: 'middle' },
+          styles: { fontSize: 9, cellPadding: 3, valign: 'middle' }
         });
-        y = doc.lastAutoTable.finalY + 8;
+        y = doc.lastAutoTable.finalY + 10;
       } else {
         doc.text('Nenhuma conta a receber cadastrada.', pageWidth / 2, y, { align: 'center' });
-        y += 8;
+        y += 10;
       }
 
       // Salvar PDF
