@@ -865,6 +865,7 @@
       <div class="financeiro-card pagar">
         <div class="financeiro-header">
           <h2>Contas a Pagar</h2>
+          <span id="total-pagar" style="font-size:1.1em;font-weight:600;color:#dc2626;margin-left:10px;"></span>
           <button class="btn btn-primary" id="btn-add-pagar"><i class="fas fa-plus"></i> Adicionar</button>
         </div>
         <form id="form-pagar" class="financeiro-form" style="display:none;">
@@ -879,6 +880,7 @@
       <div class="financeiro-card receber">
         <div class="financeiro-header">
           <h2>Contas a Receber</h2>
+          <span id="total-receber" style="font-size:1.1em;font-weight:600;color:#059669;margin-left:10px;"></span>
           <button class="btn btn-success" id="btn-add-receber"><i class="fas fa-plus"></i> Adicionar</button>
         </div>
         <form id="form-receber" class="financeiro-form" style="display:none;">
@@ -1621,16 +1623,34 @@
       const lista = document.getElementById('lista-' + tipo);
       const contas = await getContas(tipo);
       lista.innerHTML = '';
+      let total = 0;
       if (!contas || contas.length === 0) {
         lista.innerHTML = '<li style="color:#888;">Nenhuma conta cadastrada.</li>';
+        document.getElementById('total-' + tipo).textContent = 'Total: R$ 0,00';
         return;
       }
       contas.forEach(conta => {
+        total += parseFloat(conta.valor);
         const li = document.createElement('li');
         li.classList.add(tipo);
-        li.innerHTML = `<span class="desc">${conta.descricao}</span> <span class="valor">R$ ${parseFloat(conta.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}</span> <span class="data">Venc: ${conta.data_vencimento}</span> <button class="remover" title="Remover" onclick="removerContaUI('${tipo}',${conta.id})"><i class="fas fa-trash"></i></button>`;
+        // Status de vencimento
+        const hoje = new Date();
+        const dataVenc = new Date(conta.data_vencimento);
+        dataVenc.setHours(0,0,0,0);
+        hoje.setHours(0,0,0,0);
+        let status = '';
+        let statusColor = '';
+        if (dataVenc < hoje) {
+          status = 'Vencido';
+          statusColor = 'color:#dc2626;font-weight:700;';
+        } else {
+          status = 'Em aberto';
+          statusColor = 'color:#059669;font-weight:700;';
+        }
+        li.innerHTML = `<span class="desc">${conta.descricao}</span> <span class="valor">R$ ${parseFloat(conta.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}</span> <span class="data">Venc: ${conta.data_vencimento}</span> <span class="status" style="${statusColor}">${status}</span> <button class="remover" title="Remover" onclick="removerContaUI('${tipo}',${conta.id})"><i class="fas fa-trash"></i></button>`;
         lista.appendChild(li);
       });
+      document.getElementById('total-' + tipo).textContent = `Total: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
     }
     window.removerContaUI = async function(tipo, id) {
       await removerConta(tipo, id);
