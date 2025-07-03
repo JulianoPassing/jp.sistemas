@@ -763,8 +763,8 @@ app.get('/api/relatorios/estatisticas', async (req, res) => {
     
     if (mes) {
       const [ano, mesNum] = mes.split('-');
-      mesFiltro = mesNum;
-      anoFiltro = ano;
+      mesFiltro = parseInt(mesNum, 10); // Garante que o mês é inteiro
+      anoFiltro = parseInt(ano, 10);
     } else {
       // Se não foi passado, usar mês atual
       const hoje = new Date();
