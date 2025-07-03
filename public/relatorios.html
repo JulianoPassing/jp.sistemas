@@ -1457,7 +1457,7 @@
           body: contasPagarTable,
           theme: 'grid',
           margin: { left: margin, right: margin },
-          tableWidth: pageWidth - 2 * margin,
+          tableWidth: 'auto',
           headStyles: {
             fillColor: [220, 38, 38],
             textColor: [255, 255, 255],
@@ -1466,7 +1466,6 @@
             fontSize: 10
           },
           styles: { fontSize: 9, cellPadding: 3, valign: 'middle' },
-          columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 28 }, 2: { cellWidth: 28 }, 3: { cellWidth: 28 } }
         });
         y = doc.lastAutoTable.finalY + 8;
       } else {
@@ -1496,7 +1495,7 @@
           body: contasReceberTable,
           theme: 'grid',
           margin: { left: margin, right: margin },
-          tableWidth: pageWidth - 2 * margin,
+          tableWidth: 'auto',
           headStyles: {
             fillColor: [40, 167, 69],
             textColor: [255, 255, 255],
@@ -1505,7 +1504,6 @@
             fontSize: 10
           },
           styles: { fontSize: 9, cellPadding: 3, valign: 'middle' },
-          columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 28 }, 2: { cellWidth: 28 }, 3: { cellWidth: 28 } }
         });
         y = doc.lastAutoTable.finalY + 8;
       } else {
