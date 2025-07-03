@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const mysql = require('mysql2/promise');
 const { getUserDatabaseConfig } = require('../database-config');
-const { requireAuthJWT } = require('../server');
+const { requireAuthJWT } = require('../middlewares/auth');
 
 // Helper para obter conexão do banco do usuário logado via JWT
 async function getUserConnection(req) {
