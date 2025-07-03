@@ -242,6 +242,12 @@
           padding: 18px 0 12px 0;
         }
       }
+      .dashboard-card.pagar i {
+        color: #dc2626;
+      }
+      .dashboard-card.receber i {
+        color: #059669;
+      }
     </style>
   </head>
   <body>
@@ -286,6 +292,16 @@
           <i class="fas fa-coins"></i>
           <div class="dashboard-value" id="dashboardVendas">--</div>
           <div class="dashboard-label">Vendas do mês</div>
+        </div>
+        <div class="dashboard-card pagar">
+          <i class="fas fa-arrow-circle-up"></i>
+          <div class="dashboard-value" id="dashboardPagar">--</div>
+          <div class="dashboard-label">Contas a Pagar</div>
+        </div>
+        <div class="dashboard-card receber">
+          <i class="fas fa-arrow-circle-down"></i>
+          <div class="dashboard-value" id="dashboardReceber">--</div>
+          <div class="dashboard-label">Contas a Receber</div>
         </div>
       </div>
 
@@ -356,6 +372,26 @@
             document.getElementById('dashboardProdutos').textContent = '--';
             document.getElementById('dashboardPedidos').textContent = '--';
             document.getElementById('dashboardVendas').textContent = '--';
+          });
+
+        // Buscar contas a pagar e receber
+        fetch('/api/contas/pagar', { credentials: 'include' })
+          .then(res => res.json())
+          .then(lista => {
+            const total = lista.reduce((acc, c) => acc + Number(c.valor || 0), 0);
+            document.getElementById('dashboardPagar').textContent = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+          })
+          .catch(() => {
+            document.getElementById('dashboardPagar').textContent = '--';
+          });
+        fetch('/api/contas/receber', { credentials: 'include' })
+          .then(res => res.json())
+          .then(lista => {
+            const total = lista.reduce((acc, c) => acc + Number(c.valor || 0), 0);
+            document.getElementById('dashboardReceber').textContent = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+          })
+          .catch(() => {
+            document.getElementById('dashboardReceber').textContent = '--';
           });
       });
       
