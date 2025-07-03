@@ -1578,6 +1578,15 @@
     // Funções para consumir a API
     async function getContas(tipo) {
       const res = await fetch(`/api/contas/${tipo}`);
+      if (res.status === 304) {
+        // Não há conteúdo novo, retorne array vazio
+        return [];
+      }
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('Erro ao buscar contas:', text);
+        throw new Error('Erro ao buscar contas: ' + text);
+      }
       return await res.json();
     }
     async function addConta(tipo, conta) {
