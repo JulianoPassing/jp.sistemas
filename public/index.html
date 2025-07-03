@@ -3,133 +3,160 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JP. Sistemas - Tecnologia em Gestão</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <title>JP. Sistemas - Tecnologia em GestÃ£o</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png">
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
   <style>
+    :root {
+        --primary-blue: #002f4b; 
+        --accent-blue: #00e6ff; 
+        --light-gray: #f0f2f5; 
+        --dark-text: #2c3e50; 
+        --light-text: #ecf0f1; 
+    }
+
     body {
       margin: 0;
       font-family: 'Inter', sans-serif;
-      background: radial-gradient(circle at 50% 40%, #fff 0%, #fff 20%, #a3adb8 100%);
-      color: #fff;
+      background: linear-gradient(to bottom, #ffffff 0%, #ffffff 40%, #7c7c7c63 100%);
+      color: var(--dark-text); 
       min-height: 100vh;
       overflow-x: hidden;
       position: relative;
-    }
-    body::before {
-      /* Removido para não criar manchas escuras */
-      content: none;
-    }
-    body::after {
-      /* Removido para não criar manchas escuras */
-      content: none;
     }
     header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.6rem 4vw;
-      background: rgba(0, 47, 75, 0.92);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 0.8rem 4vw; 
+      background: var(--primary-blue); 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
       position: sticky;
       top: 0;
       z-index: 10;
       animation: fadeDown 0.7s cubic-bezier(.4,0,.2,1);
+      transition: background 0.3s ease; 
+    }
+    header.scrolled {
+        background: rgba(0, 47, 75, 0.98); 
     }
     .logo {
       display: flex;
       align-items: center;
-      gap: 1.5rem;
+      gap: 1rem; 
     }
     .logo img {
-      height: 60px;
-      transition: transform 0.3s;
+      height: 55px; 
+      transition: transform 0.3s ease;
+    }
+    .logo img:hover {
+        transform: scale(1.05);
     }
     .logo span {
-      font-size: 1.8rem;
+      font-size: 1.6rem; 
       font-weight: 700;
-      letter-spacing: 2px;
+      letter-spacing: 1.5px;
+      color: var(--light-text); 
     }
     .tech-font {
       font-family: 'Inter', sans-serif;
       font-size: 1.35rem;
       font-weight: 700;
       letter-spacing: 2px;
-      color: #fff;
+      color: var(--light-text);
       text-shadow: none;
       text-transform: uppercase;
     }
     nav a {
-      color: #fff;
+      color: var(--light-text);
       text-decoration: none;
       margin-left: 2rem;
       font-weight: 500;
       font-family: 'Inter', sans-serif;
-      transition: color 0.2s;
+      transition: color 0.2s ease, transform 0.2s ease; 
+      position: relative; 
+    }
+    nav a::after { 
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 2px;
+        bottom: -5px;
+        left: 0;
+        background-color: var(--accent-blue);
+        transition: width 0.3s ease-out;
+    }
+    nav a:hover::after {
+        width: 100%;
     }
     nav a:hover {
-      color: #00e6ff;
+      color: var(--accent-blue);
+      transform: translateY(-2px); 
     }
     .hero {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 60vh;
+      min-height: 65vh; 
       text-align: center;
       position: relative;
       z-index: 1;
+      padding: 2rem 1rem;
     }
     .hero h1 {
-      font-size: 2.43rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      color: #222;
+      font-size: 2.8rem; 
+      font-weight: 800; 
+      margin-bottom: 1.2rem;
+      color: var(--primary-blue); 
+      line-height: 1.2; 
     }
     .hero p {
-      font-size: 1.05rem;
-      max-width: 600px;
-      margin: 0 auto 2rem auto;
-      color: #222;
+      font-size: 1.15rem; 
+      max-width: 700px; 
+      margin: 0 auto 2.5rem auto;
+      color: var(--dark-text);
+      line-height: 1.6; 
     }
     .cta-btn {
-      background: rgba(0, 47, 75, 0.85);
-      color: #fff;
-      border: 2px solid rgba(0, 47, 75, 0.85);
-      padding: 1rem 2.5rem;
+      background: var(--primary-blue);
+      color: var(--light-text);
+      border: 2px solid var(--primary-blue);
+      padding: 1.1rem 2.8rem; 
       border-radius: 12px;
-      font-size: 1.03rem;
+      font-size: 1.05rem; 
       font-weight: 700;
       font-family: 'Inter', sans-serif;
       cursor: pointer;
-      box-shadow: none;
-      letter-spacing: 1px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+      letter-spacing: 0.8px;
       text-transform: uppercase;
       position: relative;
       overflow: hidden;
-      transition: border-color 0.2s, color 0.2s, box-shadow 0.2s, background 0.2s, transform 0.2s;
+      transition: all 0.3s cubic-bezier(.4,0,.2,1); 
     }
     .cta-btn::before {
       content: '';
       position: absolute;
       top: 0; left: -75%;
       width: 50%; height: 100%;
-      background: rgba(0,0,0,0.04);
-      filter: blur(8px);
+      background: rgba(255,255,255,0.15); 
+      filter: blur(10px);
       transform: skewX(-20deg);
-      transition: left 0.4s;
+      transition: left 0.4s ease-out;
       z-index: 0;
     }
     .cta-btn:hover::before {
       left: 120%;
     }
     .cta-btn:hover {
-      color: rgba(0, 47, 75, 0.85);
-      background: #fff;
-      border-color: rgba(0, 47, 75, 0.85);
-      box-shadow: none;
-      transform: translateY(-2px) scale(1.04);
+      color: var(--primary-blue);
+      background: var(--accent-blue); 
+      border-color: var(--accent-blue);
+      box-shadow: 0 6px 15px rgba(0,230,255,0.3); 
+      transform: translateY(-3px) scale(1.02); 
     }
     .cta-btn span {
       position: relative;
@@ -139,44 +166,66 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 2rem;
-      margin: 4rem 0 2rem 0;
+      gap: 2.5rem; 
+      margin: 5rem 0 3rem 0; 
+      padding: 0 2vw;
     }
     .feature-card {
-      background: rgba(0, 47, 75, 0.85);
+      background: var(--primary-blue); 
       border: 1px solid rgba(0, 47, 75, 0.85);
       border-radius: 18px;
-      padding: 1.8rem;
-      width: 288px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      padding: 2rem; 
+      width: 300px; 
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12); 
       text-align: center;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: transform 0.3s ease, box-shadow 0.3s ease; 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .feature-card .icon { 
+        font-size: 3.5rem;
+        color: var(--accent-blue);
+        margin-bottom: 1rem;
+        transition: transform 0.3s ease;
+    }
+    .feature-card:hover .icon {
+        transform: scale(1.1);
     }
     .feature-card:hover {
-      transform: translateY(-6px) scale(1.03);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      transform: translateY(-8px) scale(1.04); 
+      box-shadow: 0 10px 40px rgba(0,0,0,0.25); 
     }
     .feature-card h3 {
-      color: #fff;
-      margin-bottom: 0.9rem;
+      color: var(--light-text);
+      margin-bottom: 0.8rem;
       font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 1.3rem; 
     }
     .feature-card p {
-      color: #fff;
-      font-size: 0.9rem;
+      color: var(--light-text);
+      font-size: 0.95rem; 
       font-family: 'Inter', sans-serif;
+      line-height: 1.5;
     }
     footer {
       text-align: center;
-      padding: 2rem 0 1rem 0;
-      color: #b0c4d4;
+      padding: 2.5rem 0 1.5rem 0; 
+      color: var(--light-text);
       font-size: 0.9rem;
-      background: rgba(0, 47, 75, 0.85);
-      margin-top: 3rem;
+      background: var(--primary-blue);
+      margin-top: 4rem;
       font-family: 'Inter', sans-serif;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
     }
     footer a {
-      color: #005fa3;
+      color: var(--accent-blue);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    footer a:hover {
+        color: #008cff; 
     }
     @media (max-width: 900px) {
       .features {
@@ -189,61 +238,46 @@
     }
     @media (max-width: 600px) {
       .hero h1 {
-        font-size: 1.35rem;
+        font-size: 1.8rem; 
       }
       .typewriter-msg {
-        font-size: 1.1rem;
-        min-height: 1.5rem;
-        max-width: 90vw;
-        overflow: hidden;
-        word-break: break-word;
-        margin-left: auto;
-        margin-right: auto;
+        font-size: 1.2rem;
+        min-height: 1.8rem;
       }
       .hero p {
-        font-size: 0.95rem;
-        margin-bottom: 1rem;
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
       }
       .cta-btn {
-        padding: 0.7rem 1.2rem;
-        font-size: 0.95rem;
-        border-radius: 8px;
+        padding: 0.9rem 1.8rem;
+        font-size: 1rem;
       }
       .features {
-        gap: 1rem;
-        margin: 2rem 0 1rem 0;
+        gap: 1.5rem;
+        margin: 3rem 0 1.5rem 0;
       }
       .feature-card {
-        width: 98vw;
-        padding: 1rem;
-        font-size: 0.9rem;
+        width: 95vw;
+        padding: 1.5rem;
       }
       .feature-card h3 {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
       }
       .feature-card p {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
       }
       footer {
-        font-size: 0.8rem;
-        padding: 1rem 0 0.5rem 0;
+        font-size: 0.85rem;
+        padding: 1.5rem 0 0.8rem 0;
       }
       header {
-        padding: 0.4rem 2vw;
+        padding: 0.6rem 3vw;
       }
       .logo img {
-        height: 38px;
+        height: 45px;
       }
       .logo span.tech-font {
-        font-size: 1.1rem;
-      }
-      #typewriter {
-        max-width: 90vw;
-        overflow-x: auto;
-        white-space: nowrap;
-        word-break: normal;
-        display: inline-block;
-        -webkit-overflow-scrolling: touch;
+        font-size: 1.2rem;
       }
     }
     #particles-js {
@@ -252,27 +286,28 @@
       z-index: 0;
       pointer-events: none;
       background: transparent;
+      opacity: 30%;
     }
     body > *:not(#particles-js):not(.modal-bg) {
-      position: static !important;
-      z-index: auto !important;
+      position: relative; 
+      z-index: 1; 
     }
     .typewriter-msg {
-      margin-top: 2.5rem;
-      min-height: 3.2rem;
-      font-size: 2.07rem;
+      margin-top: 2.8rem; 
+      min-height: 3.5rem;
+      font-size: 2.2rem; 
       font-weight: 700;
-      color: #000;
+      color: var(--primary-blue); 
       letter-spacing: 1px;
       text-align: center;
       font-family: 'Inter', sans-serif;
       text-shadow: none;
     }
     #typewriter {
-      color: #000;
+      color: var(--primary-blue);
       text-shadow: none;
-      border-right: 2px solid #00e6ff;
-      padding-right: 6px;
+      border-right: 3px solid var(--accent-blue); 
+      padding-right: 8px;
       white-space: nowrap;
       overflow: hidden;
       display: inline-block;
@@ -280,110 +315,117 @@
     }
     @keyframes blink-caret {
       from, to { border-color: transparent; }
-      50% { border-color: #00e6ff; }
+      50% { border-color: var(--accent-blue); }
     }
     .sistema-funcional-msg {
-      margin-top: 1.2rem;
+      margin-top: 1.5rem; 
       text-align: center;
-      color: #000;
-      font-size: 1.03rem;
+      color: var(--dark-text);
+      font-size: 1.05rem; 
       font-family: 'Inter', sans-serif;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
       text-shadow: none;
+      font-weight: 500;
     }
     .download-btn {
       display: flex;
       justify-content: center;
-      margin-top: 1.2rem;
+      margin-top: 1.8rem; 
       text-decoration: none;
     }
-    /* Modal styles */
+    
     .modal-bg {
       display: none;
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.65);
+      background: rgba(0,0,0,0.75); 
       z-index: 99999 !important;
       align-items: center;
       justify-content: center;
       overflow: hidden;
+      backdrop-filter: blur(5px); 
     }
     .modal-bg.active {
       display: flex;
     }
     .modal-box {
-      background: #0a2e4d;
-      border: 2px solid #bfc9d1;
+      background: linear-gradient(135deg, #0a2e4d 0%, #001f3f 100%); 
+      border: 1px solid var(--accent-blue); 
       border-radius: 16px;
-      box-shadow: 0 0 32px #bfc9d155;
-      padding: 2.5rem 2rem 2rem 2rem;
-      min-width: 320px;
+      padding: 3rem 2.5rem 2.5rem 2.5rem; 
+      min-width: 350px;
       max-width: 90vw;
-      color: #fff;
+      color: var(--light-text);
       font-family: 'Inter', sans-serif;
       text-align: center;
       position: relative;
       animation: fadeInModal 0.4s cubic-bezier(.4,0,.2,1);
     }
     @keyframes fadeInModal {
-      from { opacity: 0; transform: scale(0.95); }
+      from { opacity: 0; transform: scale(0.9); } 
       to { opacity: 1; transform: scale(1); }
     }
     .modal-box h2 {
-      color: #005fa3;
-      margin-bottom: 1.2rem;
-      font-size: 1.35rem;
+      color: var(--accent-blue);
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem; 
+      font-weight: 700;
     }
     .modal-box .login-info {
-      margin-bottom: 1.2rem;
-      font-size: 0.99rem;
-      color: #fff;
+      margin-bottom: 1.5rem;
+      font-size: 1.05rem;
+      color: var(--light-text);
+    }
+    .modal-box .login-info strong {
+        color: var(--accent-blue);
     }
     .modal-box .redirect-msg {
-      color: #005fa3;
-      font-size: 0.97rem;
-      margin-top: 1.2rem;
+      color: var(--accent-blue);
+      font-size: 1.02rem;
+      margin-top: 1.5rem;
+      font-weight: 500;
     }
     .modal-close {
       position: absolute;
-      top: 0.7rem;
-      right: 1.2rem;
+      top: 0.9rem;
+      right: 1.4rem;
       background: none;
       border: none;
-      color: #005fa3;
-      font-size: 1.5rem;
+      color: var(--accent-blue);
+      font-size: 1.8rem; 
       cursor: pointer;
-      transition: color 0.2s;
+      transition: color 0.2s, transform 0.2s;
     }
     .modal-close:hover {
-      color: #222;
+      color: #fff;
+      transform: rotate(90deg); 
     }
   </style>
 </head>
 <body>
+  <div id="particles-js"></div>
   <header>
     <div class="logo">
       <img src="https://i.imgur.com/6N82fk2.png" alt="JP Sistemas Logo" />
       <span class="tech-font">J.P SISTEMAS</span>
     </div>
     <nav>
-      <a href="sistema.html">Acessar Sistema</a>
       <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" rel="noopener">Contato</a>
     </nav>
   </header>
   <section class="hero">
-    <h1>Transforme sua gestão com tecnologia 100% em nuvem</h1>
+    <h1>Transforme sua gestÃ£o com tecnologia 100% em nuvem</h1>
     <p>
-      O <strong>JP. Sistemas</strong> oferece soluções inovadoras para gestão empresarial, com banco de dados integrados, segurança, mobilidade e performance. Tudo isso em uma plataforma moderna, intuitiva e acessível de qualquer lugar.
+      O <strong>JP. Sistemas</strong> oferece soluÃ§Ãµes inovadoras para gestÃ£o empresarial, com banco de dados integrados, seguranÃ§a, mobilidade e performance. Tudo isso em uma plataforma moderna, intuitiva e acessÃ­vel de qualquer lugar.
     </p>
     <a href="#" id="conheca-btn-link">
-      <button class="cta-btn"><span>Conheça o Sistema</span></button>
+      <button class="cta-btn"><span>ConheÃ§a o Sistema</span></button>
     </a>
     <div class="typewriter-msg">
       <span id="typewriter"></span>
     </div>
     <div class="sistema-funcional-msg">
-      Funciona em <strong>Desktop</strong> (navegador ou executável) e <strong>Smartphones</strong> (via navegador).
+      Funciona em <strong>Desktop</strong> (navegador ou executÃ¡vel) e <strong>Smartphones</strong> (via navegador).
     </div>
     <a href="https://drive.google.com/file/d/1u4Azxd2rECC79PAewxA_CgxNFzBKV58q/view?usp=sharing" target="_blank" rel="noopener" class="download-btn">
       <button class="cta-btn"><span>Download Windows</span></button>
@@ -391,45 +433,157 @@
   </section>
   <section class="features" id="recursos">
     <div class="feature-card">
-      <h3>Banco de Dados Integrados</h3>
-      <p>Centralize todas as informações do seu negócio em um só lugar, com integração total entre módulos e dados sempre atualizados em tempo real.</p>
+      <i class="fas fa-database icon"></i> <h3>Banco de Dados Integrados</h3>
+      <p>Centralize todas as informaÃ§Ãµes do seu negÃ³cio em um sÃ³ lugar, com integraÃ§Ã£o total entre mÃ³dulos e dados sempre atualizados em tempo real.</p>
     </div>
     <div class="feature-card">
-      <h3>100% em Nuvem</h3>
-      <p>Acesse o sistema de qualquer dispositivo, a qualquer hora, com total segurança e sem necessidade de instalações locais.</p>
+      <i class="fas fa-cloud icon"></i> <h3>100% em Nuvem</h3>
+      <p>Acesse o sistema de qualquer dispositivo, a qualquer hora, com total seguranÃ§a e sem necessidade de instalaÃ§Ãµes locais.</p>
     </div>
     <div class="feature-card">
-      <h3>Segurança e Backup</h3>
-      <p>Seus dados protegidos com criptografia avançada e backups automáticos, garantindo tranquilidade e conformidade.</p>
+      <i class="fas fa-shield-alt icon"></i> <h3>SeguranÃ§a e Backup</h3>
+      <p>Seus dados protegidos com criptografia avanÃ§ada e backups automÃ¡ticos, garantindo tranquilidade e conformidade.</p>
     </div>
     <div class="feature-card">
-      <h3>Interface Moderna</h3>
-      <p>Design intuitivo, responsivo e pensado para facilitar o dia a dia da sua equipe, com dashboards e relatórios inteligentes.</p>
+      <i class="fas fa-desktop icon"></i> <h3>Interface Moderna</h3>
+      <p>Design intuitivo, responsivo e pensado para facilitar o dia a dia da sua equipe, com dashboards e relatÃ³rios inteligentes.</p>
     </div>
   </section>
   <footer id="contato">
-    © 2025 JP. Sistemas. Todos os direitos reservados. | <a href="https://jp-sistemas.com/" style="color:#00e6ff;">jp-sistemas.com</a>
+    Â© 2025 JP. Sistemas. Todos os direitos reservados. | <a href="https://jp-sistemas.com/" style="color:var(--accent-blue);">jp-sistemas.com</a>
   </footer>
   <div class="modal-bg" id="modal-bg">
     <div class="modal-box">
       <button class="modal-close" id="modal-close" title="Fechar">&times;</button>
-      <h2>Login de Demonstração</h2>
+      <h2>Login de DemonstraÃ§Ã£o</h2>
       <div class="login-info">
-        <div><strong>Usuário:</strong> teste</div>
+        <div><strong>UsuÃ¡rio:</strong> teste</div>
         <div><strong>Senha:</strong> teste</div>
       </div>
-      <div class="redirect-msg" id="redirect-msg">Você será redirecionado em 10 segundos...</div>
+      <div class="redirect-msg" id="redirect-msg">VocÃª serÃ¡ redirecionado em 10 segundos...</div>
     </div>
   </div>
   <script>
-    // Typewriter effect for animated message
+
+    particlesJS('particles-js', {
+      "particles": {
+        "number": {
+          "value": 80,
+          "density": {
+            "enable": true,
+            "value_area": 800
+          }
+        },
+        "color": {
+          "value": "#00e6ff" 
+        },
+        "shape": {
+          "type": "circle",
+          "stroke": {
+            "width": 0,
+            "color": "#000000"
+          },
+          "polygon": {
+            "nb_sides": 5
+          },
+          "image": {
+            "src": "img/github.svg",
+            "width": 100,
+            "height": 100
+          }
+        },
+        "opacity": {
+          "value": 0.5,
+          "random": false,
+          "anim": {
+            "enable": false,
+            "speed": 1,
+            "opacity_min": 0.1,
+            "sync": false
+          }
+        },
+        "size": {
+          "value": 3,
+          "random": true,
+          "anim": {
+            "enable": false,
+            "speed": 40,
+            "size_min": 0.1,
+            "sync": false
+          }
+        },
+        "line_linked": {
+          "enable": true,
+          "distance": 150,
+          "color": "#00e6ff", 
+          "opacity": 0.4,
+          "width": 1
+        },
+        "move": {
+          "enable": true,
+          "speed": 3,
+          "direction": "none",
+          "random": false,
+          "straight": false,
+          "out_mode": "out",
+          "bounce": false,
+          "attract": {
+            "enable": false,
+            "rotateX": 600,
+            "rotateY": 1200
+          }
+        }
+      },
+      "interactivity": {
+        "detect_on": "canvas",
+        "events": {
+          "onhover": {
+            "enable": true,
+            "mode": "grab"
+          },
+          "onclick": {
+            "enable": true,
+            "mode": "push"
+          },
+          "resize": true
+        },
+        "modes": {
+          "grab": {
+            "distance": 140,
+            "line_linked": {
+              "opacity": 1
+            }
+          },
+          "bubble": {
+            "distance": 400,
+            "size": 40,
+            "duration": 2,
+            "opacity": 8,
+            "speed": 3
+          },
+          "repulse": {
+            "distance": 200,
+            "duration": 0.4
+          },
+          "push": {
+            "particles_nb": 4
+          },
+          "remove": {
+            "particles_nb": 2
+          }
+        }
+      },
+      "retina_detect": true
+    });
+
+    
     const typewriterTexts = [
       "Banco de Dados Integrados",
       "100% em Nuvem",
-      "Segurança e Backup",
+      "SeguranÃ§a e Backup",
       "Interface Moderna",
       "Acesse de Qualquer Lugar",
-      "Gestão Empresarial Simplificada",
+      "GestÃ£o Empresarial Simplificada",
       "Entre em contato e saiba mais"
     ];
     let twIndex = 0, charIndex = 0, isDeleting = false;
@@ -457,7 +611,8 @@
       }
     }
     if (twElem) typeWriterLoop();
-    // Modal logic para "Conheça o Sistema"
+
+    // Modal logic para "ConheÃ§a o Sistema"
     const conhecaBtn = document.getElementById('conheca-btn-link');
     const modalBg = document.getElementById('modal-bg');
     const modalClose = document.getElementById('modal-close');
@@ -468,10 +623,10 @@
         e.preventDefault();
         modalBg.classList.add('active');
         let seconds = 10;
-        redirectMsg.textContent = `Você será redirecionado em ${seconds} segundos...`;
+        redirectMsg.textContent = `VocÃª serÃ¡ redirecionado em ${seconds} segundos...`;
         redirectTimeout = setInterval(() => {
           seconds--;
-          redirectMsg.textContent = `Você será redirecionado em ${seconds} segundos...`;
+          redirectMsg.textContent = `VocÃª serÃ¡ redirecionado em ${seconds} segundos...`;
           if (seconds <= 0) {
             clearInterval(redirectTimeout);
             window.location.href = 'https://jp-sistemas.com/';
@@ -490,6 +645,16 @@
         }
       });
     }
+
+    
+    window.addEventListener('scroll', function() {
+        const header = document.querySelector('header');
+        if (window.scrollY > 50) { 
+            header.classList.add('scrolled');
+        } else {
+            header.classList.remove('scrolled');
+        }
+    });
   </script>
 </body>
 </html>
