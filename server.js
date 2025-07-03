@@ -280,6 +280,9 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(500).json({ error: 'Erro interno do servidor' });
     }
 
+    // Cria a sessão express para rotas que dependem de req.session.username
+    req.session.username = user.username;
+
     const userPayload = {
       id: user.id,
       username: user.username,
