@@ -1,0 +1,79 @@
+/* mobile.css: Ajustes responsivos para telas pequenas */
+
+@media (max-width: 600px) {
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.8rem 2vw;
+  }
+  .logo img {
+    height: 40px;
+  }
+  .logo span, .tech-font {
+    font-size: 1.1rem;
+  }
+  nav {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: 0.5rem;
+  }
+  nav a {
+    margin: 0.5rem 0 0.5rem 0;
+    font-size: 1rem;
+  }
+  .hero {
+    padding: 1rem 0.2rem;
+    min-height: 40vh;
+  }
+  .hero h1 {
+    font-size: 1.5rem;
+  }
+  .features {
+    flex-direction: column;
+    gap: 1.2rem;
+    margin: 2rem 0 1rem 0;
+    padding: 0 1vw;
+  }
+  .feature-card {
+    width: 95vw;
+    padding: 1rem;
+    font-size: 1rem;
+  }
+  .cta-btn {
+    width: 100%;
+    padding: 0.8rem 0;
+    font-size: 1rem;
+  }
+  /* Ajuste para tabelas e listas */
+  table, thead, tbody, th, td, tr {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  th, td {
+    padding: 0.5rem 0.2rem;
+    font-size: 0.95rem;
+    text-align: left;
+  }
+  /* Esconda colunas menos importantes em mobile, se necessário */
+  /* .coluna-desnecessaria { display: none; } */
+  /* Ajuste para botões */
+  button, input[type="button"], input[type="submit"] {
+    font-size: 1rem;
+    padding: 0.7rem 1.2rem;
+  }
+  /* Ajuste para formulários */
+  input, select, textarea {
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 0.7rem;
+  }
+  /* Scroll horizontal para tabelas grandes */
+  .tabela-scroll {
+    overflow-x: auto;
+    display: block;
+  }
+} 
