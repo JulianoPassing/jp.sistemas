@@ -1586,6 +1586,11 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(conta)
       });
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('Erro ao adicionar conta:', text);
+        throw new Error('Erro ao adicionar conta: ' + text);
+      }
       return await res.json();
     }
     async function removerConta(tipo, id) {
