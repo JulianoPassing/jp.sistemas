@@ -262,6 +262,28 @@
           max-width: 100%;
         }
       }
+
+      .dashboard-financeiro-bloco {
+        background: rgba(255,255,255,0.98);
+        border-radius: 18px;
+        box-shadow: 0 8px 32px var(--shadow-hover);
+        padding: 32px 0 24px 0;
+        margin: 40px auto 0 auto;
+        max-width: 600px;
+        border: 1px solid var(--border);
+      }
+      .dashboard-financeiro-titulo {
+        text-align: center;
+        color: var(--primary-color);
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 24px;
+        letter-spacing: 0.01em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
     </style>
   </head>
   <body>
@@ -348,16 +370,19 @@
       </div>
 
       <!-- Linha separada para contas a pagar e receber -->
-      <div class="dashboard-grid dashboard-financeiro" style="margin-top: 0;">
-        <div class="dashboard-card pagar">
-          <i class="fas fa-arrow-circle-up"></i>
-          <div class="dashboard-value" id="dashboardPagar">--</div>
-          <div class="dashboard-label">Contas a Pagar</div>
-        </div>
-        <div class="dashboard-card receber">
-          <i class="fas fa-arrow-circle-down"></i>
-          <div class="dashboard-value" id="dashboardReceber">--</div>
-          <div class="dashboard-label">Contas a Receber</div>
+      <div class="dashboard-financeiro-bloco">
+        <h3 class="dashboard-financeiro-titulo"><i class="fas fa-wallet"></i> Resumo Financeiro</h3>
+        <div class="dashboard-grid dashboard-financeiro">
+          <div class="dashboard-card pagar">
+            <i class="fas fa-arrow-circle-up"></i>
+            <div class="dashboard-value" id="dashboardPagar">--</div>
+            <div class="dashboard-label">Contas a Pagar</div>
+          </div>
+          <div class="dashboard-card receber">
+            <i class="fas fa-arrow-circle-down"></i>
+            <div class="dashboard-value" id="dashboardReceber">--</div>
+            <div class="dashboard-label">Contas a Receber</div>
+          </div>
         </div>
       </div>
     </main>
