@@ -248,6 +248,20 @@
       .dashboard-card.receber i {
         color: #059669;
       }
+
+      .dashboard-financeiro {
+        grid-template-columns: 1fr 1fr;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 32px;
+      }
+      @media (max-width: 768px) {
+        .dashboard-financeiro {
+          grid-template-columns: 1fr;
+          max-width: 100%;
+        }
+      }
     </style>
   </head>
   <body>
@@ -293,16 +307,6 @@
           <div class="dashboard-value" id="dashboardVendas">--</div>
           <div class="dashboard-label">Vendas do mês</div>
         </div>
-        <div class="dashboard-card pagar">
-          <i class="fas fa-arrow-circle-up"></i>
-          <div class="dashboard-value" id="dashboardPagar">--</div>
-          <div class="dashboard-label">Contas a Pagar</div>
-        </div>
-        <div class="dashboard-card receber">
-          <i class="fas fa-arrow-circle-down"></i>
-          <div class="dashboard-value" id="dashboardReceber">--</div>
-          <div class="dashboard-label">Contas a Receber</div>
-        </div>
       </div>
 
       <div class="menu-grid">
@@ -341,6 +345,20 @@
           <h3>Ajuda</h3>
           <p>Encontre ajuda e suporte para usar o sistema</p>
         </a>
+      </div>
+
+      <!-- Linha separada para contas a pagar e receber -->
+      <div class="dashboard-grid dashboard-financeiro" style="margin-top: 0;">
+        <div class="dashboard-card pagar">
+          <i class="fas fa-arrow-circle-up"></i>
+          <div class="dashboard-value" id="dashboardPagar">--</div>
+          <div class="dashboard-label">Contas a Pagar</div>
+        </div>
+        <div class="dashboard-card receber">
+          <i class="fas fa-arrow-circle-down"></i>
+          <div class="dashboard-value" id="dashboardReceber">--</div>
+          <div class="dashboard-label">Contas a Receber</div>
+        </div>
       </div>
     </main>
     <footer class="footer">
