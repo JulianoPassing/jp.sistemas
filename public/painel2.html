@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel Principal - J.P Sistemas</title>
+    <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+      :root {
+        --primary-color: #005a9f;
+        --primary-dark: #003766;
+        --primary-light: #0077cc;
+        --secondary-color: #022656;
+        --accent-color: #1e4a8a;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --background: #f8fafc;
+        --surface: #ffffff;
+        --border: #e5e7eb;
+        --shadow: rgba(0, 90, 159, 0.1);
+        --shadow-hover: rgba(0, 90, 159, 0.2);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #005a9f 0%, #003766 100%);
+        min-height: 100vh;
+        color: var(--text-primary);
+      }
+
+      .header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        padding: 20px 0;
+        box-shadow: 0 4px 20px rgba(0, 90, 159, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo h1 {
+        color: var(--primary-color);
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .user-info span {
+        color: var(--text-primary);
+        font-family: 'Inter', sans-serif;
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      .user-info #userDisplay {
+        font-weight: 700;
+      }
+
+      .logout-btn {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      .logout-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 90, 159, 0.3);
+      }
+
+      .main-content {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+
+      .welcome-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 32px;
+        margin-bottom: 32px;
+        box-shadow: 0 10px 30px rgba(0, 90, 159, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        text-align: center;
+      }
+
+      .welcome-section h2 {
+        color: var(--primary-color);
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 12px;
+      }
+
+      .welcome-section p {
+        color: var(--text-secondary);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .menu-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+        margin-top: 32px;
+      }
+
+      .menu-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 16px;
+        padding: 32px;
+        text-align: center;
+        box-shadow: 0 8px 25px rgba(0, 90, 159, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+      }
+
+      .menu-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 90, 159, 0.2);
+      }
+
+      .menu-card i {
+        font-size: 48px;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        transition: transform 0.3s ease;
+      }
+
+      .menu-card:hover i {
+        transform: scale(1.1);
+      }
+
+      .menu-card h3 {
+        color: var(--text-primary);
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      .menu-card p {
+        color: var(--text-secondary);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      @media (max-width: 768px) {
+        .header-content {
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .menu-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .welcome-section {
+          padding: 24px;
+        }
+      }
+
+      .footer {
+        width: 100%;
+        text-align: center;
+        padding: 18px 0 12px 0;
+        color: #fff;
+        font-size: 15px;
+        background: transparent;
+        font-family: 'Inter', sans-serif;
+        letter-spacing: 0.02em;
+      }
+
+      /* Dashboard Styles */
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+      .dashboard-card {
+        background: rgba(255,255,255,0.97);
+        border-radius: 14px;
+        box-shadow: 0 4px 16px var(--shadow);
+        padding: 24px 0 18px 0;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.18);
+        transition: box-shadow 0.3s;
+        position: relative;
+      }
+      .dashboard-card i {
+        font-size: 32px;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+      }
+      .dashboard-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin-bottom: 6px;
+      }
+      .dashboard-label {
+        font-size: 15px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        letter-spacing: 0.01em;
+      }
+      @media (max-width: 768px) {
+        .dashboard-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+        .dashboard-card {
+          padding: 18px 0 12px 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 150px; height: 67px; display: block; object-fit: contain; background: none; box-shadow: none; border-radius: 0; margin: 0;" />
+        </div>
+        <div class="user-info">
+          <span>Bem-vindo, <span id="userDisplay"></span></span>
+          <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Sair
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="welcome-section">
+        <h2>Bem-vindo(a) ao J.P Sistemas</h2>
+        <p>Gerencie seus clientes, produtos, pedidos e relatorios de forma eficiente</p>
+      </div>
+
+      <!-- Dashboard Pequeno -->
+      <div class="dashboard-grid">
+        <div class="dashboard-card">
+          <i class="fas fa-users"></i>
+          <div class="dashboard-value" id="dashboardClientes">--</div>
+          <div class="dashboard-label">Clientes</div>
+        </div>
+        <div class="dashboard-card">
+          <i class="fas fa-box"></i>
+          <div class="dashboard-value" id="dashboardProdutos">--</div>
+          <div class="dashboard-label">Produtos</div>
+        </div>
+        <div class="dashboard-card">
+          <i class="fas fa-shopping-cart"></i>
+          <div class="dashboard-value" id="dashboardPedidos">--</div>
+          <div class="dashboard-label">Pedidos</div>
+        </div>
+        <div class="dashboard-card">
+          <i class="fas fa-coins"></i>
+          <div class="dashboard-value" id="dashboardVendas">--</div>
+          <div class="dashboard-label">Vendas do mês</div>
+        </div>
+      </div>
+
+      <div class="menu-grid">
+        <a href="painel-clientes.html" class="menu-card">
+          <i class="fas fa-users"></i>
+          <h3>Clientes</h3>
+          <p>Gerencie o cadastro de clientes, visualize informacoes e mantenha dados atualizados</p>
+        </a>
+
+        <a href="produtos.html" class="menu-card">
+          <i class="fas fa-box"></i>
+          <h3>Produtos</h3>
+          <p>Controle seu estoque de produtos, precos e informacoes detalhadas</p>
+        </a>
+
+        <a href="pedidos.html" class="menu-card">
+          <i class="fas fa-shopping-cart"></i>
+          <h3>Pedidos</h3>
+          <p>Crie e gerencie pedidos, acompanhe status e gere relatorios</p>
+        </a>
+
+        <a href="relatorios.html" class="menu-card">
+          <i class="fas fa-chart-bar"></i>
+          <h3>Relatorios</h3>
+          <p>Visualize relatorios detalhados de vendas, clientes e produtos</p>
+        </a>
+
+        <a href="configuracoes.html" class="menu-card">
+          <i class="fas fa-cog"></i>
+          <h3>Configuracoes</h3>
+          <p>Configure preferencias do sistema e gerencie usuarios</p>
+        </a>
+
+        <a href="ajuda.html" class="menu-card">
+          <i class="fas fa-question-circle"></i>
+          <h3>Ajuda</h3>
+          <p>Encontre ajuda e suporte para usar o sistema</p>
+        </a>
+      </div>
+    </main>
+    <footer class="footer">
+      © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ola,%20gostaria%20de%20mais%20informacoes%20sobre%20os%20sistemas." target="_blank" style="color: #fff; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
+    </footer>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // Verificar se esta logado
+        if (sessionStorage.getItem('loggedIn') !== 'true') {
+          window.location.href = 'index.html';
+        }
+
+        // Exibir nome do usuario
+        const username = sessionStorage.getItem('username') || 'Usuario';
+        document.getElementById('userDisplay').textContent = username;
+
+        // Buscar dados do dashboard
+        fetch('/api/relatorios/estatisticas', { credentials: 'include' })
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById('dashboardClientes').textContent = data.totalClientes ?? '--';
+            document.getElementById('dashboardProdutos').textContent = data.totalProdutos ?? '--';
+            document.getElementById('dashboardPedidos').textContent = data.pedidosMes ?? '--';
+            document.getElementById('dashboardVendas').textContent = data.vendasMes ? 'R$ ' + Number(data.vendasMes).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '--';
+          })
+          .catch(() => {
+            document.getElementById('dashboardClientes').textContent = '--';
+            document.getElementById('dashboardProdutos').textContent = '--';
+            document.getElementById('dashboardPedidos').textContent = '--';
+            document.getElementById('dashboardVendas').textContent = '--';
+          });
+      });
+      
+      // Função logout global
+      async function logout() {
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+        sessionStorage.removeItem('loggedIn');
+        sessionStorage.removeItem('username');
+        window.location.href = 'sistema.html';
+      }
+    </script>
+  </body>
+</html>
