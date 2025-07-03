@@ -1709,7 +1709,17 @@
           status = 'Em aberto';
           statusColor = 'color:#059669;font-weight:700;';
         }
-        li.innerHTML = `<span class="desc">${conta.descricao}</span> <span class="valor">R$ ${parseFloat(conta.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}</span> <span class="data">Venc: ${conta.data_vencimento}</span> <span class="status" style="${statusColor}">${status}</span> ` +
+        // Formatar data para DD/MM/YYYY
+        let dataFormatada = conta.data_vencimento;
+        if (dataFormatada && dataFormatada.length > 10) {
+          const d = new Date(dataFormatada);
+          if (!isNaN(d)) {
+            dataFormatada = d.toLocaleDateString('pt-BR');
+          } else {
+            dataFormatada = dataFormatada.substring(0, 10);
+          }
+        }
+        li.innerHTML = `<span class="desc">${conta.descricao}</span> <span class="valor">R$ ${parseFloat(conta.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}</span> <span class="data">Venc: ${dataFormatada}</span> <span class="status" style="${statusColor}">${status}</span> ` +
           (!pago ? `<button class="pago-btn" title="Marcar como Pago" onclick="marcarComoPago('${tipo}',${conta.id})"><i class="fas fa-check-circle"></i> Pago</button>` : `<button class="emaberto-btn" title="Voltar para Em Aberto" onclick="marcarComoEmAberto('${tipo}',${conta.id})"><i class='fas fa-undo'></i> Em Aberto</button>`) +
           ` <button class="remover" title="Remover" onclick="removerContaUI('${tipo}',${conta.id})"><i class="fas fa-trash"></i></button>`;
         lista.appendChild(li);
