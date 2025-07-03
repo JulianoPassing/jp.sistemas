@@ -66,4 +66,28 @@ router.delete('/:tipo/:id', requireAuthJWT, async (req, res) => {
   }
 });
 
+// Atualizar status da conta (PATCH)
+router.patch('/:tipo/:id', requireAuthJWT, async (req, res) => {
+  const tipo = req.params.tipo;
+  const id = req.params.id;
+  const { status } = req.body;
+  if (!['pagar', 'receber'].includes(tipo)) return res.status(400).json({ error: 'Tipo inválido' });
+  if (!status) return res.status(400).json({ error: 'Status obrigatório' });
+  try {
+    const connection = await getUserConnection(req);
+    const [result] = await connection.query(
+      `UPDATE contas_${tipo} SET status = ? WHERE id = ?`,
+      [status, id]
+    );
+    await connection.end();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Conta não encontrada' });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao atualizar status', details: err.message });
+  }
+});
+
 module.exports = router; 
