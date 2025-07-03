@@ -60,8 +60,8 @@ app.use(session({
   cookie: {
     secure: isProduction, // true em produção (https), false em dev/local
     httpOnly: true,
-    sameSite: isProduction ? 'none' : 'lax', // 'none' para cross-domain, 'lax' para local
-    domain: isProduction ? '.jp-sistemas.vercel.app' : undefined, // só seta domínio em produção
+    sameSite: isProduction ? 'none' : 'lax', // 'none' para produção, 'lax' para local
+    domain: isProduction ? '.jp-sistemas.com' : undefined, // Corrigido para o domínio de produção correto
     maxAge: 24 * 60 * 60 * 1000 // 24 horas
   }
 }));
