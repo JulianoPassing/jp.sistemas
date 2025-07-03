@@ -1429,6 +1429,90 @@
         }
       });
 
+      // Após blocos principais, adicionar contas a pagar e receber
+      // Buscar contas a pagar e receber do backend (sincrono, pois o relatório é gerado após clique)
+      // Como não é possível fazer fetch síncrono, usar window.contasPagar/contasReceber se já carregadas, senão mostrar mensagem
+      const contasPagar = window.contasPagar || [];
+      const contasReceber = window.contasReceber || [];
+      // Contas a Pagar
+      garantirEspaco(12);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(220, 38, 38);
+      doc.text('CONTAS A PAGAR', pageWidth / 2, y, { align: 'center' });
+      y += 8;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      if (contasPagar.length > 0) {
+        const contasPagarTable = contasPagar.map(c => [
+          c.descricao,
+          `R$ ${parseFloat(c.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}`,
+          (c.data_vencimento ? new Date(c.data_vencimento).toLocaleDateString('pt-BR') : ''),
+          (c.status === 'pago' ? 'Pago' : (c.status === 'vencido' ? 'Vencido' : 'Em aberto'))
+        ]);
+        doc.autoTable({
+          startY: y,
+          head: [['Descrição', 'Valor', 'Vencimento', 'Status']],
+          body: contasPagarTable,
+          theme: 'grid',
+          margin: { left: margin, right: margin },
+          tableWidth: pageWidth - 2 * margin,
+          headStyles: {
+            fillColor: [220, 38, 38],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            halign: 'center',
+            fontSize: 10
+          },
+          styles: { fontSize: 9, cellPadding: 3, valign: 'middle' },
+          columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 28 }, 2: { cellWidth: 28 }, 3: { cellWidth: 28 } }
+        });
+        y = doc.lastAutoTable.finalY + 8;
+      } else {
+        doc.text('Nenhuma conta a pagar cadastrada.', pageWidth / 2, y, { align: 'center' });
+        y += 8;
+      }
+      // Contas a Receber
+      garantirEspaco(12);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(40, 167, 69);
+      doc.text('CONTAS A RECEBER', pageWidth / 2, y, { align: 'center' });
+      y += 8;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      if (contasReceber.length > 0) {
+        const contasReceberTable = contasReceber.map(c => [
+          c.descricao,
+          `R$ ${parseFloat(c.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}`,
+          (c.data_vencimento ? new Date(c.data_vencimento).toLocaleDateString('pt-BR') : ''),
+          (c.status === 'pago' ? 'Pago' : (c.status === 'vencido' ? 'Vencido' : 'Em aberto'))
+        ]);
+        doc.autoTable({
+          startY: y,
+          head: [['Descrição', 'Valor', 'Vencimento', 'Status']],
+          body: contasReceberTable,
+          theme: 'grid',
+          margin: { left: margin, right: margin },
+          tableWidth: pageWidth - 2 * margin,
+          headStyles: {
+            fillColor: [40, 167, 69],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            halign: 'center',
+            fontSize: 10
+          },
+          styles: { fontSize: 9, cellPadding: 3, valign: 'middle' },
+          columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 28 }, 2: { cellWidth: 28 }, 3: { cellWidth: 28 } }
+        });
+        y = doc.lastAutoTable.finalY + 8;
+      } else {
+        doc.text('Nenhuma conta a receber cadastrada.', pageWidth / 2, y, { align: 'center' });
+        y += 8;
+      }
+
       // Salvar PDF
       const hoje = new Date();
       const dataAtual = `${hoje.getDate().toString().padStart(2, '0')}-${(hoje.getMonth() + 1).toString().padStart(2, '0')}-${hoje.getFullYear()}`;
@@ -1509,6 +1593,42 @@
         ['', ''],
         ['Gerado em:', new Date().toLocaleString('pt-BR')]
       ];
+
+      // Adicionar contas a pagar e receber ao final
+      const contasPagar = window.contasPagar || [];
+      const contasReceber = window.contasReceber || [];
+      // Cabeçalho
+      dadosRelatorio.push(['']);
+      dadosRelatorio.push(['CONTAS A PAGAR']);
+      dadosRelatorio.push(['Descrição', 'Valor', 'Vencimento', 'Status']);
+      if (contasPagar.length > 0) {
+        contasPagar.forEach(c => {
+          dadosRelatorio.push([
+            c.descricao,
+            `R$ ${parseFloat(c.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}`,
+            (c.data_vencimento ? new Date(c.data_vencimento).toLocaleDateString('pt-BR') : ''),
+            (c.status === 'pago' ? 'Pago' : (c.status === 'vencido' ? 'Vencido' : 'Em aberto'))
+          ]);
+        });
+      } else {
+        dadosRelatorio.push(['Nenhuma conta a pagar cadastrada', '', '', '']);
+      }
+      // Adicionar bloco contas a receber
+      dadosRelatorio.push(['']);
+      dadosRelatorio.push(['CONTAS A RECEBER']);
+      dadosRelatorio.push(['Descrição', 'Valor', 'Vencimento', 'Status']);
+      if (contasReceber.length > 0) {
+        contasReceber.forEach(c => {
+          dadosRelatorio.push([
+            c.descricao,
+            `R$ ${parseFloat(c.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}`,
+            (c.data_vencimento ? new Date(c.data_vencimento).toLocaleDateString('pt-BR') : ''),
+            (c.status === 'pago' ? 'Pago' : (c.status === 'vencido' ? 'Vencido' : 'Em aberto'))
+          ]);
+        });
+      } else {
+        dadosRelatorio.push(['Nenhuma conta a receber cadastrada', '', '', '']);
+      }
 
       // Criar planilha
       const ws = XLSX.utils.aoa_to_sheet(dadosRelatorio);
@@ -1676,6 +1796,7 @@
     async function renderContas(tipo) {
       const lista = document.getElementById('lista-' + tipo);
       const contas = await getContas(tipo);
+      window['contas' + tipo.charAt(0).toUpperCase() + tipo.slice(1)] = contas;
       lista.innerHTML = '';
       let total = 0;
       if (!contas || contas.length === 0) {
