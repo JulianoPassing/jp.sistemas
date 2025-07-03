@@ -746,13 +746,13 @@ app.post('/api/caixa', async (req, res) => {
 });
 
 // Rota para relatórios
-app.get('/api/relatorios/estatisticas', async (req, res) => {
+app.get('/api/relatorios/estatisticas', requireAuthJWT, async (req, res) => {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: 'jpsistemas_admin',
+      database: req.user.dbName,
       charset: 'utf8mb4'
     });
 
