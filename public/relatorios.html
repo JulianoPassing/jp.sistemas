@@ -1575,31 +1575,39 @@
     });
 
     // --- CONTAS A PAGAR E RECEBER ---
-    function getContas(tipo) {
-      return JSON.parse(localStorage.getItem('contas_' + tipo)) || [];
+    // Funções para consumir a API
+    async function getContas(tipo) {
+      const res = await fetch(`/api/contas/${tipo}`);
+      return await res.json();
     }
-    function setContas(tipo, contas) {
-      localStorage.setItem('contas_' + tipo, JSON.stringify(contas));
+    async function addConta(tipo, conta) {
+      const res = await fetch(`/api/contas/${tipo}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(conta)
+      });
+      return await res.json();
     }
-    function renderContas(tipo) {
+    async function removerConta(tipo, id) {
+      await fetch(`/api/contas/${tipo}/${id}`, { method: 'DELETE' });
+    }
+    async function renderContas(tipo) {
       const lista = document.getElementById('lista-' + tipo);
-      const contas = getContas(tipo);
+      const contas = await getContas(tipo);
       lista.innerHTML = '';
-      if (contas.length === 0) {
+      if (!contas || contas.length === 0) {
         lista.innerHTML = '<li style="color:#888;">Nenhuma conta cadastrada.</li>';
         return;
       }
-      contas.forEach((conta, idx) => {
+      contas.forEach(conta => {
         const li = document.createElement('li');
         li.classList.add(tipo);
-        li.innerHTML = `<span class="desc">${conta.desc}</span> <span class="valor">R$ ${parseFloat(conta.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}</span> <span class="data">Venc: ${conta.data}</span> <button class="remover" title="Remover" onclick="removerConta('${tipo}',${idx})"><i class="fas fa-trash"></i></button>`;
+        li.innerHTML = `<span class="desc">${conta.descricao}</span> <span class="valor">R$ ${parseFloat(conta.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}</span> <span class="data">Venc: ${conta.data_vencimento}</span> <button class="remover" title="Remover" onclick="removerContaUI('${tipo}',${conta.id})"><i class="fas fa-trash"></i></button>`;
         lista.appendChild(li);
       });
     }
-    function removerConta(tipo, idx) {
-      const contas = getContas(tipo);
-      contas.splice(idx, 1);
-      setContas(tipo, contas);
+    window.removerContaUI = async function(tipo, id) {
+      await removerConta(tipo, id);
       renderContas(tipo);
     }
     // Eventos para mostrar/ocultar formulários
@@ -1622,29 +1630,25 @@
       document.getElementById('btn-add-receber').style.display = '';
     };
     // Submissão dos formulários
-    document.getElementById('form-pagar').onsubmit = function(e) {
+    document.getElementById('form-pagar').onsubmit = async function(e) {
       e.preventDefault();
       const desc = document.getElementById('desc-pagar').value.trim();
       const valor = document.getElementById('valor-pagar').value;
       const data = document.getElementById('data-pagar').value;
       if (!desc || !valor || !data) return;
-      const contas = getContas('pagar');
-      contas.push({ desc, valor, data });
-      setContas('pagar', contas);
+      await addConta('pagar', { descricao: desc, valor, data_vencimento: data });
       renderContas('pagar');
       this.reset();
       this.style.display = 'none';
       document.getElementById('btn-add-pagar').style.display = '';
     };
-    document.getElementById('form-receber').onsubmit = function(e) {
+    document.getElementById('form-receber').onsubmit = async function(e) {
       e.preventDefault();
       const desc = document.getElementById('desc-receber').value.trim();
       const valor = document.getElementById('valor-receber').value;
       const data = document.getElementById('data-receber').value;
       if (!desc || !valor || !data) return;
-      const contas = getContas('receber');
-      contas.push({ desc, valor, data });
-      setContas('receber', contas);
+      await addConta('receber', { descricao: desc, valor, data_vencimento: data });
       renderContas('receber');
       this.reset();
       this.style.display = 'none';

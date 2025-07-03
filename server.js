@@ -914,6 +914,8 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(publicPath, 'index.html'));
 });
 
+app.use('/api/contas', require('./api/contas'));
+
 module.exports = app;
 
 // Inicialização do servidor (apenas se executado diretamente)
