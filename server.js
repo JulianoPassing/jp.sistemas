@@ -909,12 +909,12 @@ app.get('/ajuda', (req, res) => {
   res.sendFile(path.join(publicPath, 'ajuda.html'));
 });
 
+app.use('/api/contas', require('./api/contas'));
+
 // Fallback para SPA ou 404
 app.get('*', (req, res) => {
   res.sendFile(path.join(publicPath, 'index.html'));
 });
-
-app.use('/api/contas', require('./api/contas'));
 
 module.exports = app;
 
