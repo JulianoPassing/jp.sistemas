@@ -282,6 +282,8 @@ app.post('/api/auth/login', async (req, res) => {
 
     // Cria a sessão express para rotas que dependem de req.session.username
     req.session.username = user.username;
+    // Log para depuração: verificar se a sessão está sendo criada corretamente
+    console.log('Sessão após login:', req.sessionID, req.session);
 
     const userPayload = {
       id: user.id,
