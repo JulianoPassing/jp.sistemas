@@ -644,6 +644,89 @@
         padding: 24px;
       }
     }
+
+    /* --- FINANCEIRO --- */
+    .financeiro-section {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      margin: 40px 0 40px 0;
+    }
+    .financeiro-card {
+      background: rgba(255,255,255,0.97);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,90,159,0.08);
+      padding: 32px 32px 24px 32px;
+      border: 2px solid var(--border-color);
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+      animation: fadeInUp 1.1s;
+    }
+    .financeiro-card.pagar { border-left: 6px solid var(--danger-color); }
+    .financeiro-card.receber { border-left: 6px solid var(--success-color); }
+    .financeiro-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .financeiro-form {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .financeiro-form input {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 1rem;
+      min-width: 120px;
+      flex: 1 1 180px;
+    }
+    .financeiro-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .financeiro-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--light-color);
+      border-radius: 8px;
+      padding: 12px 18px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 8px rgba(0,90,159,0.04);
+      font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      border-left: 4px solid var(--primary-color);
+      gap: 10px;
+    }
+    .financeiro-list li.pagar { border-left: 4px solid var(--danger-color); }
+    .financeiro-list li.receber { border-left: 4px solid var(--success-color); }
+    .financeiro-list .desc { font-weight: 600; color: var(--text-primary); }
+    .financeiro-list .valor { font-weight: 700; color: var(--dark-color); }
+    .financeiro-list .data { color: var(--text-secondary); font-size: 0.95em; }
+    .financeiro-list .remover {
+      background: none;
+      border: none;
+      color: var(--danger-color);
+      font-size: 1.2em;
+      cursor: pointer;
+      margin-left: 8px;
+      transition: color 0.2s;
+    }
+    .financeiro-list .remover:hover { color: #a00; }
+    @media (max-width: 900px) {
+      .financeiro-card { max-width: 100%; padding: 18px 6px; }
+    }
+    @media (max-width: 600px) {
+      .financeiro-section { gap: 18px; }
+      .financeiro-card { padding: 10px 2px; }
+      .financeiro-header h2 { font-size: 1.2rem; }
+    }
   </style>
 </head>
 <body>
@@ -777,6 +860,39 @@
       </div>
     </div>
 
+    <!-- INÍCIO: CONTAS A PAGAR E RECEBER -->
+    <div class="financeiro-section">
+      <div class="financeiro-card pagar">
+        <div class="financeiro-header">
+          <h2>Contas a Pagar</h2>
+          <button class="btn btn-primary" id="btn-add-pagar"><i class="fas fa-plus"></i> Adicionar</button>
+        </div>
+        <form id="form-pagar" class="financeiro-form" style="display:none;">
+          <input type="text" id="desc-pagar" placeholder="Descrição" required />
+          <input type="number" id="valor-pagar" placeholder="Valor (R$)" min="0" step="0.01" required />
+          <input type="date" id="data-pagar" required />
+          <button type="submit" class="btn btn-success">Salvar</button>
+          <button type="button" class="btn btn-primary" id="cancel-pagar">Cancelar</button>
+        </form>
+        <ul id="lista-pagar" class="financeiro-list"></ul>
+      </div>
+      <div class="financeiro-card receber">
+        <div class="financeiro-header">
+          <h2>Contas a Receber</h2>
+          <button class="btn btn-success" id="btn-add-receber"><i class="fas fa-plus"></i> Adicionar</button>
+        </div>
+        <form id="form-receber" class="financeiro-form" style="display:none;">
+          <input type="text" id="desc-receber" placeholder="Descrição" required />
+          <input type="number" id="valor-receber" placeholder="Valor (R$)" min="0" step="0.01" required />
+          <input type="date" id="data-receber" required />
+          <button type="submit" class="btn btn-primary">Salvar</button>
+          <button type="button" class="btn btn-success" id="cancel-receber">Cancelar</button>
+        </form>
+        <ul id="lista-receber" class="financeiro-list"></ul>
+      </div>
+    </div>
+    <!-- FIM: CONTAS A PAGAR E RECEBER -->
+
     <div class="actions-section">
       <div class="actions-header">
         <h2 class="actions-title">Exportar Relatorios</h2>
@@ -853,7 +969,7 @@
     function logout() {
       sessionStorage.removeItem('loggedIn');
       sessionStorage.removeItem('username');
-      window.location.href = 'index.html';
+      window.location.href = 'sistema.html';
     }
 
     document.getElementById('btn-relatorio-clientes').onclick = function() {
@@ -1456,6 +1572,88 @@
           this.style.transform = 'translateY(0) scale(1)';
         });
       });
+    });
+
+    // --- CONTAS A PAGAR E RECEBER ---
+    function getContas(tipo) {
+      return JSON.parse(localStorage.getItem('contas_' + tipo)) || [];
+    }
+    function setContas(tipo, contas) {
+      localStorage.setItem('contas_' + tipo, JSON.stringify(contas));
+    }
+    function renderContas(tipo) {
+      const lista = document.getElementById('lista-' + tipo);
+      const contas = getContas(tipo);
+      lista.innerHTML = '';
+      if (contas.length === 0) {
+        lista.innerHTML = '<li style="color:#888;">Nenhuma conta cadastrada.</li>';
+        return;
+      }
+      contas.forEach((conta, idx) => {
+        const li = document.createElement('li');
+        li.classList.add(tipo);
+        li.innerHTML = `<span class="desc">${conta.desc}</span> <span class="valor">R$ ${parseFloat(conta.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}</span> <span class="data">Venc: ${conta.data}</span> <button class="remover" title="Remover" onclick="removerConta('${tipo}',${idx})"><i class="fas fa-trash"></i></button>`;
+        lista.appendChild(li);
+      });
+    }
+    function removerConta(tipo, idx) {
+      const contas = getContas(tipo);
+      contas.splice(idx, 1);
+      setContas(tipo, contas);
+      renderContas(tipo);
+    }
+    // Eventos para mostrar/ocultar formulários
+    document.getElementById('btn-add-pagar').onclick = function() {
+      document.getElementById('form-pagar').style.display = 'flex';
+      this.style.display = 'none';
+    };
+    document.getElementById('cancel-pagar').onclick = function() {
+      document.getElementById('form-pagar').reset();
+      document.getElementById('form-pagar').style.display = 'none';
+      document.getElementById('btn-add-pagar').style.display = '';
+    };
+    document.getElementById('btn-add-receber').onclick = function() {
+      document.getElementById('form-receber').style.display = 'flex';
+      this.style.display = 'none';
+    };
+    document.getElementById('cancel-receber').onclick = function() {
+      document.getElementById('form-receber').reset();
+      document.getElementById('form-receber').style.display = 'none';
+      document.getElementById('btn-add-receber').style.display = '';
+    };
+    // Submissão dos formulários
+    document.getElementById('form-pagar').onsubmit = function(e) {
+      e.preventDefault();
+      const desc = document.getElementById('desc-pagar').value.trim();
+      const valor = document.getElementById('valor-pagar').value;
+      const data = document.getElementById('data-pagar').value;
+      if (!desc || !valor || !data) return;
+      const contas = getContas('pagar');
+      contas.push({ desc, valor, data });
+      setContas('pagar', contas);
+      renderContas('pagar');
+      this.reset();
+      this.style.display = 'none';
+      document.getElementById('btn-add-pagar').style.display = '';
+    };
+    document.getElementById('form-receber').onsubmit = function(e) {
+      e.preventDefault();
+      const desc = document.getElementById('desc-receber').value.trim();
+      const valor = document.getElementById('valor-receber').value;
+      const data = document.getElementById('data-receber').value;
+      if (!desc || !valor || !data) return;
+      const contas = getContas('receber');
+      contas.push({ desc, valor, data });
+      setContas('receber', contas);
+      renderContas('receber');
+      this.reset();
+      this.style.display = 'none';
+      document.getElementById('btn-add-receber').style.display = '';
+    };
+    // Inicializar listas ao carregar
+    document.addEventListener('DOMContentLoaded', function() {
+      renderContas('pagar');
+      renderContas('receber');
     });
   </script>
 </body>
