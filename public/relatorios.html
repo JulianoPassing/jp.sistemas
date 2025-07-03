@@ -1435,12 +1435,15 @@
       const contasPagar = window.contasPagar || [];
       const contasReceber = window.contasReceber || [];
       // Contas a Pagar
-      garantirEspaco(12);
+      garantirEspaco(16);
+      // Bloco visual de totais
+      doc.setFillColor(255, 235, 238); // leve vermelho
+      doc.rect(margin, y, pageWidth - 2 * margin, 14, 'F');
       doc.setFontSize(13);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(220, 38, 38);
-      doc.text('CONTAS A PAGAR', pageWidth / 2, y, { align: 'center' });
-      y += 8;
+      doc.text('CONTAS A PAGAR', pageWidth / 2, y + 6, { align: 'center', baseline: 'middle' });
+      y += 14;
       // Calcular totais
       let totalPagar = 0, totalPagarAberto = 0, totalPagarVencido = 0, totalPagarPago = 0;
       contasPagar.forEach(c => {
@@ -1456,14 +1459,21 @@
           else totalPagarAberto += valor;
         }
       });
+      // Totais destacados
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('helvetica', 'bold');
       doc.setTextColor(0,0,0);
-      doc.text(`Total de contas: R$ ${totalPagar.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin, y);
-      doc.text(`Em aberto: R$ ${totalPagarAberto.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 70, y);
-      doc.text(`Vencidas: R$ ${totalPagarVencido.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 140, y);
-      doc.text(`Pagas: R$ ${totalPagarPago.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 210, y);
-      y += 7;
+      doc.setFillColor(255,255,255);
+      doc.roundedRect(margin, y, pageWidth - 2 * margin, 10, 2, 2, 'F');
+      doc.text(`Total: R$ ${totalPagar.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 2, y + 7);
+      doc.setTextColor(220,38,38);
+      doc.text(`Em aberto: R$ ${totalPagarAberto.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 65, y + 7);
+      doc.setTextColor(245, 158, 11);
+      doc.text(`Vencidas: R$ ${totalPagarVencido.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 140, y + 7);
+      doc.setTextColor(16, 185, 129);
+      doc.text(`Pagas: R$ ${totalPagarPago.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 215, y + 7);
+      y += 13;
+      doc.setTextColor(0,0,0);
       if (contasPagar.length > 0) {
         const contasPagarTable = contasPagar.map(c => {
           let statusLabel = 'Em aberto';
@@ -1496,20 +1506,35 @@
             halign: 'center',
             fontSize: 10
           },
-          styles: { fontSize: 9, cellPadding: 3, valign: 'middle' }
+          styles: { fontSize: 9, cellPadding: 3, valign: 'middle', halign: 'left' },
+          columnStyles: {
+            1: {halign: 'right'},
+            2: {halign: 'center'},
+            3: {halign: 'center'}
+          },
+          didDrawPage: function (data) {
+            // Linha separadora após tabela
+            if (data.pageCount === doc.internal.getNumberOfPages()) {
+              doc.setDrawColor(220,38,38);
+              doc.setLineWidth(0.5);
+              doc.line(margin, doc.lastAutoTable.finalY + 2, pageWidth - margin, doc.lastAutoTable.finalY + 2);
+            }
+          }
         });
-        y = doc.lastAutoTable.finalY + 10;
+        y = doc.lastAutoTable.finalY + 14;
       } else {
         doc.text('Nenhuma conta a pagar cadastrada.', pageWidth / 2, y, { align: 'center' });
-        y += 10;
+        y += 14;
       }
       // Contas a Receber
-      garantirEspaco(12);
+      garantirEspaco(16);
+      doc.setFillColor(232, 247, 236); // leve verde
+      doc.rect(margin, y, pageWidth - 2 * margin, 14, 'F');
       doc.setFontSize(13);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(40, 167, 69);
-      doc.text('CONTAS A RECEBER', pageWidth / 2, y, { align: 'center' });
-      y += 8;
+      doc.text('CONTAS A RECEBER', pageWidth / 2, y + 6, { align: 'center', baseline: 'middle' });
+      y += 14;
       // Calcular totais
       let totalReceber = 0, totalReceberAberto = 0, totalReceberVencido = 0, totalReceberPago = 0;
       contasReceber.forEach(c => {
@@ -1526,13 +1551,19 @@
         }
       });
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('helvetica', 'bold');
       doc.setTextColor(0,0,0);
-      doc.text(`Total de contas: R$ ${totalReceber.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin, y);
-      doc.text(`Em aberto: R$ ${totalReceberAberto.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 70, y);
-      doc.text(`Vencidas: R$ ${totalReceberVencido.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 140, y);
-      doc.text(`Pagas: R$ ${totalReceberPago.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 210, y);
-      y += 7;
+      doc.setFillColor(255,255,255);
+      doc.roundedRect(margin, y, pageWidth - 2 * margin, 10, 2, 2, 'F');
+      doc.text(`Total: R$ ${totalReceber.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 2, y + 7);
+      doc.setTextColor(40,167,69);
+      doc.text(`Em aberto: R$ ${totalReceberAberto.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 65, y + 7);
+      doc.setTextColor(245, 158, 11);
+      doc.text(`Vencidas: R$ ${totalReceberVencido.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 140, y + 7);
+      doc.setTextColor(16, 185, 129);
+      doc.text(`Pagas: R$ ${totalReceberPago.toLocaleString('pt-BR', {minimumFractionDigits:2})}`, margin + 215, y + 7);
+      y += 13;
+      doc.setTextColor(0,0,0);
       if (contasReceber.length > 0) {
         const contasReceberTable = contasReceber.map(c => {
           let statusLabel = 'Em aberto';
@@ -1565,12 +1596,25 @@
             halign: 'center',
             fontSize: 10
           },
-          styles: { fontSize: 9, cellPadding: 3, valign: 'middle' }
+          styles: { fontSize: 9, cellPadding: 3, valign: 'middle', halign: 'left' },
+          columnStyles: {
+            1: {halign: 'right'},
+            2: {halign: 'center'},
+            3: {halign: 'center'}
+          },
+          didDrawPage: function (data) {
+            // Linha separadora após tabela
+            if (data.pageCount === doc.internal.getNumberOfPages()) {
+              doc.setDrawColor(40,167,69);
+              doc.setLineWidth(0.5);
+              doc.line(margin, doc.lastAutoTable.finalY + 2, pageWidth - margin, doc.lastAutoTable.finalY + 2);
+            }
+          }
         });
-        y = doc.lastAutoTable.finalY + 10;
+        y = doc.lastAutoTable.finalY + 14;
       } else {
         doc.text('Nenhuma conta a receber cadastrada.', pageWidth / 2, y, { align: 'center' });
-        y += 10;
+        y += 14;
       }
 
       // Salvar PDF
