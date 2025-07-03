@@ -746,6 +746,25 @@
       background: linear-gradient(135deg, #10b981, #059669);
       transform: scale(1.05);
     }
+    .emaberto-btn {
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 16px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 8px;
+      transition: background 0.2s, transform 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .emaberto-btn:hover {
+      background: linear-gradient(135deg, #60a5fa, #2563eb);
+      transform: scale(1.05);
+    }
   </style>
 </head>
 <body>
@@ -1639,12 +1658,12 @@
     async function removerConta(tipo, id) {
       await fetch(`/api/contas/${tipo}/${id}`, { method: 'DELETE', credentials: 'include' });
     }
-    async function atualizarStatusConta(tipo, id) {
-      // PATCH para atualizar status para 'pago'
+    async function atualizarStatusConta(tipo, id, novoStatus = 'pago') {
+      // PATCH para atualizar status
       const res = await fetch(`/api/contas/${tipo}/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'pago' }),
+        body: JSON.stringify({ status: novoStatus }),
         credentials: 'include'
       });
       if (!res.ok) {
@@ -1665,7 +1684,10 @@
         return;
       }
       contas.forEach(conta => {
-        total += parseFloat(conta.valor);
+        // Somar apenas contas em aberto
+        if (conta.status !== 'pago') {
+          total += parseFloat(conta.valor);
+        }
         const li = document.createElement('li');
         li.classList.add(tipo);
         // Status de vencimento
@@ -1688,7 +1710,7 @@
           statusColor = 'color:#059669;font-weight:700;';
         }
         li.innerHTML = `<span class="desc">${conta.descricao}</span> <span class="valor">R$ ${parseFloat(conta.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}</span> <span class="data">Venc: ${conta.data_vencimento}</span> <span class="status" style="${statusColor}">${status}</span> ` +
-          (!pago ? `<button class="pago-btn" title="Marcar como Pago" onclick="marcarComoPago('${tipo}',${conta.id})"><i class="fas fa-check-circle"></i> Pago</button>` : '') +
+          (!pago ? `<button class="pago-btn" title="Marcar como Pago" onclick="marcarComoPago('${tipo}',${conta.id})"><i class="fas fa-check-circle"></i> Pago</button>` : `<button class="emaberto-btn" title="Voltar para Em Aberto" onclick="marcarComoEmAberto('${tipo}',${conta.id})"><i class='fas fa-undo'></i> Em Aberto</button>`) +
           ` <button class="remover" title="Remover" onclick="removerContaUI('${tipo}',${conta.id})"><i class="fas fa-trash"></i></button>`;
         lista.appendChild(li);
       });
@@ -1700,6 +1722,10 @@
     }
     window.marcarComoPago = async function(tipo, id) {
       await atualizarStatusConta(tipo, id);
+      renderContas(tipo);
+    }
+    window.marcarComoEmAberto = async function(tipo, id) {
+      await atualizarStatusConta(tipo, id, 'aberto');
       renderContas(tipo);
     }
     // Eventos para mostrar/ocultar formulários
