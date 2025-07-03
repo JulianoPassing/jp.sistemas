@@ -230,17 +230,7 @@ function normalizarData(data) {
 }
 
 // Middleware de autenticação por JWT
-function requireAuthJWT(req, res, next) {
-  const token = req.cookies.token || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
-  if (!token) return res.status(401).json({ error: 'Token não fornecido.' });
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    return res.status(401).json({ error: 'Token inválido ou expirado.' });
-  }
-}
+const { requireAuthJWT } = require('./middlewares/auth');
 
 // Rota de login usando JWT
 app.post('/api/auth/login', async (req, res) => {
@@ -926,9 +916,6 @@ app.use('/api/contas', require('./api/contas'));
 app.get('*', (req, res) => {
   res.sendFile(path.join(publicPath, 'index.html'));
 });
-
-// Exporta o middleware JWT para uso em outros módulos
-module.exports.requireAuthJWT = requireAuthJWT;
 
 // Inicialização do servidor (apenas se executado diretamente)
 if (require.main === module) {
