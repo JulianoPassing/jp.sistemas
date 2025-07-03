@@ -1591,7 +1591,7 @@
     // --- CONTAS A PAGAR E RECEBER ---
     // Funções para consumir a API
     async function getContas(tipo) {
-      const res = await fetch(`/api/contas/${tipo}`);
+      const res = await fetch(`/api/contas/${tipo}`, { credentials: 'include' });
       if (res.status === 304) {
         // Não há conteúdo novo, retorne array vazio
         return [];
@@ -1607,7 +1607,8 @@
       const res = await fetch(`/api/contas/${tipo}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(conta)
+        body: JSON.stringify(conta),
+        credentials: 'include'
       });
       if (!res.ok) {
         const text = await res.text();
@@ -1617,7 +1618,7 @@
       return await res.json();
     }
     async function removerConta(tipo, id) {
-      await fetch(`/api/contas/${tipo}/${id}`, { method: 'DELETE' });
+      await fetch(`/api/contas/${tipo}/${id}`, { method: 'DELETE', credentials: 'include' });
     }
     async function renderContas(tipo) {
       const lista = document.getElementById('lista-' + tipo);
