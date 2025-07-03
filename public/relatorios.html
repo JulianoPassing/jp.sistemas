@@ -1685,6 +1685,14 @@
       renderContas('pagar');
       renderContas('receber');
     });
+
+    // Handler global para silenciar erros de JSON inesperados causados por respostas HTML
+    window.addEventListener('unhandledrejection', function(event) {
+      if (event.reason && typeof event.reason.message === 'string' && event.reason.message.includes('Unexpected token <')) {
+        // Silencia o erro de JSON vindo de resposta HTML
+        event.preventDefault();
+      }
+    });
   </script>
 </body>
 </html> 
