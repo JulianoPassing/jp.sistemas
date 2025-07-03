@@ -1445,12 +1445,25 @@
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
       if (contasPagar.length > 0) {
-        const contasPagarTable = contasPagar.map(c => [
-          c.descricao,
-          `R$ ${parseFloat(c.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}`,
-          (c.data_vencimento ? new Date(c.data_vencimento).toLocaleDateString('pt-BR') : ''),
-          (c.status === 'pago' ? 'Pago' : (c.status === 'vencido' ? 'Vencido' : 'Em aberto'))
-        ]);
+        const contasPagarTable = contasPagar.map(c => {
+          let statusLabel = 'Em aberto';
+          if (c.status === 'pago') {
+            statusLabel = 'Pago';
+          } else {
+            // Verificar vencimento
+            const hoje = new Date();
+            const dataVenc = new Date(c.data_vencimento);
+            dataVenc.setHours(0,0,0,0);
+            hoje.setHours(0,0,0,0);
+            if (dataVenc < hoje) statusLabel = 'Vencido';
+          }
+          return [
+            c.descricao,
+            `R$ ${parseFloat(c.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}`,
+            (c.data_vencimento ? new Date(c.data_vencimento).toLocaleDateString('pt-BR') : ''),
+            statusLabel
+          ];
+        });
         doc.autoTable({
           startY: y,
           head: [['Descrição', 'Valor', 'Vencimento', 'Status']],
@@ -1483,12 +1496,25 @@
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
       if (contasReceber.length > 0) {
-        const contasReceberTable = contasReceber.map(c => [
-          c.descricao,
-          `R$ ${parseFloat(c.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}`,
-          (c.data_vencimento ? new Date(c.data_vencimento).toLocaleDateString('pt-BR') : ''),
-          (c.status === 'pago' ? 'Pago' : (c.status === 'vencido' ? 'Vencido' : 'Em aberto'))
-        ]);
+        const contasReceberTable = contasReceber.map(c => {
+          let statusLabel = 'Em aberto';
+          if (c.status === 'pago') {
+            statusLabel = 'Pago';
+          } else {
+            // Verificar vencimento
+            const hoje = new Date();
+            const dataVenc = new Date(c.data_vencimento);
+            dataVenc.setHours(0,0,0,0);
+            hoje.setHours(0,0,0,0);
+            if (dataVenc < hoje) statusLabel = 'Vencido';
+          }
+          return [
+            c.descricao,
+            `R$ ${parseFloat(c.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}`,
+            (c.data_vencimento ? new Date(c.data_vencimento).toLocaleDateString('pt-BR') : ''),
+            statusLabel
+          ];
+        });
         doc.autoTable({
           startY: y,
           head: [['Descrição', 'Valor', 'Vencimento', 'Status']],
@@ -1601,11 +1627,21 @@
       dadosRelatorio.push(['Descrição', 'Valor', 'Vencimento', 'Status']);
       if (contasPagar.length > 0) {
         contasPagar.forEach(c => {
+          let statusLabel = 'Em aberto';
+          if (c.status === 'pago') {
+            statusLabel = 'Pago';
+          } else {
+            const hoje = new Date();
+            const dataVenc = new Date(c.data_vencimento);
+            dataVenc.setHours(0,0,0,0);
+            hoje.setHours(0,0,0,0);
+            if (dataVenc < hoje) statusLabel = 'Vencido';
+          }
           dadosRelatorio.push([
             c.descricao,
             `R$ ${parseFloat(c.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}`,
             (c.data_vencimento ? new Date(c.data_vencimento).toLocaleDateString('pt-BR') : ''),
-            (c.status === 'pago' ? 'Pago' : (c.status === 'vencido' ? 'Vencido' : 'Em aberto'))
+            statusLabel
           ]);
         });
       } else {
@@ -1617,11 +1653,21 @@
       dadosRelatorio.push(['Descrição', 'Valor', 'Vencimento', 'Status']);
       if (contasReceber.length > 0) {
         contasReceber.forEach(c => {
+          let statusLabel = 'Em aberto';
+          if (c.status === 'pago') {
+            statusLabel = 'Pago';
+          } else {
+            const hoje = new Date();
+            const dataVenc = new Date(c.data_vencimento);
+            dataVenc.setHours(0,0,0,0);
+            hoje.setHours(0,0,0,0);
+            if (dataVenc < hoje) statusLabel = 'Vencido';
+          }
           dadosRelatorio.push([
             c.descricao,
             `R$ ${parseFloat(c.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}`,
             (c.data_vencimento ? new Date(c.data_vencimento).toLocaleDateString('pt-BR') : ''),
-            (c.status === 'pago' ? 'Pago' : (c.status === 'vencido' ? 'Vencido' : 'Em aberto'))
+            statusLabel
           ]);
         });
       } else {
