@@ -197,11 +197,12 @@ async function createUserDatabase(username) {
 // Função para normalizar o status do pedido
 function normalizarStatus(status) {
   if (!status) return '';
-  const s = status.toString().trim().toLowerCase();
+  const s = status.toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
   if (s === 'em aberto') return 'Em Aberto';
   if (s === 'em processamento') return 'Em Processamento';
-  if (s === 'concluído' || s === 'concluido') return 'Concluído';
+  if (s === 'concluido') return 'Concluído';
   if (s === 'cancelado') return 'Cancelado';
+  if (s === 'pendente') return 'Pendente';
   return status;
 }
 
