@@ -111,6 +111,30 @@ async function createUserDatabase(username) {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
+    await userConnection.execute(`
+      CREATE TABLE IF NOT EXISTS contas_pagar (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        descricao VARCHAR(255) NOT NULL,
+        valor DECIMAL(10,2) NOT NULL,
+        data_vencimento DATE NOT NULL,
+        status VARCHAR(20) DEFAULT 'aberto',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    await userConnection.execute(`
+      CREATE TABLE IF NOT EXISTS contas_receber (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        descricao VARCHAR(255) NOT NULL,
+        valor DECIMAL(10,2) NOT NULL,
+        data_vencimento DATE NOT NULL,
+        status VARCHAR(20) DEFAULT 'aberto',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
     await rootConnection.end();
     await userConnection.end();
     
@@ -164,6 +188,76 @@ async function createUser(username, email, password, isAdmin = false) {
   }
 }
 
+// Função para garantir que os bancos principais existem e possuem as tabelas padrão
+async function ensureMainDatabasesAndTables() {
+  const mainDatabases = [
+    { name: 'jpsistemas_users', charset: 'utf8mb4', collate: 'utf8mb4_unicode_ci' },
+    { name: 'jpsistemas_sessions', charset: 'utf8mb4', collate: 'utf8mb4_unicode_ci' },
+    { name: 'jpsistemas_admin', charset: 'utf8mb4', collate: 'utf8mb4_unicode_ci' }
+  ];
+  let rootConnection;
+  try {
+    rootConnection = await mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      user: process.env.DB_USER || 'jpsistemas',
+      password: process.env.DB_PASSWORD || 'SuaSenhaForte123!',
+      charset: 'utf8mb4'
+    });
+    for (const db of mainDatabases) {
+      await rootConnection.execute(
+        `CREATE DATABASE IF NOT EXISTS \`${db.name}\` CHARACTER SET ${db.charset} COLLATE ${db.collate}`
+      );
+    }
+    // Criar tabela users em jpsistemas_users
+    await rootConnection.execute('USE jpsistemas_users');
+    await rootConnection.execute(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(50) UNIQUE NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        is_active BOOLEAN DEFAULT TRUE,
+        is_admin BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_username (username),
+        INDEX idx_email (email),
+        INDEX idx_is_active (is_active)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    // Criar tabela sessions em jpsistemas_sessions
+    await rootConnection.execute('USE jpsistemas_sessions');
+    await rootConnection.execute(`
+      CREATE TABLE IF NOT EXISTS sessions (
+        session_id VARCHAR(128) NOT NULL PRIMARY KEY,
+        expires INT UNSIGNED NOT NULL,
+        data TEXT,
+        INDEX idx_expires (expires)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    // Criar tabela caixa em jpsistemas_admin
+    await rootConnection.execute('USE jpsistemas_admin');
+    await rootConnection.execute(`
+      CREATE TABLE IF NOT EXISTS caixa (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        tipo VARCHAR(20),
+        valor DECIMAL(10,2),
+        descricao VARCHAR(255),
+        data DATE,
+        pedido_id INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (pedido_id) REFERENCES pedidos(id) ON DELETE SET NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    await rootConnection.end();
+    console.log('✅ Bancos principais e tabelas padrão verificados/criados');
+  } catch (error) {
+    if (rootConnection) await rootConnection.end();
+    console.error('❌ Erro ao criar bancos principais/tabelas:', error);
+    throw error;
+  }
+}
+
 // Função principal
 async function createNewUser() {
   const args = process.argv.slice(2);
@@ -211,6 +305,8 @@ async function createNewUser() {
   console.log('');
 
   try {
+    // 0. Garantir bancos principais e tabelas padrão
+    await ensureMainDatabasesAndTables();
     // 1. Criar usuário no banco de usuários
     console.log('👤 Criando usuário no banco de usuários...');
     await createUser(username, email, password, isAdmin);
