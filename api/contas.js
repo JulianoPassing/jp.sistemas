@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../database-config');
+const pool = require('../db-pool');
 
 // Listar contas
 router.get('/:tipo', async (req, res) => {
