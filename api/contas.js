@@ -1,0 +1,47 @@
+const express = require('express');
+const router = express.Router();
+const pool = require('../database-config');
+
+// Listar contas
+router.get('/:tipo', async (req, res) => {
+  const tipo = req.params.tipo;
+  if (!['pagar', 'receber'].includes(tipo)) return res.status(400).json({ error: 'Tipo inválido' });
+  try {
+    const [rows] = await pool.query(`SELECT * FROM contas_${tipo} ORDER BY data_vencimento ASC, id DESC`);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar contas' });
+  }
+});
+
+// Adicionar conta
+router.post('/:tipo', async (req, res) => {
+  const tipo = req.params.tipo;
+  const { descricao, valor, data_vencimento } = req.body;
+  if (!['pagar', 'receber'].includes(tipo)) return res.status(400).json({ error: 'Tipo inválido' });
+  if (!descricao || !valor || !data_vencimento) return res.status(400).json({ error: 'Dados obrigatórios' });
+  try {
+    const [result] = await pool.query(
+      `INSERT INTO contas_${tipo} (descricao, valor, data_vencimento) VALUES (?, ?, ?)`,
+      [descricao, valor, data_vencimento]
+    );
+    res.json({ id: result.insertId, descricao, valor, data_vencimento });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao adicionar conta' });
+  }
+});
+
+// Remover conta
+router.delete('/:tipo/:id', async (req, res) => {
+  const tipo = req.params.tipo;
+  const id = req.params.id;
+  if (!['pagar', 'receber'].includes(tipo)) return res.status(400).json({ error: 'Tipo inválido' });
+  try {
+    await pool.query(`DELETE FROM contas_${tipo} WHERE id = ?`, [id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao remover conta' });
+  }
+});
+
+module.exports = router; 
