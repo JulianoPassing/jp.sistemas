@@ -248,15 +248,18 @@
       .dashboard-card.receber i {
         color: #059669;
       }
+      .dashboard-card.lucro i {
+        color: #f59e42;
+      }
 
       .dashboard-financeiro {
-        grid-template-columns: 1fr 1fr;
-        max-width: 500px;
+        grid-template-columns: 1fr 1fr 1fr;
+        max-width: 700px;
         margin-left: auto;
         margin-right: auto;
-        margin-bottom: 32px;
+        margin-bottom: 0;
       }
-      @media (max-width: 768px) {
+      @media (max-width: 900px) {
         .dashboard-financeiro {
           grid-template-columns: 1fr;
           max-width: 100%;
@@ -383,6 +386,11 @@
             <div class="dashboard-value" id="dashboardReceber">--</div>
             <div class="dashboard-label">Contas a Receber</div>
           </div>
+          <div class="dashboard-card lucro">
+            <i class="fas fa-coins"></i>
+            <div class="dashboard-value" id="dashboardLucro">--</div>
+            <div class="dashboard-label">Lucro do mês</div>
+          </div>
         </div>
       </div>
     </main>
@@ -435,6 +443,16 @@
           })
           .catch(() => {
             document.getElementById('dashboardReceber').textContent = '--';
+          });
+
+        // Buscar lucro do mês
+        fetch('/api/relatorios/estatisticas', { credentials: 'include' })
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById('dashboardLucro').textContent = data.lucroMes ? 'R$ ' + Number(data.lucroMes).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '--';
+          })
+          .catch(() => {
+            document.getElementById('dashboardLucro').textContent = '--';
           });
       });
       
