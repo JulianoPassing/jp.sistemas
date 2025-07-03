@@ -2,17 +2,18 @@ const express = require('express');
 const router = express.Router();
 const mysql = require('mysql2/promise');
 const { getUserDatabaseConfig } = require('../database-config');
+const { requireAuthJWT } = require('../server');
 
-// Helper para obter conexão do banco do usuário logado
+// Helper para obter conexão do banco do usuário logado via JWT
 async function getUserConnection(req) {
-  const username = req.session && req.session.username;
+  const username = req.user && req.user.username;
   if (!username) throw new Error('Usuário não autenticado');
   const dbConfig = getUserDatabaseConfig(username);
   return mysql.createConnection(dbConfig);
 }
 
 // Listar contas
-router.get('/:tipo', async (req, res) => {
+router.get('/:tipo', requireAuthJWT, async (req, res) => {
   const tipo = req.params.tipo;
   if (!['pagar', 'receber'].includes(tipo)) return res.status(400).json({ error: 'Tipo inválido' });
   try {
@@ -27,7 +28,7 @@ router.get('/:tipo', async (req, res) => {
 });
 
 // Adicionar conta
-router.post('/:tipo', async (req, res) => {
+router.post('/:tipo', requireAuthJWT, async (req, res) => {
   const tipo = req.params.tipo;
   const { descricao, valor, data_vencimento } = req.body;
   console.log('POST /api/contas/' + tipo, req.body); // Log do corpo recebido
@@ -50,7 +51,7 @@ router.post('/:tipo', async (req, res) => {
 });
 
 // Remover conta
-router.delete('/:tipo/:id', async (req, res) => {
+router.delete('/:tipo/:id', requireAuthJWT, async (req, res) => {
   const tipo = req.params.tipo;
   const id = req.params.id;
   if (!['pagar', 'receber'].includes(tipo)) return res.status(400).json({ error: 'Tipo inválido' });
