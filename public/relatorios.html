@@ -727,6 +727,25 @@
       .financeiro-card { padding: 10px 2px; }
       .financeiro-header h2 { font-size: 1.2rem; }
     }
+    .pago-btn {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 16px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 8px;
+      transition: background 0.2s, transform 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pago-btn:hover {
+      background: linear-gradient(135deg, #10b981, #059669);
+      transform: scale(1.05);
+    }
   </style>
 </head>
 <body>
@@ -1620,6 +1639,21 @@
     async function removerConta(tipo, id) {
       await fetch(`/api/contas/${tipo}/${id}`, { method: 'DELETE', credentials: 'include' });
     }
+    async function atualizarStatusConta(tipo, id) {
+      // PATCH para atualizar status para 'pago'
+      const res = await fetch(`/api/contas/${tipo}/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'pago' }),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('Erro ao atualizar status:', text);
+        throw new Error('Erro ao atualizar status: ' + text);
+      }
+      return await res.json();
+    }
     async function renderContas(tipo) {
       const lista = document.getElementById('lista-' + tipo);
       const contas = await getContas(tipo);
@@ -1641,20 +1675,31 @@
         hoje.setHours(0,0,0,0);
         let status = '';
         let statusColor = '';
-        if (dataVenc < hoje) {
+        let pago = false;
+        if (conta.status === 'pago') {
+          status = 'Pago';
+          statusColor = 'color:#2563eb;font-weight:700;'; // azul
+          pago = true;
+        } else if (dataVenc < hoje) {
           status = 'Vencido';
           statusColor = 'color:#dc2626;font-weight:700;';
         } else {
           status = 'Em aberto';
           statusColor = 'color:#059669;font-weight:700;';
         }
-        li.innerHTML = `<span class="desc">${conta.descricao}</span> <span class="valor">R$ ${parseFloat(conta.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}</span> <span class="data">Venc: ${conta.data_vencimento}</span> <span class="status" style="${statusColor}">${status}</span> <button class="remover" title="Remover" onclick="removerContaUI('${tipo}',${conta.id})"><i class="fas fa-trash"></i></button>`;
+        li.innerHTML = `<span class="desc">${conta.descricao}</span> <span class="valor">R$ ${parseFloat(conta.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}</span> <span class="data">Venc: ${conta.data_vencimento}</span> <span class="status" style="${statusColor}">${status}</span> ` +
+          (!pago ? `<button class="pago-btn" title="Marcar como Pago" onclick="marcarComoPago('${tipo}',${conta.id})"><i class="fas fa-check-circle"></i> Pago</button>` : '') +
+          ` <button class="remover" title="Remover" onclick="removerContaUI('${tipo}',${conta.id})"><i class="fas fa-trash"></i></button>`;
         lista.appendChild(li);
       });
       document.getElementById('total-' + tipo).textContent = `Total: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
     }
     window.removerContaUI = async function(tipo, id) {
       await removerConta(tipo, id);
+      renderContas(tipo);
+    }
+    window.marcarComoPago = async function(tipo, id) {
+      await atualizarStatusConta(tipo, id);
       renderContas(tipo);
     }
     // Eventos para mostrar/ocultar formulários
