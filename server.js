@@ -748,6 +748,7 @@ app.post('/api/caixa', async (req, res) => {
 // Rota para relatórios
 app.get('/api/relatorios/estatisticas', requireAuthJWT, async (req, res) => {
   try {
+    console.log('Banco usado para estatísticas:', req.user && req.user.dbName);
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
@@ -782,6 +783,7 @@ app.get('/api/relatorios/estatisticas', requireAuthJWT, async (req, res) => {
 
     // Buscar total de pedidos CONCLUÍDOS
     const [pedidosResult] = await connection.execute('SELECT COUNT(*) as total FROM pedidos WHERE status IN ("Concluído", "concluído", "Concluido", "concluido", "CONCLUÍDO", "CONCLUIDO")');
+    console.log('Total pedidos concluídos encontrados:', pedidosResult[0].total);
     const totalPedidos = pedidosResult[0].total;
 
     // Buscar total de pedidos EM PROCESSAMENTO
