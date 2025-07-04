@@ -449,14 +449,19 @@
       .hamburger span {
         height: 4px;
         width: 28px;
-        background: var(--accent-color);
+        background: var(--primary-color, #00e6ff);
         margin: 4px 0;
         border-radius: 2px;
         transition: 0.3s;
         display: block;
       }
+      .header nav {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+      }
       @media (max-width: 900px) {
-        nav {
+        .header nav {
           display: none;
         }
         .hamburger {
@@ -546,6 +551,15 @@
           <span></span>
           <span></span>
         </button>
+        <div class="user-info">
+          <span>Bem-vindo, <span id="userDisplay"></span></span>
+          <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Sair
+          </button>
+          <a href="painel.html" class="logout-btn" style="background: var(--primary-light); margin-left: 8px;">
+            <i class="fas fa-arrow-left"></i> Voltar
+          </a>
+        </div>
       </div>
     </header>
     <div class="drawer-bg" id="drawer-bg"></div>
@@ -672,7 +686,7 @@
 
         // Exibir nome do usuario
         const username = sessionStorage.getItem('username') || 'Usuario';
-        document.getElementById('userDisplay').textContent = username;
+        document.querySelectorAll('#userDisplay').forEach(el => el.textContent = username);
 
         // Buscar dados do dashboard
         fetch('/api/relatorios/estatisticas', { credentials: 'include' })

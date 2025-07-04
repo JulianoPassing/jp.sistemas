@@ -310,8 +310,13 @@
       transition: 0.3s;
       display: block;
     }
+    .header nav {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
     @media (max-width: 900px) {
-      nav {
+      .header nav {
         display: none;
       }
       .hamburger {
@@ -401,6 +406,15 @@
         <span></span>
         <span></span>
       </button>
+      <div class="user-info">
+        <span>Bem-vindo, <span id="userDisplay"></span></span>
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+        <a href="painel.html" class="logout-btn" style="background: var(--primary-light); margin-left: 8px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+      </div>
     </div>
   </header>
   <div class="drawer-bg" id="drawer-bg"></div>
@@ -512,7 +526,7 @@
         window.location.href = 'index.html';
       }
       const username = sessionStorage.getItem('username') || 'Usuário';
-      document.getElementById('userDisplay').textContent = username;
+      document.querySelectorAll('#userDisplay').forEach(el => el.textContent = username);
       carregarProdutos();
       carregarClientes();
       document.getElementById('finalizar-venda').onclick = finalizarVenda;

@@ -299,8 +299,13 @@
       transition: 0.3s;
       display: block;
     }
+    .header nav {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
     @media (max-width: 900px) {
-      nav {
+      .header nav {
         display: none;
       }
       .hamburger {
@@ -374,19 +379,31 @@
   <header class="header">
     <div class="header-content">
       <div class="logo">
-        <img src="https://i.imgur.com/6N82fk2.png" alt="JP Sistemas Logo" />
-        <span class="tech-font">J.P SISTEMAS</span>
+        <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" />
       </div>
       <nav>
-        <a href="index.html">Início</a>
-        <a href="sistema.html">Acessar Sistema</a>
+        <a href="painel.html">Painel</a>
+        <a href="produtos.html">Produtos</a>
+        <a href="pedidos.html">Pedidos</a>
+        <a href="relatorios.html">Relatórios</a>
+        <a href="configuracoes.html">Configurações</a>
         <a href="ajuda.html">Ajuda</a>
+        <a href="sistema.html">Sair</a>
       </nav>
       <button class="hamburger" id="hamburger" aria-label="Abrir menu" aria-controls="mobile-drawer" aria-expanded="false">
         <span></span>
         <span></span>
         <span></span>
       </button>
+      <div class="user-info">
+        <span>Bem-vindo, <span id="userDisplay"></span></span>
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+        <a href="painel.html" class="logout-btn" style="background: var(--primary-light); margin-left: 8px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+      </div>
     </div>
   </header>
   <div class="drawer-bg" id="drawer-bg"></div>
@@ -472,7 +489,7 @@
       }
       // Exibir nome do usuário
       const username = sessionStorage.getItem('username') || 'Usuário';
-      document.getElementById('userDisplay').textContent = username;
+      document.querySelectorAll('#userDisplay').forEach(el => el.textContent = username);
     });
 
     async function logout() {
