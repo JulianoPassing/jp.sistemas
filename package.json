@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "start:cobrancas": "cd public/jpcobrancas/backend && node app.js",
-    "dev:cobrancas": "cd public/jpcobrancas/backend && nodemon app.js",
+    "start:cobrancas": "cd public/jpcobranca/backend && node app.js",
+    "dev:cobrancas": "cd public/jpcobranca/backend && nodemon app.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:cobrancas\"",
     "build": "echo 'Build completed'",
     "vercel-build": "echo 'Vercel build completed'",
