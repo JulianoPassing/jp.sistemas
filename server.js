@@ -14,6 +14,7 @@ const {
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const empresaHandler = require('./api/empresa');
+const cobrancasHandler = require('./api/cobrancas');
 require('dotenv').config({ path: __dirname + '/.env' });
 console.log('DB_HOST:', process.env.DB_HOST);
 console.log('DB_USER:', process.env.DB_USER);
@@ -26,6 +27,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.all('/api/empresa', empresaHandler);
+app.use('/api/cobrancas', cobrancasHandler);
 
 // CORS - deve vir antes de qualquer middleware de sessão ou rotas
 const allowedOrigins = [

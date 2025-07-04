@@ -11,6 +11,7 @@
     "init-db": "node scripts/init-db.js",
     "init-produtos": "node scripts/init-produtos.js",
     "init-vercel": "node scripts/init-vercel-db.js",
+    "init-cobrancas": "node scripts/init-cobrancas-db.js",
     "backup": "bash scripts/backup.sh",
     "backup-debian": "bash scripts/backup-debian.sh"
   },
