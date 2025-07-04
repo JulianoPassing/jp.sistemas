@@ -298,4 +298,15 @@
     font-size: 13px !important;
     padding-bottom: 60px !important; /* espaço para nav fixa */
   }
+  .card, .feature-card, .menu-card, .caixa-section, .mesa-card, .relatorio-card, .config-area, .faq-item, .card-header, .container, .main-content, .cards, .card-list, .painel-card, .painel3-card, .painel-clientes-card, .produtos-card, .pedidos-card, .relatorios-card, .configuracoes-card, .ajuda-card, .clientes-card {
+    width: 98vw !important;
+    max-width: 420px !important;
+    min-width: unset !important;
+    box-sizing: border-box !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    overflow-x: auto !important;
+  }
 } 
