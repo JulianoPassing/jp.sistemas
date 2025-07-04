@@ -277,25 +277,127 @@
       font-family: 'Inter', sans-serif;
       letter-spacing: 0.02em;
     }
+    /* Menu hambúrguer */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      z-index: 1001;
+      background: none;
+      border: none;
+      margin-left: 1rem;
+    }
+    .hamburger span {
+      height: 4px;
+      width: 28px;
+      background: var(--primary-color, #00e6ff);
+      margin: 4px 0;
+      border-radius: 2px;
+      transition: 0.3s;
+      display: block;
+    }
+    @media (max-width: 900px) {
+      nav {
+        display: none;
+      }
+      .hamburger {
+        display: flex;
+      }
+      .mobile-drawer {
+        display: flex;
+      }
+    }
+    .mobile-drawer {
+      display: none;
+      flex-direction: column;
+      position: fixed;
+      top: 0; right: 0;
+      width: 75vw;
+      max-width: 320px;
+      height: 100vh;
+      background: var(--primary-color, #002f4b);
+      box-shadow: -2px 0 16px rgba(0,0,0,0.18);
+      z-index: 1000;
+      padding: 2.5rem 1.5rem 1.5rem 2rem;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+    }
+    .mobile-drawer.active {
+      transform: translateX(0);
+      display: flex;
+    }
+    .mobile-drawer .close-drawer {
+      position: absolute;
+      top: 1.2rem;
+      right: 1.2rem;
+      background: none;
+      border: none;
+      color: var(--accent-color, #00e6ff);
+      font-size: 2rem;
+      cursor: pointer;
+    }
+    .mobile-drawer nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+    .mobile-drawer nav a {
+      color: var(--text-primary, #ecf0f1);
+      font-size: 1.2rem;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid rgba(0,230,255,0.08);
+      transition: color 0.2s;
+    }
+    .mobile-drawer nav a:hover {
+      color: var(--accent-color, #00e6ff);
+    }
+    .drawer-bg {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.35);
+      z-index: 999;
+      transition: opacity 0.3s;
+    }
+    .drawer-bg.active {
+      display: block;
+    }
   </style>
 </head>
 <body>
   <header class="header">
     <div class="header-content">
       <div class="logo">
-        <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 150px; height: 67px; display: block; object-fit: contain; background: none; box-shadow: none; border-radius: 0; margin: 0;" />
+        <img src="https://i.imgur.com/6N82fk2.png" alt="JP Sistemas Logo" />
+        <span class="tech-font">J.P SISTEMAS</span>
       </div>
-      <div class="user-info">
-        <span>Bem-vindo, <span id="userDisplay"></span></span>
-        <button class="logout-btn" onclick="logout()">
-          <i class="fas fa-sign-out-alt"></i> Sair
-        </button>
-        <a href="painel.html" class="logout-btn" style="background: var(--primary-light); margin-left: 8px;">
-          <i class="fas fa-arrow-left"></i> Voltar
-        </a>
-      </div>
+      <nav>
+        <a href="index.html">Início</a>
+        <a href="sistema.html">Acessar Sistema</a>
+        <a href="ajuda.html">Ajuda</a>
+      </nav>
+      <button class="hamburger" id="hamburger" aria-label="Abrir menu" aria-controls="mobile-drawer" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
   </header>
+  <div class="drawer-bg" id="drawer-bg"></div>
+  <aside class="mobile-drawer" id="mobile-drawer" aria-hidden="true">
+    <button class="close-drawer" id="close-drawer" aria-label="Fechar menu">&times;</button>
+    <nav>
+      <a href="index.html">Início</a>
+      <a href="sistema.html">Acessar Sistema</a>
+      <a href="ajuda.html">Ajuda</a>
+    </nav>
+  </aside>
   <main class="main-content">
     <div class="card">
       <div class="card-header">
@@ -379,6 +481,31 @@
       sessionStorage.removeItem('username');
       window.location.href = 'sistema.html';
     }
+
+    // Menu hambúrguer responsivo
+    const hamburger = document.getElementById('hamburger');
+    const mobileDrawer = document.getElementById('mobile-drawer');
+    const drawerBg = document.getElementById('drawer-bg');
+    const closeDrawer = document.getElementById('close-drawer');
+    function openDrawer() {
+      mobileDrawer.classList.add('active');
+      drawerBg.classList.add('active');
+      hamburger.setAttribute('aria-expanded', 'true');
+      mobileDrawer.setAttribute('aria-hidden', 'false');
+    }
+    function closeDrawerFn() {
+      mobileDrawer.classList.remove('active');
+      drawerBg.classList.remove('active');
+      hamburger.setAttribute('aria-expanded', 'false');
+      mobileDrawer.setAttribute('aria-hidden', 'true');
+    }
+    hamburger.addEventListener('click', openDrawer);
+    closeDrawer.addEventListener('click', closeDrawerFn);
+    drawerBg.addEventListener('click', closeDrawerFn);
+    // Fechar com ESC
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeDrawerFn();
+    });
   </script>
 </body>
 </html> 
