@@ -1,0 +1,75 @@
+========================================
+    JP-Cobranças NOVO - Instruções Rápidas
+========================================
+
+🎯 COMO USAR O SISTEMA NOVO:
+
+1. INICIAR O SISTEMA:
+   - Windows: Execute "install.bat"
+   - Linux/Mac: Execute "./install.sh"
+   - Ou manualmente: 
+     cd backend && npm install && npm start
+
+2. CONFIGURAR BANCO DE DADOS:
+   - Instale o MariaDB/MySQL
+   - Execute: mysql -u root -p < ../database_config.sql
+   - Configure as credenciais em backend/db.js se necessário
+
+3. ACESSAR:
+   - Backend: http://localhost:3001
+   - Frontend: Abra frontend/index.html no navegador
+
+4. NAVEGAÇÃO:
+   - Dashboard: Página principal com resumo
+   - Clientes: Cadastro e gerenciamento de clientes
+   - Empréstimos: Controle de empréstimos
+   - Cobranças: Controle de pagamentos
+   - Atrasados: Clientes em inadimplência
+
+🔧 CONFIGURAÇÃO DO BANCO:
+
+1. Instale o MariaDB/MySQL
+2. Execute: mysql -u root -p < database_config.sql
+3. O banco será criado automaticamente com dados de exemplo
+
+📁 ESTRUTURA DOS ARQUIVOS:
+
+- backend/ (API Node.js)
+  - app.js (servidor principal)
+  - db.js (configuração do banco)
+  - routes/ (rotas da API)
+  - package.json (dependências)
+
+- frontend/ (Interface)
+  - index.html (dashboard)
+  - clientes.html (gestão de clientes)
+  - emprestimos.html (gestão de empréstimos)
+  - cobrancas.html (gestão de cobranças)
+  - atrasados.html (clientes em atraso)
+  - css/style.css (estilos)
+  - js/ (JavaScript)
+
+✨ FUNCIONALIDADES IMPLEMENTADAS:
+
+✅ Sistema 100% funcional
+✅ Interface responsiva moderna
+✅ Logo personalizada (JP-Cobranças)
+✅ API REST completa
+✅ Banco de dados MariaDB configurado
+✅ Scripts de instalação automática
+✅ Documentação completa
+✅ CRUD completo para clientes
+✅ Gestão de empréstimos
+✅ Sistema de cobranças
+✅ Dashboard com estatísticas
+✅ Busca e filtros
+✅ Validações de dados
+
+🚀 PRONTO PARA USO!
+
+O sistema novo está completamente configurado e funcional.
+Todas as páginas foram implementadas com funcionalidades completas.
+A API está rodando e integrada com o frontend.
+O sistema roda localmente com Node.js e MariaDB.
+
+Para mais detalhes, consulte o README.md 
