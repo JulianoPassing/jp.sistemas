@@ -918,7 +918,7 @@ app.use('/api/contas', require('./api/contas'));
 
 // Proxy para o sistema de cobranças
 app.use('/jpcobranca/api', createProxyMiddleware({
-  target: 'http://localhost:3001',
+  target: 'http://localhost:3005',
   changeOrigin: true,
   pathRewrite: {
     '^/jpcobranca/api': '/api' // Remove o prefixo /jpcobranca/api
@@ -927,7 +927,7 @@ app.use('/jpcobranca/api', createProxyMiddleware({
     console.error('Erro no proxy para cobranças:', err.message);
     res.status(503).json({ 
       error: 'Sistema de cobranças temporariamente indisponível',
-      message: 'Certifique-se de que o sistema de cobranças está rodando na porta 3001'
+      message: 'Certifique-se de que o sistema de cobranças está rodando na porta 3005'
     });
   }
 }));
