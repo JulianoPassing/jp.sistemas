@@ -34,7 +34,7 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Rota não encontrada' });
 });
 
-const PORT = process.env.PORT_COBRANCAS || 3001;
+const PORT = process.env.PORT_COBRANCAS || 3005;
 app.listen(PORT, () => {
   console.log(`🚀 Backend JP-Cobranças rodando em http://localhost:${PORT}`);
   console.log(`📊 API disponível em http://localhost:${PORT}/api`);
