@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - JP Cobranças</title>
-  <link rel="stylesheet" href="css/login.css">
+  <link rel="icon" type="image/png" href="https://i.imgur.com/6N82fk2.png">
   <style>
     body {
       background: #f4f8fb;
@@ -89,7 +89,7 @@
 </head>
 <body>
   <div class="login-container">
-    <img src="/jp.cobrancas/css/logo.png" alt="JP Sistemas" class="login-logo">
+    <img src="https://i.imgur.com/2jT2EPD.png" alt="JP Sistemas" class="login-logo">
     <div class="login-title">Login - JP Cobranças</div>
     <div class="login-error" id="loginError"></div>
     <form class="login-form" id="loginForm" autocomplete="off">
@@ -114,7 +114,7 @@
         });
         const data = await res.json();
         if (res.ok && data.success) {
-          window.location.href = '/jp.cobrancas/index.html';
+          window.location.href = '/jp.cobrancas/dashboard.html';
         } else {
           errorDiv.textContent = data.message || 'Usuário ou senha inválidos.';
           errorDiv.style.display = 'block';
