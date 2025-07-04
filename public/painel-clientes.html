@@ -1,3 +1,10 @@
+<!--
+  RESPONSIVIDADE MOBILE:
+  - Este arquivo já inclui <meta name="viewport"> e mobile.css para responsividade.
+  - Use as classes .coluna-desnecessaria ou .hide-mobile em <th> ou <td> para esconder colunas no mobile.
+  - Para navegação fixa no rodapé, utilize <nav class="mobile-nav">.
+  - Mantenha sempre o mobile.css atualizado para melhor experiência mobile.
+-->
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -484,38 +491,6 @@
 
     .table-responsive::-webkit-scrollbar-thumb:hover {
       background: var(--primary-hover);
-    }
-
-    @media (max-width: 768px) {
-      body {
-        padding: 80px 15px 15px 15px;
-      }
-
-      .header-top {
-        padding: 15px 20px;
-      }
-
-      .card {
-        padding: 20px;
-      }
-
-      .card-header h2 {
-        font-size: 1.5rem;
-      }
-
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-
-      th, td {
-        padding: 12px 15px;
-        font-size: 0.9rem;
-      }
-
-      .btn {
-        padding: 10px 16px;
-        font-size: 0.9rem;
-      }
     }
 
     .footer {
