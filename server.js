@@ -917,11 +917,6 @@ app.get('/ajuda', (req, res) => {
 
 app.use('/api/contas', require('./api/contas'));
 
-// Fallback para SPA ou 404
-app.get('*', (req, res) => {
-  res.sendFile(path.join(publicPath, 'index.html'));
-});
-
 // Inicialização do servidor (apenas se executado diretamente)
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
