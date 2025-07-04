@@ -236,7 +236,7 @@
       .feature-card {
         width: 90vw;
       }
-      nav {
+      .header nav {
         display: none;
       }
       .hamburger {
@@ -426,11 +426,16 @@
     .hamburger span {
       height: 4px;
       width: 28px;
-      background: var(--accent-blue);
+      background: var(--primary-color, #00e6ff);
       margin: 4px 0;
       border-radius: 2px;
       transition: 0.3s;
       display: block;
+    }
+    .header nav {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
     }
     .mobile-drawer {
       display: none;
@@ -494,21 +499,35 @@
 </head>
 <body>
   <div id="particles-js"></div>
-  <header>
-    <div class="logo">
-      <img src="https://i.imgur.com/6N82fk2.png" alt="JP Sistemas Logo" />
-      <span class="tech-font">J.P SISTEMAS</span>
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" />
+      </div>
+      <nav>
+        <a href="painel.html">Painel</a>
+        <a href="produtos.html">Produtos</a>
+        <a href="pedidos.html">Pedidos</a>
+        <a href="relatorios.html">Relatórios</a>
+        <a href="configuracoes.html">Configurações</a>
+        <a href="ajuda.html">Ajuda</a>
+        <a href="sistema.html">Sair</a>
+      </nav>
+      <button class="hamburger" id="hamburger" aria-label="Abrir menu" aria-controls="mobile-drawer" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <div class="user-info">
+        <span>Bem-vindo, <span id="userDisplay"></span></span>
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+        <a href="painel.html" class="logout-btn" style="background: var(--primary-light); margin-left: 8px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+      </div>
     </div>
-    <nav>
-      <a href="sistema.html">Acessar Sistema</a>
-      <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" rel="noopener">Contato</a>
-      <a href="precos.html">Planos</a>
-    </nav>
-    <button class="hamburger" id="hamburger" aria-label="Abrir menu" aria-controls="mobile-drawer" aria-expanded="false">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
   </header>
   <div class="drawer-bg" id="drawer-bg"></div>
   <aside class="mobile-drawer" id="mobile-drawer" aria-hidden="true">
@@ -786,6 +805,8 @@
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') closeDrawerFn();
     });
+
+    document.querySelectorAll('#userDisplay').forEach(el => el.textContent = username);
   </script>
 </body>
 </html>
