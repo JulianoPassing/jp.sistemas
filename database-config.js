@@ -158,11 +158,27 @@ function getRootConfig() {
   };
 }
 
+// Configuração para banco de cobranças
+function getCobrancasDatabaseConfig() {
+  const config = getDatabaseConfig();
+  
+  return {
+    host: config.host,
+    port: config.port || 3306,
+    user: config.user,
+    password: config.password,
+    database: 'jpsistemas_cobrancas',
+    ssl: config.ssl,
+    charset: config.charset
+  };
+}
+
 module.exports = {
   getDatabaseConfig,
   getSessionConfig,
   getUsersConfig,
   getUserDatabaseConfig,
   getRootConfig,
+  getCobrancasDatabaseConfig,
   databaseConfigs
 }; 

@@ -1,0 +1,361 @@
+const express = require('express');
+const mysql = require('mysql2/promise');
+const { getCobrancasDatabaseConfig } = require('../database-config');
+
+const router = express.Router();
+
+// Função para criar conexão com banco de cobranças
+async function createCobrancasConnection() {
+  const dbConfig = getCobrancasDatabaseConfig();
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    return connection;
+  } catch (error) {
+    console.error('Erro ao conectar ao banco de cobranças:', error);
+    throw error;
+  }
+}
+
+// Função para criar banco de dados de cobranças
+async function createCobrancasDatabase() {
+  try {
+    // Conectar como root para criar o banco
+    const rootConfig = getCobrancasDatabaseConfig();
+    const rootConnection = await mysql.createConnection({
+      ...rootConfig,
+      database: undefined // Sem especificar database para conectar como root
+    });
+
+    // Criar banco de dados
+    await rootConnection.execute(`CREATE DATABASE IF NOT EXISTS \`jpsistemas_cobrancas\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+    
+    // Conectar ao banco criado
+    const cobrancasConnection = await createCobrancasConnection();
+
+    // Criar tabelas
+    await cobrancasConnection.execute(`
+      CREATE TABLE IF NOT EXISTS clientes_cobrancas (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nome VARCHAR(255) NOT NULL,
+        cpf_cnpj VARCHAR(18),
+        email VARCHAR(255),
+        telefone VARCHAR(20),
+        endereco VARCHAR(255),
+        cidade VARCHAR(100),
+        estado VARCHAR(2),
+        cep VARCHAR(9),
+        status VARCHAR(50) DEFAULT 'Ativo',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_nome (nome),
+        INDEX idx_cpf_cnpj (cpf_cnpj),
+        INDEX idx_email (email),
+        INDEX idx_status (status)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    await cobrancasConnection.execute(`
+      CREATE TABLE IF NOT EXISTS emprestimos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        cliente_id INT,
+        valor DECIMAL(10,2) NOT NULL,
+        data_emprestimo DATE NOT NULL,
+        data_vencimento DATE NOT NULL,
+        juros_mensal DECIMAL(5,2) DEFAULT 0.00,
+        multa_atraso DECIMAL(5,2) DEFAULT 0.00,
+        status VARCHAR(50) DEFAULT 'Ativo',
+        observacoes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (cliente_id) REFERENCES clientes_cobrancas(id) ON DELETE SET NULL,
+        INDEX idx_cliente_id (cliente_id),
+        INDEX idx_data_vencimento (data_vencimento),
+        INDEX idx_status (status)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    await cobrancasConnection.execute(`
+      CREATE TABLE IF NOT EXISTS cobrancas (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        emprestimo_id INT,
+        cliente_id INT,
+        valor_original DECIMAL(10,2) NOT NULL,
+        valor_atualizado DECIMAL(10,2) NOT NULL,
+        juros_calculados DECIMAL(10,2) DEFAULT 0.00,
+        multa_calculada DECIMAL(10,2) DEFAULT 0.00,
+        data_vencimento DATE NOT NULL,
+        dias_atraso INT DEFAULT 0,
+        status VARCHAR(50) DEFAULT 'Pendente',
+        data_cobranca DATE,
+        observacoes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (emprestimo_id) REFERENCES emprestimos(id) ON DELETE SET NULL,
+        FOREIGN KEY (cliente_id) REFERENCES clientes_cobrancas(id) ON DELETE SET NULL,
+        INDEX idx_emprestimo_id (emprestimo_id),
+        INDEX idx_cliente_id (cliente_id),
+        INDEX idx_data_vencimento (data_vencimento),
+        INDEX idx_status (status),
+        INDEX idx_dias_atraso (dias_atraso)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    await cobrancasConnection.execute(`
+      CREATE TABLE IF NOT EXISTS pagamentos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        cobranca_id INT,
+        valor_pago DECIMAL(10,2) NOT NULL,
+        data_pagamento DATE NOT NULL,
+        forma_pagamento VARCHAR(50),
+        observacoes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (cobranca_id) REFERENCES cobrancas(id) ON DELETE SET NULL,
+        INDEX idx_cobranca_id (cobranca_id),
+        INDEX idx_data_pagamento (data_pagamento)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    await rootConnection.end();
+    await cobrancasConnection.end();
+    
+    console.log('Banco de dados jpsistemas_cobrancas criado com sucesso');
+    return true;
+  } catch (error) {
+    console.error('Erro ao criar banco de dados de cobranças:', error);
+    throw error;
+  }
+}
+
+// Middleware para inicializar banco se necessário
+async function ensureDatabase(req, res, next) {
+  try {
+    await createCobrancasDatabase();
+    next();
+  } catch (error) {
+    console.error('Erro ao garantir banco de dados:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+}
+
+// Dashboard
+router.get('/dashboard', ensureDatabase, async (req, res) => {
+  try {
+    const connection = await createCobrancasConnection();
+    
+    // Estatísticas gerais
+    const [emprestimosStats] = await connection.execute(`
+      SELECT 
+        COUNT(*) as total_emprestimos,
+        SUM(valor) as valor_total_emprestimos,
+        COUNT(CASE WHEN status = 'Ativo' THEN 1 END) as emprestimos_ativos,
+        COUNT(CASE WHEN status = 'Quitado' THEN 1 END) as emprestimos_quitados
+      FROM emprestimos
+    `);
+
+    const [cobrancasStats] = await connection.execute(`
+      SELECT 
+        COUNT(*) as total_cobrancas,
+        SUM(valor_atualizado) as valor_total_cobrancas,
+        COUNT(CASE WHEN status = 'Pendente' THEN 1 END) as cobrancas_pendentes,
+        COUNT(CASE WHEN status = 'Paga' THEN 1 END) as cobrancas_pagas,
+        SUM(CASE WHEN dias_atraso > 0 THEN valor_atualizado ELSE 0 END) as valor_atrasado
+      FROM cobrancas
+    `);
+
+    const [clientesStats] = await connection.execute(`
+      SELECT COUNT(*) as total_clientes FROM clientes_cobrancas WHERE status = 'Ativo'
+    `);
+
+    // Empréstimos recentes
+    const [emprestimosRecentes] = await connection.execute(`
+      SELECT e.*, c.nome as cliente_nome
+      FROM emprestimos e
+      LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
+      ORDER BY e.created_at DESC
+      LIMIT 5
+    `);
+
+    // Cobranças pendentes
+    const [cobrancasPendentes] = await connection.execute(`
+      SELECT cb.*, c.nome as cliente_nome, c.telefone
+      FROM cobrancas cb
+      LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
+      WHERE cb.status = 'Pendente'
+      ORDER BY cb.data_vencimento ASC
+      LIMIT 10
+    `);
+
+    await connection.end();
+
+    res.json({
+      emprestimos: emprestimosStats[0],
+      cobrancas: cobrancasStats[0],
+      clientes: clientesStats[0],
+      emprestimosRecentes,
+      cobrancasPendentes
+    });
+  } catch (error) {
+    console.error('Erro ao buscar dados do dashboard:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Clientes
+router.get('/clientes', ensureDatabase, async (req, res) => {
+  try {
+    const connection = await createCobrancasConnection();
+    const [clientes] = await connection.execute(`
+      SELECT * FROM clientes_cobrancas 
+      ORDER BY nome ASC
+    `);
+    await connection.end();
+    res.json(clientes);
+  } catch (error) {
+    console.error('Erro ao buscar clientes:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+router.post('/clientes', ensureDatabase, async (req, res) => {
+  try {
+    const { nome, cpf_cnpj, email, telefone, endereco, cidade, estado, cep } = req.body;
+    
+    const connection = await createCobrancasConnection();
+    const [result] = await connection.execute(`
+      INSERT INTO clientes_cobrancas (nome, cpf_cnpj, email, telefone, endereco, cidade, estado, cep)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `, [nome, cpf_cnpj, email, telefone, endereco, cidade, estado, cep]);
+    
+    await connection.end();
+    res.json({ id: result.insertId, message: 'Cliente criado com sucesso' });
+  } catch (error) {
+    console.error('Erro ao criar cliente:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Empréstimos
+router.get('/emprestimos', ensureDatabase, async (req, res) => {
+  try {
+    const connection = await createCobrancasConnection();
+    const [emprestimos] = await connection.execute(`
+      SELECT e.*, c.nome as cliente_nome
+      FROM emprestimos e
+      LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
+      ORDER BY e.created_at DESC
+    `);
+    await connection.end();
+    res.json(emprestimos);
+  } catch (error) {
+    console.error('Erro ao buscar empréstimos:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+router.post('/emprestimos', ensureDatabase, async (req, res) => {
+  try {
+    const { cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes } = req.body;
+    
+    const connection = await createCobrancasConnection();
+    
+    // Inserir empréstimo
+    const [emprestimoResult] = await connection.execute(`
+      INSERT INTO emprestimos (cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes]);
+    
+    // Criar cobrança automaticamente
+    await connection.execute(`
+      INSERT INTO cobrancas (emprestimo_id, cliente_id, valor_original, valor_atualizado, data_vencimento, status)
+      VALUES (?, ?, ?, ?, ?, 'Pendente')
+    `, [emprestimoResult.insertId, cliente_id, valor, valor, data_vencimento]);
+    
+    await connection.end();
+    res.json({ id: emprestimoResult.insertId, message: 'Empréstimo criado com sucesso' });
+  } catch (error) {
+    console.error('Erro ao criar empréstimo:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Cobranças
+router.get('/cobrancas', ensureDatabase, async (req, res) => {
+  try {
+    const connection = await createCobrancasConnection();
+    
+    // Atualizar dias de atraso e valores
+    await connection.execute(`
+      UPDATE cobrancas 
+      SET 
+        dias_atraso = CASE 
+          WHEN data_vencimento < CURDATE() THEN DATEDIFF(CURDATE(), data_vencimento)
+          ELSE 0 
+        END,
+        valor_atualizado = valor_original + 
+          (valor_original * (juros_calculados / 100)) + 
+          (valor_original * (multa_calculada / 100))
+      WHERE status = 'Pendente'
+    `);
+    
+    const [cobrancas] = await connection.execute(`
+      SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
+      FROM cobrancas cb
+      LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
+      ORDER BY cb.data_vencimento ASC
+    `);
+    
+    await connection.end();
+    res.json(cobrancas);
+  } catch (error) {
+    console.error('Erro ao buscar cobranças:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Cobranças atrasadas
+router.get('/cobrancas/atrasadas', ensureDatabase, async (req, res) => {
+  try {
+    const connection = await createCobrancasConnection();
+    const [cobrancas] = await connection.execute(`
+      SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
+      FROM cobrancas cb
+      LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
+      WHERE cb.dias_atraso > 0 AND cb.status = 'Pendente'
+      ORDER BY cb.dias_atraso DESC
+    `);
+    await connection.end();
+    res.json(cobrancas);
+  } catch (error) {
+    console.error('Erro ao buscar cobranças atrasadas:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Registrar pagamento
+router.post('/cobrancas/:id/pagamento', ensureDatabase, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { valor_pago, data_pagamento, forma_pagamento, observacoes } = req.body;
+    
+    const connection = await createCobrancasConnection();
+    
+    // Registrar pagamento
+    await connection.execute(`
+      INSERT INTO pagamentos (cobranca_id, valor_pago, data_pagamento, forma_pagamento, observacoes)
+      VALUES (?, ?, ?, ?, ?)
+    `, [id, valor_pago, data_pagamento, forma_pagamento, observacoes]);
+    
+    // Atualizar status da cobrança
+    await connection.execute(`
+      UPDATE cobrancas SET status = 'Paga' WHERE id = ?
+    `, [id]);
+    
+    await connection.end();
+    res.json({ message: 'Pagamento registrado com sucesso' });
+  } catch (error) {
+    console.error('Erro ao registrar pagamento:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+module.exports = router; 
