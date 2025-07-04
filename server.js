@@ -933,11 +933,11 @@ app.use('/jpcobranca/api', createProxyMiddleware({
 }));
 
 // Servir arquivos estáticos do sistema de cobranças
-app.use('/jpcobranca', express.static(path.join(__dirname, 'public', 'jpcobranca', 'frontend')));
+app.use('/jpcobranca', express.static(path.join(__dirname, 'public', 'jpcobrancas', 'frontend')));
 
 // Rota específica para o index do sistema de cobranças
 app.get('/jpcobranca', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'jpcobranca', 'frontend', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'jpcobrancas', 'frontend', 'index.html'));
 });
 
 // Fallback para SPA ou 404
