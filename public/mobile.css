@@ -19,8 +19,13 @@
     padding: 0 8px;
   }
   .logo img {
-    width: 110px !important;
+    width: 90vw !important;
+    max-width: 220px !important;
     height: auto !important;
+    margin-bottom: 12px !important;
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
   .logo span, .tech-font {
     font-size: 1.1rem;
