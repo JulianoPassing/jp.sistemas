@@ -13,6 +13,7 @@ const {
 } = require('./database-config');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 const empresaHandler = require('./api/empresa');
 require('dotenv').config({ path: __dirname + '/.env' });
 console.log('DB_HOST:', process.env.DB_HOST);
@@ -914,6 +915,30 @@ app.get('/ajuda', (req, res) => {
 });
 
 app.use('/api/contas', require('./api/contas'));
+
+// Proxy para o sistema de cobranças
+app.use('/jpcobranca/api', createProxyMiddleware({
+  target: 'http://localhost:3001',
+  changeOrigin: true,
+  pathRewrite: {
+    '^/jpcobranca/api': '/api' // Remove o prefixo /jpcobranca/api
+  },
+  onError: (err, req, res) => {
+    console.error('Erro no proxy para cobranças:', err.message);
+    res.status(503).json({ 
+      error: 'Sistema de cobranças temporariamente indisponível',
+      message: 'Certifique-se de que o sistema de cobranças está rodando na porta 3001'
+    });
+  }
+}));
+
+// Servir arquivos estáticos do sistema de cobranças
+app.use('/jpcobranca', express.static(path.join(__dirname, 'public', 'jpcobrancas', 'frontend')));
+
+// Rota específica para o index do sistema de cobranças
+app.get('/jpcobranca', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'jpcobrancas', 'frontend', 'index.html'));
+});
 
 // Fallback para SPA ou 404
 app.get('*', (req, res) => {
