@@ -438,4 +438,18 @@ router.put('/emprestimos/:id/status', ensureDatabase, async (req, res) => {
   }
 });
 
+// Rota para remover empréstimo
+router.delete('/emprestimos/:id', ensureDatabase, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const connection = await createCobrancasConnection();
+    await connection.execute('DELETE FROM emprestimos WHERE id = ?', [id]);
+    await connection.end();
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao remover empréstimo:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 module.exports = router; 
