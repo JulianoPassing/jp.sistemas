@@ -962,8 +962,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!resp.ok || !data.id) throw new Error('Erro ao criar cliente');
             cliente_id = data.id;
             // Atualizar lista de clientes se existir na página
-            if (typeof renderClientesLista === 'function') {
-              renderClientesLista();
+            if (window.clientesApp && typeof window.clientesApp.loadClientes === 'function') {
+              window.clientesApp.loadClientes();
             } else if (document.getElementById('clientes-lista')) {
               // fallback: recarregar clientes se função não existir
               location.reload();
