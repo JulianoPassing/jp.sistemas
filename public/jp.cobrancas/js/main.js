@@ -440,6 +440,11 @@ const app = {
         renderEmprestimosLista();
       }
       
+      // Carregar lista de cobranças em aberto se existir na página
+      if (document.getElementById('cobrancas-lista')) {
+        renderCobrancasEmAbertoLista();
+      }
+      
     } catch (error) {
       console.error('Erro na inicialização:', error);
       ui.showNotification('Erro ao inicializar a aplicação', 'error');
@@ -618,9 +623,9 @@ const emprestimoController = {
       const afiliado = emp.afiliado_nome || 'Nenhum afiliado informado';
       const multa = emp.multa_atraso ? utils.formatCurrency(emp.multa_atraso) : '-';
       const pix = emp.chave_pix || 'CHAVE';
-      // Mensagem WhatsApp
+      // Mensagem WhatsApp corrigida
       const msgWhatsapp = encodeURIComponent(
-        `Bom dia ${nome}, hoje é a data de pagamento da sua parcela ${parcelaAtual} de ${totalParcelas}. Valor total da dívida: ${totalReceber}\nConta para Depósito: Chave PIX: ${pix}\nObservação: O não pagamento resultará em uma multa de ${multa} por dia.`
+        `Bom dia ${nome}, hoje é a data de pagamento da sua parcela ${parcelaAtual} de ${totalParcelas}. Valor total da dívida: ${totalReceber}\nJuros do mês: ${jurosPercent}% (${jurosReceber})\nConta para Depósito: Chave PIX: ${pix}\nObservação: O não pagamento resultará em uma multa de ${multa} por dia.`
       );
       const linkWhatsapp = telefone ? `https://wa.me/55${telefone.replace(/\D/g,'')}?text=${msgWhatsapp}` : '#';
       // Modal HTML
@@ -782,6 +787,56 @@ async function renderEmprestimosLista() {
   }
 }
 
+// Função para renderizar cobranças (empréstimos em aberto)
+async function renderCobrancasEmAbertoLista() {
+  const tbody = document.getElementById('cobrancas-lista');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
+  try {
+    const emprestimos = await apiService.getEmprestimos();
+    // Filtrar apenas em aberto (status Ativo ou Pendente)
+    const emAberto = (emprestimos || []).filter(e => {
+      const status = (e.status || '').toLowerCase();
+      return status === 'ativo' || status === 'pendente';
+    });
+    if (emAberto.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500">Nenhuma cobrança em aberto</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    emAberto.forEach(emp => {
+      const valor = utils.formatCurrency(emp.valor || 0);
+      const vencimento = emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-';
+      const diasAtraso = emp.dias_atraso || 0;
+      let badge = '';
+      const status = (emp.status || '').toLowerCase();
+      if (status === 'quitado') {
+        badge = '<span class="badge" style="background:#10b981;color:#fff;">Quitado</span>';
+      } else if (status === 'em atraso' || status === 'atrasado') {
+        badge = '<span class="badge" style="background:#ef4444;color:#fff;">Em Atraso</span>';
+      } else if (status === 'ativo' || status === 'pendente') {
+        badge = '<span class="badge" style="background:#6366f1;color:#fff;">Pendente</span>';
+      } else {
+        badge = `<span class="badge" style="background:#888;color:#fff;">${emp.status || '-'}</span>`;
+      }
+      tbody.innerHTML += `
+        <tr>
+          <td>${emp.cliente_nome || 'N/A'}</td>
+          <td>${emp.id}</td>
+          <td>1</td>
+          <td>${valor}</td>
+          <td>${vencimento}</td>
+          <td>${diasAtraso > 0 ? diasAtraso : '-'}</td>
+          <td>${badge}</td>
+          <td><button class="btn btn-primary btn-sm" onclick="emprestimoController.viewEmprestimo(${emp.id})">Ver</button></td>
+        </tr>
+      `;
+    });
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-red-500">Erro ao carregar cobranças</td></tr>';
+  }
+}
+
 // Inicializar quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
   app.init();
@@ -906,6 +961,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await resp.json();
             if (!resp.ok || !data.id) throw new Error('Erro ao criar cliente');
             cliente_id = data.id;
+            // Atualizar lista de clientes se existir na página
+            if (typeof renderClientesLista === 'function') {
+              renderClientesLista();
+            } else if (document.getElementById('clientes-lista')) {
+              // fallback: recarregar clientes se função não existir
+              location.reload();
+            }
           } catch (err) {
             ui.showNotification('Erro ao criar cliente', 'error');
             return;
