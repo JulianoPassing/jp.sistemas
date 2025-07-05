@@ -618,60 +618,88 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (e) {
         ui.showNotification('Erro ao carregar clientes', 'error');
       }
-      const clienteOptions = clientes.map(c => `<option value="${c.id}">${c.nome || c.name}</option>`).join('');
+      const clienteOptions = clientes.map(c => `<option value=\"${c.id}\">${c.nome || c.name}</option>`).join('');
       const modalContent = `
-        <form id="modal-emprestimo-form">
-          <div class="form-group">
-            <label>Cliente *</label>
-            <select name="clienteId" class="form-input" required>
-              <option value="">Selecione um cliente...</option>
+        <form id=\"modal-emprestimo-form\">
+          <div class=\"form-group\">
+            <label>Cliente (selecione ou preencha manualmente)</label>
+            <select name=\"clienteId\" id=\"modal-cliente-select\" class=\"form-input\">
+              <option value=\"\">Novo cliente (preencher abaixo)</option>
               ${clienteOptions}
             </select>
           </div>
-          <div class="form-group">
+          <div class=\"form-group\">
+            <label>Nome *</label>
+            <input type=\"text\" name=\"nome\" id=\"modal-nome\" class=\"form-input\" required placeholder=\"Nome do cliente\">
+          </div>
+          <div class=\"form-group\">
+            <label>CPF (Opcional)</label>
+            <input type=\"text\" name=\"cpf\" id=\"modal-cpf\" class=\"form-input\" placeholder=\"CPF do cliente\">
+          </div>
+          <div class=\"form-group\">
+            <label>Telefone</label>
+            <input type=\"text\" name=\"telefone\" id=\"modal-telefone\" class=\"form-input\" placeholder=\"Telefone do cliente\">
+          </div>
+          <div class=\"form-group\">
             <label>Tipo de Empréstimo</label>
-            <select name="tipo" class="form-input">
-              <option value="fixo">Fixo</option>
-              <option value="parcelado">Parcelado</option>
+            <select name=\"tipo\" class=\"form-input\">
+              <option value=\"fixo\">Fixo</option>
+              <option value=\"parcelado\">Parcelado</option>
             </select>
           </div>
-          <div class="form-group">
+          <div class=\"form-group\">
             <label>Valor (R$)</label>
-            <input type="number" name="valor" class="form-input" step="0.01" min="0" required placeholder="ex.: 1000">
+            <input type=\"number\" name=\"valor\" class=\"form-input\" step=\"0.01\" min=\"0\" required placeholder=\"ex.: 1000\">
           </div>
-          <div class="form-group">
+          <div class=\"form-group\">
             <label>Porcentagem (%)</label>
-            <input type="number" name="porcentagem" class="form-input" step="0.01" min="0" required placeholder="ex.: 20">
+            <input type=\"number\" name=\"porcentagem\" class=\"form-input\" step=\"0.01\" min=\"0\" required placeholder=\"ex.: 20\">
           </div>
-          <div class="form-group">
+          <div class=\"form-group\">
             <label>Data de Pagamento</label>
-            <input type="date" name="dataPagamento" class="form-input" required>
+            <input type=\"date\" name=\"dataPagamento\" class=\"form-input\" required>
           </div>
-          <div class="form-group">
+          <div class=\"form-group\">
             <label>Frequência</label>
-            <select name="frequencia" class="form-input">
-              <option value="mensal">Mensal</option>
-              <option value="diario">Diário</option>
-              <option value="semanal">Semanal</option>
-              <option value="quinzenal">Quinzenal</option>
+            <select name=\"frequencia\" class=\"form-input\">
+              <option value=\"mensal\">Mensal</option>
+              <option value=\"diario\">Diário</option>
+              <option value=\"semanal\">Semanal</option>
+              <option value=\"quinzenal\">Quinzenal</option>
             </select>
           </div>
-          <div class="form-group">
-            <button type="submit" class="btn btn-primary">Adicionar Empréstimo</button>
+          <div class=\"form-group\">
+            <button type=\"submit\" class=\"btn btn-primary\">Adicionar Empréstimo</button>
           </div>
         </form>
       `;
       const modal = ui.showModal(modalContent, 'Adicionar Empréstimo');
       const form = modal.querySelector('#modal-emprestimo-form');
+      // Preencher campos ao selecionar cliente
+      const select = modal.querySelector('#modal-cliente-select');
+      const nomeInput = modal.querySelector('#modal-nome');
+      const cpfInput = modal.querySelector('#modal-cpf');
+      const telefoneInput = modal.querySelector('#modal-telefone');
+      select.addEventListener('change', () => {
+        const selectedId = select.value;
+        if (!selectedId) {
+          nomeInput.value = '';
+          cpfInput.value = '';
+          telefoneInput.value = '';
+        } else {
+          const cliente = clientes.find(c => String(c.id) === String(selectedId));
+          nomeInput.value = cliente?.nome || cliente?.name || '';
+          cpfInput.value = cliente?.cpf || cliente?.cpf_cnpj || '';
+          telefoneInput.value = cliente?.telefone || cliente?.phone || '';
+        }
+      });
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = Object.fromEntries(new FormData(form).entries());
-        // Aqui você pode chamar apiService.createEmprestimo ou outra função para salvar
         try {
           await apiService.createEmprestimo(formData);
           ui.showNotification('Empréstimo adicionado com sucesso!', 'success');
           modal.remove();
-          // Opcional: recarregar lista de empréstimos
           window.location.reload();
         } catch (err) {
           ui.showNotification('Erro ao adicionar empréstimo', 'error');
