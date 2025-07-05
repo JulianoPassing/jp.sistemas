@@ -1,3 +1,4 @@
+require('dotenv').config();
 const mysql = require('mysql2/promise');
 
 if (process.argv.length < 4) {
@@ -12,7 +13,7 @@ const dbUser = dbName;
 
 const rootConfig = {
   host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
+  user: process.env.DB_USER || 'julianopassing',
   password: process.env.DB_PASSWORD || 'Juliano@95',
   port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306
 };
