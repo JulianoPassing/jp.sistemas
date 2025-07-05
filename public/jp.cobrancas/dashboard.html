@@ -11,6 +11,12 @@
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body class="app-layout">
+<script>
+fetch('/api/cobrancas/session')
+  .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+  .then(data => { if (!data.loggedIn) window.location.href = 'login.html'; })
+  .catch(() => window.location.href = 'login.html');
+</script>
   <header>
     <div class="header-content">
       <a href="index.html" class="logo" style="display: flex; align-items: center;">
