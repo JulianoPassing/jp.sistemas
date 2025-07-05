@@ -424,6 +424,17 @@ const app = {
       // Adicionar estilos para notificações
       this.addNotificationStyles();
       
+      // Após carregar os dados do dashboard, se estiver na página de cobranças, renderizar os cards estruturados
+      const path = window.location.pathname;
+      if (path.includes('cobrancas.html')) {
+        document.addEventListener('DOMContentLoaded', () => {
+          apiService.getCobrancas().then(lista => {
+            renderCobrancasResumo(lista, 'cobrancas-pendentes');
+            renderCobrancasResumo(lista, 'valor-receber'); // Se quiser separar, filtre as listas
+          });
+        });
+      }
+      
     } catch (error) {
       console.error('Erro na inicialização:', error);
       ui.showNotification('Erro ao inicializar a aplicação', 'error');
@@ -595,6 +606,79 @@ const cobrancaController = {
 // Inicializar quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
   app.init();
+
+  // Modal de Novo Empréstimo
+  const novoEmprestimoBtn = document.getElementById('toggleForm');
+  if (novoEmprestimoBtn) {
+    novoEmprestimoBtn.addEventListener('click', async () => {
+      // Buscar clientes
+      let clientes = [];
+      try {
+        clientes = await apiService.getClientes();
+      } catch (e) {
+        ui.showNotification('Erro ao carregar clientes', 'error');
+      }
+      const clienteOptions = clientes.map(c => `<option value="${c.id}">${c.nome || c.name}</option>`).join('');
+      const modalContent = `
+        <form id="modal-emprestimo-form">
+          <div class="form-group">
+            <label>Cliente *</label>
+            <select name="clienteId" class="form-input" required>
+              <option value="">Selecione um cliente...</option>
+              ${clienteOptions}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tipo de Empréstimo</label>
+            <select name="tipo" class="form-input">
+              <option value="fixo">Fixo</option>
+              <option value="parcelado">Parcelado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Valor (R$)</label>
+            <input type="number" name="valor" class="form-input" step="0.01" min="0" required placeholder="ex.: 1000">
+          </div>
+          <div class="form-group">
+            <label>Porcentagem (%)</label>
+            <input type="number" name="porcentagem" class="form-input" step="0.01" min="0" required placeholder="ex.: 20">
+          </div>
+          <div class="form-group">
+            <label>Data de Pagamento</label>
+            <input type="date" name="dataPagamento" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label>Frequência</label>
+            <select name="frequencia" class="form-input">
+              <option value="mensal">Mensal</option>
+              <option value="diario">Diário</option>
+              <option value="semanal">Semanal</option>
+              <option value="quinzenal">Quinzenal</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn btn-primary">Adicionar Empréstimo</button>
+          </div>
+        </form>
+      `;
+      const modal = ui.showModal(modalContent, 'Adicionar Empréstimo');
+      const form = modal.querySelector('#modal-emprestimo-form');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = Object.fromEntries(new FormData(form).entries());
+        // Aqui você pode chamar apiService.createEmprestimo ou outra função para salvar
+        try {
+          await apiService.createEmprestimo(formData);
+          ui.showNotification('Empréstimo adicionado com sucesso!', 'success');
+          modal.remove();
+          // Opcional: recarregar lista de empréstimos
+          window.location.reload();
+        } catch (err) {
+          ui.showNotification('Erro ao adicionar empréstimo', 'error');
+        }
+      });
+    });
+  }
 });
 
 // Exportar para uso global
@@ -603,4 +687,22 @@ window.dashboardController = dashboardController;
 window.emprestimoController = emprestimoController;
 window.cobrancaController = cobrancaController;
 window.ui = ui;
-window.utils = utils; 
+window.utils = utils;
+
+// Adicionar função para renderizar cobranças pendentes e valor a receber de forma estruturada
+function renderCobrancasResumo(lista, targetId) {
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  if (!lista || lista.length === 0) {
+    target.innerHTML = '<span class="text-gray-500">Nenhuma cobrança</span>';
+    return;
+  }
+  target.innerHTML = lista.map(cobranca => `
+    <div class="cobranca-item">
+      <span class="cobranca-nome">${cobranca.cliente_nome || 'N/A'}</span>
+      <span class="cobranca-valor">${utils.formatCurrency(cobranca.valor_atualizado || cobranca.valor || 0)}</span>
+      <span class="cobranca-data">${cobranca.data_vencimento ? utils.formatDate(cobranca.data_vencimento) : ''}</span>
+      <span class="cobranca-status">${cobranca.dias_atraso > 0 ? cobranca.dias_atraso + ' dias de atraso' : 'No prazo'}</span>
+    </div>
+  `).join('');
+} 

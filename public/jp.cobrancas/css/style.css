@@ -739,4 +739,19 @@ footer {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--gray-500);
+}
+
+.cobranca-item {
+  margin-bottom: 0.5rem;
+  font-weight: 400;
+  line-height: 1.2;
+}
+.cobranca-nome {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+.cobranca-valor, .cobranca-data, .cobranca-status {
+  font-size: 0.98rem;
+  font-weight: 400;
+  display: block;
 } 
