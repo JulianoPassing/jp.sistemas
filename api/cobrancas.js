@@ -168,22 +168,22 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
       SELECT COUNT(*) as total_clientes FROM clientes_cobrancas WHERE status = 'Ativo'
     `);
 
-    // Empréstimos recentes (apenas ativos)
+    // Empréstimos recentes (apenas ativos e com cliente)
     const [emprestimosRecentes] = await connection.execute(`
       SELECT e.*, c.nome as cliente_nome, c.telefone as telefone
       FROM emprestimos e
       LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
-      WHERE e.status IN ('Ativo', 'Pendente')
+      WHERE e.status IN ('Ativo', 'Pendente') AND e.cliente_id IS NOT NULL
       ORDER BY e.created_at DESC
       LIMIT 5
     `);
 
-    // Cobranças pendentes
+    // Cobranças pendentes (apenas com cliente)
     const [cobrancasPendentes] = await connection.execute(`
       SELECT cb.*, c.nome as cliente_nome, c.telefone as telefone
       FROM cobrancas cb
       LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
-      WHERE cb.status = 'Pendente'
+      WHERE cb.status = 'Pendente' AND cb.cliente_id IS NOT NULL
       ORDER BY cb.data_vencimento ASC
       LIMIT 10
     `);
@@ -433,6 +433,18 @@ router.put('/emprestimos/:id/status', ensureDatabase, async (req, res) => {
       'UPDATE emprestimos SET status = ? WHERE id = ?',
       [status, id]
     );
+    // Se status for 'Em Atraso', atualiza o valor da dívida (valor = valor + juros)
+    if (status === 'Em Atraso') {
+      // Busca valor e juros atuais
+      const [rows] = await connection.execute('SELECT valor, juros_mensal FROM emprestimos WHERE id = ?', [id]);
+      if (rows.length > 0) {
+        const valorAtual = parseFloat(rows[0].valor) || 0;
+        const juros = parseFloat(rows[0].juros_mensal) || 0;
+        const valorJuros = valorAtual * (juros / 100);
+        const novoValor = valorAtual + valorJuros;
+        await connection.execute('UPDATE emprestimos SET valor = ? WHERE id = ?', [novoValor, id]);
+      }
+    }
     await connection.end();
     res.json({ success: true });
   } catch (error) {
