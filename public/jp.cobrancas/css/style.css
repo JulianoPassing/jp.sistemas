@@ -7,9 +7,9 @@
 
 :root {
   /* Novo padrão de cores */
-  --terciary: #1976D2;         /* Azul principal */
-  --terciary-100: #1565C0;     /* Azul escuro */
-  --terciary-200: #0D47A1;     /* Azul ainda mais escuro */
+  --terciary: #002f4b;         /* Azul principal */
+  --terciary-100: #00213a;     /* Azul escuro */
+  --terciary-200: #001425;     /* Azul ainda mais escuro */
   --primary: #43A047;          /* Verde principal */
   --secondary: #388E3C;        /* Verde escuro */
   --ea-green-100: #66BB6A;     /* Verde claro */
