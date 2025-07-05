@@ -453,4 +453,28 @@ router.delete('/emprestimos/:id', ensureDatabase, async (req, res) => {
   }
 });
 
+// Remover cliente
+router.delete('/clientes/:id', ensureDatabase, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const connection = await createCobrancasConnection();
+    // Verifica se o cliente possui empréstimos vinculados
+    const [emprestimos] = await connection.execute(
+      'SELECT COUNT(*) as total FROM emprestimos WHERE cliente_id = ?',
+      [id]
+    );
+    if (emprestimos[0].total > 0) {
+      await connection.end();
+      return res.status(400).json({ error: 'Não é possível remover clientes com empréstimos vinculados.' });
+    }
+    // Remove o cliente
+    await connection.execute('DELETE FROM clientes_cobrancas WHERE id = ?', [id]);
+    await connection.end();
+    res.json({ message: 'Cliente removido com sucesso.' });
+  } catch (error) {
+    console.error('Erro ao remover cliente:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 module.exports = router; 
