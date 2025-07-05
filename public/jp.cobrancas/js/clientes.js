@@ -46,7 +46,7 @@ const clientesApiService = {
 };
 
 // UI Components
-const ui = {
+const clientesUI = {
   showLoading() {
     if (clientesTableBody) {
       clientesTableBody.innerHTML = `
@@ -61,6 +61,55 @@ const ui = {
 
   hideLoading() {
     // Loading será removido quando os dados forem carregados
+  },
+
+  showModal(content, title = '') {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>${title}</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          ${content}
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Fechar modal
+    const closeModal = () => modal.remove();
+    modal.querySelector('.modal-close').addEventListener('click', closeModal);
+    modal.querySelector('.modal-overlay').addEventListener('click', closeModal);
+
+    return modal;
+  },
+
+  showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+      <div class="notification-content">
+        <span>${message}</span>
+        <button class="notification-close">&times;</button>
+      </div>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Auto remove após 5 segundos
+    setTimeout(() => {
+      notification.remove();
+    }, 5000);
+
+    // Close button
+    notification.querySelector('.notification-close').addEventListener('click', () => {
+      notification.remove();
+    });
   },
 
   renderClienteRow(cliente) {
@@ -174,7 +223,7 @@ const ui = {
       </form>
     `;
 
-    const modal = ui.showModal(formContent, title);
+    const modal = clientesUI.showModal(formContent, title);
     
     // Adicionar evento de submit
     const form = modal.querySelector('#cliente-form');
@@ -238,7 +287,7 @@ const ui = {
       </div>
     `;
 
-    ui.showModal(detailsContent, `Detalhes do Cliente - ${cliente.name}`);
+    clientesUI.showModal(detailsContent, `Detalhes do Cliente - ${cliente.name}`);
   }
 };
 
@@ -252,7 +301,7 @@ const clientesApp = {
   bindEvents() {
     if (addClienteBtn) {
       addClienteBtn.addEventListener('click', () => {
-        ui.renderClienteForm();
+        clientesUI.renderClienteForm();
       });
     }
 
@@ -265,18 +314,18 @@ const clientesApp = {
 
   async loadClientes() {
     try {
-      ui.showLoading();
+      clientesUI.showLoading();
       clientes = await clientesApiService.getClientes();
       this.renderClientes();
       this.updateStats();
     } catch (error) {
-      ui.showNotification('Erro ao carregar clientes', 'error');
+      clientesUI.showNotification('Erro ao carregar clientes', 'error');
       console.error('Erro ao carregar clientes:', error);
     }
   },
 
   renderClientes() {
-    ui.renderClientesTable(clientes);
+    clientesUI.renderClientesTable(clientes);
   },
 
   updateStats() {
@@ -292,11 +341,11 @@ const clientesApp = {
     }
 
     try {
-      ui.showLoading();
+      clientesUI.showLoading();
       const searchResults = await clientesApiService.searchClientes(term);
-      ui.renderClientesTable(searchResults);
+      clientesUI.renderClientesTable(searchResults);
     } catch (error) {
-      ui.showNotification('Erro na busca', 'error');
+      clientesUI.showNotification('Erro na busca', 'error');
       console.error('Erro na busca:', error);
     }
   },
@@ -307,12 +356,12 @@ const clientesApp = {
       clientes.unshift(newCliente);
       this.renderClientes();
       this.updateStats();
-      ui.showNotification('Cliente cadastrado com sucesso!');
+      clientesUI.showNotification('Cliente cadastrado com sucesso!');
       
       // Fechar modal
       document.querySelector('.modal').remove();
     } catch (error) {
-      ui.showNotification(error.message || 'Erro ao cadastrar cliente', 'error');
+      clientesUI.showNotification(error.message || 'Erro ao cadastrar cliente', 'error');
     }
   },
 
@@ -324,12 +373,12 @@ const clientesApp = {
         clientes[index] = updatedCliente;
         this.renderClientes();
       }
-      ui.showNotification('Cliente atualizado com sucesso!');
+      clientesUI.showNotification('Cliente atualizado com sucesso!');
       
       // Fechar modal
       document.querySelector('.modal').remove();
     } catch (error) {
-      ui.showNotification(error.message || 'Erro ao atualizar cliente', 'error');
+      clientesUI.showNotification(error.message || 'Erro ao atualizar cliente', 'error');
     }
   },
 
@@ -343,27 +392,27 @@ const clientesApp = {
       clientes = clientes.filter(c => c.id !== id);
       this.renderClientes();
       this.updateStats();
-      ui.showNotification('Cliente deletado com sucesso!');
+      clientesUI.showNotification('Cliente deletado com sucesso!');
     } catch (error) {
-      ui.showNotification(error.message || 'Erro ao deletar cliente', 'error');
+      clientesUI.showNotification(error.message || 'Erro ao deletar cliente', 'error');
     }
   },
 
   async viewCliente(id) {
     try {
       const cliente = await clientesApiService.getCliente(id);
-      ui.renderClienteDetails(cliente);
+      clientesUI.renderClienteDetails(cliente);
     } catch (error) {
-      ui.showNotification('Erro ao carregar detalhes do cliente', 'error');
+      clientesUI.showNotification('Erro ao carregar detalhes do cliente', 'error');
     }
   },
 
   async editCliente(id) {
     try {
       const cliente = await clientesApiService.getCliente(id);
-      ui.renderClienteForm(cliente);
+      clientesUI.renderClienteForm(cliente);
     } catch (error) {
-      ui.showNotification('Erro ao carregar dados do cliente', 'error');
+      clientesUI.showNotification('Erro ao carregar dados do cliente', 'error');
     }
   }
 };
