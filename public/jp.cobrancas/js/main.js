@@ -1,5 +1,5 @@
 // Configurações da API
-const API_BASE_URL = 'http://localhost:3000/api/cobrancas';
+const API_BASE_URL = '/api/cobrancas';
 
 // Estado global da aplicação
 const appState = {
@@ -90,6 +90,7 @@ const apiService = {
   async request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
     const config = {
+      credentials: 'include', // Sempre incluir cookies de sessão
       headers: {
         'Content-Type': 'application/json',
         ...options.headers
