@@ -630,33 +630,38 @@ const emprestimoController = {
       const linkWhatsapp = telefone ? `https://wa.me/55${telefone.replace(/\D/g,'')}?text=${msgWhatsapp}` : '#';
       // Modal HTML
       const detalhes = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-          ${statusBadge}
-          <button class="btn btn-secondary" id="modal-editar-emprestimo">Editar</button>
-        </div>
-        <h2 style="margin: 1rem 0 0.2rem 0;">${nome}</h2>
-        <div style="font-weight: bold; color: #444;">${numero} (${parcelaAtual}ª parcela)</div>
-        <div class="modal-emprestimo-info">
-          <div class="info-row"><span>Deve ser pago em</span><span>${vencimento}</span></div>
-          <div class="info-row"><span>Valor Investido</span><span>${valorInvestido}</span></div>
-          <div class="info-row"><span>Juros</span><span>${jurosPercent}% (${jurosReceber})</span></div>
-        </div>
-        <div style="margin: 0.5rem 0; text-align: right;"><a href="#" id="modal-ver-parcelas">Ver todas as parcelas &gt;</a></div>
-        <h3>Detalhes</h3>
-        <div class="info-row"><span>Celular/Whatsapp</span><span>${telefone ? `<a href=\"https://wa.me/55${telefone.replace(/\D/g,'')}\" target=\"_blank\">${telefone}</a>` : '-'}</span></div>
-        <h3>Afiliado</h3>
-        <div class="info-row">${afiliado}</div>
-        <div style="margin: 1rem 0; text-align: center; font-weight: bold;">${parcelaInfo}<br>Total a Receber: <span style="font-size: 1.3em; color: #222;">${totalReceber}</span></div>
-        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-          <a class="btn" style="background: #25d366; color: #fff;" id="modal-notificar" href="${linkWhatsapp}" target="_blank" rel="noopener noreferrer">Notificar <b>WhatsApp</b></a>
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button class="btn" style="background: #6fffd6; color: #222; flex:1;" id="modal-btn-quitado" type="button">Quitado</button>
-            <button class="btn" style="background: #5b4fff; color: #fff; flex:1;" id="modal-btn-sojuros" type="button">Só Juros</button>
+        <div class="emprestimo-modal-box" style="padding: 1.5rem; max-width: 420px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 2px 16px #002f4b22;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+            <span class="badge" style="background: ${emp.status === 'Em Atraso' ? '#fbbf24' : emp.status === 'Quitado' ? '#10b981' : emp.status === 'Só Juros' ? '#6366f1' : '#002f4b'}; color: #fff; font-weight: 600; font-size: 1rem; padding: 0.4em 1em; border-radius: 8px; letter-spacing: 1px;">${emp.status?.toUpperCase() || '-'}</span>
+            <button class="btn" style="background: #10b981; color: #fff; font-weight: 600; border-radius: 8px; padding: 0.4em 1.2em; font-size: 1rem;" id="modal-btn-editar">Editar</button>
           </div>
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button class="btn" style="background: #ff3b3b; color: #fff; flex:1;" id="modal-btn-naopagou" type="button">Não Pagou</button>
+          <div style="margin-bottom: 1.2rem;">
+            <h2 style="font-size: 1.4rem; font-weight: bold; margin-bottom: 0.2em; color: #002f4b;">${emp.cliente_nome || 'N/A'}</h2>
+            <div style="font-size: 1.1rem; font-weight: 600; color: #222; margin-bottom: 0.2em;">PCL-Nº #${emp.id} ${emp.parcelas ? `(${emp.parcelas}ª parcela)` : ''}</div>
+            <div style="font-size: 1rem; color: #444; margin-bottom: 0.2em;">Deve ser pago em <b>${utils.formatDate(emp.data_vencimento)}</b></div>
+            <div style="font-size: 1rem; color: #444;">Valor Investido <b>R$ ${utils.formatCurrency(emp.valor_inicial || emp.valor)}</b></div>
+            <div style="font-size: 1rem; color: #444;">Juros <b>${emp.juros_mensal}%</b> (R$ ${utils.formatCurrency((emp.valor_inicial || emp.valor) * (emp.juros_mensal / 100))})</div>
           </div>
-          <button class="btn" style="background: #ff2222; color: #fff;" id="modal-btn-remover" type="button">REMOVER</button>
+          <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid #eee;">
+          <div style="margin-bottom: 1.2rem;">
+            <div style="font-size: 1.05rem; font-weight: 600; color: #002f4b; margin-bottom: 0.5em;">Detalhes</div>
+            <div style="font-size: 1rem; color: #444; margin-bottom: 0.2em;">Celular/Whatsapp <a href="https://wa.me/55${(emp.telefone || '').replace(/\D/g,'')}" target="_blank" style="color: #1886e6; text-decoration: underline;">${emp.telefone || '-'}</a></div>
+            <div style="font-size: 1rem; color: #444;">Afiliado <span style="color: #888;">${emp.afiliado || 'Nenhum afiliado informado'}</span></div>
+          </div>
+          <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid #eee;">
+          <div style="margin-bottom: 1.2rem; text-align: center;">
+            <div style="font-size: 1.1rem; font-weight: 700; color: #222; margin-bottom: 0.2em;">PARCELA 1 DE ${emp.parcelas || 1}</div>
+            <div style="font-size: 1.3rem; font-weight: bold; color: #002f4b;">Total a Receber: <span style="color: #10b981;">R$ ${utils.formatCurrency(emp.valor)}</span></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.7rem; margin-top: 1.5rem;">
+            <a class="btn" style="background: #25d366; color: #fff; font-weight: 600; font-size: 1.1rem; border-radius: 8px;" id="modal-notificar" href="${linkWhatsapp}" target="_blank" rel="noopener noreferrer">Notificar <b>WhatsApp</b></a>
+            <div style="display: flex; gap: 0.7rem; flex-wrap: wrap;">
+              <button class="btn" style="background: #10b981; color: #fff; flex:1; font-weight: 600; border-radius: 8px;" id="modal-btn-quitado" type="button">Quitado</button>
+              <button class="btn" style="background: #6366f1; color: #fff; flex:1; font-weight: 600; border-radius: 8px;" id="modal-btn-sojuros" type="button">Só Juros</button>
+            </div>
+            <button class="btn" style="background: #ef4444; color: #fff; font-weight: 600; border-radius: 8px; font-size: 1.1rem;" id="modal-btn-naopagou" type="button">Não Pagou</button>
+            <button class="btn" style="background: #ff2222; color: #fff; font-weight: 600; border-radius: 8px; font-size: 1.1rem;" id="modal-btn-remover" type="button">REMOVER</button>
+          </div>
         </div>
       `;
       const modal = ui.showModal(detalhes, 'Detalhes do Empréstimo');
@@ -684,15 +689,21 @@ const emprestimoController = {
         }
       };
       // Botão Só Juros
-      modal.querySelector('#modal-btn-sojuros').onclick = (e) => {
+      modal.querySelector('#modal-btn-sojuros').onclick = async (e) => {
         e.preventDefault();
-        // Apenas envia mensagem de cobrança dos juros
-        if (!telefone) {
-          ui.showNotification('Sem telefone para cobrança!', 'error');
-          return;
+        try {
+          await fetch(`/api/cobrancas/emprestimos/${emp.id}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ status: 'Só Juros' })
+          });
+          ui.showNotification('Pagamento de só juros registrado! Empréstimo segue em aberto.', 'success');
+          modal.remove();
+          if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
+        } catch (err) {
+          ui.showNotification('Erro ao registrar só juros', 'error');
         }
-        const msg = encodeURIComponent(`Olá ${nome}, você pode pagar apenas os juros deste mês: ${jurosReceber}`);
-        window.open(`https://wa.me/55${telefone.replace(/\D/g,'')}?text=${msg}`, '_blank');
       };
       // Botão Não Pagou
       modal.querySelector('#modal-btn-naopagou').onclick = async (e) => {
