@@ -397,4 +397,27 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Rota para verificar sessão
+router.get('/session', (req, res) => {
+  if (req.session.cobrancasUser) {
+    res.json({ 
+      authenticated: true, 
+      user: req.session.cobrancasUser,
+      db: req.session.cobrancasDb
+    });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+
+// Rota para logout
+router.post('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: 'Erro ao fazer logout.' });
+    }
+    res.json({ success: true });
+  });
+});
+
 module.exports = router; 

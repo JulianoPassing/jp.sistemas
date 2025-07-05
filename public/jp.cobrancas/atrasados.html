@@ -12,9 +12,12 @@
 </head>
 <body class="app-layout">
 <script>
-fetch('/api/cobrancas/session')
+fetch('/api/cobrancas/session', {
+  method: 'GET',
+  credentials: 'include'
+})
   .then(res => { if (!res.ok) throw new Error(); return res.json(); })
-  .then(data => { if (!data.loggedIn) window.location.href = 'login.html'; })
+  .then(data => { if (!data.authenticated) window.location.href = 'login.html'; })
   .catch(() => window.location.href = 'login.html');
 </script>
   <header>

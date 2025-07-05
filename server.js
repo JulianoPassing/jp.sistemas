@@ -45,7 +45,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Configuração de sessão
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === 'production' || process.env.PORT;
 const sessionStore = new MySQLStore({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -60,10 +60,9 @@ app.use(session({
   saveUninitialized: false,
   store: sessionStore,
   cookie: {
-    secure: isProduction, // true em produção (https), false em dev/local
+    secure: false, // false para VPS sem HTTPS por enquanto
     httpOnly: true,
-    sameSite: isProduction ? 'none' : 'lax', // 'none' para produção, 'lax' para local
-    domain: isProduction ? '.jp-sistemas.com' : undefined, // Corrigido para o domínio de produção correto
+    sameSite: 'lax', // 'lax' para VPS sem HTTPS
     maxAge: 24 * 60 * 60 * 1000 // 24 horas
   }
 }));
