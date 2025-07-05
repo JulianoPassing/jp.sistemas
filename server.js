@@ -60,10 +60,9 @@ app.use(session({
   saveUninitialized: false,
   store: sessionStore,
   cookie: {
-    secure: isProduction, // true em produção (https), false em dev/local
+    secure: false, // false para VPS sem HTTPS por enquanto
     httpOnly: true,
-    sameSite: isProduction ? 'none' : 'lax', // 'none' para produção, 'lax' para local
-    domain: isProduction ? '.jp-sistemas.com' : undefined, // Corrigido para o domínio de produção correto
+    sameSite: 'lax', // 'lax' para VPS sem HTTPS
     maxAge: 24 * 60 * 60 * 1000 // 24 horas
   }
 }));
