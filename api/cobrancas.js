@@ -303,6 +303,7 @@ router.get('/cobrancas', ensureDatabase, async (req, res) => {
       SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
       FROM cobrancas cb
       LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
+      WHERE cb.status = 'Pendente'
       ORDER BY cb.data_vencimento ASC
     `);
     
