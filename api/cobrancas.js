@@ -1,6 +1,7 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const { getCobrancasDatabaseConfig } = require('../database-config');
+const bcrypt = require('bcryptjs');
 
 const router = express.Router();
 
@@ -355,6 +356,44 @@ router.post('/cobrancas/:id/pagamento', ensureDatabase, async (req, res) => {
   } catch (error) {
     console.error('Erro ao registrar pagamento:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota de login
+router.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    // Conecte ao banco central de usuários (ex: jpsistemas_users)
+    const conn = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_users'
+    });
+    const [rows] = await conn.execute(
+      'SELECT * FROM usuarios_cobrancas WHERE username = ?',
+      [username]
+    );
+    await conn.end();
+
+    if (rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Usuário ou senha inválidos.' });
+    }
+
+    const user = rows[0];
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) {
+      return res.status(401).json({ success: false, message: 'Usuário ou senha inválidos.' });
+    }
+
+    // Salva na sessão o usuário e o banco correspondente
+    req.session.cobrancasUser = username;
+    req.session.cobrancasDb = user.db_name;
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Erro no login:', err);
+    res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
   }
 });
 
