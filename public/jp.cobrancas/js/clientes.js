@@ -1,6 +1,3 @@
-// Configurações da API
-const API_BASE_URL = 'http://localhost:3001/api';
-
 // Estado da aplicação
 let clientes = [];
 let currentPage = 1;
@@ -13,124 +10,38 @@ const searchInput = document.getElementById('search-cliente');
 const addClienteBtn = document.getElementById('add-cliente-btn');
 const totalClientesSpan = document.getElementById('total-clientes');
 
-// Utilitários
-const utils = {
-  formatCurrency: (value) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  },
-
-  formatDate: (date) => {
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    }).format(new Date(date));
-  },
-
-  showNotification: (message, type = 'success') => {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-      <div class="notification-content">
-        <span>${message}</span>
-        <button class="notification-close">&times;</button>
-      </div>
-    `;
-
-    document.body.appendChild(notification);
-
-    setTimeout(() => notification.remove(), 5000);
-
-    notification.querySelector('.notification-close').addEventListener('click', () => {
-      notification.remove();
-    });
-  },
-
-  showModal: (content, title = '') => {
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `
-      <div class="modal-overlay"></div>
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>${title}</h3>
-          <button class="modal-close">&times;</button>
-        </div>
-        <div class="modal-body">
-          ${content}
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    const closeModal = () => modal.remove();
-    modal.querySelector('.modal-close').addEventListener('click', closeModal);
-    modal.querySelector('.modal-overlay').addEventListener('click', closeModal);
-
-    return { modal, closeModal };
-  }
-};
-
-// API Service
-const apiService = {
-  async request(endpoint, options = {}) {
-    const url = `${API_BASE_URL}${endpoint}`;
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      },
-      ...options
-    };
-
-    try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('API Error:', error);
-      throw error;
-    }
-  },
-
+// API Service específico para clientes
+const clientesApiService = {
   async getClientes() {
-    return this.request('/clientes');
+    return apiService.request('/clientes');
   },
 
   async getCliente(id) {
-    return this.request(`/clientes/${id}`);
+    return apiService.request(`/clientes/${id}`);
   },
 
   async createCliente(clienteData) {
-    return this.request('/clientes', {
+    return apiService.request('/clientes', {
       method: 'POST',
       body: JSON.stringify(clienteData)
     });
   },
 
   async updateCliente(id, clienteData) {
-    return this.request(`/clientes/${id}`, {
+    return apiService.request(`/clientes/${id}`, {
       method: 'PUT',
       body: JSON.stringify(clienteData)
     });
   },
 
   async deleteCliente(id) {
-    return this.request(`/clientes/${id}`, {
+    return apiService.request(`/clientes/${id}`, {
       method: 'DELETE'
     });
   },
 
   async searchClientes(term) {
-    return this.request(`/clientes/search/${term}`);
+    return apiService.request(`/clientes/search/${term}`);
   }
 };
 
@@ -263,7 +174,7 @@ const ui = {
       </form>
     `;
 
-    const { modal } = utils.showModal(formContent, title);
+    const modal = ui.showModal(formContent, title);
     
     // Adicionar evento de submit
     const form = modal.querySelector('#cliente-form');
@@ -299,7 +210,7 @@ const ui = {
           <strong>Endereço:</strong> ${cliente.address || 'N/A'}
         </div>
         <div class="detail-row">
-          <strong>Data de Cadastro:</strong> ${utils.formatDate(cliente.created_at)}
+          <strong>Data de Cadastro:</strong> ${new Date(cliente.created_at).toLocaleDateString('pt-BR')}
         </div>
         
         ${cliente.emprestimos && cliente.emprestimos.length > 0 ? `
@@ -315,9 +226,9 @@ const ui = {
                     </span>
                   </div>
                   <div class="emprestimo-details">
-                    <div>Valor: ${utils.formatCurrency(emp.amount)}</div>
-                    <div>Vencimento: ${utils.formatDate(emp.due_date)}</div>
-                    <div>Restante: ${utils.formatCurrency(emp.valor_restante)}</div>
+                    <div>Valor: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(emp.amount)}</div>
+                    <div>Vencimento: ${new Date(emp.due_date).toLocaleDateString('pt-BR')}</div>
+                    <div>Restante: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(emp.valor_restante)}</div>
                   </div>
                 </div>
               `).join('')}
@@ -327,7 +238,7 @@ const ui = {
       </div>
     `;
 
-    utils.showModal(detailsContent, `Detalhes do Cliente - ${cliente.name}`);
+    ui.showModal(detailsContent, `Detalhes do Cliente - ${cliente.name}`);
   }
 };
 
@@ -346,20 +257,20 @@ const clientesApp = {
     }
 
     if (searchInput) {
-      searchInput.addEventListener('input', utils.debounce((e) => {
+      searchInput.addEventListener('input', (e) => {
         this.searchClientes(e.target.value);
-      }, 300));
+      });
     }
   },
 
   async loadClientes() {
     try {
       ui.showLoading();
-      clientes = await apiService.getClientes();
+      clientes = await clientesApiService.getClientes();
       this.renderClientes();
       this.updateStats();
     } catch (error) {
-      utils.showNotification('Erro ao carregar clientes', 'error');
+      ui.showNotification('Erro ao carregar clientes', 'error');
       console.error('Erro ao carregar clientes:', error);
     }
   },
@@ -382,43 +293,43 @@ const clientesApp = {
 
     try {
       ui.showLoading();
-      const searchResults = await apiService.searchClientes(term);
+      const searchResults = await clientesApiService.searchClientes(term);
       ui.renderClientesTable(searchResults);
     } catch (error) {
-      utils.showNotification('Erro na busca', 'error');
+      ui.showNotification('Erro na busca', 'error');
       console.error('Erro na busca:', error);
     }
   },
 
   async createCliente(clienteData) {
     try {
-      const newCliente = await apiService.createCliente(clienteData);
+      const newCliente = await clientesApiService.createCliente(clienteData);
       clientes.unshift(newCliente);
       this.renderClientes();
       this.updateStats();
-      utils.showNotification('Cliente cadastrado com sucesso!');
+      ui.showNotification('Cliente cadastrado com sucesso!');
       
       // Fechar modal
       document.querySelector('.modal').remove();
     } catch (error) {
-      utils.showNotification(error.message || 'Erro ao cadastrar cliente', 'error');
+      ui.showNotification(error.message || 'Erro ao cadastrar cliente', 'error');
     }
   },
 
   async updateCliente(id, clienteData) {
     try {
-      const updatedCliente = await apiService.updateCliente(id, clienteData);
+      const updatedCliente = await clientesApiService.updateCliente(id, clienteData);
       const index = clientes.findIndex(c => c.id === id);
       if (index !== -1) {
         clientes[index] = updatedCliente;
         this.renderClientes();
       }
-      utils.showNotification('Cliente atualizado com sucesso!');
+      ui.showNotification('Cliente atualizado com sucesso!');
       
       // Fechar modal
       document.querySelector('.modal').remove();
     } catch (error) {
-      utils.showNotification(error.message || 'Erro ao atualizar cliente', 'error');
+      ui.showNotification(error.message || 'Erro ao atualizar cliente', 'error');
     }
   },
 
@@ -428,31 +339,31 @@ const clientesApp = {
     }
 
     try {
-      await apiService.deleteCliente(id);
+      await clientesApiService.deleteCliente(id);
       clientes = clientes.filter(c => c.id !== id);
       this.renderClientes();
       this.updateStats();
-      utils.showNotification('Cliente deletado com sucesso!');
+      ui.showNotification('Cliente deletado com sucesso!');
     } catch (error) {
-      utils.showNotification(error.message || 'Erro ao deletar cliente', 'error');
+      ui.showNotification(error.message || 'Erro ao deletar cliente', 'error');
     }
   },
 
   async viewCliente(id) {
     try {
-      const cliente = await apiService.getCliente(id);
+      const cliente = await clientesApiService.getCliente(id);
       ui.renderClienteDetails(cliente);
     } catch (error) {
-      utils.showNotification('Erro ao carregar detalhes do cliente', 'error');
+      ui.showNotification('Erro ao carregar detalhes do cliente', 'error');
     }
   },
 
   async editCliente(id) {
     try {
-      const cliente = await apiService.getCliente(id);
+      const cliente = await clientesApiService.getCliente(id);
       ui.renderClienteForm(cliente);
     } catch (error) {
-      utils.showNotification('Erro ao carregar dados do cliente', 'error');
+      ui.showNotification('Erro ao carregar dados do cliente', 'error');
     }
   }
 };

@@ -213,7 +213,7 @@ const ui = {
     return modal;
   },
 
-  // Table helpers
+  // Table helpers (mantido para compatibilidade)
   createTableRow(data, actions = []) {
     const row = document.createElement('tr');
     row.innerHTML = Object.values(data).map(value => `<td>${value}</td>`).join('');
@@ -319,18 +319,16 @@ const dashboardController = {
       
       const data = new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR');
       
-      const row = ui.createTableRow({
-        cliente: emprestimo.cliente_nome || 'N/A',
-        valor: valor,
-        data: data,
-        status: `<span class="badge badge-${emprestimo.status === 'Ativo' ? 'success' : 'warning'}">${emprestimo.status}</span>`
-      }, [
-        {
-          type: 'primary',
-          text: 'Ver',
-          onclick: `emprestimoController.viewEmprestimo(${emprestimo.id})`
-        }
-      ]);
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${emprestimo.cliente_nome || 'N/A'}</td>
+        <td>${valor}</td>
+        <td>${data}</td>
+        <td><span class="badge badge-${emprestimo.status === 'Ativo' ? 'success' : 'warning'}">${emprestimo.status}</span></td>
+        <td>
+          <button class="btn btn-primary btn-sm" onclick="emprestimoController.viewEmprestimo(${emprestimo.id})">Ver</button>
+        </td>
+      `;
       
       tbody.appendChild(row);
     });
@@ -357,19 +355,17 @@ const dashboardController = {
       const diasAtraso = cobranca.dias_atraso || 0;
       const statusClass = diasAtraso > 30 ? 'danger' : diasAtraso > 7 ? 'warning' : 'info';
       
-      const row = ui.createTableRow({
-        cliente: cobranca.cliente_nome || 'N/A',
-        valor: valor,
-        vencimento: vencimento,
-        diasAtraso: diasAtraso > 0 ? `${diasAtraso} dias` : 'No prazo',
-        status: `<span class="badge badge-${statusClass}">${cobranca.status}</span>`
-      }, [
-        {
-          type: 'secondary',
-          text: 'Cobrar',
-          onclick: `cobrancaController.cobrar(${cobranca.id})`
-        }
-      ]);
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${cobranca.cliente_nome || 'N/A'}</td>
+        <td>${valor}</td>
+        <td>${vencimento}</td>
+        <td>${diasAtraso > 0 ? `${diasAtraso} dias` : 'No prazo'}</td>
+        <td><span class="badge badge-${statusClass}">${cobranca.status}</span></td>
+        <td>
+          <button class="btn btn-secondary btn-sm" onclick="cobrancaController.cobrar(${cobranca.id})">Cobrar</button>
+        </td>
+      `;
       
       tbody.appendChild(row);
     });
@@ -579,6 +575,23 @@ const app = {
   }
 };
 
+// Controllers para ações específicas
+const emprestimoController = {
+  viewEmprestimo(id) {
+    // Redirecionar para página de empréstimos
+    console.log(`Visualizando empréstimo #${id}`);
+    window.location.href = 'emprestimos.html';
+  }
+};
+
+const cobrancaController = {
+  cobrar(id) {
+    // Redirecionar para página de cobranças
+    console.log(`Registrando cobrança #${id}`);
+    window.location.href = 'cobrancas.html';
+  }
+};
+
 // Inicializar quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
   app.init();
@@ -587,5 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Exportar para uso global
 window.app = app;
 window.dashboardController = dashboardController;
+window.emprestimoController = emprestimoController;
+window.cobrancaController = cobrancaController;
 window.ui = ui;
 window.utils = utils; 
