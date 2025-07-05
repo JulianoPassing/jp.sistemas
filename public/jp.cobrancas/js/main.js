@@ -435,6 +435,11 @@ const app = {
         });
       }
       
+      // Carregar lista de empréstimos se existir na página
+      if (document.getElementById('emprestimos-lista')) {
+        renderEmprestimosLista();
+      }
+      
     } catch (error) {
       console.error('Erro na inicialização:', error);
       ui.showNotification('Erro ao inicializar a aplicação', 'error');
@@ -603,6 +608,41 @@ const cobrancaController = {
   }
 };
 
+// Função para renderizar a lista de empréstimos
+async function renderEmprestimosLista() {
+  const tbody = document.getElementById('emprestimos-lista');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7">Carregando...</td></tr>';
+  try {
+    const emprestimos = await apiService.getEmprestimos();
+    if (!emprestimos || emprestimos.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    emprestimos.forEach(emprestimo => {
+      const valor = utils.formatCurrency(emprestimo.valor || 0);
+      const parcelas = emprestimo.parcelas || '-';
+      const data = emprestimo.data_emprestimo ? utils.formatDate(emprestimo.data_emprestimo) : '-';
+      const vencimento = emprestimo.data_vencimento ? utils.formatDate(emprestimo.data_vencimento) : '-';
+      const status = emprestimo.status || '-';
+      tbody.innerHTML += `
+        <tr>
+          <td>${emprestimo.cliente_nome || 'N/A'}</td>
+          <td>${valor}</td>
+          <td>${parcelas}</td>
+          <td>${data}</td>
+          <td>${vencimento}</td>
+          <td>${status}</td>
+          <td><button class="btn btn-primary btn-sm" onclick="emprestimoController.viewEmprestimo(${emprestimo.id})">Ver</button></td>
+        </tr>
+      `;
+    });
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
+  }
+}
+
 // Inicializar quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
   app.init();
@@ -741,7 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
           cliente_id,
           valor: formData.valor,
           data_emprestimo: formData.dataPagamento,
-          data_vencimento: formData.dataVencimento,
+          data_vencimento: formData.dataPagamento, // agora igual a data de pagamento
           juros_mensal: formData.porcentagem,
           multa_atraso: formData.multa,
           observacoes: formData.observacoes || ''
@@ -750,7 +790,10 @@ document.addEventListener('DOMContentLoaded', () => {
           await apiService.createEmprestimo(payload);
           ui.showNotification('Empréstimo adicionado com sucesso!', 'success');
           modal.remove();
-          window.location.reload();
+          // Atualizar lista sem reload
+          if (document.getElementById('emprestimos-lista')) {
+            renderEmprestimosLista();
+          }
         } catch (err) {
           ui.showNotification('Erro ao adicionar empréstimo', 'error');
         }
