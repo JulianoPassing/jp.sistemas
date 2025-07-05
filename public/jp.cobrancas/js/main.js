@@ -609,7 +609,9 @@ const emprestimoController = {
       const totalParcelas = emp.total_parcelas || 1;
       const parcelaInfo = `PARCELA ${parcelaAtual} DE ${totalParcelas}`;
       const valorInvestido = utils.formatCurrency(emp.valor || 0);
-      const jurosReceber = utils.formatCurrency(emp.juros_a_receber || emp.juros_mensal || 0);
+      const jurosPercent = emp.juros_mensal || 0;
+      const jurosValor = (emp.valor || 0) * (jurosPercent / 100);
+      const jurosReceber = utils.formatCurrency(jurosValor);
       const totalReceber = utils.formatCurrency(emp.valor_total || emp.valor || 0);
       const telefone = emp.telefone || emp.celular || emp.whatsapp || '';
       const vencimento = emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-';
@@ -632,7 +634,7 @@ const emprestimoController = {
         <div class="modal-emprestimo-info">
           <div class="info-row"><span>Deve ser pago em</span><span>${vencimento}</span></div>
           <div class="info-row"><span>Valor Investido</span><span>${valorInvestido}</span></div>
-          <div class="info-row"><span>Juros a Receber</span><span>${jurosReceber}</span></div>
+          <div class="info-row"><span>Juros</span><span>${jurosPercent}% (${jurosReceber})</span></div>
         </div>
         <div style="margin: 0.5rem 0; text-align: right;"><a href="#" id="modal-ver-parcelas">Ver todas as parcelas &gt;</a></div>
         <h3>Detalhes</h3>
@@ -837,10 +839,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <input type=\"number\" name=\"multa\" class=\"form-input\" step=\"0.01\" min=\"0\" required placeholder=\"ex.: 2\">
           </div>
           <div class=\"form-group\">
-            <label>Data de Pagamento</label>
-            <input type=\"date\" name=\"dataPagamento\" class=\"form-input\" required>
-          </div>
-          <div class=\"form-group\">
             <label>Data de Vencimento</label>
             <input type=\"date\" name=\"dataVencimento\" class=\"form-input\" required>
           </div>
@@ -917,8 +915,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const payload = {
           cliente_id,
           valor: formData.valor,
-          data_emprestimo: formData.dataPagamento,
-          data_vencimento: formData.dataPagamento, // agora igual a data de pagamento
+          data_emprestimo: formData.dataVencimento,
+          data_vencimento: formData.dataVencimento,
           juros_mensal: formData.porcentagem,
           multa_atraso: formData.multa,
           observacoes: formData.observacoes || ''

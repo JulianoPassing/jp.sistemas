@@ -169,7 +169,7 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
 
     // Empréstimos recentes
     const [emprestimosRecentes] = await connection.execute(`
-      SELECT e.*, c.nome as cliente_nome
+      SELECT e.*, c.nome as cliente_nome, c.telefone as telefone
       FROM emprestimos e
       LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
       ORDER BY e.created_at DESC
@@ -178,7 +178,7 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
 
     // Cobranças pendentes
     const [cobrancasPendentes] = await connection.execute(`
-      SELECT cb.*, c.nome as cliente_nome, c.telefone
+      SELECT cb.*, c.nome as cliente_nome, c.telefone as telefone
       FROM cobrancas cb
       LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
       WHERE cb.status = 'Pendente'
@@ -240,7 +240,7 @@ router.get('/emprestimos', ensureDatabase, async (req, res) => {
   try {
     const connection = await createCobrancasConnection();
     const [emprestimos] = await connection.execute(`
-      SELECT e.*, c.nome as cliente_nome
+      SELECT e.*, c.nome as cliente_nome, c.telefone as telefone
       FROM emprestimos e
       LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
       ORDER BY e.created_at DESC
