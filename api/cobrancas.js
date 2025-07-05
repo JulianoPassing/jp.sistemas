@@ -420,4 +420,22 @@ router.post('/logout', (req, res) => {
   });
 });
 
+// Rota para atualizar status do empréstimo
+router.put('/emprestimos/:id/status', ensureDatabase, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const connection = await createCobrancasConnection();
+    await connection.execute(
+      'UPDATE emprestimos SET status = ? WHERE id = ?',
+      [status, id]
+    );
+    await connection.end();
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao atualizar status do empréstimo:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 module.exports = router; 

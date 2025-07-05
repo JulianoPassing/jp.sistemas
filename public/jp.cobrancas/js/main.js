@@ -636,25 +636,32 @@ const emprestimoController = {
         </div>
         <div style="margin: 0.5rem 0; text-align: right;"><a href="#" id="modal-ver-parcelas">Ver todas as parcelas &gt;</a></div>
         <h3>Detalhes</h3>
-        <div class="info-row"><span>Celular/Whatsapp</span><span>${telefone ? `<a href="https://wa.me/55${telefone.replace(/\D/g,'')}" target="_blank">${telefone}</a>` : '-'}</span></div>
+        <div class="info-row"><span>Celular/Whatsapp</span><span>${telefone ? `<a href=\"https://wa.me/55${telefone.replace(/\D/g,'')}\" target=\"_blank\">${telefone}</a>` : '-'}</span></div>
         <h3>Afiliado</h3>
         <div class="info-row">${afiliado}</div>
         <div style="margin: 1rem 0; text-align: center; font-weight: bold;">${parcelaInfo}<br>Total a Receber: <span style="font-size: 1.3em; color: #222;">${totalReceber}</span></div>
         <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-          <a class="btn" style="background: #25d366; color: #fff;" id="modal-notificar" href="${linkWhatsapp}" target="_blank">Notificar <b>WhatsApp</b></a>
+          <a class="btn" style="background: #25d366; color: #fff;" id="modal-notificar" href="${linkWhatsapp}" target="_blank" rel="noopener noreferrer">Notificar <b>WhatsApp</b></a>
           <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button class="btn" style="background: #6fffd6; color: #222; flex:1;" id="modal-btn-quitado">Quitado</button>
-            <button class="btn" style="background: #5b4fff; color: #fff; flex:1;" id="modal-btn-sojuros">Só Juros</button>
+            <button class="btn" style="background: #6fffd6; color: #222; flex:1;" id="modal-btn-quitado" type="button">Quitado</button>
+            <button class="btn" style="background: #5b4fff; color: #fff; flex:1;" id="modal-btn-sojuros" type="button">Só Juros</button>
           </div>
           <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button class="btn" style="background: #ff3b3b; color: #fff; flex:1;" id="modal-btn-naopagou">Não Pagou</button>
+            <button class="btn" style="background: #ff3b3b; color: #fff; flex:1;" id="modal-btn-naopagou" type="button">Não Pagou</button>
           </div>
-          <button class="btn" style="background: #ff2222; color: #fff;">REMOVER</button>
+          <button class="btn" style="background: #ff2222; color: #fff;" id="modal-btn-remover" type="button">REMOVER</button>
         </div>
       `;
       const modal = ui.showModal(detalhes, 'Detalhes do Empréstimo');
+      // Corrigir comportamento do botão WhatsApp para nunca recarregar
+      const btnWhats = modal.querySelector('#modal-notificar');
+      btnWhats.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Não faz nada além de abrir o link
+      });
       // Botão Quitado
-      modal.querySelector('#modal-btn-quitado').onclick = async () => {
+      modal.querySelector('#modal-btn-quitado').onclick = async (e) => {
+        e.preventDefault();
         try {
           await fetch(`/api/cobrancas/emprestimos/${emp.id}/status`, {
             method: 'PUT',
@@ -670,7 +677,8 @@ const emprestimoController = {
         }
       };
       // Botão Só Juros
-      modal.querySelector('#modal-btn-sojuros').onclick = () => {
+      modal.querySelector('#modal-btn-sojuros').onclick = (e) => {
+        e.preventDefault();
         // Apenas envia mensagem de cobrança dos juros
         if (!telefone) {
           ui.showNotification('Sem telefone para cobrança!', 'error');
@@ -680,7 +688,8 @@ const emprestimoController = {
         window.open(`https://wa.me/55${telefone.replace(/\D/g,'')}?text=${msg}`, '_blank');
       };
       // Botão Não Pagou
-      modal.querySelector('#modal-btn-naopagou').onclick = async () => {
+      modal.querySelector('#modal-btn-naopagou').onclick = async (e) => {
+        e.preventDefault();
         try {
           await fetch(`/api/cobrancas/emprestimos/${emp.id}/status`, {
             method: 'PUT',
@@ -693,6 +702,22 @@ const emprestimoController = {
           if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
         } catch (err) {
           ui.showNotification('Erro ao atualizar status', 'error');
+        }
+      };
+      // Botão Remover
+      modal.querySelector('#modal-btn-remover').onclick = async (e) => {
+        e.preventDefault();
+        if (!confirm('Tem certeza que deseja remover este empréstimo?')) return;
+        try {
+          await fetch(`/api/cobrancas/emprestimos/${emp.id}`, {
+            method: 'DELETE',
+            credentials: 'include'
+          });
+          ui.showNotification('Empréstimo removido!', 'success');
+          modal.remove();
+          if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
+        } catch (err) {
+          ui.showNotification('Erro ao remover empréstimo', 'error');
         }
       };
     } catch (err) {
@@ -726,7 +751,18 @@ async function renderEmprestimosLista() {
       const parcelas = emprestimo.parcelas || '-';
       const data = emprestimo.data_emprestimo ? utils.formatDate(emprestimo.data_emprestimo) : '-';
       const vencimento = emprestimo.data_vencimento ? utils.formatDate(emprestimo.data_vencimento) : '-';
-      const status = emprestimo.status || '-';
+      // Badge de status
+      let badge = '';
+      const status = (emprestimo.status || '').toLowerCase();
+      if (status === 'quitado') {
+        badge = '<span class="badge" style="background:#10b981;color:#fff;">Quitado</span>';
+      } else if (status === 'em atraso' || status === 'atrasado') {
+        badge = '<span class="badge" style="background:#ef4444;color:#fff;">Em Atraso</span>';
+      } else if (status === 'ativo' || status === 'pendente') {
+        badge = '<span class="badge" style="background:#6366f1;color:#fff;">Pendente</span>';
+      } else {
+        badge = `<span class="badge" style="background:#888;color:#fff;">${emprestimo.status || '-'}</span>`;
+      }
       tbody.innerHTML += `
         <tr>
           <td>${emprestimo.cliente_nome || 'N/A'}</td>
@@ -734,7 +770,7 @@ async function renderEmprestimosLista() {
           <td>${parcelas}</td>
           <td>${data}</td>
           <td>${vencimento}</td>
-          <td>${status}</td>
+          <td>${badge}</td>
           <td><button class="btn btn-primary btn-sm" onclick="emprestimoController.viewEmprestimo(${emprestimo.id})">Ver</button></td>
         </tr>
       `;
