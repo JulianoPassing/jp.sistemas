@@ -652,12 +652,20 @@ document.addEventListener('DOMContentLoaded', () => {
             <input type=\"number\" name=\"valor\" class=\"form-input\" step=\"0.01\" min=\"0\" required placeholder=\"ex.: 1000\">
           </div>
           <div class=\"form-group\">
-            <label>Porcentagem (%)</label>
+            <label>Porcentagem de Juros (%)</label>
             <input type=\"number\" name=\"porcentagem\" class=\"form-input\" step=\"0.01\" min=\"0\" required placeholder=\"ex.: 20\">
+          </div>
+          <div class=\"form-group\">
+            <label>Multa por Atraso (%)</label>
+            <input type=\"number\" name=\"multa\" class=\"form-input\" step=\"0.01\" min=\"0\" required placeholder=\"ex.: 2\">
           </div>
           <div class=\"form-group\">
             <label>Data de Pagamento</label>
             <input type=\"date\" name=\"dataPagamento\" class=\"form-input\" required>
+          </div>
+          <div class=\"form-group\">
+            <label>Data de Vencimento</label>
+            <input type=\"date\" name=\"dataVencimento\" class=\"form-input\" required>
           </div>
           <div class=\"form-group\">
             <label>Frequência</label>
@@ -667,6 +675,10 @@ document.addEventListener('DOMContentLoaded', () => {
               <option value=\"semanal\">Semanal</option>
               <option value=\"quinzenal\">Quinzenal</option>
             </select>
+          </div>
+          <div class=\"form-group\">
+            <label>Observações (opcional)</label>
+            <textarea name=\"observacoes\" class=\"form-input\" rows=\"2\"></textarea>
           </div>
           <div class=\"form-group\">
             <button type=\"submit\" class=\"btn btn-primary\">Adicionar Empréstimo</button>
@@ -696,8 +708,46 @@ document.addEventListener('DOMContentLoaded', () => {
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = Object.fromEntries(new FormData(form).entries());
+        let cliente_id = formData.clienteId;
+        // Se não selecionou cliente, criar cliente
+        if (!cliente_id) {
+          try {
+            const clientePayload = {
+              nome: formData.nome,
+              cpf_cnpj: formData.cpf || '',
+              telefone: formData.telefone || '',
+              email: '',
+              endereco: '',
+              cidade: '',
+              estado: '',
+              cep: ''
+            };
+            const resp = await fetch('/api/cobrancas/clientes', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify(clientePayload)
+            });
+            const data = await resp.json();
+            if (!resp.ok || !data.id) throw new Error('Erro ao criar cliente');
+            cliente_id = data.id;
+          } catch (err) {
+            ui.showNotification('Erro ao criar cliente', 'error');
+            return;
+          }
+        }
+        // Montar payload do empréstimo
+        const payload = {
+          cliente_id,
+          valor: formData.valor,
+          data_emprestimo: formData.dataPagamento,
+          data_vencimento: formData.dataVencimento,
+          juros_mensal: formData.porcentagem,
+          multa_atraso: formData.multa,
+          observacoes: formData.observacoes || ''
+        };
         try {
-          await apiService.createEmprestimo(formData);
+          await apiService.createEmprestimo(payload);
           ui.showNotification('Empréstimo adicionado com sucesso!', 'success');
           modal.remove();
           window.location.reload();
