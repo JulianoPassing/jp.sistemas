@@ -146,10 +146,10 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     // Estatísticas gerais
     const [emprestimosStats] = await connection.execute(`
       SELECT 
-        COUNT(CASE WHEN status IN ('Ativo', 'Pendente') THEN 1 END) as total_emprestimos,
-        SUM(CASE WHEN status IN ('Ativo', 'Pendente') THEN valor ELSE 0 END) as valor_total_emprestimos,
-        COUNT(CASE WHEN status = 'Ativo' THEN 1 END) as emprestimos_ativos,
-        COUNT(CASE WHEN status = 'Quitado' THEN 1 END) as emprestimos_quitados
+        COUNT(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN 1 END) as total_emprestimos,
+        SUM(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN valor ELSE 0 END) as valor_total_emprestimos,
+        COUNT(CASE WHEN status = 'Ativo' AND cliente_id IS NOT NULL THEN 1 END) as emprestimos_ativos,
+        COUNT(CASE WHEN status = 'Quitado' AND cliente_id IS NOT NULL THEN 1 END) as emprestimos_quitados
       FROM emprestimos
     `);
 
@@ -161,6 +161,7 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
         COUNT(CASE WHEN status = 'Paga' THEN 1 END) as cobrancas_pagas,
         SUM(CASE WHEN dias_atraso > 0 THEN valor_atualizado ELSE 0 END) as valor_atrasado
       FROM cobrancas
+      WHERE cliente_id IS NOT NULL
     `);
 
     const [clientesStats] = await connection.execute(`
