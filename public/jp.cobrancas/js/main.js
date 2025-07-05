@@ -150,11 +150,15 @@ const apiService = {
 const ui = {
   // Loading states
   showLoading(element) {
-    element.classList.add('loading');
+    if (element && element.classList) {
+      element.classList.add('loading');
+    }
   },
 
   hideLoading(element) {
-    element.classList.remove('loading');
+    if (element && element.classList) {
+      element.classList.remove('loading');
+    }
   },
 
   // Notificações
@@ -229,37 +233,48 @@ const ui = {
 const dashboardController = {
   async loadDashboardData() {
     try {
-      ui.showLoading(document.querySelector('.dashboard'));
+      const dashboardElement = document.querySelector('.dashboard') || document.querySelector('main');
+      if (dashboardElement) {
+        ui.showLoading(dashboardElement);
+      }
       
       const data = await apiService.getDashboardData();
       appState.data.dashboard = data;
       
       this.updateDashboardCards(data);
-      this.updateRecentEmprestimos(data.recentEmprestimos || []);
+      this.updateRecentEmprestimos(data.emprestimosRecentes || []);
       this.updateCobrancasPendentes(data.cobrancasPendentes || []);
       
     } catch (error) {
       console.error('Erro ao carregar dashboard:', error);
       ui.showNotification('Erro ao carregar dados do dashboard', 'error');
     } finally {
-      ui.hideLoading(document.querySelector('.dashboard'));
+      const dashboardElement = document.querySelector('.dashboard') || document.querySelector('main');
+      if (dashboardElement) {
+        ui.hideLoading(dashboardElement);
+      }
     }
   },
 
   updateDashboardCards(data) {
-    // Atualizar cards com animação
+    // Atualizar cards com animação baseado no formato da API
     const cards = {
-      'total-clientes': data.totalClientes || 0,
-      'total-emprestimos': data.totalEmprestimos || 0,
-      'valor-receber': data.valorReceber || 0,
-      'clientes-atraso': data.clientesAtraso || 0
+      'total-clientes': data.clientes?.total_clientes || 0,
+      'total-emprestimos': data.emprestimos?.total_emprestimos || 0,
+      'valor-receber': data.cobrancas?.valor_total_cobrancas || 0,
+      'clientes-atraso': data.cobrancas?.cobrancas_pendentes || 0
     };
 
     Object.entries(cards).forEach(([id, value]) => {
       const element = document.getElementById(id);
       if (element) {
         if (id === 'valor-receber') {
-          utils.animateValue(element, 0, value, 1000);
+          // Formatar como moeda
+          const formattedValue = new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+          }).format(value || 0);
+          element.textContent = formattedValue;
         } else {
           // Animar números
           const startValue = parseInt(element.textContent) || 0;
@@ -296,11 +311,18 @@ const dashboardController = {
     }
 
     emprestimos.forEach(emprestimo => {
+      const valor = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(emprestimo.valor || 0);
+      
+      const data = new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR');
+      
       const row = ui.createTableRow({
-        cliente: emprestimo.cliente.nome,
-        valor: utils.formatCurrency(emprestimo.valor),
-        data: utils.formatDate(emprestimo.data),
-        status: `<span class="badge badge-${emprestimo.status === 'ativo' ? 'success' : 'warning'}">${emprestimo.status}</span>`
+        cliente: emprestimo.cliente_nome || 'N/A',
+        valor: valor,
+        data: data,
+        status: `<span class="badge badge-${emprestimo.status === 'Ativo' ? 'success' : 'warning'}">${emprestimo.status}</span>`
       }, [
         {
           type: 'primary',
@@ -325,13 +347,19 @@ const dashboardController = {
     }
 
     cobrancas.forEach(cobranca => {
-      const diasAtraso = utils.calculateDaysLate(cobranca.vencimento);
+      const valor = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(cobranca.valor_atualizado || 0);
+      
+      const vencimento = new Date(cobranca.data_vencimento).toLocaleDateString('pt-BR');
+      const diasAtraso = cobranca.dias_atraso || 0;
       const statusClass = diasAtraso > 30 ? 'danger' : diasAtraso > 7 ? 'warning' : 'info';
       
       const row = ui.createTableRow({
-        cliente: cobranca.cliente.nome,
-        valor: utils.formatCurrency(cobranca.valor),
-        vencimento: utils.formatDate(cobranca.vencimento),
+        cliente: cobranca.cliente_nome || 'N/A',
+        valor: valor,
+        vencimento: vencimento,
         diasAtraso: diasAtraso > 0 ? `${diasAtraso} dias` : 'No prazo',
         status: `<span class="badge badge-${statusClass}">${cobranca.status}</span>`
       }, [
