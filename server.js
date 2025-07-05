@@ -45,7 +45,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Configuração de sessão
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === 'production' || process.env.PORT;
 const sessionStore = new MySQLStore({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
