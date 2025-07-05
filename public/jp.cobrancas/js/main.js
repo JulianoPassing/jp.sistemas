@@ -593,10 +593,60 @@ const app = {
 
 // Controllers para ações específicas
 const emprestimoController = {
-  viewEmprestimo(id) {
-    // Redirecionar para página de empréstimos
-    console.log(`Visualizando empréstimo #${id}`);
-    window.location.href = 'emprestimos.html';
+  async viewEmprestimo(id) {
+    try {
+      const emprestimos = await apiService.getEmprestimos();
+      const emp = emprestimos.find(e => String(e.id) === String(id));
+      if (!emp) {
+        ui.showNotification('Empréstimo não encontrado', 'error');
+        return;
+      }
+      // Montar HTML do modal
+      const statusBadge = emp.status === 'Ativo' ? '<span class="badge badge-success">Pendente</span>' : `<span class="badge badge-warning">${emp.status}</span>`;
+      const nome = emp.cliente_nome || 'N/A';
+      const numero = `PCL-Nº #${emp.id}`;
+      const parcelaInfo = emp.parcela_atual ? `PARCELA ${emp.parcela_atual} DE ${emp.total_parcelas || ''}` : '';
+      const valorInvestido = utils.formatCurrency(emp.valor || 0);
+      const jurosReceber = utils.formatCurrency(emp.juros_a_receber || 0);
+      const totalReceber = utils.formatCurrency(emp.valor_total || emp.valor || 0);
+      const telefone = emp.telefone || emp.celular || emp.whatsapp || '';
+      const vencimento = emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-';
+      const afiliado = emp.afiliado_nome || 'Nenhum afiliado informado';
+      const detalhes = `
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          ${statusBadge}
+          <button class="btn btn-secondary" id="modal-editar-emprestimo">Editar</button>
+        </div>
+        <h2 style="margin: 1rem 0 0.2rem 0;">${nome}</h2>
+        <div style="font-weight: bold; color: #444;">${numero} ${emp.parcela_atual ? `(${emp.parcela_atual}ª parcela)` : ''}</div>
+        <div class="modal-emprestimo-info">
+          <div class="info-row"><span>Deve ser pago em</span><span>${vencimento}</span></div>
+          <div class="info-row"><span>Valor Investido</span><span>${valorInvestido}</span></div>
+          <div class="info-row"><span>Juros a Receber</span><span>${jurosReceber}</span></div>
+        </div>
+        <div style="margin: 0.5rem 0; text-align: right;"><a href="#" id="modal-ver-parcelas">Ver todas as parcelas &gt;</a></div>
+        <h3>Detalhes</h3>
+        <div class="info-row"><span>Celular/Whatsapp</span><span>${telefone ? `<a href="https://wa.me/55${telefone.replace(/\D/g,'')}" target="_blank">${telefone}</a>` : '-'}</span></div>
+        <h3>Afiliado</h3>
+        <div class="info-row">${afiliado}</div>
+        <div style="margin: 1rem 0; text-align: center; font-weight: bold;">${parcelaInfo}<br>Total a Receber: <span style="font-size: 1.3em; color: #222;">${totalReceber}</span></div>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <button class="btn" style="background: #25d366; color: #fff;" id="modal-notificar">Notificar <b>WhatsApp</b></button>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn" style="background: #6fffd6; color: #222; flex:1;">Quitado</button>
+            <button class="btn" style="background: #5b4fff; color: #fff; flex:1;">Só Juros</button>
+          </div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn" style="background: #ff3b3b; color: #fff; flex:1;">Não Pagou</button>
+            <button class="btn" style="background: #111; color: #fff; flex:1;">Lista Negra</button>
+          </div>
+          <button class="btn" style="background: #ff2222; color: #fff;">REMOVER</button>
+        </div>
+      `;
+      ui.showModal(detalhes, 'Detalhes do Empréstimo');
+    } catch (err) {
+      ui.showNotification('Erro ao buscar empréstimo', 'error');
+    }
   }
 };
 
