@@ -27,7 +27,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.all('/api/empresa', empresaHandler);
-app.use('/api/cobrancas', cobrancasHandler);
+// app.use('/api/cobrancas', cobrancasHandler);
 
 // CORS - deve vir antes de qualquer middleware de sessão ou rotas
 const allowedOrigins = [
@@ -67,6 +67,8 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000 // 24 horas
   }
 }));
+
+app.use('/api/cobrancas', cobrancasHandler);
 
 // Função utilitária para converter undefined para null
 function safeValue(value) {
