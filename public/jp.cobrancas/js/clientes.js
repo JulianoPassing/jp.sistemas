@@ -159,6 +159,9 @@ const clientesUI = {
   },
 
   renderClientesTable(clientes) {
+    if (clientesTableBody) {
+      clientesTableBody.innerHTML = '';
+    }
     const clientesValidos = (clientes || []).filter(
       c =>
         c &&
