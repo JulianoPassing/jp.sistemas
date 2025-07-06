@@ -669,51 +669,32 @@ const emprestimoController = {
         ui.showNotification('Empréstimo não encontrado', 'error');
         return;
       }
-      // Dados principais
-      const statusBadge = emp.status === 'Ativo' ? '<span class="badge badge-success">Pendente</span>' : `<span class="badge badge-warning">${emp.status}</span>`;
-      const nome = emp.cliente_nome || 'N/A';
-      const numero = `PCL-Nº #${emp.id}`;
-      const parcelaAtual = emp.parcela_atual || 1;
-      const totalParcelas = emp.total_parcelas || 1;
-      const parcelaInfo = `PARCELA ${parcelaAtual} DE ${totalParcelas}`;
-      const valorInvestido = emp.valor || 0;
-      const jurosPercent = emp.juros_mensal || 0;
-      const jurosValor = valorInvestido * (jurosPercent / 100);
-      const jurosReceber = utils.formatCurrency(jurosValor);
-      const totalReceber = utils.formatCurrency(emp.valor_total || emp.valor || 0);
-      const telefone = emp.telefone || emp.celular || emp.whatsapp || '';
-      const vencimento = emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-';
-      const afiliado = emp.afiliado_nome || 'Nenhum afiliado informado';
-      const multa = emp.multa_atraso ? utils.formatCurrency(emp.multa_atraso) : '-';
-      const pix = emp.chave_pix || 'CHAVE';
-      // Mensagem WhatsApp corrigida
-      const msgWhatsapp = encodeURIComponent(
-        `Bom dia ${nome}, hoje é a data de pagamento da sua parcela ${parcelaAtual} de ${totalParcelas}. Valor total da dívida: ${totalReceber}\nJuros do mês: ${jurosPercent}% (${jurosReceber})\nConta para Depósito: Chave PIX: ${pix}\nObservação: O não pagamento resultará em uma multa de ${multa} por dia.`
-      );
-      const linkWhatsapp = telefone ? `https://wa.me/55${telefone.replace(/\D/g,'')}?text=${msgWhatsapp}` : '#';
-      // Cálculo de atraso e juros diário
-      const dataVencimento = new Date(emp.data_vencimento);
+      // Validação e fallback seguro para campos
+      const valorInvestido = Number(emp.valor_inicial || emp.valor || 0);
+      const jurosPercent = Number(emp.juros_mensal || 0);
+      const jurosTotal = valorInvestido * (jurosPercent / 100);
+      const dataVencimento = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
       const hoje = new Date();
       hoje.setHours(0,0,0,0);
       let status = (emp.status || '').toUpperCase();
-      let valorAtualizado = valorInvestido;
+      let valorAtualizado = valorInvestido + jurosTotal;
       let infoJuros = '';
       let diasAtraso = 0;
       let jurosDiario = 0;
       let jurosAplicado = 0;
-      if (dataVencimento < hoje && status !== 'QUITADO') {
+      if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
         status = 'ATRASADO';
         // Calcular dias de atraso
         const diffTime = hoje.getTime() - dataVencimento.getTime();
         diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         // Juros diário: juros total dividido por 30 dias, arredondado para cima
-        jurosDiario = Math.ceil(jurosValor / 30);
+        jurosDiario = Math.ceil(jurosTotal / 30);
         jurosAplicado = jurosDiario * diasAtraso;
         valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
         infoJuros = `
           <div style='margin-top:1em; color:#ef4444; font-size:1rem;'>
             <b>Em atraso:</b> ${diasAtraso} dia(s)<br>
-            Juros total previsto: <b>R$ ${jurosValor.toFixed(2)}</b><br>
+            Juros total previsto: <b>R$ ${jurosTotal.toFixed(2)}</b><br>
             Juros diário: <b>R$ ${jurosDiario.toFixed(2)}</b><br>
             Juros aplicado (atraso): <b>R$ ${jurosAplicado.toFixed(2)}</b><br>
             <span style='font-size:1.1em;'>Valor atualizado: <b>R$ ${valorAtualizado.toFixed(2)}</b></span>
@@ -730,9 +711,9 @@ const emprestimoController = {
           <div style="margin-bottom: 1.2rem;">
             <h2 style="font-size: 1.4rem; font-weight: bold; margin-bottom: 0.2em; color: #002f4b;">${emp.cliente_nome || 'N/A'}</h2>
             <div style="font-size: 1.1rem; font-weight: 600; color: #222; margin-bottom: 0.2em;">PCL-Nº #${emp.id} ${emp.parcelas ? `(${emp.parcelas}ª parcela)` : ''}</div>
-            <div style="font-size: 1rem; color: #444; margin-bottom: 0.2em;">Deve ser pago em <b>${utils.formatDate(emp.data_vencimento)}</b></div>
+            <div style="font-size: 1rem; color: #444; margin-bottom: 0.2em;">Deve ser pago em <b>${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</b></div>
             <div style="font-size: 1rem; color: #444;">Valor Investido <b>R$ ${utils.formatCurrency(emp.valor_inicial || emp.valor)}</b></div>
-            <div style="font-size: 1rem; color: #444;">Juros <b>${emp.juros_mensal}%</b> (R$ ${utils.formatCurrency((emp.valor_inicial || emp.valor) * (emp.juros_mensal / 100))})</div>
+            <div style="font-size: 1rem; color: #444;">Juros <b>${emp.juros_mensal || 0}%</b> (R$ ${utils.formatCurrency((emp.valor_inicial || emp.valor) * ((emp.juros_mensal || 0) / 100))})</div>
             ${infoJuros}
           </div>
           <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid #eee;">
@@ -834,7 +815,7 @@ const emprestimoController = {
         }
       };
     } catch (err) {
-      ui.showNotification('Erro ao buscar empréstimo', 'error');
+      ui.showNotification('Erro ao buscar ou exibir empréstimo. Verifique os dados do empréstimo.', 'error');
     }
   }
 };
