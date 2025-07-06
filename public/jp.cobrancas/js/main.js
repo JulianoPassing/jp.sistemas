@@ -405,12 +405,24 @@ const dashboardController = {
 
     tbody.innerHTML = '';
 
-    if (cobrancas.length === 0) {
+    // Filtrar apenas cobranças atrasadas
+    const atrasadas = cobrancas.filter(cobranca => {
+      const dataVencimento = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      let status = (cobranca.status || '').toUpperCase();
+      if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+        status = 'ATRASADO';
+      }
+      return status === 'ATRASADO';
+    });
+
+    if (atrasadas.length === 0) {
       tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhuma cobrança pendente</td></tr>';
       return;
     }
 
-    cobrancas.forEach(cobranca => {
+    atrasadas.forEach(cobranca => {
       // Cálculo de atraso e juros diário para cobranças
       const valorInvestido = Number(cobranca.valor_inicial || cobranca.valor_original || cobranca.valor || 0);
       const jurosPercent = Number(cobranca.juros_mensal || cobranca.juros || cobranca.juros_percentual || 0);
