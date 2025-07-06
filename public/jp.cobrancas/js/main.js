@@ -541,7 +541,7 @@ const app = {
         renderCobrancasEmAbertoLista();
       }
       
-      image.png      // Atualizar cards de estatísticas nas páginas específicas
+      // Atualizar cards de estatísticas nas páginas específicas
       if (document.getElementById('total-atraso') && document.getElementById('valor-atraso')) {
         fetch('/api/cobrancas/dashboard', { credentials: 'include' })
           .then(res => res.json())
