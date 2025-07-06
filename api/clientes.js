@@ -16,6 +16,13 @@ module.exports = async (req, res) => {
         email, telefone, transporte, prazo, obs
       } = req.body;
 
+      // Validação do nome do cliente
+      const nomeInvalido = !razao || typeof razao !== 'string' || ['undefined', 'n/a', 'na'].includes(razao.trim().toLowerCase()) || razao.trim() === '';
+      if (nomeInvalido) {
+        res.status(400).json({ error: 'Nome do cliente inválido. Não é permitido cadastrar clientes sem nome ou com nome "undefined" ou "N/A".' });
+        return;
+      }
+
       // Função utilitária para converter undefined para null
       function safeValue(value) {
         return value === undefined ? null : value;
