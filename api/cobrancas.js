@@ -285,46 +285,6 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
   }
 });
 
-// Cobranças pendentes do dia (com data de vencimento até o dia atual)
-router.get('/cobrancas/pendentes-dia', ensureDatabase, async (req, res) => {
-  try {
-    const connection = await createCobrancasConnection();
-    const [cobrancas] = await connection.execute(`
-      SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
-      FROM cobrancas cb
-      LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
-      WHERE cb.status = 'Pendente' 
-        AND cb.data_vencimento <= CURDATE()
-        AND cb.cliente_id IS NOT NULL
-      ORDER BY cb.data_vencimento ASC
-    `);
-    await connection.end();
-    res.json(cobrancas);
-  } catch (error) {
-    console.error('Erro ao buscar cobranças pendentes do dia:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
-
-// Cobranças atrasadas
-router.get('/cobrancas/atrasadas', ensureDatabase, async (req, res) => {
-  try {
-    const connection = await createCobrancasConnection();
-    const [cobrancas] = await connection.execute(`
-      SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
-      FROM cobrancas cb
-      LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
-      WHERE cb.dias_atraso > 0 AND cb.status = 'Pendente'
-      ORDER BY cb.dias_atraso DESC
-    `);
-    await connection.end();
-    res.json(cobrancas);
-  } catch (error) {
-    console.error('Erro ao buscar cobranças atrasadas:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
-
 // Cobranças
 router.get('/cobrancas', ensureDatabase, async (req, res) => {
   try {
@@ -359,6 +319,25 @@ router.get('/cobrancas', ensureDatabase, async (req, res) => {
   }
 });
 
+// Cobranças atrasadas
+router.get('/cobrancas/atrasadas', ensureDatabase, async (req, res) => {
+  try {
+    const connection = await createCobrancasConnection();
+    const [cobrancas] = await connection.execute(`
+      SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
+      FROM cobrancas cb
+      LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
+      WHERE cb.dias_atraso > 0 AND cb.status = 'Pendente'
+      ORDER BY cb.dias_atraso DESC
+    `);
+    await connection.end();
+    res.json(cobrancas);
+  } catch (error) {
+    console.error('Erro ao buscar cobranças atrasadas:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Registrar pagamento
 router.post('/cobrancas/:id/pagamento', ensureDatabase, async (req, res) => {
   try {
@@ -386,40 +365,42 @@ router.post('/cobrancas/:id/pagamento', ensureDatabase, async (req, res) => {
   }
 });
 
-// Rota de login simplificada
+// Rota de login
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  
-  // Login simples para desenvolvimento/produção
-  // Você pode personalizar essas credenciais
-  const validCredentials = {
-    'admin': 'admin123',
-    'juliano': 'juliano123'
-  };
-
   try {
-    if (validCredentials[username] && validCredentials[username] === password) {
-      // Salva na sessão o usuário
-      req.session.cobrancasUser = username;
-      req.session.cobrancasDb = 'jpsistemas_cobrancas';
-      
-      res.json({ success: true });
-    } else {
-      res.status(401).json({ success: false, message: 'Usuário ou senha inválidos.' });
+    // Conecte ao banco central de usuários (ex: jpsistemas_users)
+    const conn = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: 'jpsistemas_users'
+    });
+    const [rows] = await conn.execute(
+      'SELECT * FROM usuarios_cobrancas WHERE username = ?',
+      [username]
+    );
+    await conn.end();
+
+    if (rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Usuário ou senha inválidos.' });
     }
+
+    const user = rows[0];
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) {
+      return res.status(401).json({ success: false, message: 'Usuário ou senha inválidos.' });
+    }
+
+    // Salva na sessão o usuário e o banco correspondente
+    req.session.cobrancasUser = username;
+    req.session.cobrancasDb = user.db_name;
+
+    res.json({ success: true });
   } catch (err) {
     console.error('Erro no login:', err);
     res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
   }
-});
-
-// Rota de teste para verificar se o servidor está funcionando
-router.get('/test', (req, res) => {
-  res.json({ 
-    message: 'API de cobranças funcionando!',
-    timestamp: new Date().toISOString(),
-    session: req.session
-  });
 });
 
 // Rota para verificar sessão
@@ -559,16 +540,5 @@ router.get('/clientes/:id', ensureDatabase, async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
-
-// Log das rotas registradas
-console.log('🚀 Rotas de cobranças registradas:');
-console.log('   - GET /dashboard');
-console.log('   - GET /cobrancas/pendentes-dia');
-console.log('   - GET /cobrancas/atrasadas');
-console.log('   - GET /cobrancas');
-console.log('   - GET /test');
-console.log('   - GET /session');
-console.log('   - POST /login');
-console.log('   - POST /logout');
 
 module.exports = router; 
