@@ -414,7 +414,8 @@ const dashboardController = {
     cobrancas.forEach(cobranca => {
       // Cálculo de atraso e juros diário para cobranças
       const valorInvestido = Number(cobranca.valor_inicial || cobranca.valor_original || cobranca.valor || 0);
-      const jurosPercent = Number(cobranca.juros_mensal || cobranca.juros || 0);
+      // Tenta pegar o juros de várias formas e converte para número
+      const jurosPercent = Number(cobranca.juros_mensal || cobranca.juros || cobranca.juros_percentual || 0);
       const jurosTotal = valorInvestido * (jurosPercent / 100);
       const dataVencimento = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
       const hoje = new Date();
@@ -1201,12 +1202,34 @@ function renderCobrancasResumo(lista, targetId) {
     target.innerHTML = '<span class="text-gray-500">Nenhuma cobrança</span>';
     return;
   }
-  target.innerHTML = lista.map(cobranca => `
-    <div class="cobranca-item">
-      <span class="cobranca-nome">${cobranca.cliente_nome || 'N/A'}</span>
-      <span class="cobranca-valor">${utils.formatCurrency(cobranca.valor_atualizado || cobranca.valor || 0)}</span>
-      <span class="cobranca-data">${cobranca.data_vencimento ? utils.formatDate(cobranca.data_vencimento) : ''}</span>
-      <span class="cobranca-status">${cobranca.dias_atraso > 0 ? cobranca.dias_atraso + ' dias de atraso' : 'No prazo'}</span>
-    </div>
-  `).join('');
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+  target.innerHTML = lista.map(cobranca => {
+    // Cálculo de valor atualizado e status atrasado
+    const valorInvestido = Number(cobranca.valor_inicial || cobranca.valor_original || cobranca.valor || 0);
+    const jurosPercent = Number(cobranca.juros_mensal || cobranca.juros || cobranca.juros_percentual || 0);
+    const jurosTotal = valorInvestido * (jurosPercent / 100);
+    const dataVencimento = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
+    let status = (cobranca.status || '').toUpperCase();
+    let valorAtualizado = valorInvestido + jurosTotal;
+    let diasAtraso = 0;
+    let jurosDiario = 0;
+    let jurosAplicado = 0;
+    if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+      status = 'ATRASADO';
+      const diffTime = hoje.getTime() - dataVencimento.getTime();
+      diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      jurosDiario = Math.ceil(jurosTotal / 30);
+      jurosAplicado = jurosDiario * diasAtraso;
+      valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
+    }
+    return `
+      <div class="cobranca-item">
+        <span class="cobranca-nome">${cobranca.cliente_nome || 'N/A'}</span>
+        <span class="cobranca-valor">${utils.formatCurrency(valorAtualizado)}</span>
+        <span class="cobranca-data">${cobranca.data_vencimento ? utils.formatDate(cobranca.data_vencimento) : ''}</span>
+        <span class="cobranca-status">${diasAtraso > 0 ? diasAtraso + ' dias de atraso' : 'No prazo'}</span>
+      </div>
+    `;
+  }).join('');
 } 
