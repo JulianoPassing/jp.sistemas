@@ -44,27 +44,33 @@ app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Configuração de sessão
+// Configuração de sessão para VPS
 const isProduction = process.env.NODE_ENV === 'production' || process.env.PORT;
 const sessionStore = new MySQLStore({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: 'jpsistemas_sessions'
+  database: 'jpsistemas_sessions',
+  clearExpired: true,
+  checkExpirationInterval: 900000, // 15 minutos
+  expiration: 86400000 // 24 horas
 });
 
 app.use(session({
   name: 'connect.sid',
   secret: process.env.SESSION_SECRET || 'SeuSessionSecretMuitoForte123!',
-  resave: false,
-  saveUninitialized: false,
+  resave: true,
+  saveUninitialized: true,
   store: sessionStore,
   cookie: {
-    secure: false, // false para VPS sem HTTPS por enquanto
+    secure: false, // false para VPS sem HTTPS
     httpOnly: true,
-    sameSite: 'lax', // 'lax' para VPS sem HTTPS
-    maxAge: 24 * 60 * 60 * 1000 // 24 horas
-  }
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000, // 24 horas
+    path: '/',
+    domain: undefined // Deixa o navegador definir o domínio
+  },
+  rolling: true
 }));
 
 app.use('/api/cobrancas', cobrancasHandler);
