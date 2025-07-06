@@ -541,7 +541,7 @@ const app = {
         renderCobrancasEmAbertoLista();
       }
       
-      // Atualizar cards de estatísticas nas páginas específicas
+      image.png      // Atualizar cards de estatísticas nas páginas específicas
       if (document.getElementById('total-atraso') && document.getElementById('valor-atraso')) {
         fetch('/api/cobrancas/dashboard', { credentials: 'include' })
           .then(res => res.json())
@@ -1257,14 +1257,15 @@ function renderCobrancasResumo(lista, targetId) {
   }
   const hoje = new Date();
   hoje.setHours(0,0,0,0);
-  // Se for cobranças pendentes, exibe o total de vencidas até hoje e status pendente
-  let totalPendentes = 0;
+  // Se for cobranças pendentes, exibe apenas o total de vencidas até hoje
   if (targetId === 'cobrancas-pendentes') {
-    totalPendentes = lista.filter(cobranca => {
+    const totalPendentes = lista.filter(cobranca => {
       const dataVenc = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
       const status = (cobranca.status || '').toUpperCase();
       return dataVenc && dataVenc <= hoje && (status === 'PENDENTE' || status === 'EM ABERTO');
     }).length;
+    target.innerHTML = `<span style="font-size:2rem;font-weight:600;">${totalPendentes}</span>`;
+    return;
   }
   let resumo = '';
   if (targetId === 'cobrancas-pendentes') {
