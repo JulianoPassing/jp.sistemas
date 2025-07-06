@@ -394,7 +394,12 @@ const clientesApp = {
       this.updateStats();
       clientesUI.showNotification('Cliente deletado com sucesso!');
     } catch (error) {
-      clientesUI.showNotification(error.message || 'Erro ao deletar cliente', 'error');
+      // Mensagem personalizada para erro 400 (cliente com empréstimos)
+      if (error.message && error.message.includes('vinculados')) {
+        clientesUI.showNotification('Não é possível remover clientes que possuem empréstimos vinculados. Quite ou remova os empréstimos antes.', 'error');
+      } else {
+        clientesUI.showNotification(error.message || 'Erro ao deletar cliente', 'error');
+      }
     }
   },
 
