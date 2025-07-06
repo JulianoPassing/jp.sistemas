@@ -20,8 +20,14 @@ async function createCobrancasConnection() {
 // Função para criar banco de dados de cobranças
 async function createCobrancasDatabase() {
   try {
+    console.log('createCobrancasDatabase: Iniciando criação do banco de dados');
     // Conectar como root para criar o banco
     const rootConfig = getCobrancasDatabaseConfig();
+    console.log('createCobrancasDatabase: Configuração do banco:', {
+      host: rootConfig.host,
+      user: rootConfig.user,
+      database: rootConfig.database
+    });
     const rootConnection = await mysql.createConnection({
       ...rootConfig,
       database: undefined // Sem especificar database para conectar como root
@@ -130,7 +136,9 @@ async function createCobrancasDatabase() {
 // Middleware para inicializar banco se necessário
 async function ensureDatabase(req, res, next) {
   try {
+    console.log('ensureDatabase: Iniciando criação/verificação do banco de dados');
     await createCobrancasDatabase();
+    console.log('ensureDatabase: Banco de dados verificado com sucesso');
     next();
   } catch (error) {
     console.error('Erro ao garantir banco de dados:', error);
@@ -424,6 +432,15 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Rota de teste para verificar se o servidor está funcionando
+router.get('/test', (req, res) => {
+  res.json({ 
+    message: 'API de cobranças funcionando!',
+    timestamp: new Date().toISOString(),
+    session: req.session
+  });
+});
+
 // Rota para verificar sessão
 router.get('/session', (req, res) => {
   if (req.session.cobrancasUser) {
@@ -561,5 +578,14 @@ router.get('/clientes/:id', ensureDatabase, async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
+
+// Log das rotas registradas
+console.log('Rotas de cobranças registradas:');
+console.log('- GET /dashboard');
+console.log('- GET /cobrancas/pendentes-dia');
+console.log('- GET /cobrancas/atrasadas');
+console.log('- GET /cobrancas');
+console.log('- GET /test');
+console.log('- GET /session');
 
 module.exports = router; 
