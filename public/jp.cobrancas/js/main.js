@@ -766,33 +766,32 @@ async function renderEmprestimosLista() {
     }
     tbody.innerHTML = '';
     emprestimos.forEach(emprestimo => {
-      const valor = utils.formatCurrency(emprestimo.valor || 0);
-      const parcelas = emprestimo.parcelas || '-';
-      const data = emprestimo.data_emprestimo ? utils.formatDate(emprestimo.data_emprestimo) : '-';
-      const vencimento = emprestimo.data_vencimento ? utils.formatDate(emprestimo.data_vencimento) : '-';
-      // Badge de status
-      let badge = '';
-      const status = (emprestimo.status || '').toLowerCase();
-      if (status === 'quitado') {
-        badge = '<span class="badge" style="background:#10b981;color:#fff;">Quitado</span>';
-      } else if (status === 'em atraso' || status === 'atrasado') {
-        badge = '<span class="badge" style="background:#ef4444;color:#fff;">Em Atraso</span>';
-      } else if (status === 'ativo' || status === 'pendente') {
-        badge = '<span class="badge" style="background:#6366f1;color:#fff;">Pendente</span>';
-      } else {
-        badge = `<span class="badge" style="background:#888;color:#fff;">${emprestimo.status || '-'}</span>`;
+      const valor = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(emprestimo.valor || 0);
+      const data = new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR');
+      const vencimentoDate = new Date(emprestimo.data_vencimento);
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      let status = (emprestimo.status || '').toUpperCase();
+      if (vencimentoDate < hoje && status !== 'QUITADO') {
+        status = 'ATRASADO';
       }
-      tbody.innerHTML += `
-        <tr>
-          <td>${emprestimo.cliente_nome || 'N/A'}</td>
-          <td>${valor}</td>
-          <td>${parcelas}</td>
-          <td>${data}</td>
-          <td>${vencimento}</td>
-          <td>${badge}</td>
-          <td><button class="btn btn-primary btn-sm" onclick="emprestimoController.viewEmprestimo(${emprestimo.id})">Ver</button></td>
-        </tr>
+      const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : 'info'));
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${emprestimo.cliente_nome || 'N/A'}</td>
+        <td>${valor}</td>
+        <td>${emprestimo.parcelas || '-'}</td>
+        <td>${data}</td>
+        <td>${emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-'}</td>
+        <td><span class="badge badge-${statusClass}">${status}</span></td>
+        <td>
+          <button class="btn btn-primary btn-sm" onclick="emprestimoController.viewEmprestimo(${emprestimo.id})">Ver</button>
+        </td>
       `;
+      tbody.appendChild(row);
     });
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
