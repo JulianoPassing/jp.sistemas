@@ -270,6 +270,20 @@ const dashboardController = {
       this.updateRecentEmprestimos(data.emprestimosRecentes || []);
       this.updateCobrancasPendentes(data.cobrancasPendentes || []);
       
+      // Calcular clientes em atraso: apenas clientes com empréstimo atrasado
+      const clientesEmAtrasoSet = new Set();
+      emprestimos.forEach(emprestimo => {
+        const dataVencimento = new Date(emprestimo.data_vencimento);
+        if (
+          dataVencimento < hoje &&
+          (emprestimo.status || '').toUpperCase() !== 'QUITADO' &&
+          emprestimo.cliente_id
+        ) {
+          clientesEmAtrasoSet.add(emprestimo.cliente_id);
+        }
+      });
+      data.cobrancas.clientes_em_atraso = clientesEmAtrasoSet.size;
+      
     } catch (error) {
       console.error('Erro ao carregar dashboard:', error);
       ui.showNotification('Erro ao carregar dados do dashboard', 'error');
@@ -287,7 +301,7 @@ const dashboardController = {
       'total-clientes': data.clientes?.total_clientes || 0,
       'total-emprestimos': data.emprestimos?.total_emprestimos || 0,
       'valor-receber': data.cobrancas?.valor_total_cobrancas || 0,
-      'clientes-atraso': data.cobrancas?.cobrancas_pendentes || 0,
+      'clientes-atraso': data.cobrancas?.clientes_em_atraso || 0,
       'total-investido': data.emprestimos?.valor_total_emprestimos || 0
     };
 
@@ -696,8 +710,6 @@ const emprestimoController = {
         jurosDiario = Math.ceil(jurosValor / 30);
         jurosAplicado = jurosDiario * diasAtraso;
         valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
-        // Atualizar o valor do empréstimo para refletir o valor atualizado
-        emp.valor = valorAtualizado;
         infoJuros = `
           <div style='margin-top:1em; color:#ef4444; font-size:1rem;'>
             <b>Em atraso:</b> ${diasAtraso} dia(s)<br>
