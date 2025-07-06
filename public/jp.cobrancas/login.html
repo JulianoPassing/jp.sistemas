@@ -95,7 +95,7 @@
     <form class="login-form" id="loginForm" autocomplete="off">
       <input type="text" id="username" name="username" placeholder="Usuário" required autofocus>
       <input type="password" id="password" name="password" placeholder="Senha" required>
-      <button type="submit" class="login-btn">Entrar</button>
+      <button type="submit" class="login-btn" id="submitBtn">Entrar</button>
     </form>
   </div>
   <script>
@@ -110,6 +110,13 @@
       const password = document.getElementById('password').value;
       const errorDiv = document.getElementById('loginError');
       const submitBtn = document.getElementById('submitBtn');
+      
+      // Verificar se os elementos existem
+      if (!errorDiv || !submitBtn) {
+        console.error('Elementos necessários não encontrados');
+        return;
+      }
+      
       const originalText = submitBtn.textContent;
       
       // Validação básica
@@ -144,16 +151,24 @@
             window.location.href = 'dashboard.html';
           }, 1000);
         } else {
-          errorDiv.textContent = data.message || 'Usuário ou senha inválidos.';
+          if (errorDiv) {
+            errorDiv.textContent = data.message || 'Usuário ou senha inválidos.';
+            errorDiv.style.display = 'block';
+          }
+          if (submitBtn) {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+          }
+        }
+      } catch (err) {
+        if (errorDiv) {
+          errorDiv.textContent = 'Erro ao conectar ao servidor.';
           errorDiv.style.display = 'block';
+        }
+        if (submitBtn) {
           submitBtn.textContent = originalText;
           submitBtn.disabled = false;
         }
-      } catch (err) {
-        errorDiv.textContent = 'Erro ao conectar ao servidor.';
-        errorDiv.style.display = 'block';
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
       }
     });
 
