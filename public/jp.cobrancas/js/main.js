@@ -1225,17 +1225,18 @@ function renderCobrancasResumo(lista, targetId) {
   }
   const hoje = new Date();
   hoje.setHours(0,0,0,0);
-  // Se for cobranças pendentes, exibe o total de vencidas até hoje
-  let totalVencidas = 0;
+  // Se for cobranças pendentes, exibe o total de vencidas até hoje e status pendente
+  let totalPendentes = 0;
   if (targetId === 'cobrancas-pendentes') {
-    totalVencidas = lista.filter(cobranca => {
+    totalPendentes = lista.filter(cobranca => {
       const dataVenc = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
-      return dataVenc && dataVenc <= hoje;
+      const status = (cobranca.status || '').toUpperCase();
+      return dataVenc && dataVenc <= hoje && (status === 'PENDENTE' || status === 'EM ABERTO');
     }).length;
   }
   let resumo = '';
   if (targetId === 'cobrancas-pendentes') {
-    resumo = `<div style="font-weight:600; margin-bottom:0.5em;">Total de cobranças vencidas até hoje: <span style="color:#ef4444;">${totalVencidas}</span></div>`;
+    resumo = `<div style="font-weight:600; margin-bottom:0.5em;">Total de cobranças pendentes até hoje: <span style="color:#ef4444;">${totalPendentes}</span></div>`;
   }
   target.innerHTML = resumo + lista.map(cobranca => {
     // Cálculo de valor atualizado e status atrasado
