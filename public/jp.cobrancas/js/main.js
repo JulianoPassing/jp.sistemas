@@ -690,146 +690,153 @@ const emprestimoController = {
         ui.showNotification('Empréstimo não encontrado', 'error');
         return;
       }
-      // Validação e fallback seguro para campos numéricos
-      const valorInvestido = Number(emp.valor || 0);
-      const jurosPercent = Number(emp.juros_mensal || 0);
-      const multaAtraso = Number(emp.multa_atraso || 0);
-      const jurosTotal = valorInvestido * (jurosPercent / 100);
-      const dataVencimento = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
-      const hoje = new Date();
-      hoje.setHours(0,0,0,0);
-      let status = (emp.status || '').toUpperCase();
-      let valorAtualizado = valorInvestido + jurosTotal;
-      let infoJuros = '';
-      let diasAtraso = 0;
-      let jurosDiario = 0;
-      let jurosAplicado = 0;
-      if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
-        status = 'ATRASADO';
-        // Calcular dias de atraso
-        const diffTime = hoje.getTime() - dataVencimento.getTime();
-        diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        // Juros diário: juros total dividido por 30 dias, arredondado para cima
-        jurosDiario = Math.ceil(jurosTotal / 30);
-        jurosAplicado = jurosDiario * diasAtraso;
-        valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
-        infoJuros = `
-          <div style='margin-top:1em; color:#ef4444; font-size:1rem;'>
-            <b>Em atraso:</b> ${diasAtraso} dia(s)<br>
-            Juros total previsto: <b>R$ ${jurosTotal.toFixed(2)}</b><br>
-            Juros diário: <b>R$ ${jurosDiario.toFixed(2)}</b><br>
-            Juros aplicado (atraso): <b>R$ ${jurosAplicado.toFixed(2)}</b><br>
-            <span style='font-size:1.1em;'>Valor atualizado: <b>R$ ${valorAtualizado.toFixed(2)}</b></span>
+      try {
+        // Validação e fallback seguro para campos numéricos
+        const valorInvestido = Number(emp.valor || 0);
+        const jurosPercent = Number(emp.juros_mensal || 0);
+        const multaAtraso = Number(emp.multa_atraso || 0);
+        const jurosTotal = valorInvestido * (jurosPercent / 100);
+        const dataVencimento = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
+        const hoje = new Date();
+        hoje.setHours(0,0,0,0);
+        let status = (emp.status || '').toUpperCase();
+        if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+          status = 'ATRASADO';
+        }
+        let valorAtualizado = valorInvestido + jurosTotal;
+        let infoJuros = '';
+        let diasAtraso = 0;
+        let jurosDiario = 0;
+        let jurosAplicado = 0;
+        if (status === 'ATRASADO') {
+          // Calcular dias de atraso
+          const diffTime = hoje.getTime() - dataVencimento.getTime();
+          diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          // Juros diário: juros total dividido por 30 dias, arredondado para cima
+          jurosDiario = Math.ceil(jurosTotal / 30);
+          jurosAplicado = jurosDiario * diasAtraso;
+          valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
+          infoJuros = `
+            <div style='margin-top:1em; color:#ef4444; font-size:1rem;'>
+              <b>Em atraso:</b> ${diasAtraso} dia(s)<br>
+              Juros total previsto: <b>R$ ${jurosTotal.toFixed(2)}</b><br>
+              Juros diário: <b>R$ ${jurosDiario.toFixed(2)}</b><br>
+              Juros aplicado (atraso): <b>R$ ${jurosAplicado.toFixed(2)}</b><br>
+              <span style='font-size:1.1em;'>Valor atualizado: <b>R$ ${valorAtualizado.toFixed(2)}</b></span>
+            </div>
+          `;
+        }
+        // Modal HTML
+        const detalhes = `
+          <div class="emprestimo-modal-box" style="padding: 1.5rem; max-width: 420px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 2px 16px #002f4b22;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+              <span class="badge" style="background: ${status === 'ATRASADO' ? '#fbbf24' : status === 'QUITADO' ? '#10b981' : status === 'SÓ JUROS' ? '#6366f1' : '#002f4b'}; color: #fff; font-weight: 600; font-size: 1rem; padding: 0.4em 1em; border-radius: 8px; letter-spacing: 1px;">${status || '-'}</span>
+              <button class="btn" style="background: #10b981; color: #fff; font-weight: 600; border-radius: 8px; padding: 0.4em 1.2em; font-size: 1rem;" id="modal-btn-editar">Editar</button>
+            </div>
+            <div style="margin-bottom: 1.2rem;">
+              <h2 style="font-size: 1.4rem; font-weight: bold; margin-bottom: 0.2em; color: #002f4b;">${emp.cliente_nome || 'N/A'}</h2>
+              <div style="font-size: 1.1rem; font-weight: 600; color: #222; margin-bottom: 0.2em;">PCL-Nº #${emp.id} ${emp.parcelas ? `(${emp.parcelas}ª parcela)` : ''}</div>
+              <div style="font-size: 1rem; color: #444; margin-bottom: 0.2em;">Deve ser pago em <b>${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</b></div>
+              <div style="font-size: 1rem; color: #444;">Valor Investido <b>R$ ${utils.formatCurrency(valorInvestido)}</b></div>
+              <div style="font-size: 1rem; color: #444;">Juros <b>${jurosPercent}%</b> (R$ ${utils.formatCurrency(jurosTotal)})</div>
+              ${infoJuros}
+            </div>
+            <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid #eee;">
+            <div style="margin-bottom: 1.2rem; text-align: center;">
+              <div style="font-size: 1.1rem; font-weight: 700; color: #222; margin-bottom: 0.2em;">PARCELA 1 DE ${emp.parcelas || 1}</div>
+              <div style="font-size: 1.3rem; font-weight: bold; color: #002f4b;">Total a Receber: <span style="color: #10b981;">R$ ${utils.formatCurrency(valorAtualizado)}</span></div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.7rem; margin-top: 1.5rem;">
+              <a class="btn" style="background: #25d366; color: #fff; font-weight: 600; font-size: 1.1rem; border-radius: 8px;" id="modal-notificar" href="${linkWhatsapp}" target="_blank" rel="noopener noreferrer">Notificar <b>WhatsApp</b></a>
+              <div style="display: flex; gap: 0.7rem; flex-wrap: wrap;">
+                <button class="btn" style="background: #10b981; color: #fff; flex:1; font-weight: 600; border-radius: 8px;" id="modal-btn-quitado" type="button">Quitado</button>
+                <button class="btn" style="background: #6366f1; color: #fff; flex:1; font-weight: 600; border-radius: 8px;" id="modal-btn-sojuros" type="button">Só Juros</button>
+              </div>
+              <button class="btn" style="background: #ef4444; color: #fff; font-weight: 600; border-radius: 8px; font-size: 1.1rem;" id="modal-btn-naopagou" type="button">Não Pagou</button>
+              <button class="btn" style="background: #ff2222; color: #fff; font-weight: 600; border-radius: 8px; font-size: 1.1rem;" id="modal-btn-remover" type="button">REMOVER</button>
+            </div>
           </div>
         `;
+        const modal = ui.showModal(detalhes, 'Detalhes do Empréstimo');
+        // Corrigir comportamento do botão WhatsApp para nunca recarregar
+        const btnWhats = modal.querySelector('#modal-notificar');
+        btnWhats.addEventListener('click', (e) => {
+          e.stopPropagation();
+          // Não faz nada além de abrir o link
+        });
+        // Botão Quitado
+        modal.querySelector('#modal-btn-quitado').onclick = async (e) => {
+          e.preventDefault();
+          try {
+            await fetch(`/api/cobrancas/emprestimos/${emp.id}/status`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ status: 'Quitado' })
+            });
+            ui.showNotification('Empréstimo marcado como quitado!', 'success');
+            modal.remove();
+            if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
+          } catch (err) {
+            ui.showNotification('Erro ao atualizar status', 'error');
+          }
+        };
+        // Botão Só Juros
+        modal.querySelector('#modal-btn-sojuros').onclick = async (e) => {
+          e.preventDefault();
+          try {
+            await fetch(`/api/cobrancas/emprestimos/${emp.id}/status`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ status: 'Só Juros' })
+            });
+            // Voltar valor do empréstimo para o valor original na interface
+            emp.valor = Number(emp.valor_inicial || emp.valor_original || emp.valor);
+            ui.showNotification('Pagamento de só juros registrado! Empréstimo segue em aberto.', 'success');
+            modal.remove();
+            if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
+          } catch (err) {
+            ui.showNotification('Erro ao registrar só juros', 'error');
+          }
+        };
+        // Botão Não Pagou
+        modal.querySelector('#modal-btn-naopagou').onclick = async (e) => {
+          e.preventDefault();
+          try {
+            await fetch(`/api/cobrancas/emprestimos/${emp.id}/status`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ status: 'Em Atraso' })
+            });
+            ui.showNotification('Status alterado para Em Atraso!', 'success');
+            modal.remove();
+            if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
+          } catch (err) {
+            ui.showNotification('Erro ao atualizar status', 'error');
+          }
+        };
+        // Botão Remover
+        modal.querySelector('#modal-btn-remover').onclick = async (e) => {
+          e.preventDefault();
+          if (!confirm('Tem certeza que deseja remover este empréstimo?')) return;
+          try {
+            await fetch(`/api/cobrancas/emprestimos/${emp.id}`, {
+              method: 'DELETE',
+              credentials: 'include'
+            });
+            ui.showNotification('Empréstimo removido!', 'success');
+            modal.remove();
+            if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
+          } catch (err) {
+            ui.showNotification('Erro ao remover empréstimo', 'error');
+          }
+        };
+      } catch (err) {
+        console.error('Erro real ao exibir modal:', err, emp);
+        ui.showNotification('Erro ao exibir detalhes do empréstimo. Veja o console para detalhes.', 'error');
       }
-      // Modal HTML
-      const detalhes = `
-        <div class="emprestimo-modal-box" style="padding: 1.5rem; max-width: 420px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 2px 16px #002f4b22;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-            <span class="badge" style="background: ${emp.status === 'Em Atraso' ? '#fbbf24' : emp.status === 'Quitado' ? '#10b981' : emp.status === 'Só Juros' ? '#6366f1' : '#002f4b'}; color: #fff; font-weight: 600; font-size: 1rem; padding: 0.4em 1em; border-radius: 8px; letter-spacing: 1px;">${emp.status?.toUpperCase() || '-'}</span>
-            <button class="btn" style="background: #10b981; color: #fff; font-weight: 600; border-radius: 8px; padding: 0.4em 1.2em; font-size: 1rem;" id="modal-btn-editar">Editar</button>
-          </div>
-          <div style="margin-bottom: 1.2rem;">
-            <h2 style="font-size: 1.4rem; font-weight: bold; margin-bottom: 0.2em; color: #002f4b;">${emp.cliente_nome || 'N/A'}</h2>
-            <div style="font-size: 1.1rem; font-weight: 600; color: #222; margin-bottom: 0.2em;">PCL-Nº #${emp.id} ${emp.parcelas ? `(${emp.parcelas}ª parcela)` : ''}</div>
-            <div style="font-size: 1rem; color: #444; margin-bottom: 0.2em;">Deve ser pago em <b>${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</b></div>
-            <div style="font-size: 1rem; color: #444;">Valor Investido <b>R$ ${utils.formatCurrency(valorInvestido)}</b></div>
-            <div style="font-size: 1rem; color: #444;">Juros <b>${jurosPercent}%</b> (R$ ${utils.formatCurrency(jurosTotal)})</div>
-            ${infoJuros}
-          </div>
-          <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid #eee;">
-          <div style="margin-bottom: 1.2rem; text-align: center;">
-            <div style="font-size: 1.1rem; font-weight: 700; color: #222; margin-bottom: 0.2em;">PARCELA 1 DE ${emp.parcelas || 1}</div>
-            <div style="font-size: 1.3rem; font-weight: bold; color: #002f4b;">Total a Receber: <span style="color: #10b981;">R$ ${utils.formatCurrency(valorAtualizado)}</span></div>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 0.7rem; margin-top: 1.5rem;">
-            <a class="btn" style="background: #25d366; color: #fff; font-weight: 600; font-size: 1.1rem; border-radius: 8px;" id="modal-notificar" href="${linkWhatsapp}" target="_blank" rel="noopener noreferrer">Notificar <b>WhatsApp</b></a>
-            <div style="display: flex; gap: 0.7rem; flex-wrap: wrap;">
-              <button class="btn" style="background: #10b981; color: #fff; flex:1; font-weight: 600; border-radius: 8px;" id="modal-btn-quitado" type="button">Quitado</button>
-              <button class="btn" style="background: #6366f1; color: #fff; flex:1; font-weight: 600; border-radius: 8px;" id="modal-btn-sojuros" type="button">Só Juros</button>
-            </div>
-            <button class="btn" style="background: #ef4444; color: #fff; font-weight: 600; border-radius: 8px; font-size: 1.1rem;" id="modal-btn-naopagou" type="button">Não Pagou</button>
-            <button class="btn" style="background: #ff2222; color: #fff; font-weight: 600; border-radius: 8px; font-size: 1.1rem;" id="modal-btn-remover" type="button">REMOVER</button>
-          </div>
-        </div>
-      `;
-      const modal = ui.showModal(detalhes, 'Detalhes do Empréstimo');
-      // Corrigir comportamento do botão WhatsApp para nunca recarregar
-      const btnWhats = modal.querySelector('#modal-notificar');
-      btnWhats.addEventListener('click', (e) => {
-        e.stopPropagation();
-        // Não faz nada além de abrir o link
-      });
-      // Botão Quitado
-      modal.querySelector('#modal-btn-quitado').onclick = async (e) => {
-        e.preventDefault();
-        try {
-          await fetch(`/api/cobrancas/emprestimos/${emp.id}/status`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ status: 'Quitado' })
-          });
-          ui.showNotification('Empréstimo marcado como quitado!', 'success');
-          modal.remove();
-          if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
-        } catch (err) {
-          ui.showNotification('Erro ao atualizar status', 'error');
-        }
-      };
-      // Botão Só Juros
-      modal.querySelector('#modal-btn-sojuros').onclick = async (e) => {
-        e.preventDefault();
-        try {
-          await fetch(`/api/cobrancas/emprestimos/${emp.id}/status`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ status: 'Só Juros' })
-          });
-          // Voltar valor do empréstimo para o valor original na interface
-          emp.valor = Number(emp.valor_inicial || emp.valor_original || emp.valor);
-          ui.showNotification('Pagamento de só juros registrado! Empréstimo segue em aberto.', 'success');
-          modal.remove();
-          if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
-        } catch (err) {
-          ui.showNotification('Erro ao registrar só juros', 'error');
-        }
-      };
-      // Botão Não Pagou
-      modal.querySelector('#modal-btn-naopagou').onclick = async (e) => {
-        e.preventDefault();
-        try {
-          await fetch(`/api/cobrancas/emprestimos/${emp.id}/status`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ status: 'Em Atraso' })
-          });
-          ui.showNotification('Status alterado para Em Atraso!', 'success');
-          modal.remove();
-          if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
-        } catch (err) {
-          ui.showNotification('Erro ao atualizar status', 'error');
-        }
-      };
-      // Botão Remover
-      modal.querySelector('#modal-btn-remover').onclick = async (e) => {
-        e.preventDefault();
-        if (!confirm('Tem certeza que deseja remover este empréstimo?')) return;
-        try {
-          await fetch(`/api/cobrancas/emprestimos/${emp.id}`, {
-            method: 'DELETE',
-            credentials: 'include'
-          });
-          ui.showNotification('Empréstimo removido!', 'success');
-          modal.remove();
-          if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
-        } catch (err) {
-          ui.showNotification('Erro ao remover empréstimo', 'error');
-        }
-      };
     } catch (err) {
       ui.showNotification('Erro ao buscar ou exibir empréstimo. Verifique os dados do empréstimo.', 'error');
     }
