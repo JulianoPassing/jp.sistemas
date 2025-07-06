@@ -645,6 +645,7 @@ const app = {
 const emprestimoController = {
   async viewEmprestimo(id) {
     try {
+      // Sempre buscar a lista mais recente
       const emprestimos = await apiService.getEmprestimos();
       const emp = emprestimos.find(e => String(e.id) === String(id));
       if (!emp) {
