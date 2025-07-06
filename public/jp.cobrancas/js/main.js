@@ -144,11 +144,6 @@ const apiService = {
   // Cobranças
   async getCobrancas() {
     return this.request('/cobrancas');
-  },
-
-  // Cobranças pendentes do dia
-  async getCobrancasPendentesDia() {
-    return this.request('/cobrancas/pendentes-dia');
   }
 };
 
@@ -245,8 +240,6 @@ const dashboardController = {
       }
       
       const data = await apiService.getDashboardData();
-      // Buscar cobranças pendentes do dia
-      const cobrancasPendentesDia = await apiService.getCobrancasPendentesDia();
       // Buscar todos os empréstimos para calcular o valor total a receber com juros em aberto
       const emprestimos = await apiService.getEmprestimos();
       let valorTotalReceber = 0;
@@ -273,8 +266,6 @@ const dashboardController = {
       // Substituir o valor do card por esse valor calculado
       data.cobrancas = data.cobrancas || {};
       data.cobrancas.valor_total_cobrancas = valorTotalReceber;
-      // Adicionar cobranças pendentes do dia
-      data.cobrancasPendentesDia = cobrancasPendentesDia;
       appState.data.dashboard = data;
       this.updateDashboardCards(data);
       this.updateRecentEmprestimos(data.emprestimosRecentes || []);
@@ -313,11 +304,8 @@ const dashboardController = {
       'total-emprestimos': data.emprestimos?.total_emprestimos || 0,
       'valor-receber': data.cobrancas?.valor_total_cobrancas || 0,
       'clientes-atraso': data.cobrancas?.clientes_em_atraso || 0,
-      'total-investido': data.emprestimos?.valor_total_emprestimos || 0,
-      'cobrancas-pendentes-dia': data.cobrancasPendentesDia?.length || 0
+      'total-investido': data.emprestimos?.valor_total_emprestimos || 0
     };
-
-
 
     Object.entries(cards).forEach(([id, value]) => {
       const element = document.getElementById(id);

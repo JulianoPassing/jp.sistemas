@@ -32,8 +32,6 @@ app.all('/api/empresa', empresaHandler);
 // CORS - deve vir antes de qualquer middleware de sessão ou rotas
 const allowedOrigins = [
   'https://jp-sistemas.vercel.app',
-  'https://jp-sistemas.com',
-  'http://jp-sistemas.com',
   'http://localhost:3000'
 ];
 app.use(cors({
@@ -923,10 +921,9 @@ app.use('/api/contas', require('./api/contas'));
 // Inicialização do servidor (apenas se executado diretamente)
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
-  app.listen(PORT, '0.0.0.0', () => {
+  app.listen(PORT, () => {
     console.log(`🚀 Servidor J.P Sistemas rodando na porta ${PORT}`);
     console.log(`📱 Acesse: http://localhost:${PORT}`);
-    console.log(`🌐 Acesse: http://0.0.0.0:${PORT}`);
     console.log(`🔧 Ambiente: ${process.env.NODE_ENV || 'development'}`);
   });
 }
