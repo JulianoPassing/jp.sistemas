@@ -207,12 +207,11 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
         AND e.status <> 'Quitado'
     `);
 
-    // Empréstimos ativos: status Ativo ou Pendente e vencimento >= hoje
+    // Empréstimos ativos: status Ativo ou Pendente e não quitado (independente da data de vencimento)
     const [emprestimosAtivos] = await connection.execute(`
       SELECT COUNT(*) as total
       FROM emprestimos
       WHERE status IN ('Ativo', 'Pendente')
-        AND data_vencimento >= CURDATE()
         AND status <> 'Quitado'
     `);
 
