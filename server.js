@@ -923,7 +923,6 @@ app.get('/ajuda', (req, res) => {
 });
 
 app.use('/api/contas', require('./api/contas'));
-app.use('/api/caixa', require('./api/caixa'));
 
 // Inicialização do servidor (apenas se executado diretamente)
 if (require.main === module) {
