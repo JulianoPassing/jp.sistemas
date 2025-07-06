@@ -143,12 +143,12 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
   try {
     const connection = await createCobrancasConnection();
     
-    // Estatísticas gerais (apenas empréstimos Ativos)
+    // Estatísticas gerais (empréstimos Ativos ou Pendentes)
     const [emprestimosStats] = await connection.execute(`
       SELECT 
-        COUNT(CASE WHEN status = 'Ativo' AND cliente_id IS NOT NULL THEN 1 END) as total_emprestimos,
-        SUM(CASE WHEN status = 'Ativo' AND cliente_id IS NOT NULL THEN valor ELSE 0 END) as valor_total_emprestimos,
-        COUNT(CASE WHEN status = 'Ativo' AND cliente_id IS NOT NULL THEN 1 END) as emprestimos_ativos,
+        COUNT(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN 1 END) as total_emprestimos,
+        SUM(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN valor ELSE 0 END) as valor_total_emprestimos,
+        COUNT(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN 1 END) as emprestimos_ativos,
         COUNT(CASE WHEN status = 'Quitado' AND cliente_id IS NOT NULL THEN 1 END) as emprestimos_quitados
       FROM emprestimos
     `);
@@ -165,7 +165,7 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     `);
 
     const [clientesStats] = await connection.execute(`
-      SELECT COUNT(*) as total_clientes FROM clientes_cobrancas WHERE status = 'Ativo'
+      SELECT COUNT(*) as total_clientes FROM clientes_cobrancas WHERE status IN ('Ativo', 'Pendente')
     `);
 
     // Empréstimos recentes (apenas ativos e com cliente)
