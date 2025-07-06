@@ -498,6 +498,7 @@ router.delete('/clientes/:id', ensureDatabase, async (req, res) => {
 router.get('/clientes/:id', ensureDatabase, async (req, res) => {
   try {
     const { id } = req.params;
+    console.log('DEBUG /clientes/:id - id recebido:', id);
     const connection = await createCobrancasConnection();
     // Buscar dados do cliente
     const [rows] = await connection.execute('SELECT * FROM clientes_cobrancas WHERE id = ?', [id]);
@@ -508,6 +509,7 @@ router.get('/clientes/:id', ensureDatabase, async (req, res) => {
     const cliente = rows[0];
     // Buscar empréstimos do cliente
     const [emprestimos] = await connection.execute('SELECT * FROM emprestimos WHERE cliente_id = ? ORDER BY created_at DESC', [id]);
+    console.log('DEBUG /clientes/:id - emprestimos encontrados:', emprestimos);
     // Buscar pagamentos relacionados a esses empréstimos (por cobrança)
     let pagamentos = [];
     if (emprestimos.length > 0) {
