@@ -159,12 +159,13 @@ const clientesUI = {
   },
 
   renderClientesTable(clientes) {
-    const clientesValidos = clientes.filter(
+    const clientesValidos = (clientes || []).filter(
       c =>
         c &&
+        typeof c === 'object' &&
         (c.razao || c.nome || c.name) &&
-        (c.razao || c.nome || c.name) !== 'undefined' &&
-        (c.razao || c.nome || c.name).trim() !== ''
+        typeof (c.razao || c.nome || c.name) === 'string' &&
+        !['', 'undefined', 'n/a', 'na', 'N/A', 'NA', null].includes((c.razao || c.nome || c.name).trim().toLowerCase())
     );
     if (clientesTableBody) {
       if (clientesValidos.length === 0) {
