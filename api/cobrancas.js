@@ -143,6 +143,17 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
   try {
     const connection = await createCobrancasConnection();
     
+    // Atualizar dias de atraso antes das estatísticas do dashboard
+    await connection.execute(`
+      UPDATE cobrancas 
+      SET 
+        dias_atraso = CASE 
+          WHEN data_vencimento < CURDATE() THEN DATEDIFF(CURDATE(), data_vencimento)
+          ELSE 0 
+        END
+      WHERE status = 'Pendente'
+    `);
+
     // Estatísticas gerais (empréstimos Ativos ou Pendentes)
     const [emprestimosStats] = await connection.execute(`
       SELECT 
