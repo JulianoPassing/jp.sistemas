@@ -11,90 +11,44 @@ const appState = {
   }
 };
 
-// Sistema de autenticação e sessão
+// Sistema de autenticação usando o mesmo padrão do sistema principal
 const authSystem = {
-  // Cache de autenticação para evitar verificações desnecessárias
-  authCache: {
-    isAuthenticated: null,
-    lastCheck: 0,
-    cacheDuration: 30 * 1000 // 30 segundos de cache
+  // Verificar se está logado (usando sessionStorage como o sistema principal)
+  checkAuth() {
+    return sessionStorage.getItem('loggedIn') === 'true';
   },
 
-  // Verificar se está logado
-  async checkAuth() {
-    const now = Date.now();
-    
-    // Verificar cache primeiro
-    if (this.authCache.isAuthenticated !== null && 
-        (now - this.authCache.lastCheck) < this.authCache.cacheDuration) {
-      return this.authCache.isAuthenticated;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/cobrancas/check-auth`, {
-        method: 'GET',
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Não autenticado');
-      }
-      
-      const data = await response.json();
-      
-      // Atualizar cache
-      this.authCache.isAuthenticated = data.authenticated;
-      this.authCache.lastCheck = now;
-      
-      return data.authenticated;
-    } catch (error) {
-      console.log('Usuário não autenticado, redirecionando para login...');
-      
-      // Atualizar cache
-      this.authCache.isAuthenticated = false;
-      this.authCache.lastCheck = now;
-      
-      return false;
-    }
-  },
-
-  // Limpar cache de autenticação
-  clearAuthCache() {
-    this.authCache.isAuthenticated = null;
-    this.authCache.lastCheck = 0;
-  },
-
-  // Fazer logout
+  // Fazer logout (usando o mesmo padrão do sistema principal)
   async logout() {
     try {
-      await fetch(`${API_BASE_URL}/cobrancas/logout`, {
-        method: 'POST',
-        credentials: 'include'
-      });
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-    } finally {
-      // Limpar cache de autenticação
-      this.clearAuthCache();
+      // Limpar sessionStorage (mesmo padrão do sistema principal)
+      sessionStorage.removeItem('loggedIn');
+      sessionStorage.removeItem('username');
+      sessionStorage.removeItem('loginTime');
       
-      // Limpar dados locais
-      localStorage.removeItem('cobrancas_session');
-      sessionStorage.clear();
+      // Tentar fazer logout no servidor (opcional)
+      try {
+        await fetch(`${API_BASE_URL}/cobrancas/logout`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+      } catch (error) {
+        console.log('Logout do servidor falhou, mas sessionStorage foi limpo');
+      }
       
       // Redirecionar para login
+      window.location.href = 'login.html';
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      // Mesmo com erro, limpar sessionStorage e redirecionar
+      sessionStorage.clear();
       window.location.href = 'login.html';
     }
   },
 
-  // Configurar logout automático
+  // Configurar logout automático (simplificado)
   setupAutoLogout() {
-    // Logout quando a página for fechada
-    window.addEventListener('beforeunload', (e) => {
-      // Enviar requisição de logout antes de fechar
-      navigator.sendBeacon(`${API_BASE_URL}/cobrancas/logout`, '');
-    });
-
-    // Logout quando a aba perder foco por muito tempo (30 minutos)
+    // Logout por inatividade (30 minutos)
     let inactivityTimer;
     const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutos
 
@@ -115,50 +69,18 @@ const authSystem = {
     // Iniciar timer
     resetInactivityTimer();
 
-    // Logout quando a aba ficar oculta por muito tempo
+    // Logout quando a aba ficar oculta (15 minutos)
     let hiddenTimer;
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
-        // Página ficou oculta, iniciar timer
         hiddenTimer = setTimeout(() => {
           console.log('Sessão expirada - página oculta por muito tempo');
           this.logout();
         }, 15 * 60 * 1000); // 15 minutos
       } else {
-        // Página voltou a ficar visível, cancelar timer
         clearTimeout(hiddenTimer);
       }
     });
-  },
-
-  // Verificar sessão periodicamente
-  setupSessionCheck() {
-    setInterval(async () => {
-      try {
-        // Limpar cache para forçar nova verificação
-        this.clearAuthCache();
-        const isAuthenticated = await this.checkAuth();
-        if (!isAuthenticated) {
-          console.log('Sessão expirada, fazendo logout...');
-          this.logout();
-        }
-      } catch (error) {
-        console.log('Erro na verificação de sessão, tentando novamente em 5 minutos...');
-        // Se houver erro, tentar novamente em 5 minutos
-        setTimeout(async () => {
-          try {
-            this.clearAuthCache();
-            const isAuthenticated = await this.checkAuth();
-            if (!isAuthenticated) {
-              console.log('Sessão expirada na segunda tentativa, fazendo logout...');
-              this.logout();
-            }
-          } catch (retryError) {
-            console.error('Erro persistente na verificação de sessão:', retryError);
-          }
-        }, 5 * 60 * 1000);
-      }
-    }, 10 * 60 * 1000); // Verificar a cada 10 minutos (menos agressivo)
   }
 };
 
@@ -663,8 +585,8 @@ const app = {
         return;
       }
       
-      // Verificar autenticação apenas se não estiver na página de login
-      const isAuthenticated = await authSystem.checkAuth();
+      // Verificar autenticação usando sessionStorage (mesmo padrão do sistema principal)
+      const isAuthenticated = authSystem.checkAuth();
       if (!isAuthenticated) {
         console.log('Usuário não autenticado, redirecionando...');
         window.location.href = 'login.html';
@@ -673,7 +595,6 @@ const app = {
       
       // Configurar sistema de logout automático apenas se autenticado
       authSystem.setupAutoLogout();
-      authSystem.setupSessionCheck();
       
       // Configurar data atual
       this.setCurrentDate();
@@ -1690,10 +1611,16 @@ async function recarregarDadosPagina() {
   }
 }
 
-// Função para logout
+// Função para logout (mesmo padrão do sistema principal)
 function sair() {
   if (confirm('Tem certeza que deseja sair?')) {
-    authSystem.logout();
+    // Limpar sessionStorage (mesmo padrão do sistema principal)
+    sessionStorage.removeItem('loggedIn');
+    sessionStorage.removeItem('username');
+    sessionStorage.removeItem('loginTime');
+    
+    // Redirecionar para login
+    window.location.href = 'login.html';
   }
 }
 
