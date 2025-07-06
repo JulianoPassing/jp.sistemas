@@ -131,11 +131,11 @@ const apiService = {
 
   // Empréstimos
   async getEmprestimos() {
-    return this.request('/emprestimos');
+    return this.request('/cobrancas/emprestimos');
   },
 
   async createEmprestimo(emprestimoData) {
-    return this.request('/emprestimos', {
+    return this.request('/cobrancas/emprestimos', {
       method: 'POST',
       body: JSON.stringify(emprestimoData)
     });
