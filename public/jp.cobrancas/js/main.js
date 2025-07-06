@@ -411,27 +411,43 @@ const dashboardController = {
     }
 
     cobrancas.forEach(cobranca => {
+      // Cálculo de atraso e juros diário para cobranças
+      const valorInvestido = Number(cobranca.valor_inicial || cobranca.valor_original || cobranca.valor || 0);
+      const jurosPercent = Number(cobranca.juros_mensal || cobranca.juros || 0);
+      const jurosTotal = valorInvestido * (jurosPercent / 100);
+      const dataVencimento = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      let status = (cobranca.status || '').toUpperCase();
+      let valorAtualizado = valorInvestido + jurosTotal;
+      let diasAtraso = 0;
+      let jurosDiario = 0;
+      let jurosAplicado = 0;
+      if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+        status = 'ATRASADO';
+        const diffTime = hoje.getTime() - dataVencimento.getTime();
+        diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        jurosDiario = Math.ceil(jurosTotal / 30);
+        jurosAplicado = jurosDiario * diasAtraso;
+        valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
+      }
       const valor = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
-      }).format(cobranca.valor_atualizado || 0);
-      
-      const vencimento = new Date(cobranca.data_vencimento).toLocaleDateString('pt-BR');
-      const diasAtraso = cobranca.dias_atraso || 0;
-      const statusClass = diasAtraso > 30 ? 'danger' : diasAtraso > 7 ? 'warning' : 'info';
-      
+      }).format(valorAtualizado);
+      const vencimento = cobranca.data_vencimento ? new Date(cobranca.data_vencimento).toLocaleDateString('pt-BR') : '-';
+      const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : 'info'));
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${cobranca.cliente_nome || 'N/A'}</td>
         <td>${valor}</td>
         <td>${vencimento}</td>
         <td>${diasAtraso > 0 ? `${diasAtraso} dias` : 'No prazo'}</td>
-        <td><span class="badge badge-${statusClass}">${cobranca.status}</span></td>
+        <td><span class="badge badge-${statusClass}">${status}</span></td>
         <td>
           <button class="btn btn-secondary btn-sm" onclick="cobrancaController.cobrar(${cobranca.id})">Cobrar</button>
         </td>
       `;
-      
       tbody.appendChild(row);
     });
   }
