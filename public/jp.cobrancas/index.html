@@ -17,26 +17,13 @@
     </div>
 
     <script>
-        // Verificar autenticação e redirecionar
-        async function checkAuthAndRedirect() {
-            try {
-                const response = await fetch('/api/cobrancas/session', {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                
-                const data = await response.json();
-                
-                if (data.authenticated) {
-                    // Usuário autenticado, redirecionar para dashboard
-                    window.location.href = 'dashboard.html';
-                } else {
-                    // Usuário não autenticado, redirecionar para login
-                    window.location.href = 'login.html';
-                }
-            } catch (error) {
-                console.error('Erro ao verificar autenticação:', error);
-                // Em caso de erro, redirecionar para login
+        // Verificar autenticação usando sessionStorage (mesmo padrão do sistema principal)
+        function checkAuthAndRedirect() {
+            if (sessionStorage.getItem('loggedIn') === 'true') {
+                // Usuário autenticado, redirecionar para dashboard
+                window.location.href = 'dashboard.html';
+            } else {
+                // Usuário não autenticado, redirecionar para login
                 window.location.href = 'login.html';
             }
         }

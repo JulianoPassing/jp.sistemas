@@ -99,31 +99,66 @@
     </form>
   </div>
   <script>
+    // Verificar se já está logado (mesmo padrão do sistema principal)
+    if (sessionStorage.getItem('loggedIn') === 'true') {
+      window.location.href = 'dashboard.html';
+    }
+
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value;
       const errorDiv = document.getElementById('loginError');
+      const submitBtn = document.getElementById('submitBtn');
+      const originalText = submitBtn.textContent;
+      
+      // Validação básica
+      if (!username || !password) {
+        errorDiv.textContent = 'Por favor, preencha todos os campos.';
+        errorDiv.style.display = 'block';
+        return;
+      }
+
+      // Mostrar loading
+      submitBtn.textContent = 'Entrando...';
+      submitBtn.disabled = true;
       errorDiv.style.display = 'none';
-      errorDiv.textContent = '';
+      
       try {
         const res = await fetch('/api/cobrancas/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ username, password })
         });
         const data = await res.json();
+        
         if (res.ok && data.success) {
-          window.location.href = '/jp.cobrancas/dashboard.html';
+          // Salvar no sessionStorage (mesmo padrão do sistema principal)
+          sessionStorage.setItem('loggedIn', 'true');
+          sessionStorage.setItem('username', username);
+          sessionStorage.setItem('loginTime', new Date().toISOString());
+          
+          // Redirecionar após um pequeno delay
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 1000);
         } else {
           errorDiv.textContent = data.message || 'Usuário ou senha inválidos.';
           errorDiv.style.display = 'block';
+          submitBtn.textContent = originalText;
+          submitBtn.disabled = false;
         }
       } catch (err) {
         errorDiv.textContent = 'Erro ao conectar ao servidor.';
         errorDiv.style.display = 'block';
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
       }
     });
+
+    // Auto-focus no primeiro campo
+    document.getElementById('username').focus();
   </script>
 </body>
 </html> 
