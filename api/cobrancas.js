@@ -448,6 +448,14 @@ router.put('/emprestimos/:id/status', ensureDatabase, async (req, res) => {
         await connection.execute('UPDATE emprestimos SET valor = ? WHERE id = ?', [novoValor, id]);
       }
     }
+    // Se status for 'Quitado', marcar cobranças como 'Paga'
+    if (status === 'Quitado') {
+      await connection.execute('UPDATE cobrancas SET status = ? WHERE emprestimo_id = ?', ['Paga', id]);
+    }
+    // Se status for 'Cancelado', marcar cobranças como 'Cancelada'
+    if (status === 'Cancelado') {
+      await connection.execute('UPDATE cobrancas SET status = ? WHERE emprestimo_id = ?', ['Cancelada', id]);
+    }
     await connection.end();
     res.json({ success: true });
   } catch (error) {
