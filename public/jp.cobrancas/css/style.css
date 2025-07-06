@@ -656,6 +656,61 @@ footer {
   .table td {
     padding: 0.5rem;
   }
+  
+  .nav-wrapper nav {
+    display: none;
+    flex-direction: column;
+    background: #003366;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+  }
+  .nav-wrapper.open nav {
+    display: flex;
+  }
+  .mobile-menu-btn {
+    display: block;
+    background: none;
+    border: none;
+    margin-left: 1rem;
+    cursor: pointer;
+  }
+  .menu-icon {
+    width: 32px;
+    height: 4px;
+    background: #fff;
+    display: block;
+    position: relative;
+  }
+  .menu-icon::before,
+  .menu-icon::after {
+    content: '';
+    width: 32px;
+    height: 4px;
+    background: #fff;
+    position: absolute;
+    left: 0;
+    transition: 0.3s;
+  }
+  .menu-icon::before {
+    top: -10px;
+  }
+  .menu-icon::after {
+    top: 10px;
+  }
+}
+@media (min-width: 769px) {
+  .mobile-menu-btn {
+    display: none;
+  }
+  .nav-wrapper nav {
+    display: flex !important;
+    position: static;
+    background: none;
+    flex-direction: row;
+  }
 }
 
 @media (max-width: 640px) {
