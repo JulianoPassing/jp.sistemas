@@ -1193,7 +1193,7 @@ async function renderHistoricoEmprestimos() {
       if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
         status = 'ATRASADO';
         // Calcular dias de atraso
-        const diffTime = hoje.getTime() - dataVencimento.getTime();
+        let diffTime = hoje.getTime() - dataVencimento.getTime();
         diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         // Juros diário: juros total dividido por 30 dias, arredondado para cima
         jurosDiario = Math.ceil(jurosTotal / 30);
@@ -1202,14 +1202,14 @@ async function renderHistoricoEmprestimos() {
         infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
       }
       // Proteção para valores nulos/undefined
-      const valor = !isNaN(valorAtualizado) ? new Intl.NumberFormat('pt-BR', {
+      let valor = !isNaN(valorAtualizado) ? new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
       }).format(valorAtualizado) : 'R$ 0,00';
-      const data = emprestimo.data_emprestimo ? new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR') : '-';
-      const vencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-';
-      const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : (status === 'QUITADO' ? 'info' : 'secondary')));
-      const row = document.createElement('tr');
+      let data = emprestimo.data_emprestimo ? new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR') : '-';
+      let vencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-';
+      let statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : (status === 'QUITADO' ? 'info' : 'secondary')));
+      let row = document.createElement('tr');
       row.innerHTML = `
         <td>${emprestimo.cliente_nome || 'N/A'}</td>
         <td>${valor}${infoJuros}</td>
