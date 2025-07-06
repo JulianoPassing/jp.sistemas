@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JP Gestão - Pedidos</title>
+    <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="app-layout">
+    <header>
+        <div class="header-content">
+            <a href="dashboard.html" class="logo" style="display: flex; align-items: center;">
+                <img src="https://i.imgur.com/TwZLW6a.png" alt="JP Gestão" style="height: 3rem; width: auto; object-fit: contain;">
+            </a>
+            <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Abrir menu"><span class="menu-icon"></span></button>
+            <div class="nav-wrapper">
+                <nav>
+                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="produtos.html" class="nav-link">Produtos</a>
+                    <a href="pedidos.html" class="nav-link active">Pedidos</a>
+                    <a href="clientes.html" class="nav-link">Clientes</a>
+                    <a href="mesas.html" class="nav-link">Mesas</a>
+                    <a href="caixa.html" class="nav-link">Caixa</a>
+                    <a href="relatorios.html" class="nav-link">Relatórios</a>
+                    <a href="configuracoes.html" class="nav-link">Configurações</a>
+                    <a href="#" class="nav-link" onclick="sair()">Sair</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <div class="dashboard-header">
+                <div class="welcome-message" id="welcomeMessage">Bem-vindo(a)!</div>
+                <div class="dashboard-title">Gerenciamento de Pedidos</div>
+                <div class="dashboard-subtitle">Crie e gerencie pedidos dos seus clientes</div>
+            </div>
+            
+            <!-- Busca e Filtros -->
+            <div class="search-container">
+                <div style="display: flex; gap: 1rem; align-items: center; flex: 1;">
+                    <div style="flex: 1;">
+                        <input type="text" id="searchInput" placeholder="Buscar pedidos..." class="form-input">
+                    </div>
+                    <div>
+                        <select id="statusFilter" class="form-input">
+                            <option value="">Todos os status</option>
+                            <option value="pendente">Pendente</option>
+                            <option value="em_andamento">Em andamento</option>
+                            <option value="concluido">Concluído</option>
+                            <option value="cancelado">Cancelado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <input type="date" id="dateFilter" class="form-input">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-primary" onclick="showNewOrderModal()">
+                        <i class="fas fa-plus"></i> Novo Pedido
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportOrders()">
+                        <i class="fas fa-download"></i> Exportar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Tabela de Pedidos -->
+            <div class="section">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nº Pedido</th>
+                                <th>Cliente</th>
+                                <th>Itens</th>
+                                <th>Valor Total</th>
+                                <th>Status</th>
+                                <th>Data</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pedidosTable">
+                            <tr>
+                                <td colspan="7" class="text-center text-gray-500">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="text-center p-4 mt-8">
+        © 2024 JP Gestão. Todos os direitos reservados.
+    </footer>
+    
+    <script src="./js/main.js"></script>
+    <script>
+        let pedidosData = [];
+        let filteredData = [];
+        let produtosData = [];
+        let clientesData = [];
+        
+        // Verificar autenticação
+        if (sessionStorage.getItem('loggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+        
+        // Configurar mensagem de boas-vindas
+        function updateWelcomeMessage() {
+            const username = sessionStorage.getItem('userDisplay') || sessionStorage.getItem('username') || 'Usuário';
+            const capitalizedUsername = username.charAt(0).toUpperCase() + username.slice(1);
+            document.getElementById('welcomeMessage').textContent = `Bem-vindo(a), ${capitalizedUsername}!`;
+        }
+        
+        // Carregar dados
+        async function loadData() {
+            try {
+                // Carregar pedidos
+                const pedidosResponse = await fetch('/api/pedidos');
+                if (pedidosResponse.ok) {
+                    pedidosData = await pedidosResponse.json();
+                    filteredData = [...pedidosData];
+                }
+                
+                // Carregar produtos
+                const produtosResponse = await fetch('/api/produtos');
+                if (produtosResponse.ok) {
+                    produtosData = await produtosResponse.json();
+                }
+                
+                // Carregar clientes
+                const clientesResponse = await fetch('/api/clientes');
+                if (clientesResponse.ok) {
+                    clientesData = await clientesResponse.json();
+                }
+                
+                renderPedidos();
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                showNotification('Erro ao carregar dados', 'error');
+            }
+        }
+        
+        // Renderizar pedidos na tabela
+        function renderPedidos() {
+            const tbody = document.getElementById('pedidosTable');
+            
+            if (filteredData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum pedido encontrado</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filteredData.map(pedido => `
+                <tr>
+                    <td>
+                        <div class="font-semibold">#${pedido.id}</div>
+                        <div class="text-sm text-gray-500">${pedido.mesa ? `Mesa ${pedido.mesa}` : 'Delivery'}</div>
+                    </td>
+                    <td>
+                        <div class="font-semibold">${pedido.cliente || 'Cliente não identificado'}</div>
+                        <div class="text-sm text-gray-500">${pedido.telefone || ''}</div>
+                    </td>
+                    <td>
+                        <div class="text-sm">
+                            ${pedido.itens ? pedido.itens.length : 0} item(s)
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            ${pedido.itens ? pedido.itens.map(item => item.produto).join(', ') : ''}
+                        </div>
+                    </td>
+                    <td class="font-semibold">${formatCurrency(pedido.valor_total)}</td>
+                    <td>
+                        <span class="badge badge-${getStatusBadge(pedido.status)}">${getStatusText(pedido.status)}</span>
+                    </td>
+                    <td>${formatDateTime(pedido.created_at)}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-secondary btn-sm" onclick="viewPedido(${pedido.id})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="editPedido(${pedido.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-warning btn-sm" onclick="updateStatus(${pedido.id})">
+                                <i class="fas fa-tasks"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deletePedido(${pedido.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Obter badge de status
+        function getStatusBadge(status) {
+            switch (status) {
+                case 'pendente': return 'warning';
+                case 'em_andamento': return 'info';
+                case 'concluido': return 'success';
+                case 'cancelado': return 'danger';
+                default: return 'info';
+            }
+        }
+        
+        // Obter texto de status
+        function getStatusText(status) {
+            switch (status) {
+                case 'pendente': return 'Pendente';
+                case 'em_andamento': return 'Em andamento';
+                case 'concluido': return 'Concluído';
+                case 'cancelado': return 'Cancelado';
+                default: return status;
+            }
+        }
+        
+        // Filtrar pedidos
+        function filterPedidos() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            
+            filteredData = pedidosData.filter(pedido => {
+                // Filtro de busca
+                const matchesSearch = !searchTerm || 
+                    pedido.id.toString().includes(searchTerm) ||
+                    (pedido.cliente && pedido.cliente.toLowerCase().includes(searchTerm)) ||
+                    (pedido.telefone && pedido.telefone.includes(searchTerm));
+                
+                // Filtro de status
+                const matchesStatus = !statusFilter || pedido.status === statusFilter;
+                
+                // Filtro de data
+                let matchesDate = true;
+                if (dateFilter) {
+                    const pedidoDate = new Date(pedido.created_at).toISOString().split('T')[0];
+                    matchesDate = pedidoDate === dateFilter;
+                }
+                
+                return matchesSearch && matchesStatus && matchesDate;
+            });
+            
+            renderPedidos();
+        }
+        
+        // Mostrar modal de novo pedido
+        function showNewOrderModal() {
+            const content = `
+                <form id="newOrderForm">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label for="cliente" class="form-label">Cliente</label>
+                            <input type="text" id="cliente" name="cliente" class="form-input" placeholder="Nome do cliente">
+                        </div>
+                        <div class="form-group">
+                            <label for="telefone" class="form-label">Telefone</label>
+                            <input type="text" id="telefone" name="telefone" class="form-input" placeholder="(11) 99999-9999">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label for="mesa" class="form-label">Mesa</label>
+                            <input type="number" id="mesa" name="mesa" class="form-input" min="1" placeholder="Número da mesa">
+                        </div>
+                        <div class="form-group">
+                            <label for="status" class="form-label">Status</label>
+                            <select id="status" name="status" class="form-input">
+                                <option value="pendente">Pendente</option>
+                                <option value="em_andamento">Em andamento</option>
+                                <option value="concluido">Concluído</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Itens do Pedido</label>
+                        <div id="orderItems" style="border: 1px solid var(--gray-300); border-radius: var(--border-radius); padding: 1rem; margin-bottom: 1rem;">
+                            <div class="text-center text-gray-500">Nenhum item adicionado</div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="addOrderItem()">
+                            <i class="fas fa-plus"></i> Adicionar Item
+                        </button>
+                    </div>
+                    <div class="form-group">
+                        <label for="observacoes" class="form-label">Observações</label>
+                        <textarea id="observacoes" name="observacoes" class="form-input" rows="3" placeholder="Observações especiais..."></textarea>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Criar Pedido</button>
+                    </div>
+                </form>
+            `;
+            showModal('Novo Pedido', content);
+            
+            // Adicionar evento de submit
+            document.getElementById('newOrderForm').addEventListener('submit', handleNewOrder);
+        }
+        
+        // Adicionar item ao pedido
+        function addOrderItem() {
+            const itemsContainer = document.getElementById('orderItems');
+            const itemId = Date.now();
+            
+            const itemHtml = `
+                <div id="item-${itemId}" style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; padding: 1rem; border: 1px solid var(--gray-200); border-radius: var(--border-radius);">
+                    <div style="flex: 1;">
+                        <select class="form-input" name="item_produto[]" required>
+                            <option value="">Selecione o produto</option>
+                            ${produtosData.map(produto => `
+                                <option value="${produto.id}" data-preco="${produto.preco}">${produto.nome} - R$ ${formatCurrency(produto.preco)}</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div style="width: 100px;">
+                        <input type="number" class="form-input" name="item_quantidade[]" placeholder="Qtd" min="1" value="1" required onchange="updateItemTotal(${itemId})">
+                    </div>
+                    <div style="width: 120px;">
+                        <input type="number" class="form-input" name="item_preco[]" placeholder="Preço" step="0.01" min="0" required onchange="updateItemTotal(${itemId})">
+                    </div>
+                    <div style="width: 100px; text-align: right; font-weight: 600;" id="item-total-${itemId}">
+                        R$ 0,00
+                    </div>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeOrderItem(${itemId})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            if (itemsContainer.querySelector('.text-center')) {
+                itemsContainer.innerHTML = itemHtml;
+            } else {
+                itemsContainer.insertAdjacentHTML('beforeend', itemHtml);
+            }
+            
+            // Adicionar eventos aos selects
+            const select = itemsContainer.querySelector(`#item-${itemId} select`);
+            select.addEventListener('change', function() {
+                const option = this.options[this.selectedIndex];
+                const preco = option.dataset.preco;
+                if (preco) {
+                    const precoInput = this.closest(`#item-${itemId}`).querySelector('input[name="item_preco[]"]');
+                    precoInput.value = preco;
+                    updateItemTotal(itemId);
+                }
+            });
+        }
+        
+        // Remover item do pedido
+        function removeOrderItem(itemId) {
+            const item = document.getElementById(`item-${itemId}`);
+            const itemsContainer = document.getElementById('orderItems');
+            
+            item.remove();
+            
+            // Se não há mais itens, mostrar mensagem
+            if (itemsContainer.children.length === 0) {
+                itemsContainer.innerHTML = '<div class="text-center text-gray-500">Nenhum item adicionado</div>';
+            }
+        }
+        
+        // Atualizar total do item
+        function updateItemTotal(itemId) {
+            const item = document.getElementById(`item-${itemId}`);
+            const quantidade = item.querySelector('input[name="item_quantidade[]"]').value;
+            const preco = item.querySelector('input[name="item_preco[]"]').value;
+            const totalElement = document.getElementById(`item-total-${itemId}`);
+            
+            const total = (quantidade || 0) * (preco || 0);
+            totalElement.textContent = formatCurrency(total);
+        }
+        
+        // Manipular novo pedido
+        async function handleNewOrder(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const orderData = {
+                cliente: formData.get('cliente'),
+                telefone: formData.get('telefone'),
+                mesa: formData.get('mesa') ? parseInt(formData.get('mesa')) : null,
+                status: formData.get('status'),
+                observacoes: formData.get('observacoes'),
+                itens: []
+            };
+            
+            // Processar itens
+            const produtos = formData.getAll('item_produto[]');
+            const quantidades = formData.getAll('item_quantidade[]');
+            const precos = formData.getAll('item_preco[]');
+            
+            for (let i = 0; i < produtos.length; i++) {
+                if (produtos[i] && quantidades[i] && precos[i]) {
+                    orderData.itens.push({
+                        produto_id: parseInt(produtos[i]),
+                        quantidade: parseInt(quantidades[i]),
+                        preco: parseFloat(precos[i])
+                    });
+                }
+            }
+            
+            if (orderData.itens.length === 0) {
+                showNotification('Adicione pelo menos um item ao pedido', 'warning');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/pedidos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                
+                if (response.ok) {
+                    showNotification('Pedido criado com sucesso!', 'success');
+                    closeModal(e.target);
+                    loadData();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Erro ao criar pedido', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao criar pedido:', error);
+                showNotification('Erro ao criar pedido', 'error');
+            }
+        }
+        
+        // Visualizar pedido
+        function viewPedido(id) {
+            const pedido = pedidosData.find(p => p.id === id);
+            if (!pedido) return;
+            
+            const content = `
+                <div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <strong>Nº Pedido:</strong> #${pedido.id}
+                        </div>
+                        <div>
+                            <strong>Status:</strong> 
+                            <span class="badge badge-${getStatusBadge(pedido.status)}">${getStatusText(pedido.status)}</span>
+                        </div>
+                        <div>
+                            <strong>Cliente:</strong> ${pedido.cliente || 'N/A'}
+                        </div>
+                        <div>
+                            <strong>Telefone:</strong> ${pedido.telefone || 'N/A'}
+                        </div>
+                        <div>
+                            <strong>Mesa:</strong> ${pedido.mesa ? `Mesa ${pedido.mesa}` : 'Delivery'}
+                        </div>
+                        <div>
+                            <strong>Data:</strong> ${formatDateTime(pedido.created_at)}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <strong>Itens:</strong>
+                        <div style="margin-top: 0.5rem;">
+                            ${pedido.itens ? pedido.itens.map(item => `
+                                <div style="display: flex; justify-content: space-between; padding: 0.5rem; border-bottom: 1px solid var(--gray-200);">
+                                    <span>${item.produto} x${item.quantidade}</span>
+                                    <span>${formatCurrency(item.preco * item.quantidade)}</span>
+                                </div>
+                            `).join('') : 'Nenhum item'}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <strong>Total:</strong> ${formatCurrency(pedido.valor_total)}
+                    </div>
+                    
+                    ${pedido.observacoes ? `
+                        <div class="mb-4">
+                            <strong>Observações:</strong>
+                            <div style="margin-top: 0.5rem; padding: 1rem; background-color: var(--gray-100); border-radius: var(--border-radius);">
+                                ${pedido.observacoes}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            showModal(`Pedido #${pedido.id}`, content);
+        }
+        
+        // Editar pedido
+        function editPedido(id) {
+            // Implementar edição de pedido
+            showNotification('Funcionalidade de edição em desenvolvimento', 'info');
+        }
+        
+        // Atualizar status
+        function updateStatus(id) {
+            const pedido = pedidosData.find(p => p.id === id);
+            if (!pedido) return;
+            
+            const content = `
+                <form id="updateStatusForm">
+                    <input type="hidden" name="id" value="${pedido.id}">
+                    <div class="form-group">
+                        <label class="form-label">Pedido #${pedido.id}</label>
+                        <div class="form-input" style="background-color: var(--gray-100);">${pedido.cliente || 'Cliente não identificado'}</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="newStatus" class="form-label">Novo Status</label>
+                        <select id="newStatus" name="status" class="form-input" required>
+                            <option value="pendente" ${pedido.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+                            <option value="em_andamento" ${pedido.status === 'em_andamento' ? 'selected' : ''}>Em andamento</option>
+                            <option value="concluido" ${pedido.status === 'concluido' ? 'selected' : ''}>Concluído</option>
+                            <option value="cancelado" ${pedido.status === 'cancelado' ? 'selected' : ''}>Cancelado</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Atualizar Status</button>
+                    </div>
+                </form>
+            `;
+            showModal('Atualizar Status do Pedido', content);
+            
+            // Adicionar evento de submit
+            document.getElementById('updateStatusForm').addEventListener('submit', handleUpdateStatus);
+        }
+        
+        // Manipular atualização de status
+        async function handleUpdateStatus(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = {
+                status: formData.get('status')
+            };
+            
+            try {
+                const response = await fetch(`/api/pedidos/${formData.get('id')}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    showNotification('Status atualizado com sucesso!', 'success');
+                    closeModal(e.target);
+                    loadData();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Erro ao atualizar status', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar status:', error);
+                showNotification('Erro ao atualizar status', 'error');
+            }
+        }
+        
+        // Deletar pedido
+        function deletePedido(id) {
+            const pedido = pedidosData.find(p => p.id === id);
+            if (!pedido) return;
+            
+            confirmAction(`Tem certeza que deseja excluir o pedido #${pedido.id}?`, async () => {
+                try {
+                    const response = await fetch(`/api/pedidos/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        showNotification('Pedido excluído com sucesso!', 'success');
+                        loadData();
+                    } else {
+                        const error = await response.json();
+                        showNotification(error.message || 'Erro ao excluir pedido', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir pedido:', error);
+                    showNotification('Erro ao excluir pedido', 'error');
+                }
+            });
+        }
+        
+        // Exportar pedidos
+        function exportOrders() {
+            if (filteredData.length === 0) {
+                showNotification('Nenhum pedido para exportar', 'warning');
+                return;
+            }
+            
+            const exportData = filteredData.map(pedido => ({
+                'Nº Pedido': pedido.id,
+                'Cliente': pedido.cliente || 'N/A',
+                'Telefone': pedido.telefone || 'N/A',
+                'Mesa': pedido.mesa ? `Mesa ${pedido.mesa}` : 'Delivery',
+                'Status': getStatusText(pedido.status),
+                'Valor Total': pedido.valor_total,
+                'Data': formatDateTime(pedido.created_at),
+                'Observações': pedido.observacoes || ''
+            }));
+            
+            exportToCSV(exportData, 'pedidos');
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            updateWelcomeMessage();
+            loadData();
+            
+            // Busca em tempo real
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', debounce(filterPedidos, 300));
+            
+            // Filtros
+            document.getElementById('statusFilter').addEventListener('change', filterPedidos);
+            document.getElementById('dateFilter').addEventListener('change', filterPedidos);
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JP Gestão - Mesas</title>
+    <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .mesas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .mesa-card {
+            background-color: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--gray-200);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .mesa-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .mesa-card.livre {
+            border-color: var(--green-500);
+            background-color: var(--green-500);
+            color: var(--white);
+        }
+        
+        .mesa-card.ocupada {
+            border-color: var(--red-500);
+            background-color: var(--red-500);
+            color: var(--white);
+        }
+        
+        .mesa-card.reservada {
+            border-color: var(--yellow-400);
+            background-color: var(--yellow-400);
+            color: var(--white);
+        }
+        
+        .mesa-numero {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .mesa-status {
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .mesa-info {
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+        
+        .mesa-acoes {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        
+        .mesa-acoes .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body class="app-layout">
+    <header>
+        <div class="header-content">
+            <a href="dashboard.html" class="logo" style="display: flex; align-items: center;">
+                <img src="https://i.imgur.com/TwZLW6a.png" alt="JP Gestão" style="height: 3rem; width: auto; object-fit: contain;">
+            </a>
+            <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Abrir menu"><span class="menu-icon"></span></button>
+            <div class="nav-wrapper">
+                <nav>
+                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="produtos.html" class="nav-link">Produtos</a>
+                    <a href="pedidos.html" class="nav-link">Pedidos</a>
+                    <a href="clientes.html" class="nav-link">Clientes</a>
+                    <a href="mesas.html" class="nav-link active">Mesas</a>
+                    <a href="caixa.html" class="nav-link">Caixa</a>
+                    <a href="relatorios.html" class="nav-link">Relatórios</a>
+                    <a href="configuracoes.html" class="nav-link">Configurações</a>
+                    <a href="#" class="nav-link" onclick="sair()">Sair</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <div class="dashboard-header">
+                <div class="welcome-message" id="welcomeMessage">Bem-vindo(a)!</div>
+                <div class="dashboard-title">Controle de Mesas</div>
+                <div class="dashboard-subtitle">Gerencie a ocupação e status das mesas</div>
+            </div>
+            
+            <!-- Estatísticas -->
+            <div class="cards">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-title">Total de Mesas</div>
+                        <i class="fas fa-chair card-icon"></i>
+                    </div>
+                    <div class="card-value" id="total-mesas">0</div>
+                    <div class="card-change positive">Configurável</div>
+                </div>
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-title">Mesas Livres</div>
+                        <i class="fas fa-check-circle card-icon"></i>
+                    </div>
+                    <div class="card-value" id="mesas-livres">0</div>
+                    <div class="card-change positive">Disponíveis</div>
+                </div>
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-title">Mesas Ocupadas</div>
+                        <i class="fas fa-users card-icon"></i>
+                    </div>
+                    <div class="card-value" id="mesas-ocupadas">0</div>
+                    <div class="card-change negative">Em uso</div>
+                </div>
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-title">Mesas Reservadas</div>
+                        <i class="fas fa-clock card-icon"></i>
+                    </div>
+                    <div class="card-value" id="mesas-reservadas">0</div>
+                    <div class="card-change warning">Reservadas</div>
+                </div>
+            </div>
+            
+            <!-- Controles -->
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title">Gerenciar Mesas</h3>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-primary" onclick="showAddMesaModal()">
+                            <i class="fas fa-plus"></i> Adicionar Mesa
+                        </button>
+                        <button class="btn btn-secondary" onclick="showConfigModal()">
+                            <i class="fas fa-cog"></i> Configurar
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Grid de Mesas -->
+                <div class="mesas-grid" id="mesasGrid">
+                    <!-- Mesas serão carregadas aqui -->
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="text-center p-4 mt-8">
+        © 2024 JP Gestão. Todos os direitos reservados.
+    </footer>
+    
+    <script src="./js/main.js"></script>
+    <script>
+        let mesasData = [];
+        
+        // Verificar autenticação
+        if (sessionStorage.getItem('loggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+        
+        // Configurar mensagem de boas-vindas
+        function updateWelcomeMessage() {
+            const username = sessionStorage.getItem('userDisplay') || sessionStorage.getItem('username') || 'Usuário';
+            const capitalizedUsername = username.charAt(0).toUpperCase() + username.slice(1);
+            document.getElementById('welcomeMessage').textContent = `Bem-vindo(a), ${capitalizedUsername}!`;
+        }
+        
+        // Carregar mesas
+        async function loadMesas() {
+            try {
+                const response = await fetch('/api/mesas');
+                if (response.ok) {
+                    mesasData = await response.json();
+                    updateStats();
+                    renderMesas();
+                } else {
+                    showNotification('Erro ao carregar mesas', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar mesas:', error);
+                showNotification('Erro ao carregar mesas', 'error');
+            }
+        }
+        
+        // Atualizar estatísticas
+        function updateStats() {
+            const total = mesasData.length;
+            const livres = mesasData.filter(m => m.status === 'livre').length;
+            const ocupadas = mesasData.filter(m => m.status === 'ocupada').length;
+            const reservadas = mesasData.filter(m => m.status === 'reservada').length;
+            
+            document.getElementById('total-mesas').textContent = total;
+            document.getElementById('mesas-livres').textContent = livres;
+            document.getElementById('mesas-ocupadas').textContent = ocupadas;
+            document.getElementById('mesas-reservadas').textContent = reservadas;
+        }
+        
+        // Renderizar mesas
+        function renderMesas() {
+            const grid = document.getElementById('mesasGrid');
+            
+            if (mesasData.length === 0) {
+                grid.innerHTML = '<div class="text-center text-gray-500" style="grid-column: 1 / -1; padding: 2rem;">Nenhuma mesa configurada</div>';
+                return;
+            }
+            
+            grid.innerHTML = mesasData.map(mesa => `
+                <div class="mesa-card ${mesa.status}" onclick="toggleMesaStatus(${mesa.id})">
+                    <div class="mesa-numero">${mesa.numero}</div>
+                    <div class="mesa-status">${getStatusText(mesa.status)}</div>
+                    ${mesa.cliente ? `<div class="mesa-info">${mesa.cliente}</div>` : ''}
+                    ${mesa.horario ? `<div class="mesa-info">${formatTime(mesa.horario)}</div>` : ''}
+                    <div class="mesa-acoes">
+                        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewMesa(${mesa.id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); editMesa(${mesa.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deleteMesa(${mesa.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Obter texto de status
+        function getStatusText(status) {
+            switch (status) {
+                case 'livre': return 'Livre';
+                case 'ocupada': return 'Ocupada';
+                case 'reservada': return 'Reservada';
+                default: return status;
+            }
+        }
+        
+        // Formatar hora
+        function formatTime(time) {
+            if (!time) return '';
+            return new Date(time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        // Alternar status da mesa
+        async function toggleMesaStatus(id) {
+            const mesa = mesasData.find(m => m.id === id);
+            if (!mesa) return;
+            
+            const newStatus = mesa.status === 'livre' ? 'ocupada' : 'livre';
+            
+            try {
+                const response = await fetch(`/api/mesas/${id}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (response.ok) {
+                    showNotification(`Mesa ${mesa.numero} ${newStatus === 'livre' ? 'liberada' : 'ocupada'}!`, 'success');
+                    loadMesas();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Erro ao alterar status', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao alterar status:', error);
+                showNotification('Erro ao alterar status', 'error');
+            }
+        }
+        
+        // Mostrar modal de adicionar mesa
+        function showAddMesaModal() {
+            const content = `
+                <form id="addMesaForm">
+                    <div class="form-group">
+                        <label for="numero" class="form-label">Número da Mesa *</label>
+                        <input type="number" id="numero" name="numero" class="form-input" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="capacidade" class="form-label">Capacidade</label>
+                        <input type="number" id="capacidade" name="capacidade" class="form-input" min="1" value="4">
+                    </div>
+                    <div class="form-group">
+                        <label for="localizacao" class="form-label">Localização</label>
+                        <input type="text" id="localizacao" name="localizacao" class="form-input" placeholder="Ex: Área externa, Varanda, etc.">
+                    </div>
+                    <div class="form-group">
+                        <label for="observacoes" class="form-label">Observações</label>
+                        <textarea id="observacoes" name="observacoes" class="form-input" rows="3" placeholder="Observações sobre a mesa..."></textarea>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Adicionar Mesa</button>
+                    </div>
+                </form>
+            `;
+            showModal('Adicionar Nova Mesa', content);
+            
+            // Adicionar evento de submit
+            document.getElementById('addMesaForm').addEventListener('submit', handleAddMesa);
+        }
+        
+        // Manipular adição de mesa
+        async function handleAddMesa(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const mesaData = Object.fromEntries(formData.entries());
+            
+            try {
+                const response = await fetch('/api/mesas', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(mesaData)
+                });
+                
+                if (response.ok) {
+                    showNotification('Mesa adicionada com sucesso!', 'success');
+                    closeModal(e.target);
+                    loadMesas();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Erro ao adicionar mesa', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao adicionar mesa:', error);
+                showNotification('Erro ao adicionar mesa', 'error');
+            }
+        }
+        
+        // Visualizar mesa
+        function viewMesa(id) {
+            const mesa = mesasData.find(m => m.id === id);
+            if (!mesa) return;
+            
+            const content = `
+                <div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <strong>Número:</strong> ${mesa.numero}
+                        </div>
+                        <div>
+                            <strong>Status:</strong> 
+                            <span class="badge badge-${mesa.status === 'livre' ? 'success' : mesa.status === 'ocupada' ? 'danger' : 'warning'}">${getStatusText(mesa.status)}</span>
+                        </div>
+                        <div>
+                            <strong>Capacidade:</strong> ${mesa.capacidade || 'Não definida'} pessoas
+                        </div>
+                        <div>
+                            <strong>Localização:</strong> ${mesa.localizacao || 'Não definida'}
+                        </div>
+                    </div>
+                    
+                    ${mesa.cliente ? `
+                        <div class="mb-4">
+                            <strong>Cliente:</strong> ${mesa.cliente}
+                        </div>
+                    ` : ''}
+                    
+                    ${mesa.horario ? `
+                        <div class="mb-4">
+                            <strong>Horário de Ocupação:</strong> ${formatTime(mesa.horario)}
+                        </div>
+                    ` : ''}
+                    
+                    ${mesa.observacoes ? `
+                        <div class="mb-4">
+                            <strong>Observações:</strong>
+                            <div style="margin-top: 0.5rem; padding: 1rem; background-color: var(--gray-100); border-radius: var(--border-radius);">
+                                ${mesa.observacoes}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            showModal(`Mesa ${mesa.numero}`, content);
+        }
+        
+        // Editar mesa
+        function editMesa(id) {
+            const mesa = mesasData.find(m => m.id === id);
+            if (!mesa) return;
+            
+            const content = `
+                <form id="editMesaForm">
+                    <input type="hidden" name="id" value="${mesa.id}">
+                    <div class="form-group">
+                        <label for="edit_numero" class="form-label">Número da Mesa *</label>
+                        <input type="number" id="edit_numero" name="numero" class="form-input" value="${mesa.numero}" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_capacidade" class="form-label">Capacidade</label>
+                        <input type="number" id="edit_capacidade" name="capacidade" class="form-input" value="${mesa.capacidade || ''}" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_localizacao" class="form-label">Localização</label>
+                        <input type="text" id="edit_localizacao" name="localizacao" class="form-input" value="${mesa.localizacao || ''}" placeholder="Ex: Área externa, Varanda, etc.">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_observacoes" class="form-label">Observações</label>
+                        <textarea id="edit_observacoes" name="observacoes" class="form-input" rows="3" placeholder="Observações sobre a mesa...">${mesa.observacoes || ''}</textarea>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Atualizar Mesa</button>
+                    </div>
+                </form>
+            `;
+            showModal('Editar Mesa', content);
+            
+            // Adicionar evento de submit
+            document.getElementById('editMesaForm').addEventListener('submit', handleEditMesa);
+        }
+        
+        // Manipular edição de mesa
+        async function handleEditMesa(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const mesaData = Object.fromEntries(formData.entries());
+            const id = mesaData.id;
+            delete mesaData.id;
+            
+            try {
+                const response = await fetch(`/api/mesas/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(mesaData)
+                });
+                
+                if (response.ok) {
+                    showNotification('Mesa atualizada com sucesso!', 'success');
+                    closeModal(e.target);
+                    loadMesas();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Erro ao atualizar mesa', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar mesa:', error);
+                showNotification('Erro ao atualizar mesa', 'error');
+            }
+        }
+        
+        // Deletar mesa
+        function deleteMesa(id) {
+            const mesa = mesasData.find(m => m.id === id);
+            if (!mesa) return;
+            
+            confirmAction(`Tem certeza que deseja excluir a mesa ${mesa.numero}?`, async () => {
+                try {
+                    const response = await fetch(`/api/mesas/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        showNotification('Mesa excluída com sucesso!', 'success');
+                        loadMesas();
+                    } else {
+                        const error = await response.json();
+                        showNotification(error.message || 'Erro ao excluir mesa', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir mesa:', error);
+                    showNotification('Erro ao excluir mesa', 'error');
+                }
+            });
+        }
+        
+        // Mostrar modal de configuração
+        function showConfigModal() {
+            const content = `
+                <div>
+                    <p>Configurações de mesas em desenvolvimento.</p>
+                    <p>Funcionalidades futuras:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Configuração automática de mesas</li>
+                        <li>Layout personalizado</li>
+                        <li>Horários de funcionamento</li>
+                        <li>Reservas automáticas</li>
+                    </ul>
+                </div>
+            `;
+            showModal('Configurações de Mesas', content);
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            updateWelcomeMessage();
+            loadMesas();
+        });
+    </script>
+</body>
+</html> 

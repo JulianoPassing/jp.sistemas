@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JP Gestão - Ajuda</title>
+    <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .help-section {
+            margin-bottom: 2rem;
+        }
+        
+        .help-item {
+            background-color: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .help-item:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        
+        .help-item h4 {
+            color: var(--terciary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .help-item p {
+            color: var(--gray-600);
+            margin-bottom: 0;
+        }
+        
+        .help-content {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--gray-200);
+        }
+        
+        .help-content.active {
+            display: block;
+        }
+        
+        .contact-info {
+            background: linear-gradient(135deg, var(--terciary) 0%, var(--terciary-100) 100%);
+            color: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .contact-info h3 {
+            margin-bottom: 1rem;
+        }
+        
+        .contact-methods {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+        
+        .contact-method {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .contact-method i {
+            font-size: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .contact-methods {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="app-layout">
+    <header>
+        <div class="header-content">
+            <a href="dashboard.html" class="logo" style="display: flex; align-items: center;">
+                <img src="https://i.imgur.com/TwZLW6a.png" alt="JP Gestão" style="height: 3rem; width: auto; object-fit: contain;">
+            </a>
+            <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Abrir menu"><span class="menu-icon"></span></button>
+            <div class="nav-wrapper">
+                <nav>
+                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="produtos.html" class="nav-link">Produtos</a>
+                    <a href="pedidos.html" class="nav-link">Pedidos</a>
+                    <a href="clientes.html" class="nav-link">Clientes</a>
+                    <a href="mesas.html" class="nav-link">Mesas</a>
+                    <a href="caixa.html" class="nav-link">Caixa</a>
+                    <a href="relatorios.html" class="nav-link">Relatórios</a>
+                    <a href="configuracoes.html" class="nav-link">Configurações</a>
+                    <a href="#" class="nav-link" onclick="sair()">Sair</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <div class="dashboard-header">
+                <div class="welcome-message" id="welcomeMessage">Bem-vindo(a)!</div>
+                <div class="dashboard-title">Central de Ajuda</div>
+                <div class="dashboard-subtitle">Encontre respostas para suas dúvidas e suporte</div>
+            </div>
+            
+            <!-- Busca de Ajuda -->
+            <div class="search-container">
+                <div style="display: flex; gap: 1rem; align-items: center; flex: 1;">
+                    <div style="flex: 1;">
+                        <input type="text" id="searchHelp" placeholder="Buscar ajuda..." class="form-input">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-primary" onclick="searchHelpContent()">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Seções de Ajuda -->
+            <div class="help-section">
+                <h3 class="section-title">Perguntas Frequentes</h3>
+                
+                <div class="help-item" onclick="toggleHelpContent(this)">
+                    <h4><i class="fas fa-question-circle"></i> Como cadastrar um novo produto?</h4>
+                    <p>Clique para ver instruções detalhadas sobre como adicionar produtos ao sistema.</p>
+                    <div class="help-content">
+                        <ol>
+                            <li>Acesse o menu "Produtos" no sistema</li>
+                            <li>Clique no botão "Novo Produto"</li>
+                            <li>Preencha os campos obrigatórios (nome, preço, estoque)</li>
+                            <li>Adicione informações opcionais como descrição e categoria</li>
+                            <li>Clique em "Salvar Produto"</li>
+                        </ol>
+                        <p><strong>Dica:</strong> Configure o estoque mínimo para receber alertas quando o produto estiver acabando.</p>
+                    </div>
+                </div>
+                
+                <div class="help-item" onclick="toggleHelpContent(this)">
+                    <h4><i class="fas fa-question-circle"></i> Como criar um pedido?</h4>
+                    <p>Clique para ver instruções detalhadas sobre como criar pedidos no sistema.</p>
+                    <div class="help-content">
+                        <ol>
+                            <li>Acesse o menu "Pedidos" no sistema</li>
+                            <li>Clique no botão "Novo Pedido"</li>
+                            <li>Selecione ou cadastre o cliente</li>
+                            <li>Adicione os produtos desejados</li>
+                            <li>Configure a mesa (se aplicável)</li>
+                            <li>Adicione observações se necessário</li>
+                            <li>Clique em "Criar Pedido"</li>
+                        </ol>
+                        <p><strong>Dica:</strong> Você pode alterar o status do pedido conforme ele é processado.</p>
+                    </div>
+                </div>
+                
+                <div class="help-item" onclick="toggleHelpContent(this)">
+                    <h4><i class="fas fa-question-circle"></i> Como gerenciar o estoque?</h4>
+                    <p>Clique para ver instruções sobre controle de estoque.</p>
+                    <div class="help-content">
+                        <ol>
+                            <li>Acesse "Produtos" para ver o estoque atual</li>
+                            <li>Use o botão de ajuste de estoque para adicionar/remover itens</li>
+                            <li>Configure estoque mínimo para receber alertas</li>
+                            <li>Monitore produtos com baixo estoque no dashboard</li>
+                        </ol>
+                        <p><strong>Dica:</strong> O sistema mostra automaticamente produtos com estoque baixo no dashboard.</p>
+                    </div>
+                </div>
+                
+                <div class="help-item" onclick="toggleHelpContent(this)">
+                    <h4><i class="fas fa-question-circle"></i> Como usar o controle de mesas?</h4>
+                    <p>Clique para ver instruções sobre o sistema de mesas.</p>
+                    <div class="help-content">
+                        <ol>
+                            <li>Acesse o menu "Mesas" no sistema</li>
+                            <li>Visualize o status de todas as mesas</li>
+                            <li>Clique em uma mesa para alterar seu status</li>
+                            <li>Use as ações para visualizar, editar ou excluir mesas</li>
+                            <li>Configure a capacidade e localização das mesas</li>
+                        </ol>
+                        <p><strong>Dica:</strong> As mesas podem estar Livres, Ocupadas ou Reservadas.</p>
+                    </div>
+                </div>
+                
+                <div class="help-item" onclick="toggleHelpContent(this)">
+                    <h4><i class="fas fa-question-circle"></i> Como gerar relatórios?</h4>
+                    <p>Clique para ver instruções sobre relatórios e análises.</p>
+                    <div class="help-content">
+                        <ol>
+                            <li>Acesse o menu "Relatórios" no sistema</li>
+                            <li>Selecione o período desejado</li>
+                            <li>Escolha o tipo de relatório</li>
+                            <li>Clique em "Gerar Relatório"</li>
+                            <li>Use "Exportar" para baixar os dados</li>
+                        </ol>
+                        <p><strong>Dica:</strong> Os relatórios mostram estatísticas importantes do seu negócio.</p>
+                    </div>
+                </div>
+                
+                <div class="help-item" onclick="toggleHelpContent(this)">
+                    <h4><i class="fas fa-question-circle"></i> Como usar o controle de caixa?</h4>
+                    <p>Clique para ver instruções sobre o sistema financeiro.</p>
+                    <div class="help-content">
+                        <ol>
+                            <li>Acesse o menu "Caixa" no sistema</li>
+                            <li>Visualize o saldo atual e estatísticas</li>
+                            <li>Use "Registrar Pagamento" para entradas</li>
+                            <li>Use "Retirada" ou "Despesa" para saídas</li>
+                            <li>Monitore todas as movimentações</li>
+                        </ol>
+                        <p><strong>Dica:</strong> Mantenha o controle financeiro sempre atualizado.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Guias Rápidos -->
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title">Guias Rápidos</h3>
+                </div>
+                <div class="menu-grid">
+                    <div class="menu-card" onclick="showQuickGuide('primeiros-passos')">
+                        <i class="fas fa-play"></i>
+                        <h3>Primeiros Passos</h3>
+                        <p>Comece a usar o sistema rapidamente</p>
+                    </div>
+                    <div class="menu-card" onclick="showQuickGuide('configuracao-inicial')">
+                        <i class="fas fa-cog"></i>
+                        <h3>Configuração Inicial</h3>
+                        <p>Configure seu sistema pela primeira vez</p>
+                    </div>
+                    <div class="menu-card" onclick="showQuickGuide('dicas-produtividade')">
+                        <i class="fas fa-lightbulb"></i>
+                        <h3>Dicas de Produtividade</h3>
+                        <p>Maximize a eficiência do sistema</p>
+                    </div>
+                    <div class="menu-card" onclick="showQuickGuide('solucao-problemas')">
+                        <i class="fas fa-tools"></i>
+                        <h3>Solução de Problemas</h3>
+                        <p>Resolva problemas comuns</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contato e Suporte -->
+            <div class="contact-info">
+                <h3>Precisa de mais ajuda?</h3>
+                <p>Nossa equipe está pronta para ajudar você a aproveitar ao máximo o sistema JP Gestão.</p>
+                
+                <div class="contact-methods">
+                    <div class="contact-method">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <strong>Email</strong>
+                            <div>suporte@jpgestao.com</div>
+                        </div>
+                    </div>
+                    <div class="contact-method">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <strong>Telefone</strong>
+                            <div>(11) 99999-9999</div>
+                        </div>
+                    </div>
+                    <div class="contact-method">
+                        <i class="fab fa-whatsapp"></i>
+                        <div>
+                            <strong>WhatsApp</strong>
+                            <div>(11) 99999-9999</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 2rem;">
+                    <p><strong>Horário de Atendimento:</strong> Segunda a Sexta, das 8h às 18h</p>
+                    <p><strong>Tempo de Resposta:</strong> Até 24 horas em dias úteis</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="text-center p-4 mt-8">
+        © 2024 JP Gestão. Todos os direitos reservados.
+    </footer>
+    
+    <script src="./js/main.js"></script>
+    <script>
+        // Verificar autenticação
+        if (sessionStorage.getItem('loggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+        
+        // Configurar mensagem de boas-vindas
+        function updateWelcomeMessage() {
+            const username = sessionStorage.getItem('userDisplay') || sessionStorage.getItem('username') || 'Usuário';
+            const capitalizedUsername = username.charAt(0).toUpperCase() + username.slice(1);
+            document.getElementById('welcomeMessage').textContent = `Bem-vindo(a), ${capitalizedUsername}!`;
+        }
+        
+        // Alternar conteúdo de ajuda
+        function toggleHelpContent(element) {
+            const content = element.querySelector('.help-content');
+            const isActive = content.classList.contains('active');
+            
+            // Fechar todos os outros conteúdos
+            document.querySelectorAll('.help-content').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Abrir o conteúdo clicado se não estava ativo
+            if (!isActive) {
+                content.classList.add('active');
+            }
+        }
+        
+        // Buscar conteúdo de ajuda
+        function searchHelpContent() {
+            const searchTerm = document.getElementById('searchHelp').value.toLowerCase();
+            const helpItems = document.querySelectorAll('.help-item');
+            
+            helpItems.forEach(item => {
+                const title = item.querySelector('h4').textContent.toLowerCase();
+                const description = item.querySelector('p').textContent.toLowerCase();
+                const content = item.querySelector('.help-content').textContent.toLowerCase();
+                
+                const matches = title.includes(searchTerm) || 
+                               description.includes(searchTerm) || 
+                               content.includes(searchTerm);
+                
+                if (matches) {
+                    item.style.display = 'block';
+                    if (searchTerm) {
+                        item.style.backgroundColor = 'var(--yellow-300)';
+                    } else {
+                        item.style.backgroundColor = 'var(--white)';
+                    }
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+        
+        // Mostrar guia rápido
+        function showQuickGuide(guide) {
+            const guides = {
+                'primeiros-passos': {
+                    title: 'Primeiros Passos',
+                    content: `
+                        <div>
+                            <h4>Bem-vindo ao JP Gestão!</h4>
+                            <p>Siga estes passos para começar:</p>
+                            <ol>
+                                <li><strong>Configure sua empresa:</strong> Acesse Configurações > Dados da Empresa</li>
+                                <li><strong>Cadastre produtos:</strong> Vá em Produtos > Novo Produto</li>
+                                <li><strong>Adicione clientes:</strong> Acesse Clientes > Novo Cliente</li>
+                                <li><strong>Configure mesas:</strong> Vá em Mesas > Adicionar Mesa</li>
+                                <li><strong>Crie seu primeiro pedido:</strong> Acesse Pedidos > Novo Pedido</li>
+                            </ol>
+                            <p><strong>Dica:</strong> O dashboard mostra um resumo de todas as informações importantes.</p>
+                        </div>
+                    `
+                },
+                'configuracao-inicial': {
+                    title: 'Configuração Inicial',
+                    content: `
+                        <div>
+                            <h4>Configuração Inicial do Sistema</h4>
+                            <p>Configure seu sistema para funcionar perfeitamente:</p>
+                            <ol>
+                                <li><strong>Dados da Empresa:</strong> Nome, CNPJ, contatos</li>
+                                <li><strong>Configurações Gerais:</strong> Moeda, fuso horário, idioma</li>
+                                <li><strong>Usuários:</strong> Crie contas para sua equipe</li>
+                                <li><strong>Backup:</strong> Configure backup automático</li>
+                                <li><strong>Notificações:</strong> Configure alertas importantes</li>
+                            </ol>
+                            <p><strong>Importante:</strong> Faça backup regular dos seus dados.</p>
+                        </div>
+                    `
+                },
+                'dicas-produtividade': {
+                    title: 'Dicas de Produtividade',
+                    content: `
+                        <div>
+                            <h4>Maximize sua Produtividade</h4>
+                            <p>Dicas para usar o sistema de forma mais eficiente:</p>
+                            <ul>
+                                <li><strong>Atalhos:</strong> Use Ctrl+F para buscar rapidamente</li>
+                                <li><strong>Filtros:</strong> Use os filtros para encontrar informações</li>
+                                <li><strong>Relatórios:</strong> Gere relatórios regularmente</li>
+                                <li><strong>Notificações:</strong> Configure alertas importantes</li>
+                                <li><strong>Backup:</strong> Faça backup regular dos dados</li>
+                            </ul>
+                            <p><strong>Dica:</strong> Use o dashboard para monitorar seu negócio em tempo real.</p>
+                        </div>
+                    `
+                },
+                'solucao-problemas': {
+                    title: 'Solução de Problemas',
+                    content: `
+                        <div>
+                            <h4>Problemas Comuns e Soluções</h4>
+                            <p>Resolva problemas frequentes:</p>
+                            <ul>
+                                <li><strong>Não consigo fazer login:</strong> Verifique usuário e senha</li>
+                                <li><strong>Sistema lento:</strong> Limpe o cache do navegador</li>
+                                <li><strong>Dados não salvam:</strong> Verifique a conexão com a internet</li>
+                                <li><strong>Erro ao gerar relatório:</strong> Verifique o período selecionado</li>
+                                <li><strong>Problema com impressão:</strong> Verifique as configurações da impressora</li>
+                            </ul>
+                            <p><strong>Contato:</strong> Se o problema persistir, entre em contato com nosso suporte.</p>
+                        </div>
+                    `
+                }
+            };
+            
+            const guide = guides[guide];
+            if (guide) {
+                showModal(guide.title, guide.content);
+            }
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            updateWelcomeMessage();
+            
+            // Busca em tempo real
+            const searchInput = document.getElementById('searchHelp');
+            searchInput.addEventListener('input', debounce(searchHelpContent, 300));
+            
+            // Buscar ao pressionar Enter
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchHelpContent();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

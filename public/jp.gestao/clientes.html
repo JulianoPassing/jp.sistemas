@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JP Gestão - Clientes</title>
+    <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="app-layout">
+    <header>
+        <div class="header-content">
+            <a href="dashboard.html" class="logo" style="display: flex; align-items: center;">
+                <img src="https://i.imgur.com/TwZLW6a.png" alt="JP Gestão" style="height: 3rem; width: auto; object-fit: contain;">
+            </a>
+            <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Abrir menu"><span class="menu-icon"></span></button>
+            <div class="nav-wrapper">
+                <nav>
+                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="produtos.html" class="nav-link">Produtos</a>
+                    <a href="pedidos.html" class="nav-link">Pedidos</a>
+                    <a href="clientes.html" class="nav-link active">Clientes</a>
+                    <a href="mesas.html" class="nav-link">Mesas</a>
+                    <a href="caixa.html" class="nav-link">Caixa</a>
+                    <a href="relatorios.html" class="nav-link">Relatórios</a>
+                    <a href="configuracoes.html" class="nav-link">Configurações</a>
+                    <a href="#" class="nav-link" onclick="sair()">Sair</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <div class="dashboard-header">
+                <div class="welcome-message" id="welcomeMessage">Bem-vindo(a)!</div>
+                <div class="dashboard-title">Gerenciamento de Clientes</div>
+                <div class="dashboard-subtitle">Cadastre e gerencie seus clientes</div>
+            </div>
+            
+            <!-- Busca e Filtros -->
+            <div class="search-container">
+                <div style="display: flex; gap: 1rem; align-items: center; flex: 1;">
+                    <div style="flex: 1;">
+                        <input type="text" id="searchInput" placeholder="Buscar clientes..." class="form-input">
+                    </div>
+                    <div>
+                        <select id="statusFilter" class="form-input">
+                            <option value="">Todos os status</option>
+                            <option value="ativo">Ativo</option>
+                            <option value="inativo">Inativo</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-primary" onclick="showAddClientModal()">
+                        <i class="fas fa-plus"></i> Novo Cliente
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportClients()">
+                        <i class="fas fa-download"></i> Exportar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Tabela de Clientes -->
+            <div class="section">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Telefone</th>
+                                <th>Email</th>
+                                <th>Endereço</th>
+                                <th>Total de Pedidos</th>
+                                <th>Valor Total</th>
+                                <th>Última Compra</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientesTable">
+                            <tr>
+                                <td colspan="8" class="text-center text-gray-500">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="text-center p-4 mt-8">
+        © 2024 JP Gestão. Todos os direitos reservados.
+    </footer>
+    
+    <script src="./js/main.js"></script>
+    <script>
+        let clientesData = [];
+        let filteredData = [];
+        
+        // Verificar autenticação
+        if (sessionStorage.getItem('loggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+        
+        // Configurar mensagem de boas-vindas
+        function updateWelcomeMessage() {
+            const username = sessionStorage.getItem('userDisplay') || sessionStorage.getItem('username') || 'Usuário';
+            const capitalizedUsername = username.charAt(0).toUpperCase() + username.slice(1);
+            document.getElementById('welcomeMessage').textContent = `Bem-vindo(a), ${capitalizedUsername}!`;
+        }
+        
+        // Carregar clientes
+        async function loadClientes() {
+            try {
+                const response = await fetch('/api/clientes');
+                if (response.ok) {
+                    clientesData = await response.json();
+                    filteredData = [...clientesData];
+                    renderClientes();
+                } else {
+                    showNotification('Erro ao carregar clientes', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar clientes:', error);
+                showNotification('Erro ao carregar clientes', 'error');
+            }
+        }
+        
+        // Renderizar clientes na tabela
+        function renderClientes() {
+            const tbody = document.getElementById('clientesTable');
+            
+            if (filteredData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500">Nenhum cliente encontrado</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filteredData.map(cliente => `
+                <tr>
+                    <td>
+                        <div class="font-semibold">${cliente.nome}</div>
+                        <div class="text-sm text-gray-500">${cliente.cpf || 'CPF não informado'}</div>
+                    </td>
+                    <td>${cliente.telefone || 'Não informado'}</td>
+                    <td>${cliente.email || 'Não informado'}</td>
+                    <td>
+                        <div class="text-sm">
+                            ${cliente.endereco ? `${cliente.endereco}, ${cliente.numero || ''}` : 'Não informado'}
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            ${cliente.bairro ? `${cliente.bairro} - ${cliente.cidade || ''}` : ''}
+                        </div>
+                    </td>
+                    <td class="text-center">${cliente.total_pedidos || 0}</td>
+                    <td class="font-semibold">${formatCurrency(cliente.valor_total || 0)}</td>
+                    <td>${cliente.ultima_compra ? formatDate(cliente.ultima_compra) : 'Nunca'}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-secondary btn-sm" onclick="viewCliente(${cliente.id})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="editCliente(${cliente.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteCliente(${cliente.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Filtrar clientes
+        function filterClientes() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            filteredData = clientesData.filter(cliente => {
+                // Filtro de busca
+                const matchesSearch = !searchTerm || 
+                    cliente.nome.toLowerCase().includes(searchTerm) ||
+                    (cliente.email && cliente.email.toLowerCase().includes(searchTerm)) ||
+                    (cliente.telefone && cliente.telefone.includes(searchTerm)) ||
+                    (cliente.cpf && cliente.cpf.includes(searchTerm));
+                
+                // Filtro de status
+                const matchesStatus = !statusFilter || cliente.status === statusFilter;
+                
+                return matchesSearch && matchesStatus;
+            });
+            
+            renderClientes();
+        }
+        
+        // Mostrar modal de adicionar cliente
+        function showAddClientModal() {
+            const content = `
+                <form id="addClientForm">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label for="nome" class="form-label">Nome Completo *</label>
+                            <input type="text" id="nome" name="nome" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cpf" class="form-label">CPF</label>
+                            <input type="text" id="cpf" name="cpf" class="form-input" placeholder="000.000.000-00">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label for="telefone" class="form-label">Telefone</label>
+                            <input type="text" id="telefone" name="telefone" class="form-input" placeholder="(11) 99999-9999">
+                        </div>
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" id="email" name="email" class="form-input" placeholder="cliente@email.com">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="endereco" class="form-label">Endereço</label>
+                        <input type="text" id="endereco" name="endereco" class="form-input" placeholder="Rua, Avenida, etc.">
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="form-group">
+                            <label for="numero" class="form-label">Número</label>
+                            <input type="text" id="numero" name="numero" class="form-input" placeholder="123">
+                        </div>
+                        <div class="form-group">
+                            <label for="bairro" class="form-label">Bairro</label>
+                            <input type="text" id="bairro" name="bairro" class="form-input" placeholder="Centro">
+                        </div>
+                        <div class="form-group">
+                            <label for="cidade" class="form-label">Cidade</label>
+                            <input type="text" id="cidade" name="cidade" class="form-input" placeholder="São Paulo">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="observacoes" class="form-label">Observações</label>
+                        <textarea id="observacoes" name="observacoes" class="form-input" rows="3" placeholder="Observações sobre o cliente..."></textarea>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Cliente</button>
+                    </div>
+                </form>
+            `;
+            showModal('Adicionar Novo Cliente', content);
+            
+            // Adicionar evento de submit
+            document.getElementById('addClientForm').addEventListener('submit', handleAddClient);
+        }
+        
+        // Manipular adição de cliente
+        async function handleAddClient(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const clientData = Object.fromEntries(formData.entries());
+            
+            try {
+                const response = await fetch('/api/clientes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(clientData)
+                });
+                
+                if (response.ok) {
+                    showNotification('Cliente adicionado com sucesso!', 'success');
+                    closeModal(e.target);
+                    loadClientes();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Erro ao adicionar cliente', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao adicionar cliente:', error);
+                showNotification('Erro ao adicionar cliente', 'error');
+            }
+        }
+        
+        // Visualizar cliente
+        function viewCliente(id) {
+            const cliente = clientesData.find(c => c.id === id);
+            if (!cliente) return;
+            
+            const content = `
+                <div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <strong>Nome:</strong> ${cliente.nome}
+                        </div>
+                        <div>
+                            <strong>CPF:</strong> ${cliente.cpf || 'Não informado'}
+                        </div>
+                        <div>
+                            <strong>Telefone:</strong> ${cliente.telefone || 'Não informado'}
+                        </div>
+                        <div>
+                            <strong>Email:</strong> ${cliente.email || 'Não informado'}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <strong>Endereço:</strong>
+                        <div style="margin-top: 0.5rem; padding: 1rem; background-color: var(--gray-100); border-radius: var(--border-radius);">
+                            ${cliente.endereco ? `${cliente.endereco}, ${cliente.numero || ''}` : 'Não informado'}
+                            ${cliente.bairro ? `<br>${cliente.bairro}` : ''}
+                            ${cliente.cidade ? `<br>${cliente.cidade}` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <strong>Total de Pedidos:</strong><br>
+                            <span class="text-2xl font-bold text-terciary">${cliente.total_pedidos || 0}</span>
+                        </div>
+                        <div>
+                            <strong>Valor Total:</strong><br>
+                            <span class="text-2xl font-bold text-green-600">${formatCurrency(cliente.valor_total || 0)}</span>
+                        </div>
+                        <div>
+                            <strong>Última Compra:</strong><br>
+                            <span class="text-sm">${cliente.ultima_compra ? formatDate(cliente.ultima_compra) : 'Nunca'}</span>
+                        </div>
+                    </div>
+                    
+                    ${cliente.observacoes ? `
+                        <div class="mb-4">
+                            <strong>Observações:</strong>
+                            <div style="margin-top: 0.5rem; padding: 1rem; background-color: var(--gray-100); border-radius: var(--border-radius);">
+                                ${cliente.observacoes}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            showModal(`Cliente: ${cliente.nome}`, content);
+        }
+        
+        // Editar cliente
+        function editCliente(id) {
+            const cliente = clientesData.find(c => c.id === id);
+            if (!cliente) return;
+            
+            const content = `
+                <form id="editClientForm">
+                    <input type="hidden" name="id" value="${cliente.id}">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label for="edit_nome" class="form-label">Nome Completo *</label>
+                            <input type="text" id="edit_nome" name="nome" class="form-input" value="${cliente.nome}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit_cpf" class="form-label">CPF</label>
+                            <input type="text" id="edit_cpf" name="cpf" class="form-input" value="${cliente.cpf || ''}" placeholder="000.000.000-00">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label for="edit_telefone" class="form-label">Telefone</label>
+                            <input type="text" id="edit_telefone" name="telefone" class="form-input" value="${cliente.telefone || ''}" placeholder="(11) 99999-9999">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit_email" class="form-label">Email</label>
+                            <input type="email" id="edit_email" name="email" class="form-input" value="${cliente.email || ''}" placeholder="cliente@email.com">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_endereco" class="form-label">Endereço</label>
+                        <input type="text" id="edit_endereco" name="endereco" class="form-input" value="${cliente.endereco || ''}" placeholder="Rua, Avenida, etc.">
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="form-group">
+                            <label for="edit_numero" class="form-label">Número</label>
+                            <input type="text" id="edit_numero" name="numero" class="form-input" value="${cliente.numero || ''}" placeholder="123">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit_bairro" class="form-label">Bairro</label>
+                            <input type="text" id="edit_bairro" name="bairro" class="form-input" value="${cliente.bairro || ''}" placeholder="Centro">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit_cidade" class="form-label">Cidade</label>
+                            <input type="text" id="edit_cidade" name="cidade" class="form-input" value="${cliente.cidade || ''}" placeholder="São Paulo">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_observacoes" class="form-label">Observações</label>
+                        <textarea id="edit_observacoes" name="observacoes" class="form-input" rows="3" placeholder="Observações sobre o cliente...">${cliente.observacoes || ''}</textarea>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Atualizar Cliente</button>
+                    </div>
+                </form>
+            `;
+            showModal('Editar Cliente', content);
+            
+            // Adicionar evento de submit
+            document.getElementById('editClientForm').addEventListener('submit', handleEditClient);
+        }
+        
+        // Manipular edição de cliente
+        async function handleEditClient(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const clientData = Object.fromEntries(formData.entries());
+            const id = clientData.id;
+            delete clientData.id;
+            
+            try {
+                const response = await fetch(`/api/clientes/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(clientData)
+                });
+                
+                if (response.ok) {
+                    showNotification('Cliente atualizado com sucesso!', 'success');
+                    closeModal(e.target);
+                    loadClientes();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Erro ao atualizar cliente', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar cliente:', error);
+                showNotification('Erro ao atualizar cliente', 'error');
+            }
+        }
+        
+        // Deletar cliente
+        function deleteCliente(id) {
+            const cliente = clientesData.find(c => c.id === id);
+            if (!cliente) return;
+            
+            confirmAction(`Tem certeza que deseja excluir o cliente "${cliente.nome}"?`, async () => {
+                try {
+                    const response = await fetch(`/api/clientes/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        showNotification('Cliente excluído com sucesso!', 'success');
+                        loadClientes();
+                    } else {
+                        const error = await response.json();
+                        showNotification(error.message || 'Erro ao excluir cliente', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir cliente:', error);
+                    showNotification('Erro ao excluir cliente', 'error');
+                }
+            });
+        }
+        
+        // Exportar clientes
+        function exportClients() {
+            if (filteredData.length === 0) {
+                showNotification('Nenhum cliente para exportar', 'warning');
+                return;
+            }
+            
+            const exportData = filteredData.map(cliente => ({
+                Nome: cliente.nome,
+                CPF: cliente.cpf || '',
+                Telefone: cliente.telefone || '',
+                Email: cliente.email || '',
+                Endereço: cliente.endereco ? `${cliente.endereco}, ${cliente.numero || ''}` : '',
+                Bairro: cliente.bairro || '',
+                Cidade: cliente.cidade || '',
+                'Total de Pedidos': cliente.total_pedidos || 0,
+                'Valor Total': cliente.valor_total || 0,
+                'Última Compra': cliente.ultima_compra ? formatDate(cliente.ultima_compra) : 'Nunca',
+                Observações: cliente.observacoes || ''
+            }));
+            
+            exportToCSV(exportData, 'clientes');
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            updateWelcomeMessage();
+            loadClientes();
+            
+            // Busca em tempo real
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', debounce(filterClientes, 300));
+            
+            // Filtros
+            document.getElementById('statusFilter').addEventListener('change', filterClientes);
+        });
+    </script>
+</body>
+</html> 
