@@ -1163,6 +1163,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
           }
         }
+        // Garantir que cliente_id seja inteiro
+        cliente_id = parseInt(cliente_id, 10);
         // Montar payload do empréstimo
         const payload = {
           cliente_id,
