@@ -1,5 +1,5 @@
 // Configurações da API
-const API_BASE_URL = '/api/cobrancas';
+const API_BASE_URL = '/api';
 
 // Estado global da aplicação
 const appState = {
