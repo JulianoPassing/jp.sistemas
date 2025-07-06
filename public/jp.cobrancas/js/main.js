@@ -667,6 +667,7 @@ const emprestimoController = {
     try {
       const emprestimos = await apiService.getEmprestimos();
       const emp = emprestimos.find(e => String(e.id) === String(id));
+      console.log('DEBUG EMPRESTIMO:', emp);
       if (!emp) {
         ui.showNotification('Empréstimo não encontrado', 'error');
         return;
