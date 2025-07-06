@@ -813,7 +813,7 @@ const emprestimoController = {
         const telefone = emp.telefone || emp.celular || emp.whatsapp || '';
         const nome = emp.cliente_nome || '';
         const msgWhatsapp = encodeURIComponent(
-          `Olá ${nome}, sua dívida total é de R$ ${utils.formatCurrency(valorAtualizado)}. Juros do mês: ${jurosPercent}% (R$ ${utils.formatCurrency(jurosTotal)}).`
+          `Olá ${nome}, seu empréstimo está vencendo hoje. O valor total é de R$ ${utils.formatCurrency(valorAtualizado)}. Caso venha enviar somente o juros o valor é R$ ${utils.formatCurrency(jurosTotal)}.`
         );
         const linkWhatsapp = telefone ? `https://wa.me/55${telefone.replace(/\D/g,'')}?text=${msgWhatsapp}` : '#';
         const detalhes = `
