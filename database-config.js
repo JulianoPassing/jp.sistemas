@@ -57,7 +57,8 @@ const databaseConfigs = {
   local: () => ({
     host: process.env.DB_HOST ?? 'localhost',
     user: process.env.DB_USER ?? 'jpsistemas',
-    password: process.env.DB_PASSWORD ?? 'SuaSenhaForte123!',
+    password: process.env.DB_PASSWORD ?? 'Juliano@95',
+    database: process.env.DB_DATABASE ?? 'jpsistemas_cobrancas',
     port: process.env.DB_PORT ?? 3306,
     charset: 'utf8mb4'
   }),
