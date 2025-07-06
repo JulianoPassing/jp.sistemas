@@ -433,4 +433,42 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Expor para uso global
-window.clientesApp = clientesApp; 
+window.clientesApp = clientesApp;
+
+// Função para exportar clientes para Excel
+function exportarClientesParaExcel(clientes) {
+  if (!window.XLSX) {
+    clientesUI.showNotification('Biblioteca XLSX não carregada!', 'error');
+    return;
+  }
+  const data = clientes.map(c => ({
+    'Nome': c.name || c.nome || '',
+    'CPF': c.cpf_cnpj || c.cpf || '',
+    'Telefone': c.phone || c.telefone || '',
+    'E-mail': c.email || '',
+    'Cidade': c.cidade || '',
+    'Estado': c.estado || '',
+    'Status': c.status || '',
+    'Empréstimos Ativos': c.emprestimos_ativos || 0,
+    'Empréstimos Atrasados': c.emprestimos_atrasados || 0
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Clientes');
+  XLSX.writeFile(wb, 'clientes.xlsx');
+}
+
+// Adicionar evento ao botão Exportar
+window.addEventListener('DOMContentLoaded', () => {
+  const btnExportar = document.querySelector('.btn-success, .btn-exportar, #btn-exportar');
+  if (btnExportar) {
+    btnExportar.addEventListener('click', async () => {
+      let lista = clientes;
+      if (!lista || lista.length === 0) {
+        // Carregar clientes se não estiverem carregados
+        lista = await clientesApiService.getClientes();
+      }
+      exportarClientesParaExcel(lista);
+    });
+  }
+}); 
