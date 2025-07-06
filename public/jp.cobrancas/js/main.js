@@ -1229,9 +1229,12 @@ async function renderHistoricoEmprestimos() {
     }
     // Calcular valor total e valor total com juros
     let totalComJuros = 0;
+    const hoje = new Date();
+    hoje.setHours(0,0,0,0);
     (emprestimos || []).forEach(emp => {
-      const valor = Number(emp.valor || 0);
-      const jurosPercent = Number(emp.juros_mensal || 0);
+      // Garantir conversão correta
+      const valor = Number(emp.valor ? String(emp.valor).replace(',', '.').replace(/[^0-9.\-]/g, '') : 0);
+      const jurosPercent = Number(emp.juros_mensal ? String(emp.juros_mensal).replace(',', '.').replace(/[^0-9.\-]/g, '') : 0);
       let valorJuros = valor * (jurosPercent / 100);
       let valorAtualizado = valor + valorJuros;
       // Se vencido e não quitado, soma juros diário
@@ -1244,8 +1247,8 @@ async function renderHistoricoEmprestimos() {
           valorAtualizado += jurosDiario * diasAtraso;
         }
       }
-      total += valor;
-      totalComJuros += valorAtualizado;
+      if (!isNaN(valor)) total += valor;
+      if (!isNaN(valorAtualizado)) totalComJuros += valorAtualizado;
     });
     const totaisBox = document.getElementById('totais-emprestimos-box');
     if (totaisBox) {
