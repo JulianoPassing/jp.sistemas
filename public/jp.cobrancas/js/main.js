@@ -1252,12 +1252,11 @@ function renderCobrancasResumo(lista, targetId) {
   const target = document.getElementById(targetId);
   if (!target) return;
   if (!lista || lista.length === 0) {
-    target.innerHTML = '<span class="text-gray-500">Nenhuma cobrança</span>';
+    target.innerHTML = '<span class="text-gray-500">0</span>';
     return;
   }
   const hoje = new Date();
   hoje.setHours(0,0,0,0);
-  // Se for cobranças pendentes, exibe apenas o total de vencidas até hoje
   if (targetId === 'cobrancas-pendentes') {
     const totalPendentes = lista.filter(cobranca => {
       const dataVenc = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
