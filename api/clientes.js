@@ -54,6 +54,24 @@ module.exports = async (req, res) => {
       return;
     }
 
+    if (req.method === 'PATCH') {
+      // PATCH /api/clientes/:id para atualizar status
+      const parsedUrl = url.parse(req.url, true);
+      const id = parsedUrl.pathname.split('/').pop();
+      if (!id || isNaN(Number(id))) {
+        res.status(400).json({ error: 'ID inválido para atualização.' });
+        return;
+      }
+      const { status } = req.body;
+      if (!status) {
+        res.status(400).json({ error: 'Status não informado.' });
+        return;
+      }
+      await connection.execute('UPDATE clientes SET status = ? WHERE id = ?', [status, id]);
+      res.status(200).json({ message: 'Status atualizado com sucesso!' });
+      return;
+    }
+
     // GET - listar todos os clientes
     const [rows] = await connection.execute('SELECT * FROM clientes');
     res.status(200).json(rows);
