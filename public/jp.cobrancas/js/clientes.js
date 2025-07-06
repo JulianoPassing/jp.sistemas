@@ -412,7 +412,11 @@ const clientesApp = {
       const cliente = await clientesApiService.getCliente(id);
       clientesUI.renderClienteDetails(cliente);
     } catch (error) {
-      clientesUI.showNotification('Erro ao carregar detalhes do cliente', 'error');
+      if (error.status === 404 || (error.message && error.message.toLowerCase().includes('not found'))) {
+        clientesUI.showNotification('Cliente não encontrado ou já removido.', 'error');
+      } else {
+        clientesUI.showNotification('Erro ao carregar detalhes do cliente', 'error');
+      }
     }
   },
 
@@ -421,7 +425,11 @@ const clientesApp = {
       const cliente = await clientesApiService.getCliente(id);
       clientesUI.renderClienteForm(cliente);
     } catch (error) {
-      clientesUI.showNotification('Erro ao carregar dados do cliente', 'error');
+      if (error.status === 404 || (error.message && error.message.toLowerCase().includes('not found'))) {
+        clientesUI.showNotification('Cliente não encontrado ou já removido.', 'error');
+      } else {
+        clientesUI.showNotification('Erro ao carregar dados do cliente', 'error');
+      }
     }
   }
 };
