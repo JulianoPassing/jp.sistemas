@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JP-Caixa - Painel</title>
+  <link rel="icon" type="image/png" href="https://i.imgur.com/6N82fk2.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="app-layout">
+  <header>
+    <div class="header-content">
+      <a href="index.html" class="logo" style="display: flex; align-items: center;">
+        <img src="https://i.imgur.com/EQ1tjZX.png" alt="JP-Caixa" style="height: 5rem; width: auto; object-fit: contain;">
+      </a>
+      <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Abrir menu"><span class="menu-icon"></span></button>
+      <div class="nav-wrapper">
+        <nav>
+          <a href="painel.html" class="nav-link active">Painel</a>
+          <a href="caixa.html" class="nav-link">Caixa</a>
+          <a href="produtos.html" class="nav-link">Produtos</a>
+          <a href="vendas.html" class="nav-link">Vendas</a>
+          <a href="#" class="nav-link" onclick="sair()">Sair</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="container">
+      <div class="dashboard-header">
+        <div class="welcome-message" id="welcomeMessage">Bem-vindo(a)!</div>
+        <div class="dashboard-title">Painel de Controle</div>
+        <div class="dashboard-subtitle">
+          <span id="currentDate"></span>
+          <small>(hoje)</small>
+        </div>
+      </div>
+      
+      <!-- Cards de Estatísticas -->
+      <div class="cards">
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Vendas Hoje</div>
+            <i class="fas fa-shopping-cart card-icon"></i>
+          </div>
+          <div class="card-value" id="vendas-hoje">R$ 0,00</div>
+          <div class="card-change positive">+0% vs ontem</div>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Produtos Cadastrados</div>
+            <i class="fas fa-box card-icon"></i>
+          </div>
+          <div class="card-value" id="total-produtos">0</div>
+          <div class="card-change positive">+0% este mês</div>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Vendas do Mês</div>
+            <i class="fas fa-chart-line card-icon"></i>
+          </div>
+          <div class="card-value" id="vendas-mes">R$ 0,00</div>
+          <div class="card-change positive">+0% vs mês anterior</div>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Produtos em Baixa</div>
+            <i class="fas fa-exclamation-triangle card-icon"></i>
+          </div>
+          <div class="card-value" id="produtos-baixa">0</div>
+          <div class="card-change negative">-0% este mês</div>
+        </div>
+      </div>
+
+      <!-- Cards de Ações Rápidas -->
+      <div class="section">
+        <div class="section-header">
+          <h3 class="section-title">Ações Rápidas</h3>
+        </div>
+        <div class="cards">
+          <a href="caixa.html" class="card fade-in" style="text-decoration: none; color: inherit;">
+            <div class="card-header">
+              <div class="card-title">Abrir Caixa</div>
+              <i class="fas fa-cash-register card-icon"></i>
+            </div>
+            <div class="card-value" style="font-size: 1.5rem;">Iniciar Venda</div>
+            <div class="card-change">Clique para abrir o caixa</div>
+          </a>
+          <a href="produtos.html" class="card fade-in" style="text-decoration: none; color: inherit;">
+            <div class="card-header">
+              <div class="card-title">Gerenciar Produtos</div>
+              <i class="fas fa-boxes card-icon"></i>
+            </div>
+            <div class="card-value" style="font-size: 1.5rem;">Cadastrar/Editar</div>
+            <div class="card-change">Gerenciar estoque</div>
+          </a>
+          <a href="vendas.html" class="card fade-in" style="text-decoration: none; color: inherit;">
+            <div class="card-header">
+              <div class="card-title">Histórico de Vendas</div>
+              <i class="fas fa-history card-icon"></i>
+            </div>
+            <div class="card-value" style="font-size: 1.5rem;">Ver Vendas</div>
+            <div class="card-change">Consultar histórico</div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Seção de Vendas Recentes -->
+      <div class="section">
+        <div class="section-header">
+          <h3 class="section-title">Vendas Recentes</h3>
+          <a href="vendas.html" class="btn btn-primary">Ver Todas</a>
+        </div>
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Data/Hora</th>
+                <th>Itens</th>
+                <th>Total</th>
+                <th>Forma Pagamento</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="vendas-recentes">
+              <tr>
+                <td colspan="5" class="text-center text-gray-500">Carregando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Seção de Produtos em Baixa -->
+      <div class="section">
+        <div class="section-header">
+          <h3 class="section-title">Produtos em Baixa</h3>
+          <a href="produtos.html" class="btn btn-warning">Gerenciar Estoque</a>
+        </div>
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Preço</th>
+                <th>Estoque Atual</th>
+                <th>Estoque Mínimo</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="produtos-baixa-lista">
+              <tr>
+                <td colspan="5" class="text-center text-gray-500">Carregando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="text-center p-4 mt-8">
+    © 2024 JP-Caixa. Todos os direitos reservados.
+  </footer>
+  
+  <script src="./js/main.js"></script>
+  <script>
+    // Verificar autenticação
+    if (sessionStorage.getItem('loggedIn') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    // Função de logout
+    function sair() {
+      sessionStorage.removeItem('loggedIn');
+      sessionStorage.removeItem('username');
+      sessionStorage.removeItem('loginTime');
+      window.location.href = 'login.html';
+    }
+
+    // Atualizar data atual
+    function atualizarData() {
+      const now = new Date();
+      const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      };
+      document.getElementById('currentDate').textContent = now.toLocaleDateString('pt-BR', options);
+    }
+
+    // Atualizar mensagem de boas-vindas
+    function atualizarBoasVindas() {
+      const username = sessionStorage.getItem('username') || 'Usuário';
+      const now = new Date();
+      const hora = now.getHours();
+      
+      let saudacao = 'Bom dia';
+      if (hora >= 12 && hora < 18) {
+        saudacao = 'Boa tarde';
+      } else if (hora >= 18) {
+        saudacao = 'Boa noite';
+      }
+      
+      document.getElementById('welcomeMessage').textContent = `${saudacao}, ${username}!`;
+    }
+
+    // Carregar dados do painel
+    async function carregarDadosPainel() {
+      try {
+        // Carregar estatísticas
+        const resStats = await fetch('/api/caixa/estatisticas', {
+          credentials: 'include'
+        });
+        
+        if (resStats.ok) {
+          const stats = await resStats.json();
+          document.getElementById('vendas-hoje').textContent = `R$ ${stats.vendasHoje?.toFixed(2) || '0,00'}`;
+          document.getElementById('total-produtos').textContent = stats.totalProdutos || '0';
+          document.getElementById('vendas-mes').textContent = `R$ ${stats.vendasMes?.toFixed(2) || '0,00'}`;
+          document.getElementById('produtos-baixa').textContent = stats.produtosBaixa || '0';
+        }
+
+        // Carregar vendas recentes
+        const resVendas = await fetch('/api/caixa/vendas-recentes', {
+          credentials: 'include'
+        });
+        
+        if (resVendas.ok) {
+          const vendas = await resVendas.json();
+          const tbody = document.getElementById('vendas-recentes');
+          
+          if (vendas.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhuma venda encontrada</td></tr>';
+          } else {
+            tbody.innerHTML = vendas.map(venda => `
+              <tr>
+                <td>${new Date(venda.data).toLocaleString('pt-BR')}</td>
+                <td>${venda.itens} itens</td>
+                <td>R$ ${venda.total.toFixed(2)}</td>
+                <td>${venda.formaPagamento}</td>
+                <td><span class="badge badge-success">Finalizada</span></td>
+              </tr>
+            `).join('');
+          }
+        }
+
+        // Carregar produtos em baixa
+        const resProdutos = await fetch('/api/caixa/produtos-baixa', {
+          credentials: 'include'
+        });
+        
+        if (resProdutos.ok) {
+          const produtos = await resProdutos.json();
+          const tbody = document.getElementById('produtos-baixa-lista');
+          
+          if (produtos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhum produto em baixa</td></tr>';
+          } else {
+            tbody.innerHTML = produtos.map(produto => `
+              <tr>
+                <td>${produto.nome}</td>
+                <td>R$ ${produto.preco.toFixed(2)}</td>
+                <td>${produto.estoque}</td>
+                <td>${produto.estoqueMinimo}</td>
+                <td><span class="badge badge-warning">Baixo</span></td>
+              </tr>
+            `).join('');
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+      }
+    }
+
+    // Menu mobile
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuBtn = document.getElementById('mobile-menu-toggle');
+      const navWrapper = document.querySelector('.nav-wrapper');
+      
+      if (menuBtn && navWrapper) {
+        menuBtn.addEventListener('click', function() {
+          navWrapper.classList.toggle('open');
+        });
+      }
+
+      // Inicializar dados
+      atualizarData();
+      atualizarBoasVindas();
+      carregarDadosPainel();
+    });
+  </script>
+</body>
+</html> 
