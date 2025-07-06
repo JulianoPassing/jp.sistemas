@@ -119,11 +119,11 @@ const apiService = {
 
   // Clientes
   async getClientes() {
-    return this.request('/clientes');
+    return this.request('/cobrancas/clientes');
   },
 
   async createCliente(clienteData) {
-    return this.request('/clientes', {
+    return this.request('/cobrancas/clientes', {
       method: 'POST',
       body: JSON.stringify(clienteData)
     });
