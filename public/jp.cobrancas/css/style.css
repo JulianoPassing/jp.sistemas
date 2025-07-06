@@ -213,9 +213,11 @@ main {
 
 .card-value {
   font-size: 2rem;
-  font-weight: 700;
-  color: var(--terciary);
-  margin-bottom: 0.5rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
 }
 
 .card-change {
@@ -639,7 +641,7 @@ footer {
   }
   
   .card-value {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
   }
   
   .section {
@@ -764,4 +766,13 @@ footer {
   font-size: 0.98rem;
   font-weight: 400;
   display: block;
+}
+
+.card-value, .card-title, .card {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.card-header, .card {
+  min-width: 0;
 } 
