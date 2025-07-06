@@ -11,6 +11,104 @@ const appState = {
   }
 };
 
+// Sistema de autenticação e sessão
+const authSystem = {
+  // Verificar se está logado
+  async checkAuth() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/cobrancas/check-auth`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Não autenticado');
+      }
+      
+      const data = await response.json();
+      return data.authenticated;
+    } catch (error) {
+      console.log('Usuário não autenticado, redirecionando para login...');
+      return false;
+    }
+  },
+
+  // Fazer logout
+  async logout() {
+    try {
+      await fetch(`${API_BASE_URL}/cobrancas/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    } finally {
+      // Limpar dados locais
+      localStorage.removeItem('cobrancas_session');
+      sessionStorage.clear();
+      
+      // Redirecionar para login
+      window.location.href = 'login.html';
+    }
+  },
+
+  // Configurar logout automático
+  setupAutoLogout() {
+    // Logout quando a página for fechada
+    window.addEventListener('beforeunload', (e) => {
+      // Enviar requisição de logout antes de fechar
+      navigator.sendBeacon(`${API_BASE_URL}/cobrancas/logout`, '');
+    });
+
+    // Logout quando a aba perder foco por muito tempo (30 minutos)
+    let inactivityTimer;
+    const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutos
+
+    const resetInactivityTimer = () => {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        console.log('Sessão expirada por inatividade');
+        this.logout();
+      }, INACTIVITY_TIMEOUT);
+    };
+
+    // Resetar timer em eventos de atividade
+    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    activityEvents.forEach(event => {
+      document.addEventListener(event, resetInactivityTimer, true);
+    });
+
+    // Iniciar timer
+    resetInactivityTimer();
+
+    // Logout quando a aba ficar oculta por muito tempo
+    let hiddenTimer;
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        // Página ficou oculta, iniciar timer
+        hiddenTimer = setTimeout(() => {
+          console.log('Sessão expirada - página oculta por muito tempo');
+          this.logout();
+        }, 15 * 60 * 1000); // 15 minutos
+      } else {
+        // Página voltou a ficar visível, cancelar timer
+        clearTimeout(hiddenTimer);
+      }
+    });
+  },
+
+  // Verificar sessão periodicamente
+  setupSessionCheck() {
+    setInterval(async () => {
+      const isAuthenticated = await this.checkAuth();
+      if (!isAuthenticated) {
+        console.log('Sessão expirada, fazendo logout...');
+        this.logout();
+      }
+    }, 5 * 60 * 1000); // Verificar a cada 5 minutos
+  }
+};
+
 // Utilitários
 const utils = {
   // Formatação de moeda
@@ -503,6 +601,21 @@ const mobileMenuController = {
 const app = {
   async init() {
     try {
+      // Verificar autenticação primeiro (exceto na página de login)
+      const path = window.location.pathname;
+      if (!path.includes('login.html')) {
+        const isAuthenticated = await authSystem.checkAuth();
+        if (!isAuthenticated) {
+          console.log('Usuário não autenticado, redirecionando...');
+          window.location.href = 'login.html';
+          return;
+        }
+        
+        // Configurar sistema de logout automático
+        authSystem.setupAutoLogout();
+        authSystem.setupSessionCheck();
+      }
+      
       // Configurar data atual
       this.setCurrentDate();
       
@@ -510,7 +623,6 @@ const app = {
       mobileMenuController.init();
       
       // Carregar dados do dashboard apenas se estivermos na página do dashboard
-      const path = window.location.pathname;
       if (path.includes('dashboard.html') || path.endsWith('/') || path.includes('index.html')) {
         await dashboardController.loadDashboardData();
         
@@ -1522,14 +1634,7 @@ async function recarregarDadosPagina() {
 // Função para logout
 function sair() {
   if (confirm('Tem certeza que deseja sair?')) {
-    fetch('/api/cobrancas/logout', {
-      method: 'POST',
-      credentials: 'include'
-    }).then(() => {
-      window.location.href = 'login.html';
-    }).catch(() => {
-      window.location.href = 'login.html';
-    });
+    authSystem.logout();
   }
 }
 
@@ -1766,6 +1871,7 @@ window.cobrancaController = cobrancaController;
 window.clienteController = clienteController;
 window.ui = ui;
 window.utils = utils;
+window.authSystem = authSystem;
 
 // Exportar funções globais
 window.viewEmprestimo = viewEmprestimo;

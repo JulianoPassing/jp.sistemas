@@ -581,6 +581,19 @@ router.get('/session', (req, res) => {
   }
 });
 
+// Rota para verificar autenticação (usada pelo frontend)
+router.get('/check-auth', (req, res) => {
+  if (req.session.cobrancasUser) {
+    res.json({ 
+      authenticated: true, 
+      user: req.session.cobrancasUser,
+      db: req.session.cobrancasDb
+    });
+  } else {
+    res.status(401).json({ authenticated: false });
+  }
+});
+
 // Rota para logout
 router.post('/logout', (req, res) => {
   req.session.destroy((err) => {
