@@ -16,16 +16,19 @@
       <a href="index.html" class="logo" style="display: flex; align-items: center;">
         <img src="https://i.imgur.com/EQ1tjZX.png" alt="JP-Cobranças" style="height: 5rem; width: auto; object-fit: contain;">
       </a>
-      <nav>
-        <a href="dashboard.html" class="nav-link">Dashboard</a>
-        <a href="clientes.html" class="nav-link">Clientes</a>
-        <a href="adicionar-cliente.html" class="nav-link">Adicionar Cliente</a>
-        <a href="cobrancas.html" class="nav-link">Cobranças</a>
-        <a href="atrasados.html" class="nav-link">Atrasados</a>
-        <a href="lista-negra.html" class="nav-link">Lista Negra</a>
-        <a href="emprestimos.html" class="nav-link active">Histórico de Empréstimos</a>
-        <a href="#" class="nav-link" onclick="sair()">Sair</a>
-      </nav>
+      <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Abrir menu"><span class="menu-icon"></span></button>
+      <div class="nav-wrapper">
+        <nav>
+          <a href="dashboard.html" class="nav-link">Dashboard</a>
+          <a href="clientes.html" class="nav-link">Clientes</a>
+          <a href="adicionar-cliente.html" class="nav-link">Adicionar Cliente</a>
+          <a href="cobrancas.html" class="nav-link">Cobranças</a>
+          <a href="atrasados.html" class="nav-link">Atrasados</a>
+          <a href="lista-negra.html" class="nav-link">Lista Negra</a>
+          <a href="emprestimos.html" class="nav-link active">Histórico de Empréstimos</a>
+          <a href="#" class="nav-link" onclick="sair()">Sair</a>
+        </nav>
+      </div>
     </div>
   </header>
   <main>
@@ -68,5 +71,16 @@
     © 2024 JP-Cobranças. Todos os direitos reservados.
   </footer>
   <script src="./js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuBtn = document.getElementById('mobile-menu-toggle');
+      const navWrapper = document.querySelector('.nav-wrapper');
+      if (menuBtn && navWrapper) {
+        menuBtn.addEventListener('click', function() {
+          navWrapper.classList.toggle('open');
+        });
+      }
+    });
+  </script>
 </body>
 </html> 
