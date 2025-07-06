@@ -1252,7 +1252,7 @@ function renderCobrancasResumo(lista, targetId) {
   const target = document.getElementById(targetId);
   if (!target) return;
   if (!lista || lista.length === 0) {
-    target.innerHTML = '<span class="text-gray-500">0</span>';
+    target.innerHTML = '0';
     return;
   }
   const hoje = new Date();
@@ -1263,7 +1263,7 @@ function renderCobrancasResumo(lista, targetId) {
       const status = (cobranca.status || '').toUpperCase();
       return dataVenc && dataVenc <= hoje && (status === 'PENDENTE' || status === 'EM ABERTO');
     }).length;
-    target.innerHTML = `<span style="font-size:2rem;font-weight:600;">${totalPendentes}</span>`;
+    target.innerHTML = String(totalPendentes);
     return;
   }
   let resumo = '';
