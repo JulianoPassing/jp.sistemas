@@ -863,7 +863,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (e) {
         ui.showNotification('Erro ao carregar clientes', 'error');
       }
-      const clienteOptions = clientes.map(c => `<option value=\"${c.id}\">${c.nome || c.name}</option>`).join('');
+      const clienteOptions = clientes.map(c => `<option value=\"${c.id}\">${c.nome || c.razao || c.name}</option>`).join('');
       const modalContent = `
         <form id="modal-emprestimo-form">
           <div class="form-group">
@@ -949,7 +949,7 @@ document.addEventListener('DOMContentLoaded', () => {
           telefoneInput.value = '';
         } else {
           const cliente = clientes.find(c => String(c.id) === String(selectedId));
-          nomeInput.value = cliente?.nome || cliente?.name || '';
+          nomeInput.value = cliente?.nome || cliente?.razao || cliente?.name || '';
           cpfInput.value = cliente?.cpf || cliente?.cpf_cnpj || '';
           telefoneInput.value = cliente?.telefone || cliente?.phone || '';
         }
@@ -1001,6 +1001,12 @@ document.addEventListener('DOMContentLoaded', () => {
         let cliente_id = formData.clienteId;
         // Se não selecionou cliente, criar cliente
         if (!cliente_id) {
+          // Validação do nome do cliente
+          if (!formData.nome || formData.nome.trim() === '' || formData.nome === 'undefined') {
+            ui.showNotification('Preencha o nome do cliente corretamente!', 'error');
+            return;
+          }
+          
           try {
             const clientePayload = {
               nome: formData.nome,

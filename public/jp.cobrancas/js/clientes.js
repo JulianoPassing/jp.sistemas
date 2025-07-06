@@ -120,7 +120,7 @@ const clientesUI = {
       <tr data-id="${cliente.id}">
         <td>
           <div class="cliente-info">
-            <div class="cliente-nome">${cliente.name}</div>
+            <div class="cliente-nome">${cliente.razao || cliente.name || 'N/A'}</div>
             <div class="cliente-email">${cliente.email || 'N/A'}</div>
           </div>
         </td>
@@ -162,9 +162,9 @@ const clientesUI = {
     const clientesValidos = clientes.filter(
       c =>
         c &&
-        (c.nome || c.name) &&
-        (c.nome || c.name) !== 'undefined' &&
-        (c.nome || c.name).trim() !== ''
+        (c.razao || c.nome || c.name) &&
+        (c.razao || c.nome || c.name) !== 'undefined' &&
+        (c.razao || c.nome || c.name).trim() !== ''
     );
     if (clientesTableBody) {
       if (clientesValidos.length === 0) {
@@ -191,9 +191,9 @@ const clientesUI = {
     const formContent = `
       <form id="cliente-form" class="form">
         <div class="form-group">
-          <label for="name" class="form-label">Nome *</label>
-          <input type="text" id="name" name="name" class="form-input" 
-                 value="${cliente?.name || ''}" required>
+          <label for="razao" class="form-label">Nome/Razão Social *</label>
+          <input type="text" id="razao" name="razao" class="form-input" 
+                 value="${cliente?.razao || cliente?.name || ''}" required>
         </div>
         
         <div class="form-group">
@@ -251,7 +251,7 @@ const clientesUI = {
     const detailsContent = `
       <div class="cliente-details">
         <div class="detail-row">
-          <strong>Nome:</strong> ${cliente.name}
+          <strong>Nome:</strong> ${cliente.razao || cliente.name || 'N/A'}
         </div>
         <div class="detail-row">
           <strong>Email:</strong> ${cliente.email || 'N/A'}
@@ -294,7 +294,7 @@ const clientesUI = {
       </div>
     `;
 
-    clientesUI.showModal(detailsContent, `Detalhes do Cliente - ${cliente.name}`);
+    clientesUI.showModal(detailsContent, `Detalhes do Cliente - ${cliente.razao || cliente.name || 'N/A'}`);
   }
 };
 
@@ -359,8 +359,8 @@ const clientesApp = {
 
   async createCliente(clienteData) {
     // Validação: nome obrigatório
-    if (!clienteData.nome || clienteData.nome.trim() === '' || clienteData.nome === 'undefined') {
-      clientesUI.showNotification('Preencha o nome do cliente corretamente!', 'error');
+    if (!clienteData.razao || clienteData.razao.trim() === '' || clienteData.razao === 'undefined') {
+      clientesUI.showNotification('Preencha o nome/razão social do cliente corretamente!', 'error');
       return;
     }
     try {
@@ -449,7 +449,7 @@ function exportarClientesParaExcel(clientes) {
     return;
   }
   const data = clientes.map(c => ({
-    'Nome': c.name || c.nome || '',
+    'Nome': c.razao || c.name || c.nome || '',
     'CPF': c.cpf_cnpj || c.cpf || '',
     'Telefone': c.phone || c.telefone || '',
     'E-mail': c.email || '',
