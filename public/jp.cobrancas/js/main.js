@@ -114,6 +114,7 @@ const apiService = {
 
   // Dashboard
   async getDashboardData() {
+    console.log('Fazendo requisição para /cobrancas/dashboard');
     return this.request('/cobrancas/dashboard');
   },
 
@@ -148,6 +149,7 @@ const apiService = {
 
   // Cobranças pendentes do dia
   async getCobrancasPendentesDia() {
+    console.log('Fazendo requisição para /cobrancas/pendentes-dia');
     return this.request('/cobrancas/pendentes-dia');
   }
 };
@@ -244,9 +246,12 @@ const dashboardController = {
         ui.showLoading(dashboardElement);
       }
       
+      console.log('Carregando dados do dashboard...');
       const data = await apiService.getDashboardData();
+      console.log('Dashboard carregado, buscando cobranças pendentes do dia...');
       // Buscar cobranças pendentes do dia
       const cobrancasPendentesDia = await apiService.getCobrancasPendentesDia();
+      console.log('Cobranças pendentes do dia carregadas, buscando empréstimos...');
       // Buscar todos os empréstimos para calcular o valor total a receber com juros em aberto
       const emprestimos = await apiService.getEmprestimos();
       let valorTotalReceber = 0;
