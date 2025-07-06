@@ -168,6 +168,43 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
       SELECT COUNT(*) as total_clientes FROM clientes_cobrancas WHERE status IN ('Ativo', 'Pendente')
     `);
 
+    // Clientes em atraso: pelo menos um empréstimo em atraso
+    const [clientesEmAtraso] = await connection.execute(`
+      SELECT COUNT(DISTINCT c.id) as total
+      FROM clientes_cobrancas c
+      JOIN emprestimos e ON e.cliente_id = c.id
+      WHERE e.status IN ('Ativo', 'Pendente')
+        AND e.data_vencimento < CURDATE()
+        AND e.status <> 'Quitado'
+    `);
+
+    // Empréstimos em atraso
+    const [emprestimosEmAtraso] = await connection.execute(`
+      SELECT COUNT(*) as total
+      FROM emprestimos
+      WHERE status IN ('Ativo', 'Pendente')
+        AND data_vencimento < CURDATE()
+        AND status <> 'Quitado'
+    `);
+
+    // Clientes ativos: pelo menos um empréstimo ativo/pendente e não quitado
+    const [clientesAtivos] = await connection.execute(`
+      SELECT COUNT(DISTINCT c.id) as total
+      FROM clientes_cobrancas c
+      JOIN emprestimos e ON e.cliente_id = c.id
+      WHERE e.status IN ('Ativo', 'Pendente')
+        AND e.status <> 'Quitado'
+    `);
+
+    // Empréstimos ativos: status Ativo ou Pendente e vencimento >= hoje
+    const [emprestimosAtivos] = await connection.execute(`
+      SELECT COUNT(*) as total
+      FROM emprestimos
+      WHERE status IN ('Ativo', 'Pendente')
+        AND data_vencimento >= CURDATE()
+        AND status <> 'Quitado'
+    `);
+
     // Empréstimos recentes (apenas ativos e com cliente)
     const [emprestimosRecentes] = await connection.execute(`
       SELECT e.*, c.nome as cliente_nome, c.telefone as telefone
@@ -196,7 +233,11 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
       cobrancas: cobrancasStats[0],
       clientes: clientesStats[0],
       emprestimosRecentes,
-      cobrancasPendentes
+      cobrancasPendentes,
+      clientesEmAtraso: clientesEmAtraso[0].total,
+      emprestimosEmAtraso: emprestimosEmAtraso[0].total,
+      clientesAtivos: clientesAtivos[0].total,
+      emprestimosAtivos: emprestimosAtivos[0].total
     });
   } catch (error) {
     console.error('Erro ao buscar dados do dashboard:', error);

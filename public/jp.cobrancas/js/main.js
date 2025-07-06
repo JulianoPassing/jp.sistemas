@@ -303,7 +303,10 @@ const dashboardController = {
       'total-clientes': data.clientes?.total_clientes || 0,
       'total-emprestimos': data.emprestimos?.total_emprestimos || 0,
       'valor-receber': data.cobrancas?.valor_total_cobrancas || 0,
-      'clientes-atraso': data.cobrancas?.clientes_em_atraso || 0,
+      'clientes-atraso': (data.clientesEmAtraso ?? data.cobrancas?.clientes_em_atraso) || 0,
+      'emprestimos-atraso': data.emprestimosEmAtraso || 0,
+      'clientes-ativos': data.clientesAtivos || 0,
+      'emprestimos-ativos': data.emprestimosAtivos || 0,
       'total-investido': data.emprestimos?.valor_total_emprestimos || 0
     };
 
