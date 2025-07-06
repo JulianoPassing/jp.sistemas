@@ -509,70 +509,111 @@ const app = {
       // Inicializar menu mobile
       mobileMenuController.init();
       
-      // Carregar dados do dashboard
-      await dashboardController.loadDashboardData();
-      
-      // Configurar auto-refresh a cada 5 minutos
-      setInterval(() => {
-        dashboardController.loadDashboardData();
-      }, 5 * 60 * 1000);
+      // Carregar dados do dashboard apenas se estivermos na página do dashboard
+      const path = window.location.pathname;
+      if (path.includes('dashboard.html') || path.endsWith('/') || path.includes('index.html')) {
+        await dashboardController.loadDashboardData();
+        
+        // Configurar auto-refresh a cada 5 minutos
+        setInterval(() => {
+          dashboardController.loadDashboardData();
+        }, 5 * 60 * 1000);
+      }
       
       // Adicionar estilos para notificações
       this.addNotificationStyles();
       
-      // Após carregar os dados do dashboard, se estiver na página de cobranças, renderizar os cards estruturados
-      const path = window.location.pathname;
-      if (path.includes('cobrancas.html')) {
-        document.addEventListener('DOMContentLoaded', () => {
-          apiService.getCobrancas().then(lista => {
-            renderCobrancasResumo(lista, 'cobrancas-pendentes');
-            renderCobrancasResumo(lista, 'valor-receber'); // Se quiser separar, filtre as listas
-          });
-        });
-      }
-      
-      // Carregar lista de empréstimos se existir na página
-      if (document.getElementById('emprestimos-lista')) {
-        renderEmprestimosLista();
-      }
-      
-      // Carregar lista de cobranças em aberto se existir na página
-      if (document.getElementById('cobrancas-lista')) {
-        renderCobrancasEmAbertoLista();
-      }
-      
-      // Atualizar cards de estatísticas nas páginas específicas
-      if (document.getElementById('total-atraso') && document.getElementById('valor-atraso')) {
-        fetch('/api/cobrancas/dashboard', { credentials: 'include' })
-          .then(res => res.json())
-          .then(data => {
-            document.getElementById('total-atraso').textContent = data.emprestimosEmAtraso || 0;
-            document.getElementById('valor-atraso').textContent = new Intl.NumberFormat('pt-BR', {
-              style: 'currency',
-              currency: 'BRL'
-            }).format(data.cobrancas?.valor_atrasado || 0);
-          });
-      }
-      if (document.getElementById('clientes-ativos') && document.getElementById('clientes-atraso')) {
-        fetch('/api/cobrancas/dashboard', { credentials: 'include' })
-          .then(res => res.json())
-          .then(data => {
-            document.getElementById('clientes-ativos').textContent = data.clientesAtivos || 0;
-            document.getElementById('clientes-atraso').textContent = data.clientesEmAtraso || 0;
-          });
-      }
-      if (document.getElementById('emprestimos-ativos') && document.getElementById('emprestimos-atraso')) {
-        fetch('/api/cobrancas/dashboard', { credentials: 'include' })
-          .then(res => res.json())
-          .then(data => {
-            document.getElementById('emprestimos-ativos').textContent = data.emprestimosAtivos || 0;
-            document.getElementById('emprestimos-atraso').textContent = data.emprestimosEmAtraso || 0;
-          });
-      }
+      // Carregar dados específicos de cada página
+      this.loadPageSpecificData();
       
     } catch (error) {
       console.error('Erro na inicialização:', error);
       ui.showNotification('Erro ao inicializar a aplicação', 'error');
+    }
+  },
+
+  async loadPageSpecificData() {
+    const path = window.location.pathname;
+    
+    // Página de cobranças
+    if (path.includes('cobrancas.html')) {
+      try {
+        await renderCobrancasEmAbertoLista();
+      } catch (error) {
+        console.error('Erro ao carregar cobranças:', error);
+      }
+    }
+    
+    // Página de empréstimos
+    if (path.includes('emprestimos.html')) {
+      if (document.getElementById('historico-emprestimos')) {
+        await renderHistoricoEmprestimos();
+      }
+    }
+    
+    // Página de clientes
+    if (path.includes('clientes.html')) {
+      if (document.getElementById('lista-clientes')) {
+        await renderClientesLista();
+      }
+    }
+    
+    // Página de atrasados
+    if (path.includes('atrasados.html')) {
+      if (document.getElementById('atrasados-lista')) {
+        await renderAtrasadosLista();
+      }
+    }
+    
+    // Atualizar cards de estatísticas nas páginas específicas
+    await this.updateStatisticsCards();
+  },
+
+  async updateStatisticsCards() {
+    try {
+      const data = await apiService.getDashboardData();
+      
+      // Cards de atraso
+      if (document.getElementById('total-atraso')) {
+        document.getElementById('total-atraso').textContent = data.emprestimosEmAtraso || 0;
+      }
+      if (document.getElementById('valor-atraso')) {
+        document.getElementById('valor-atraso').textContent = utils.formatCurrency(data.cobrancas?.valor_atrasado || 0);
+      }
+      
+      // Cards de clientes
+      if (document.getElementById('clientes-ativos')) {
+        document.getElementById('clientes-ativos').textContent = data.clientesAtivos || 0;
+      }
+      if (document.getElementById('clientes-atraso')) {
+        document.getElementById('clientes-atraso').textContent = data.clientesEmAtraso || 0;
+      }
+      
+      // Cards de empréstimos
+      if (document.getElementById('emprestimos-ativos')) {
+        document.getElementById('emprestimos-ativos').textContent = data.emprestimosAtivos || 0;
+      }
+      if (document.getElementById('emprestimos-atraso')) {
+        document.getElementById('emprestimos-atraso').textContent = data.emprestimosEmAtraso || 0;
+      }
+      
+      // Card de valor total
+      if (document.getElementById('valor-total')) {
+        const emprestimos = await apiService.getEmprestimos();
+        const total = (emprestimos || []).reduce((acc, emp) => {
+          const status = (emp.status || '').toLowerCase();
+          if ((status === 'ativo' || status === 'pendente') && status !== 'quitado') {
+            const valor = Number(emp.valor || 0);
+            const juros = Number(emp.juros_mensal || 0);
+            acc += valor + (valor * (juros / 100));
+          }
+          return acc;
+        }, 0);
+        document.getElementById('valor-total').textContent = utils.formatCurrency(total);
+      }
+      
+    } catch (error) {
+      console.error('Erro ao atualizar cards de estatísticas:', error);
     }
   },
 
@@ -899,6 +940,141 @@ const cobrancaController = {
   }
 };
 
+const clienteController = {
+  async viewCliente(id) {
+    try {
+      const response = await fetch(`/api/cobrancas/clientes/${id}`, {
+        credentials: 'include'
+      });
+      const cliente = await response.json();
+      
+      if (!response.ok) {
+        ui.showNotification('Cliente não encontrado', 'error');
+        return;
+      }
+      
+      const modalContent = `
+        <div class="cliente-modal-box" style="padding: 1.5rem; max-width: 500px; margin: 0 auto;">
+          <h3 style="margin-bottom: 1rem; color: #002f4b;">${cliente.nome}</h3>
+          <div style="margin-bottom: 1rem;">
+            <p><strong>CPF/CNPJ:</strong> ${cliente.cpf_cnpj || 'Não informado'}</p>
+            <p><strong>Telefone:</strong> ${cliente.telefone || 'Não informado'}</p>
+            <p><strong>Email:</strong> ${cliente.email || 'Não informado'}</p>
+            <p><strong>Endereço:</strong> ${cliente.endereco || 'Não informado'}</p>
+            <p><strong>Cidade:</strong> ${cliente.cidade || 'Não informada'}</p>
+            <p><strong>Estado:</strong> ${cliente.estado || 'Não informado'}</p>
+            <p><strong>CEP:</strong> ${cliente.cep || 'Não informado'}</p>
+          </div>
+          <div style="margin-top: 1.5rem;">
+            <h4>Empréstimos Ativos: ${cliente.emprestimos?.length || 0}</h4>
+            ${cliente.emprestimos && cliente.emprestimos.length > 0 ? 
+              cliente.emprestimos.map(emp => `
+                <div style="border: 1px solid #eee; padding: 0.5rem; margin: 0.5rem 0; border-radius: 4px;">
+                  <p><strong>Valor:</strong> ${utils.formatCurrency(emp.valor)}</p>
+                  <p><strong>Vencimento:</strong> ${utils.formatDate(emp.data_vencimento)}</p>
+                  <p><strong>Status:</strong> <span class="badge badge-${emp.status === 'Ativo' ? 'success' : 'warning'}">${emp.status}</span></p>
+                </div>
+              `).join('') : '<p>Nenhum empréstimo ativo</p>'
+            }
+          </div>
+        </div>
+      `;
+      
+      ui.showModal(modalContent, 'Detalhes do Cliente');
+    } catch (error) {
+      console.error('Erro ao buscar cliente:', error);
+      ui.showNotification('Erro ao buscar dados do cliente', 'error');
+    }
+  },
+
+  async deleteCliente(id) {
+    if (!confirm('Tem certeza que deseja remover este cliente?')) return;
+    
+    try {
+      const response = await fetch(`/api/cobrancas/clientes/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        ui.showNotification(error.error || 'Erro ao remover cliente', 'error');
+        return;
+      }
+      
+      ui.showNotification('Cliente removido com sucesso!', 'success');
+      if (document.getElementById('lista-clientes')) {
+        renderClientesLista();
+      }
+    } catch (error) {
+      console.error('Erro ao remover cliente:', error);
+      ui.showNotification('Erro ao remover cliente', 'error');
+    }
+  }
+};
+
+// Função para renderizar o histórico de empréstimos
+async function renderHistoricoEmprestimos() {
+  const tbody = document.getElementById('historico-emprestimos');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="6">Carregando...</td></tr>';
+  try {
+    const emprestimos = await apiService.getEmprestimos();
+    if (!emprestimos || emprestimos.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    emprestimos.forEach(emprestimo => {
+      // Cálculo de atraso e juros diário
+      const valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
+      const jurosPercent = Number(emprestimo.juros_mensal || 0);
+      const jurosTotal = valorInvestido * (jurosPercent / 100);
+      const dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      let status = (emprestimo.status || '').toUpperCase();
+      let valorAtualizado = valorInvestido + jurosTotal;
+      let infoJuros = '';
+      let diasAtraso = 0;
+      let jurosDiario = 0;
+      let jurosAplicado = 0;
+      if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+        status = 'ATRASADO';
+        // Calcular dias de atraso
+        const diffTime = hoje.getTime() - dataVencimento.getTime();
+        diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        // Juros diário: juros total dividido por 30 dias, arredondado para cima
+        jurosDiario = Math.ceil(jurosTotal / 30);
+        jurosAplicado = jurosDiario * diasAtraso;
+        valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
+        infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
+      }
+      const valor = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(valorAtualizado);
+      const data = emprestimo.data_emprestimo ? new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR') : '-';
+      const vencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-';
+      const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : (status === 'QUITADO' ? 'info' : 'secondary')));
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${emprestimo.cliente_nome || 'N/A'}</td>
+        <td>${valor}${infoJuros}</td>
+        <td>${data}</td>
+        <td>${vencimento}</td>
+        <td><span class="badge badge-${statusClass}">${status}</span></td>
+        <td>
+          <button class="btn btn-primary btn-sm" onclick="emprestimoController.viewEmprestimo(${emprestimo.id})">Ver</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
+  }
+}
+
 // Função para renderizar a lista de empréstimos
 async function renderEmprestimosLista() {
   const tbody = document.getElementById('emprestimos-lista');
@@ -963,6 +1139,37 @@ async function renderEmprestimosLista() {
   }
 }
 
+// Função para renderizar a lista de clientes
+async function renderClientesLista() {
+  const tbody = document.getElementById('lista-clientes');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
+  try {
+    const clientes = await apiService.getClientes();
+    if (!clientes || clientes.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhum cliente encontrado</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    clientes.forEach(cliente => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${cliente.nome || 'N/A'}</td>
+        <td>${cliente.cpf_cnpj || '-'}</td>
+        <td>${cliente.telefone || '-'}</td>
+        <td><span class="badge badge-success">${cliente.status || 'Ativo'}</span></td>
+        <td>
+          <button class="btn btn-primary btn-sm" onclick="clienteController.viewCliente(${cliente.id})">Ver</button>
+          <button class="btn btn-danger btn-sm" onclick="clienteController.deleteCliente(${cliente.id})">Remover</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-red-500">Erro ao carregar clientes</td></tr>';
+  }
+}
+
 // Função para renderizar cobranças (empréstimos em aberto)
 async function renderCobrancasEmAbertoLista() {
   const tbody = document.getElementById('cobrancas-lista');
@@ -1017,6 +1224,20 @@ async function renderCobrancasEmAbertoLista() {
     });
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="8" class="text-center text-red-500">Erro ao carregar cobranças</td></tr>';
+  }
+}
+
+// Função para logout
+function sair() {
+  if (confirm('Tem certeza que deseja sair?')) {
+    fetch('/api/cobrancas/logout', {
+      method: 'POST',
+      credentials: 'include'
+    }).then(() => {
+      window.location.href = 'login.html';
+    }).catch(() => {
+      window.location.href = 'login.html';
+    });
   }
 }
 
@@ -1244,6 +1465,7 @@ window.app = app;
 window.dashboardController = dashboardController;
 window.emprestimoController = emprestimoController;
 window.cobrancaController = cobrancaController;
+window.clienteController = clienteController;
 window.ui = ui;
 window.utils = utils;
 
@@ -1257,6 +1479,7 @@ function renderCobrancasResumo(lista, targetId) {
   }
   const hoje = new Date();
   hoje.setHours(0,0,0,0);
+  
   if (targetId === 'cobrancas-pendentes') {
     const totalPendentes = lista.filter(cobranca => {
       const dataVenc = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
@@ -1266,29 +1489,47 @@ function renderCobrancasResumo(lista, targetId) {
     target.innerHTML = String(totalPendentes);
     return;
   }
-  let resumo = '';
-  if (targetId === 'cobrancas-pendentes') {
-    resumo = `<div style="font-weight:600; margin-bottom:0.5em;">Total de cobranças pendentes até hoje: <span style="color:#ef4444;">${totalPendentes}</span></div>`;
+  
+  if (targetId === 'valor-receber') {
+    const valorTotal = lista.reduce((acc, cobranca) => {
+      const valorInvestido = Number(cobranca.valor_inicial || cobranca.valor_original || cobranca.valor || 0);
+      const jurosPercent = Number(cobranca.juros_mensal || cobranca.juros || cobranca.juros_percentual || 0);
+      const jurosTotal = valorInvestido * (jurosPercent / 100);
+      const dataVencimento = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
+      let valorAtualizado = valorInvestido + jurosTotal;
+      
+      if (dataVencimento && dataVencimento < hoje) {
+        const diffTime = hoje.getTime() - dataVencimento.getTime();
+        const diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const jurosDiario = Math.ceil(jurosTotal / 30);
+        const jurosAplicado = jurosDiario * diasAtraso;
+        valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
+      }
+      
+      return acc + valorAtualizado;
+    }, 0);
+    
+    target.innerHTML = utils.formatCurrency(valorTotal);
+    return;
   }
-  target.innerHTML = resumo + lista.map(cobranca => {
-    // Cálculo de valor atualizado e status atrasado
+  
+  // Para outros casos, mostrar lista detalhada
+  target.innerHTML = lista.map(cobranca => {
     const valorInvestido = Number(cobranca.valor_inicial || cobranca.valor_original || cobranca.valor || 0);
     const jurosPercent = Number(cobranca.juros_mensal || cobranca.juros || cobranca.juros_percentual || 0);
     const jurosTotal = valorInvestido * (jurosPercent / 100);
     const dataVencimento = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
-    let status = (cobranca.status || '').toUpperCase();
     let valorAtualizado = valorInvestido + jurosTotal;
     let diasAtraso = 0;
-    let jurosDiario = 0;
-    let jurosAplicado = 0;
-    if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
-      status = 'ATRASADO';
+    
+    if (dataVencimento && dataVencimento < hoje) {
       const diffTime = hoje.getTime() - dataVencimento.getTime();
       diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      jurosDiario = Math.ceil(jurosTotal / 30);
-      jurosAplicado = jurosDiario * diasAtraso;
+      const jurosDiario = Math.ceil(jurosTotal / 30);
+      const jurosAplicado = jurosDiario * diasAtraso;
       valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
     }
+    
     return `
       <div class="cobranca-item">
         <span class="cobranca-nome">${cobranca.cliente_nome || 'N/A'}</span>
@@ -1300,11 +1541,12 @@ function renderCobrancasResumo(lista, targetId) {
   }).join('');
 }
 
-function renderAtrasadosLista() {
+async function renderAtrasadosLista() {
   const tbody = document.getElementById('atrasados-lista');
   if (!tbody) return;
   tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
-  apiService.getEmprestimos().then(emprestimos => {
+  try {
+    const emprestimos = await apiService.getEmprestimos();
     const hoje = new Date();
     hoje.setHours(0,0,0,0);
     const atrasados = (emprestimos || []).filter(e => {
@@ -1354,41 +1596,10 @@ function renderAtrasadosLista() {
         </tr>
       `;
     });
-  });
+  } catch (error) {
+    console.error('Erro ao carregar atrasados:', error);
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-red-500">Erro ao carregar atrasados</td></tr>';
+  }
 }
 
-// Chamar renderAtrasadosLista se existir a tabela na página
-if (document.getElementById('atrasados-lista')) {
-  renderAtrasadosLista();
-}
-
-// Atualizar valor do card 'valor-total' em emprestimos.html
-if (document.getElementById('valor-total')) {
-  apiService.getEmprestimos().then(emprestimos => {
-    const total = (emprestimos || []).reduce((acc, emp) => {
-      const status = (emp.status || '').toLowerCase();
-      if ((status === 'ativo' || status === 'pendente') && status !== 'quitado') {
-        const valor = Number(emp.valor || 0);
-        const juros = Number(emp.juros_mensal || 0);
-        acc += valor + (valor * (juros / 100));
-      }
-      return acc;
-    }, 0);
-    document.getElementById('valor-total').textContent = utils.formatCurrency(total);
-  });
-}
-
-// Forçar atualização do card de cobranças pendentes ao carregar a página de cobranças
-if (window.location.pathname.includes('cobrancas.html')) {
-  apiService.getCobrancas().then(lista => {
-    const hoje = new Date();
-    hoje.setHours(0,0,0,0);
-    const totalPendentes = (lista || []).filter(cobranca => {
-      const dataVenc = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
-      const status = (cobranca.status || '').toUpperCase();
-      return dataVenc && dataVenc <= hoje && (status === 'PENDENTE' || status === 'EM ABERTO');
-    }).length;
-    const card = document.getElementById('cobrancas-pendentes');
-    if (card) card.innerHTML = String(totalPendentes);
-  });
-} 
+ 
