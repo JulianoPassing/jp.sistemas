@@ -13,8 +13,23 @@ const appState = {
 
 // Sistema de autenticação e sessão
 const authSystem = {
+  // Cache de autenticação para evitar verificações desnecessárias
+  authCache: {
+    isAuthenticated: null,
+    lastCheck: 0,
+    cacheDuration: 30 * 1000 // 30 segundos de cache
+  },
+
   // Verificar se está logado
   async checkAuth() {
+    const now = Date.now();
+    
+    // Verificar cache primeiro
+    if (this.authCache.isAuthenticated !== null && 
+        (now - this.authCache.lastCheck) < this.authCache.cacheDuration) {
+      return this.authCache.isAuthenticated;
+    }
+
     try {
       const response = await fetch(`${API_BASE_URL}/cobrancas/check-auth`, {
         method: 'GET',
@@ -26,11 +41,27 @@ const authSystem = {
       }
       
       const data = await response.json();
+      
+      // Atualizar cache
+      this.authCache.isAuthenticated = data.authenticated;
+      this.authCache.lastCheck = now;
+      
       return data.authenticated;
     } catch (error) {
       console.log('Usuário não autenticado, redirecionando para login...');
+      
+      // Atualizar cache
+      this.authCache.isAuthenticated = false;
+      this.authCache.lastCheck = now;
+      
       return false;
     }
+  },
+
+  // Limpar cache de autenticação
+  clearAuthCache() {
+    this.authCache.isAuthenticated = null;
+    this.authCache.lastCheck = 0;
   },
 
   // Fazer logout
@@ -43,6 +74,9 @@ const authSystem = {
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
     } finally {
+      // Limpar cache de autenticação
+      this.clearAuthCache();
+      
       // Limpar dados locais
       localStorage.removeItem('cobrancas_session');
       sessionStorage.clear();
@@ -100,12 +134,31 @@ const authSystem = {
   // Verificar sessão periodicamente
   setupSessionCheck() {
     setInterval(async () => {
-      const isAuthenticated = await this.checkAuth();
-      if (!isAuthenticated) {
-        console.log('Sessão expirada, fazendo logout...');
-        this.logout();
+      try {
+        // Limpar cache para forçar nova verificação
+        this.clearAuthCache();
+        const isAuthenticated = await this.checkAuth();
+        if (!isAuthenticated) {
+          console.log('Sessão expirada, fazendo logout...');
+          this.logout();
+        }
+      } catch (error) {
+        console.log('Erro na verificação de sessão, tentando novamente em 5 minutos...');
+        // Se houver erro, tentar novamente em 5 minutos
+        setTimeout(async () => {
+          try {
+            this.clearAuthCache();
+            const isAuthenticated = await this.checkAuth();
+            if (!isAuthenticated) {
+              console.log('Sessão expirada na segunda tentativa, fazendo logout...');
+              this.logout();
+            }
+          } catch (retryError) {
+            console.error('Erro persistente na verificação de sessão:', retryError);
+          }
+        }, 5 * 60 * 1000);
       }
-    }, 5 * 60 * 1000); // Verificar a cada 5 minutos
+    }, 10 * 60 * 1000); // Verificar a cada 10 minutos (menos agressivo)
   }
 };
 
@@ -601,20 +654,26 @@ const mobileMenuController = {
 const app = {
   async init() {
     try {
-      // Verificar autenticação primeiro (exceto na página de login)
       const path = window.location.pathname;
-      if (!path.includes('login.html')) {
-        const isAuthenticated = await authSystem.checkAuth();
-        if (!isAuthenticated) {
-          console.log('Usuário não autenticado, redirecionando...');
-          window.location.href = 'login.html';
-          return;
-        }
-        
-        // Configurar sistema de logout automático
-        authSystem.setupAutoLogout();
-        authSystem.setupSessionCheck();
+      
+      // Se estiver na página de login, não verificar autenticação
+      if (path.includes('login.html')) {
+        this.setCurrentDate();
+        this.addNotificationStyles();
+        return;
       }
+      
+      // Verificar autenticação apenas se não estiver na página de login
+      const isAuthenticated = await authSystem.checkAuth();
+      if (!isAuthenticated) {
+        console.log('Usuário não autenticado, redirecionando...');
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Configurar sistema de logout automático apenas se autenticado
+      authSystem.setupAutoLogout();
+      authSystem.setupSessionCheck();
       
       // Configurar data atual
       this.setCurrentDate();
