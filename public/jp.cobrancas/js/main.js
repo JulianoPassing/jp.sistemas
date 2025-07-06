@@ -541,6 +541,35 @@ const app = {
         renderCobrancasEmAbertoLista();
       }
       
+      // Atualizar cards de estatísticas nas páginas específicas
+      if (document.getElementById('total-atraso') && document.getElementById('valor-atraso')) {
+        fetch('/api/cobrancas/dashboard', { credentials: 'include' })
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById('total-atraso').textContent = data.emprestimosEmAtraso || 0;
+            document.getElementById('valor-atraso').textContent = new Intl.NumberFormat('pt-BR', {
+              style: 'currency',
+              currency: 'BRL'
+            }).format(data.cobrancas?.valor_atrasado || 0);
+          });
+      }
+      if (document.getElementById('clientes-ativos') && document.getElementById('clientes-atraso')) {
+        fetch('/api/cobrancas/dashboard', { credentials: 'include' })
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById('clientes-ativos').textContent = data.clientesAtivos || 0;
+            document.getElementById('clientes-atraso').textContent = data.clientesEmAtraso || 0;
+          });
+      }
+      if (document.getElementById('emprestimos-ativos') && document.getElementById('emprestimos-atraso')) {
+        fetch('/api/cobrancas/dashboard', { credentials: 'include' })
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById('emprestimos-ativos').textContent = data.emprestimosAtivos || 0;
+            document.getElementById('emprestimos-atraso').textContent = data.emprestimosEmAtraso || 0;
+          });
+      }
+      
     } catch (error) {
       console.error('Erro na inicialização:', error);
       ui.showNotification('Erro ao inicializar a aplicação', 'error');
