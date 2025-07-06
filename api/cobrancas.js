@@ -302,12 +302,12 @@ router.get('/cobrancas', ensureDatabase, async (req, res) => {
           (valor_original * (multa_calculada / 100))
       WHERE status = 'Pendente'
     `);
-    // Buscar apenas cobranças de empréstimos ativos/pendentes
+    // Buscar apenas cobranças de empréstimos ativos/pendentes e existentes
     const [cobrancas] = await connection.execute(`
       SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
       FROM cobrancas cb
+      INNER JOIN emprestimos e ON cb.emprestimo_id = e.id
       LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
-      LEFT JOIN emprestimos e ON cb.emprestimo_id = e.id
       WHERE cb.status = 'Pendente' AND cb.cliente_id IS NOT NULL AND e.status IN ('Ativo', 'Pendente')
       ORDER BY cb.data_vencimento ASC
     `);
