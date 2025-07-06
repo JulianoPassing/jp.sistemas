@@ -158,7 +158,7 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     const [emprestimosStats] = await connection.execute(`
       SELECT 
         COUNT(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN 1 END) as total_emprestimos,
-        SUM(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN valor ELSE 0 END) as valor_total_emprestimos,
+        SUM(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN valor + (valor * (juros_mensal / 100)) ELSE 0 END) as valor_total_emprestimos,
         COUNT(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN 1 END) as emprestimos_ativos,
         COUNT(CASE WHEN status = 'Quitado' AND cliente_id IS NOT NULL THEN 1 END) as emprestimos_quitados
       FROM emprestimos
