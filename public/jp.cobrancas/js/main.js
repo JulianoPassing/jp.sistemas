@@ -1228,7 +1228,7 @@ async function renderHistoricoEmprestimos() {
     }
     // Calcular valor total e valor total com juros
     let totalComJuros = 0;
-    const hoje = new Date();
+    let hoje = new Date();
     hoje.setHours(0,0,0,0);
     (emprestimos || []).forEach(emp => {
       // Garantir conversão correta
