@@ -285,6 +285,46 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
   }
 });
 
+// Cobranças pendentes do dia (com data de vencimento até o dia atual)
+router.get('/cobrancas/pendentes-dia', ensureDatabase, async (req, res) => {
+  try {
+    const connection = await createCobrancasConnection();
+    const [cobrancas] = await connection.execute(`
+      SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
+      FROM cobrancas cb
+      LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
+      WHERE cb.status = 'Pendente' 
+        AND cb.data_vencimento <= CURDATE()
+        AND cb.cliente_id IS NOT NULL
+      ORDER BY cb.data_vencimento ASC
+    `);
+    await connection.end();
+    res.json(cobrancas);
+  } catch (error) {
+    console.error('Erro ao buscar cobranças pendentes do dia:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Cobranças atrasadas
+router.get('/cobrancas/atrasadas', ensureDatabase, async (req, res) => {
+  try {
+    const connection = await createCobrancasConnection();
+    const [cobrancas] = await connection.execute(`
+      SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
+      FROM cobrancas cb
+      LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
+      WHERE cb.dias_atraso > 0 AND cb.status = 'Pendente'
+      ORDER BY cb.dias_atraso DESC
+    `);
+    await connection.end();
+    res.json(cobrancas);
+  } catch (error) {
+    console.error('Erro ao buscar cobranças atrasadas:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Cobranças
 router.get('/cobrancas', ensureDatabase, async (req, res) => {
   try {
@@ -315,46 +355,6 @@ router.get('/cobrancas', ensureDatabase, async (req, res) => {
     res.json(cobrancas);
   } catch (error) {
     console.error('Erro ao buscar cobranças:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
-
-// Cobranças atrasadas
-router.get('/cobrancas/atrasadas', ensureDatabase, async (req, res) => {
-  try {
-    const connection = await createCobrancasConnection();
-    const [cobrancas] = await connection.execute(`
-      SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
-      FROM cobrancas cb
-      LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
-      WHERE cb.dias_atraso > 0 AND cb.status = 'Pendente'
-      ORDER BY cb.dias_atraso DESC
-    `);
-    await connection.end();
-    res.json(cobrancas);
-  } catch (error) {
-    console.error('Erro ao buscar cobranças atrasadas:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
-
-// Cobranças pendentes do dia (com data de vencimento até o dia atual)
-router.get('/cobrancas/pendentes-dia', ensureDatabase, async (req, res) => {
-  try {
-    const connection = await createCobrancasConnection();
-    const [cobrancas] = await connection.execute(`
-      SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
-      FROM cobrancas cb
-      LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
-      WHERE cb.status = 'Pendente' 
-        AND cb.data_vencimento <= CURDATE()
-        AND cb.cliente_id IS NOT NULL
-      ORDER BY cb.data_vencimento ASC
-    `);
-    await connection.end();
-    res.json(cobrancas);
-  } catch (error) {
-    console.error('Erro ao buscar cobranças pendentes do dia:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
