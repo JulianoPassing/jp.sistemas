@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JP-Caixa - Vendas</title>
+  <link rel="icon" type="image/png" href="https://i.imgur.com/6N82fk2.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="app-layout">
+  <header>
+    <div class="header-content">
+      <a href="index.html" class="logo" style="display: flex; align-items: center;">
+        <img src="https://i.imgur.com/EQ1tjZX.png" alt="JP-Caixa" style="height: 5rem; width: auto; object-fit: contain;">
+      </a>
+      <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Abrir menu"><span class="menu-icon"></span></button>
+      <div class="nav-wrapper">
+        <nav>
+          <a href="painel.html" class="nav-link">Painel</a>
+          <a href="caixa.html" class="nav-link">Caixa</a>
+          <a href="produtos.html" class="nav-link">Produtos</a>
+          <a href="vendas.html" class="nav-link active">Vendas</a>
+          <a href="#" class="nav-link" onclick="sair()">Sair</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="container">
+      <div class="dashboard-header">
+        <div class="welcome-message">Histórico de Vendas</div>
+        <div class="dashboard-title">Vendas</div>
+        <div class="dashboard-subtitle">Visualize todas as vendas realizadas</div>
+      </div>
+
+      <!-- Filtros e Busca -->
+      <div class="search-container">
+        <div style="display: flex; gap: 1rem; width: 100%;">
+          <div style="flex: 1;">
+            <input type="text" id="searchVenda" placeholder="Buscar por ID da venda..." class="form-input">
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="date" id="dataInicio" class="form-input">
+            <input type="date" id="dataFim" class="form-input">
+            <select id="formaPagamentoFilter" class="form-input">
+              <option value="">Todas as formas</option>
+              <option value="dinheiro">Dinheiro</option>
+              <option value="cartao_credito">Cartão de Crédito</option>
+              <option value="cartao_debito">Cartão de Débito</option>
+              <option value="pix">PIX</option>
+              <option value="transferencia">Transferência</option>
+            </select>
+            <button class="btn btn-primary" onclick="buscarVendas()">
+              <i class="fas fa-search"></i> Buscar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estatísticas -->
+      <div class="cards">
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Total de Vendas</div>
+            <i class="fas fa-chart-bar card-icon"></i>
+          </div>
+          <div class="card-value" id="totalVendas">0</div>
+          <div class="card-change positive">+0% este mês</div>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Faturamento Total</div>
+            <i class="fas fa-dollar-sign card-icon"></i>
+          </div>
+          <div class="card-value" id="faturamentoTotal">R$ 0,00</div>
+          <div class="card-change positive">+0% este mês</div>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Ticket Médio</div>
+            <i class="fas fa-receipt card-icon"></i>
+          </div>
+          <div class="card-value" id="ticketMedio">R$ 0,00</div>
+          <div class="card-change positive">+0% este mês</div>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Vendas Hoje</div>
+            <i class="fas fa-calendar-day card-icon"></i>
+          </div>
+          <div class="card-value" id="vendasHoje">0</div>
+          <div class="card-change positive">+0% vs ontem</div>
+        </div>
+      </div>
+
+      <!-- Lista de Vendas -->
+      <div class="section">
+        <div class="section-header">
+          <h3 class="section-title">Histórico de Vendas</h3>
+          <button class="btn btn-primary" onclick="exportarVendas()">
+            <i class="fas fa-download"></i> Exportar
+          </button>
+        </div>
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Data/Hora</th>
+                <th>Itens</th>
+                <th>Subtotal</th>
+                <th>Desconto</th>
+                <th>Total</th>
+                <th>Pagamento</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="vendasTable">
+              <tr>
+                <td colspan="8" class="text-center text-gray-500">Carregando vendas...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal de Detalhes da Venda -->
+  <div id="modalVenda" class="modal">
+    <div class="modal-overlay" onclick="fecharModalVenda()"></div>
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>Detalhes da Venda #<span id="vendaIdModal"></span></h3>
+        <button class="modal-close" onclick="fecharModalVenda()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="detalhesVenda">
+          <!-- Detalhes serão preenchidos aqui -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-center p-4 mt-8">
+    © 2024 JP-Caixa. Todos os direitos reservados.
+  </footer>
+  
+  <script src="./js/main.js"></script>
+  <script>
+    // Verificar autenticação
+    if (sessionStorage.getItem('loggedIn') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    // Função de logout
+    function sair() {
+      sessionStorage.removeItem('loggedIn');
+      sessionStorage.removeItem('username');
+      sessionStorage.removeItem('loginTime');
+      window.location.href = 'login.html';
+    }
+
+    let vendas = [];
+
+    // Carregar vendas
+    async function carregarVendas() {
+      try {
+        const response = await fetch('/api/caixa/vendas', {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          vendas = await response.json();
+          renderizarVendas(vendas);
+          atualizarEstatisticas(vendas);
+        } else {
+          mostrarNotificacao('Erro ao carregar vendas', 'error');
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        mostrarNotificacao('Erro ao carregar vendas', 'error');
+      }
+    }
+
+    // Renderizar vendas na tabela
+    function renderizarVendas(vendasFiltradas) {
+      const tbody = document.getElementById('vendasTable');
+      
+      if (vendasFiltradas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500">Nenhuma venda encontrada</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = vendasFiltradas.map(venda => `
+        <tr>
+          <td>#${venda.id.toString().padStart(4, '0')}</td>
+          <td>${new Date(venda.data).toLocaleString('pt-BR')}</td>
+          <td>${venda.itens.reduce((total, item) => total + item.quantidade, 0)} itens</td>
+          <td>R$ ${venda.subtotal.toFixed(2)}</td>
+          <td>R$ ${venda.desconto.toFixed(2)}</td>
+          <td><strong>R$ ${venda.total.toFixed(2)}</strong></td>
+          <td>
+            <span class="badge badge-info">${formatarFormaPagamento(venda.formaPagamento)}</span>
+          </td>
+          <td>
+            <button class="btn btn-secondary" onclick="verDetalhesVenda(${venda.id})" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+              <i class="fas fa-eye"></i>
+            </button>
+            <button class="btn btn-primary" onclick="imprimirVenda(${venda.id})" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+              <i class="fas fa-print"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Atualizar estatísticas
+    function atualizarEstatisticas(vendasFiltradas) {
+      const hoje = new Date().toDateString();
+      const vendasHoje = vendasFiltradas.filter(venda => 
+        new Date(venda.data).toDateString() === hoje
+      );
+      
+      const totalVendas = vendasFiltradas.length;
+      const faturamentoTotal = vendasFiltradas.reduce((total, venda) => total + venda.total, 0);
+      const ticketMedio = totalVendas > 0 ? faturamentoTotal / totalVendas : 0;
+      const faturamentoHoje = vendasHoje.reduce((total, venda) => total + venda.total, 0);
+
+      document.getElementById('totalVendas').textContent = totalVendas;
+      document.getElementById('faturamentoTotal').textContent = `R$ ${faturamentoTotal.toFixed(2)}`;
+      document.getElementById('ticketMedio').textContent = `R$ ${ticketMedio.toFixed(2)}`;
+      document.getElementById('vendasHoje').textContent = vendasHoje.length;
+    }
+
+    // Buscar vendas
+    async function buscarVendas() {
+      const searchTerm = document.getElementById('searchVenda').value;
+      const dataInicio = document.getElementById('dataInicio').value;
+      const dataFim = document.getElementById('dataFim').value;
+      const formaPagamento = document.getElementById('formaPagamentoFilter').value;
+      
+      try {
+        const params = new URLSearchParams();
+        if (searchTerm) params.append('search', searchTerm);
+        if (dataInicio) params.append('dataInicio', dataInicio);
+        if (dataFim) params.append('dataFim', dataFim);
+        if (formaPagamento) params.append('formaPagamento', formaPagamento);
+        
+        const response = await fetch(`/api/caixa/vendas?${params}`, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const vendasFiltradas = await response.json();
+          renderizarVendas(vendasFiltradas);
+          atualizarEstatisticas(vendasFiltradas);
+        }
+      } catch (error) {
+        console.error('Erro na busca:', error);
+      }
+    }
+
+    // Ver detalhes da venda
+    async function verDetalhesVenda(vendaId) {
+      try {
+        const response = await fetch(`/api/caixa/vendas/${vendaId}`, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const venda = await response.json();
+          mostrarDetalhesVenda(venda);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar detalhes:', error);
+        mostrarNotificacao('Erro ao carregar detalhes da venda', 'error');
+      }
+    }
+
+    // Mostrar detalhes da venda
+    function mostrarDetalhesVenda(venda) {
+      document.getElementById('vendaIdModal').textContent = venda.id.toString().padStart(4, '0');
+      
+      const detalhesDiv = document.getElementById('detalhesVenda');
+      detalhesDiv.innerHTML = `
+        <div style="margin-bottom: 1.5rem;">
+          <h4>Informações da Venda</h4>
+          <p><strong>Data/Hora:</strong> ${new Date(venda.data).toLocaleString('pt-BR')}</p>
+          <p><strong>Forma de Pagamento:</strong> ${formatarFormaPagamento(venda.formaPagamento)}</p>
+          ${venda.valorRecebido ? `<p><strong>Valor Recebido:</strong> R$ ${venda.valorRecebido.toFixed(2)}</p>` : ''}
+          ${venda.troco ? `<p><strong>Troco:</strong> R$ ${venda.troco.toFixed(2)}</p>` : ''}
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+          <h4>Itens da Venda</h4>
+          <div style="max-height: 200px; overflow-y: auto;">
+            ${venda.itens.map(item => `
+              <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--gray-200);">
+                <div>
+                  <strong>${item.nome}</strong><br>
+                  <small>Código: ${item.codigo}</small>
+                </div>
+                <div style="text-align: right;">
+                  <div>${item.quantidade}x R$ ${item.preco.toFixed(2)}</div>
+                  <strong>R$ ${(item.preco * item.quantidade).toFixed(2)}</strong>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <div style="border-top: 2px solid var(--primary); padding-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span>Subtotal:</span>
+            <span>R$ ${venda.subtotal.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span>Desconto:</span>
+            <span>R$ ${venda.desconto.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 700; color: var(--primary);">
+            <span>TOTAL:</span>
+            <span>R$ ${venda.total.toFixed(2)}</span>
+          </div>
+        </div>
+      `;
+      
+      const modal = document.getElementById('modalVenda');
+      modal.style.opacity = '1';
+      modal.style.visibility = 'visible';
+    }
+
+    // Fechar modal de venda
+    function fecharModalVenda() {
+      const modal = document.getElementById('modalVenda');
+      modal.style.opacity = '0';
+      modal.style.visibility = 'hidden';
+    }
+
+    // Imprimir venda
+    function imprimirVenda(vendaId) {
+      const venda = vendas.find(v => v.id === vendaId);
+      if (!venda) {
+        mostrarNotificacao('Venda não encontrada', 'error');
+        return;
+      }
+
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Venda #${venda.id.toString().padStart(4, '0')}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; margin-bottom: 20px; }
+            .venda-info { margin-bottom: 20px; }
+            .itens { margin-bottom: 20px; }
+            .item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #ccc; }
+            .total { border-top: 2px solid #000; padding-top: 10px; margin-top: 20px; }
+            .total-row { display: flex; justify-content: space-between; margin: 5px 0; }
+            @media print { body { margin: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2>JP-Caixa</h2>
+            <h3>Venda #${venda.id.toString().padStart(4, '0')}</h3>
+            <p>${new Date(venda.data).toLocaleString('pt-BR')}</p>
+          </div>
+          
+          <div class="venda-info">
+            <p><strong>Forma de Pagamento:</strong> ${formatarFormaPagamento(venda.formaPagamento)}</p>
+            ${venda.valorRecebido ? `<p><strong>Valor Recebido:</strong> R$ ${venda.valorRecebido.toFixed(2)}</p>` : ''}
+            ${venda.troco ? `<p><strong>Troco:</strong> R$ ${venda.troco.toFixed(2)}</p>` : ''}
+          </div>
+          
+          <div class="itens">
+            <h4>Itens:</h4>
+            ${venda.itens.map(item => `
+              <div class="item">
+                <div>
+                  <strong>${item.nome}</strong><br>
+                  <small>${item.quantidade}x R$ ${item.preco.toFixed(2)}</small>
+                </div>
+                <div>R$ ${(item.preco * item.quantidade).toFixed(2)}</div>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div class="total">
+            <div class="total-row">
+              <span>Subtotal:</span>
+              <span>R$ ${venda.subtotal.toFixed(2)}</span>
+            </div>
+            <div class="total-row">
+              <span>Desconto:</span>
+              <span>R$ ${venda.desconto.toFixed(2)}</span>
+            </div>
+            <div class="total-row" style="font-size: 1.2rem; font-weight: bold;">
+              <span>TOTAL:</span>
+              <span>R$ ${venda.total.toFixed(2)}</span>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px;">
+            <p>Obrigado pela preferência!</p>
+            <small>JP-Caixa - Sistema de Gestão</small>
+          </div>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+
+    // Exportar vendas
+    function exportarVendas() {
+      const vendasFiltradas = vendas; // Aqui você pode aplicar filtros se necessário
+      
+      if (vendasFiltradas.length === 0) {
+        mostrarNotificacao('Nenhuma venda para exportar', 'warning');
+        return;
+      }
+
+      const csvContent = [
+        ['ID', 'Data/Hora', 'Itens', 'Subtotal', 'Desconto', 'Total', 'Forma Pagamento'],
+        ...vendasFiltradas.map(venda => [
+          venda.id,
+          new Date(venda.data).toLocaleString('pt-BR'),
+          venda.itens.reduce((total, item) => total + item.quantidade, 0),
+          venda.subtotal.toFixed(2),
+          venda.desconto.toFixed(2),
+          venda.total.toFixed(2),
+          formatarFormaPagamento(venda.formaPagamento)
+        ])
+      ].map(row => row.join(',')).join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `vendas_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Formatar forma de pagamento
+    function formatarFormaPagamento(forma) {
+      const formatos = {
+        'dinheiro': 'Dinheiro',
+        'cartao_credito': 'Cartão de Crédito',
+        'cartao_debito': 'Cartão de Débito',
+        'pix': 'PIX',
+        'transferencia': 'Transferência'
+      };
+      return formatos[forma] || forma;
+    }
+
+    // Busca em tempo real
+    document.getElementById('searchVenda').addEventListener('input', function() {
+      clearTimeout(this.searchTimeout);
+      this.searchTimeout = setTimeout(buscarVendas, 300);
+    });
+
+    document.getElementById('dataInicio').addEventListener('change', buscarVendas);
+    document.getElementById('dataFim').addEventListener('change', buscarVendas);
+    document.getElementById('formaPagamentoFilter').addEventListener('change', buscarVendas);
+
+    // Menu mobile
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuBtn = document.getElementById('mobile-menu-toggle');
+      const navWrapper = document.querySelector('.nav-wrapper');
+      
+      if (menuBtn && navWrapper) {
+        menuBtn.addEventListener('click', function() {
+          navWrapper.classList.toggle('open');
+        });
+      }
+
+      // Definir data atual nos filtros
+      const hoje = new Date().toISOString().split('T')[0];
+      document.getElementById('dataFim').value = hoje;
+      
+      // Carregar vendas iniciais
+      carregarVendas();
+    });
+  </script>
+</body>
+</html> 

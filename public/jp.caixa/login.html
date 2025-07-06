@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - JP Caixa</title>
+  <link rel="icon" type="image/png" href="https://i.imgur.com/6N82fk2.png">
+  <style>
+    body {
+      background: #f4f8fb;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .login-container {
+      background: #fff;
+      padding: 2.5rem 2rem 2rem 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 370px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .login-logo {
+      width: 60px;
+      margin-bottom: 1.2rem;
+    }
+    .login-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #1a365d;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .login-form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .login-form input {
+      padding: 0.8rem 1rem;
+      border: 1px solid #d1d9e6;
+      border-radius: 6px;
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .login-form input:focus {
+      border-color: #1a365d;
+    }
+    .login-btn {
+      background: #1a365d;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.9rem 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: background 0.2s;
+    }
+    .login-btn:hover {
+      background: #274472;
+    }
+    .login-error {
+      color: #e53e3e;
+      background: #fff0f0;
+      border: 1px solid #e53e3e;
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+      display: none;
+    }
+    @media (max-width: 500px) {
+      .login-container {
+        padding: 1.5rem 0.5rem;
+        max-width: 98vw;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <img src="https://i.imgur.com/EQ1tjZX.png" alt="JP Sistemas" class="login-logo" style="height: 5rem; width: auto; object-fit: contain;">
+    <div class="login-title">Login - JP Caixa</div>
+    <div class="login-error" id="loginError"></div>
+    <form class="login-form" id="loginForm" autocomplete="off">
+      <input type="text" id="username" name="username" placeholder="Usuário" required autofocus>
+      <input type="password" id="password" name="password" placeholder="Senha" required>
+      <button type="submit" class="login-btn" id="submitBtn">Entrar</button>
+    </form>
+  </div>
+  <script>
+    // Verificar se já está logado (mesmo padrão do sistema principal)
+    if (sessionStorage.getItem('loggedIn') === 'true') {
+      window.location.href = 'painel.html';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const errorDiv = document.getElementById('loginError');
+      const submitBtn = document.getElementById('submitBtn');
+      
+      // Verificar se os elementos existem
+      if (!errorDiv || !submitBtn) {
+        console.error('Elementos necessários não encontrados');
+        return;
+      }
+      
+      const originalText = submitBtn.textContent;
+      
+      // Validação básica
+      if (!username || !password) {
+        errorDiv.textContent = 'Por favor, preencha todos os campos.';
+        errorDiv.style.display = 'block';
+        return;
+      }
+
+      // Mostrar loading
+      submitBtn.textContent = 'Entrando...';
+      submitBtn.disabled = true;
+      errorDiv.style.display = 'none';
+      
+      try {
+        const res = await fetch('/api/caixa/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        
+        if (res.ok && data.success) {
+          // Salvar no sessionStorage (mesmo padrão do sistema principal)
+          sessionStorage.setItem('loggedIn', 'true');
+          sessionStorage.setItem('username', username);
+          sessionStorage.setItem('loginTime', new Date().toISOString());
+          
+          // Redirecionar após um pequeno delay
+          setTimeout(() => {
+            window.location.href = 'painel.html';
+          }, 1000);
+        } else {
+          if (errorDiv) {
+            errorDiv.textContent = data.message || 'Usuário ou senha inválidos.';
+            errorDiv.style.display = 'block';
+          }
+          if (submitBtn) {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+          }
+        }
+      } catch (err) {
+        if (errorDiv) {
+          errorDiv.textContent = 'Erro ao conectar ao servidor.';
+          errorDiv.style.display = 'block';
+        }
+        if (submitBtn) {
+          submitBtn.textContent = originalText;
+          submitBtn.disabled = false;
+        }
+      }
+    });
+
+    // Auto-focus no primeiro campo
+    document.getElementById('username').focus();
+  </script>
+</body>
+</html> 
