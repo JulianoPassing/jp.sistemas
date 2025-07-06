@@ -1619,6 +1619,18 @@ window.clienteController = clienteController;
 window.ui = ui;
 window.utils = utils;
 
+// Exportar funções globais
+window.viewEmprestimo = viewEmprestimo;
+window.viewCliente = viewCliente;
+window.deleteCliente = deleteCliente;
+window.cobrar = cobrar;
+window.sair = sair;
+window.renderHistoricoEmprestimos = renderHistoricoEmprestimos;
+window.renderClientesLista = renderClientesLista;
+window.renderCobrancasEmAbertoLista = renderCobrancasEmAbertoLista;
+window.renderAtrasadosLista = renderAtrasadosLista;
+window.recarregarDadosPagina = recarregarDadosPagina;
+
 // Adicionar função para renderizar cobranças pendentes e valor a receber de forma estruturada
 function renderCobrancasResumo(lista, targetId) {
   const target = document.getElementById(targetId);
@@ -1749,6 +1761,39 @@ async function renderAtrasadosLista() {
   } catch (error) {
     console.error('Erro ao carregar atrasados:', error);
     tbody.innerHTML = '<tr><td colspan="8" class="text-center text-red-500">Erro ao carregar atrasados</td></tr>';
+  }
+}
+
+// Funções globais para compatibilidade
+async function viewEmprestimo(id) {
+  if (typeof emprestimoController !== 'undefined' && emprestimoController.viewEmprestimo) {
+    return emprestimoController.viewEmprestimo(id);
+  } else {
+    console.error('emprestimoController não está disponível');
+  }
+}
+
+async function viewCliente(id) {
+  if (typeof clienteController !== 'undefined' && clienteController.viewCliente) {
+    return clienteController.viewCliente(id);
+  } else {
+    console.error('clienteController não está disponível');
+  }
+}
+
+async function deleteCliente(id) {
+  if (typeof clienteController !== 'undefined' && clienteController.deleteCliente) {
+    return clienteController.deleteCliente(id);
+  } else {
+    console.error('clienteController não está disponível');
+  }
+}
+
+function cobrar(id) {
+  if (typeof cobrancaController !== 'undefined' && cobrancaController.cobrar) {
+    return cobrancaController.cobrar(id);
+  } else {
+    console.error('cobrancaController não está disponível');
   }
 }
 
