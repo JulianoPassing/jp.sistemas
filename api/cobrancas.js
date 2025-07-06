@@ -494,4 +494,21 @@ router.delete('/clientes/:id', ensureDatabase, async (req, res) => {
   }
 });
 
+// Rota para buscar detalhes de um cliente pelo ID
+router.get('/clientes/:id', ensureDatabase, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const connection = await createCobrancasConnection();
+    const [rows] = await connection.execute('SELECT * FROM clientes_cobrancas WHERE id = ?', [id]);
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Cliente não encontrado' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Erro ao buscar cliente:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 module.exports = router; 

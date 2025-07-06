@@ -271,17 +271,16 @@ const dashboardController = {
       this.updateRecentEmprestimos(data.emprestimosRecentes || []);
       this.updateCobrancasPendentes(data.cobrancasPendentes || []);
       
-      // Calcular clientes em atraso: aceitar cliente_id, cliente ou cliente_nome como identificador único do cliente
+      // Calcular clientes em atraso: recalcula status localmente
       const clientesEmAtrasoSet = new Set();
       emprestimos.forEach(emprestimo => {
         const dataVencimento = new Date(emprestimo.data_vencimento);
-        // Tenta pegar o identificador do cliente de várias formas
+        let status = (emprestimo.status || '').toUpperCase();
+        if (dataVencimento < hoje && status !== 'QUITADO') {
+          status = 'ATRASADO';
+        }
         const clienteId = emprestimo.cliente_id || emprestimo.cliente || emprestimo.cliente_nome || null;
-        if (
-          dataVencimento < hoje &&
-          (emprestimo.status || '').toUpperCase() !== 'QUITADO' &&
-          clienteId
-        ) {
+        if (status === 'ATRASADO' && clienteId) {
           clientesEmAtrasoSet.add(clienteId);
         }
       });
@@ -414,7 +413,6 @@ const dashboardController = {
     cobrancas.forEach(cobranca => {
       // Cálculo de atraso e juros diário para cobranças
       const valorInvestido = Number(cobranca.valor_inicial || cobranca.valor_original || cobranca.valor || 0);
-      // Tenta pegar o juros de várias formas e converte para número
       const jurosPercent = Number(cobranca.juros_mensal || cobranca.juros || cobranca.juros_percentual || 0);
       const jurosTotal = valorInvestido * (jurosPercent / 100);
       const dataVencimento = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
@@ -1211,7 +1209,19 @@ function renderCobrancasResumo(lista, targetId) {
   }
   const hoje = new Date();
   hoje.setHours(0,0,0,0);
-  target.innerHTML = lista.map(cobranca => {
+  // Se for cobranças pendentes, exibe o total de vencidas até hoje
+  let totalVencidas = 0;
+  if (targetId === 'cobrancas-pendentes') {
+    totalVencidas = lista.filter(cobranca => {
+      const dataVenc = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
+      return dataVenc && dataVenc <= hoje;
+    }).length;
+  }
+  let resumo = '';
+  if (targetId === 'cobrancas-pendentes') {
+    resumo = `<div style="font-weight:600; margin-bottom:0.5em;">Total de cobranças vencidas até hoje: <span style="color:#ef4444;">${totalVencidas}</span></div>`;
+  }
+  target.innerHTML = resumo + lista.map(cobranca => {
     // Cálculo de valor atualizado e status atrasado
     const valorInvestido = Number(cobranca.valor_inicial || cobranca.valor_original || cobranca.valor || 0);
     const jurosPercent = Number(cobranca.juros_mensal || cobranca.juros || cobranca.juros_percentual || 0);
@@ -1239,4 +1249,66 @@ function renderCobrancasResumo(lista, targetId) {
       </div>
     `;
   }).join('');
+}
+
+function renderAtrasadosLista() {
+  const tbody = document.getElementById('atrasados-lista');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
+  apiService.getEmprestimos().then(emprestimos => {
+    const hoje = new Date();
+    hoje.setHours(0,0,0,0);
+    const atrasados = (emprestimos || []).filter(e => {
+      const dataVenc = e.data_vencimento ? new Date(e.data_vencimento) : null;
+      let status = (e.status || '').toUpperCase();
+      if (dataVenc && dataVenc < hoje && status !== 'QUITADO') {
+        status = 'ATRASADO';
+      }
+      return status === 'ATRASADO';
+    });
+    if (atrasados.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500">Nenhum empréstimo atrasado</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    atrasados.forEach(emp => {
+      const valorInvestido = Number(emp.valor || 0);
+      const jurosPercent = Number(emp.juros_mensal || 0);
+      const jurosTotal = valorInvestido * (jurosPercent / 100);
+      const dataVencimento = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
+      let valorAtualizado = valorInvestido + jurosTotal;
+      let diasAtraso = 0;
+      let jurosDiario = 0;
+      let jurosAplicado = 0;
+      if (dataVencimento && dataVencimento < hoje) {
+        const diffTime = hoje.getTime() - dataVencimento.getTime();
+        diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        jurosDiario = Math.ceil(jurosTotal / 30);
+        jurosAplicado = jurosDiario * diasAtraso;
+        valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
+      }
+      const valor = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(valorAtualizado);
+      const vencimento = emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-';
+      tbody.innerHTML += `
+        <tr>
+          <td>${emp.cliente_nome || 'N/A'}</td>
+          <td>${emp.id}</td>
+          <td>1</td>
+          <td>${valor}</td>
+          <td>${vencimento}</td>
+          <td>${diasAtraso > 0 ? diasAtraso : '-'}</td>
+          <td><span class="badge badge-danger">ATRASADO</span></td>
+          <td><button class="btn btn-primary btn-sm" onclick="emprestimoController.viewEmprestimo(${emp.id})">Ver</button></td>
+        </tr>
+      `;
+    });
+  });
+}
+
+// Chamar renderAtrasadosLista se existir a tabela na página
+if (document.getElementById('atrasados-lista')) {
+  renderAtrasadosLista();
 } 
