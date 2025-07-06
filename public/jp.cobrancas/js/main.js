@@ -812,8 +812,10 @@ const emprestimoController = {
         // Modal HTML
         const telefone = emp.telefone || emp.celular || emp.whatsapp || '';
         const nome = emp.cliente_nome || '';
+        // Calcular valor total dos juros (juros total + juros aplicado por atraso)
+        const valorTotalJuros = jurosTotal + jurosAplicado;
         const msgWhatsapp = encodeURIComponent(
-          `Olá ${nome}, seu empréstimo está vencendo hoje. O valor total é de R$ ${utils.formatCurrency(valorAtualizado)}. Caso venha enviar somente o juros o valor é R$ ${utils.formatCurrency(jurosTotal)}.`
+          `Olá ${nome}, seu empréstimo está vencendo hoje. O valor total é de R$ ${utils.formatCurrency(valorAtualizado)}. Caso venha enviar somente o juros o valor é R$ ${utils.formatCurrency(valorTotalJuros)}.`
         );
         const linkWhatsapp = telefone ? `https://wa.me/55${telefone.replace(/\D/g,'')}?text=${msgWhatsapp}` : '#';
         const detalhes = `
