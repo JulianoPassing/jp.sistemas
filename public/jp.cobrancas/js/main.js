@@ -930,7 +930,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div id="simulador-preview" class="form-group" style="display:none;"></div>
           <div class="form-group">
-            <button type="submit" id="btn-adicionar-emprestimo" class="btn btn-primary" disabled>Adicionar Empréstimo</button>
+            <button type="submit" id="btn-adicionar-emprestimo" class="btn btn-primary">Adicionar Empréstimo</button>
           </div>
         </form>
       `;
@@ -994,11 +994,9 @@ document.addEventListener('DOMContentLoaded', () => {
             Valor da Parcela: <b>R$ ${valorParcela.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b>
           </div>
         `;
-        btnAdicionar.disabled = false;
       });
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (btnAdicionar.disabled) return;
         const formData = Object.fromEntries(new FormData(form).entries());
         let cliente_id = formData.clienteId;
         // Se não selecionou cliente, criar cliente
