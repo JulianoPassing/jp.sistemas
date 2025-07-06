@@ -395,7 +395,7 @@ const dashboardController = {
         <td>${emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-'}</td>
         <td><span class="badge badge-${statusClass}">${status}</span></td>
         <td>
-          <button class="btn btn-primary btn-sm" onclick="emprestimoController.viewEmprestimo(${emprestimo.id})">Ver</button>
+          <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
         </td>
       `;
       tbody.appendChild(row);
@@ -1065,7 +1065,7 @@ async function renderHistoricoEmprestimos() {
         <td>${vencimento}</td>
         <td><span class="badge badge-${statusClass}">${status}</span></td>
         <td>
-          <button class="btn btn-primary btn-sm" onclick="emprestimoController.viewEmprestimo(${emprestimo.id})">Ver</button>
+          <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
         </td>
       `;
       tbody.appendChild(row);
@@ -1129,7 +1129,7 @@ async function renderEmprestimosLista() {
         <td>${emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-'}</td>
         <td><span class="badge badge-${statusClass}">${status}</span></td>
         <td>
-          <button class="btn btn-primary btn-sm" onclick="emprestimoController.viewEmprestimo(${emprestimo.id})">Ver</button>
+          <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
         </td>
       `;
       tbody.appendChild(row);
@@ -1159,8 +1159,8 @@ async function renderClientesLista() {
         <td>${cliente.telefone || '-'}</td>
         <td><span class="badge badge-success">${cliente.status || 'Ativo'}</span></td>
         <td>
-          <button class="btn btn-primary btn-sm" onclick="clienteController.viewCliente(${cliente.id})">Ver</button>
-          <button class="btn btn-danger btn-sm" onclick="clienteController.deleteCliente(${cliente.id})">Remover</button>
+          <button class="btn btn-primary btn-sm" onclick="viewCliente(${cliente.id})">Ver</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCliente(${cliente.id})">Remover</button>
         </td>
       `;
       tbody.appendChild(row);
@@ -1174,7 +1174,7 @@ async function renderClientesLista() {
 async function renderCobrancasEmAbertoLista() {
   const tbody = document.getElementById('cobrancas-lista');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
   try {
     const emprestimos = await apiService.getEmprestimos();
     // Filtrar apenas em aberto (status Ativo ou Pendente)
@@ -1183,7 +1183,7 @@ async function renderCobrancasEmAbertoLista() {
       return status === 'ativo' || status === 'pendente';
     });
     if (emAberto.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500">Nenhuma cobrança em aberto</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhuma cobrança em aberto</td></tr>';
       return;
     }
     tbody.innerHTML = '';
@@ -1212,18 +1212,57 @@ async function renderCobrancasEmAbertoLista() {
       tbody.innerHTML += `
         <tr>
           <td>${emp.cliente_nome || 'N/A'}</td>
-          <td>${emp.id}</td>
-          <td>1</td>
           <td>${valor}</td>
           <td>${vencimento}</td>
-          <td>${diasAtraso > 0 ? diasAtraso : '-'}</td>
           <td>${badge}</td>
-          <td><button class="btn btn-primary btn-sm" onclick="emprestimoController.viewEmprestimo(${emp.id})">Ver</button></td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
+            <button class="btn btn-warning btn-sm" onclick="cobrar(${emp.id})">Cobrar</button>
+          </td>
         </tr>
       `;
     });
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-red-500">Erro ao carregar cobranças</td></tr>';
+    console.error('Erro ao carregar cobranças:', err);
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-red-500">Erro ao carregar cobranças</td></tr>';
+  }
+}
+
+// Função global para recarregar dados da página atual
+async function recarregarDadosPagina() {
+  try {
+    console.log('Recarregando dados da página...');
+    
+    // Recarregar lista de cobranças se estiver na página de cobranças
+    if (document.getElementById('cobrancas-lista')) {
+      await renderCobrancasEmAbertoLista();
+    }
+    
+    // Recarregar histórico de empréstimos se estiver na página de emprestimos
+    if (document.getElementById('historico-emprestimos')) {
+      await renderHistoricoEmprestimos();
+    }
+    
+    // Recarregar lista de clientes se estiver na página de clientes
+    if (document.getElementById('lista-clientes')) {
+      await renderClientesLista();
+    }
+    
+    // Recarregar dashboard se estiver na página principal
+    if (document.getElementById('dashboard-stats')) {
+      await app.loadDashboardData();
+    }
+    
+    // Recarregar atrasados se estiver na página de atrasados
+    if (document.getElementById('atrasados-lista')) {
+      await renderAtrasadosLista();
+    }
+    
+    console.log('Dados recarregados com sucesso!');
+    return true;
+  } catch (error) {
+    console.error('Erro ao recarregar dados:', error);
+    return false;
   }
 }
 
@@ -1592,7 +1631,7 @@ async function renderAtrasadosLista() {
           <td>${vencimento}</td>
           <td>${diasAtraso > 0 ? diasAtraso : '-'}</td>
           <td><span class="badge badge-danger">ATRASADO</span></td>
-          <td><button class="btn btn-primary btn-sm" onclick="emprestimoController.viewEmprestimo(${emp.id})">Ver</button></td>
+          <td><button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button></td>
         </tr>
       `;
     });
