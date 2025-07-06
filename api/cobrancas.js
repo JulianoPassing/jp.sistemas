@@ -5,33 +5,44 @@ const bcrypt = require('bcryptjs');
 
 const router = express.Router();
 
-// Função para criar conexão com banco de cobranças
-async function createCobrancasConnection() {
-  const dbConfig = getCobrancasDatabaseConfig();
+// Função para criar conexão com banco de cobranças do usuário
+async function createCobrancasConnection(username) {
+  const dbName = `jpsistemas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+  const dbConfig = {
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'jpsistemas',
+    password: process.env.DB_PASSWORD || 'SuaSenhaForte123!',
+    database: dbName,
+    charset: 'utf8mb4'
+  };
+  
   try {
     const connection = await mysql.createConnection(dbConfig);
     return connection;
   } catch (error) {
-    console.error('Erro ao conectar ao banco de cobranças:', error);
+    console.error(`Erro ao conectar ao banco de cobranças do usuário ${username}:`, error);
     throw error;
   }
 }
 
-// Função para criar banco de dados de cobranças
-async function createCobrancasDatabase() {
+// Função para criar banco de dados de cobranças do usuário
+async function createCobrancasDatabase(username) {
+  const dbName = `jpsistemas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+  
   try {
     // Conectar como root para criar o banco
-    const rootConfig = getCobrancasDatabaseConfig();
     const rootConnection = await mysql.createConnection({
-      ...rootConfig,
-      database: undefined // Sem especificar database para conectar como root
+      host: process.env.DB_HOST || 'localhost',
+      user: process.env.DB_USER || 'jpsistemas',
+      password: process.env.DB_PASSWORD || 'SuaSenhaForte123!',
+      charset: 'utf8mb4'
     });
 
     // Criar banco de dados
-    await rootConnection.execute(`CREATE DATABASE IF NOT EXISTS \`jpsistemas_cobrancas\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+    await rootConnection.execute(`CREATE DATABASE IF NOT EXISTS \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
     
     // Conectar ao banco criado
-    const cobrancasConnection = await createCobrancasConnection();
+    const cobrancasConnection = await createCobrancasConnection(username);
 
     // Criar tabelas
     await cobrancasConnection.execute(`
@@ -120,10 +131,10 @@ async function createCobrancasDatabase() {
     await rootConnection.end();
     await cobrancasConnection.end();
     
-    console.log('Banco de dados jpsistemas_cobrancas criado com sucesso');
+    console.log(`Banco de dados ${dbName} criado com sucesso para o usuário ${username}`);
     return true;
   } catch (error) {
-    console.error('Erro ao criar banco de dados de cobranças:', error);
+    console.error(`Erro ao criar banco de dados de cobranças para ${username}:`, error);
     throw error;
   }
 }
@@ -131,7 +142,11 @@ async function createCobrancasDatabase() {
 // Middleware para inicializar banco se necessário
 async function ensureDatabase(req, res, next) {
   try {
-    await createCobrancasDatabase();
+    const username = req.session.cobrancasUser;
+    if (!username) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+    await createCobrancasDatabase(username);
     next();
   } catch (error) {
     console.error('Erro ao garantir banco de dados:', error);
@@ -142,7 +157,8 @@ async function ensureDatabase(req, res, next) {
 // Dashboard
 router.get('/dashboard', ensureDatabase, async (req, res) => {
   try {
-    const connection = await createCobrancasConnection();
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
     
     // Atualizar dias de atraso antes das estatísticas do dashboard
     await connection.execute(`
@@ -557,9 +573,17 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Usuário ou senha inválidos.' });
     }
 
-    // Salva na sessão o usuário e o banco correspondente
+    // Criar banco de dados do usuário se não existir
+    try {
+      await createCobrancasDatabase(username);
+    } catch (dbError) {
+      console.error('Erro ao criar banco do usuário:', dbError);
+      return res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
+    }
+
+    // Salva na sessão o usuário
     req.session.cobrancasUser = username;
-    req.session.cobrancasDb = user.db_name;
+    req.session.cobrancasDb = `jpsistemas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
 
     res.json({ success: true });
   } catch (err) {
