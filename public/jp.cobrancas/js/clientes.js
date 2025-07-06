@@ -7,7 +7,7 @@ const itemsPerPage = 10;
 const clientesTable = document.getElementById('clientes-table');
 const clientesTableBody = document.getElementById('clientes-table-body');
 const searchInput = document.getElementById('search-cliente');
-const addClienteBtn = document.getElementById('add-cliente-btn');
+const addClienteBtn = document.getElementById('addClienteBtn');
 const totalClientesSpan = document.getElementById('total-clientes');
 
 // API Service específico para clientes
