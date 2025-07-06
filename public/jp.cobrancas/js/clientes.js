@@ -249,6 +249,13 @@ const clientesUI = {
   },
 
   renderClienteDetails(cliente) {
+    const pagamentosPorCobranca = {};
+    if (Array.isArray(cliente.pagamentos)) {
+      cliente.pagamentos.forEach(pag => {
+        if (!pagamentosPorCobranca[pag.cobranca_id]) pagamentosPorCobranca[pag.cobranca_id] = [];
+        pagamentosPorCobranca[pag.cobranca_id].push(pag);
+      });
+    }
     const detailsContent = `
       <div class="cliente-details">
         <div class="detail-row">
@@ -280,7 +287,7 @@ const clientesUI = {
         </div>
         ${cliente.emprestimos && cliente.emprestimos.length > 0 ? `
           <div class="emprestimos-section">
-            <h4>Empréstimos</h4>
+            <h4>Histórico de Empréstimos</h4>
             <div class="emprestimos-list">
               ${cliente.emprestimos.map(emp => `
                 <div class="emprestimo-item">
@@ -291,18 +298,43 @@ const clientesUI = {
                     </span>
                   </div>
                   <div class="emprestimo-details">
-                    <div>Valor: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(emp.amount)}</div>
-                    <div>Vencimento: ${new Date(emp.due_date).toLocaleDateString('pt-BR')}</div>
-                    <div>Restante: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(emp.valor_restante)}</div>
+                    <div>Valor: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(emp.valor || emp.valor_inicial || 0)}</div>
+                    <div>Vencimento: ${emp.data_vencimento ? new Date(emp.data_vencimento).toLocaleDateString('pt-BR') : 'N/A'}</div>
+                    <div>Juros Mensal: ${emp.juros_mensal ? emp.juros_mensal + '%' : 'N/A'}</div>
+                    <div>Status: ${emp.status || 'N/A'}</div>
+                  </div>
+                  <div class="pagamentos-section">
+                    <h5>Pagamentos</h5>
+                    ${(pagamentosPorCobranca[emp.id] && pagamentosPorCobranca[emp.id].length > 0) ? `
+                      <table class="pagamentos-table">
+                        <thead>
+                          <tr>
+                            <th>Valor Pago</th>
+                            <th>Data</th>
+                            <th>Forma</th>
+                            <th>Observações</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${pagamentosPorCobranca[emp.id].map(pag => `
+                            <tr>
+                              <td>${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pag.valor_pago)}</td>
+                              <td>${pag.data_pagamento ? new Date(pag.data_pagamento).toLocaleDateString('pt-BR') : 'N/A'}</td>
+                              <td>${pag.forma_pagamento || 'N/A'}</td>
+                              <td>${pag.observacoes || ''}</td>
+                            </tr>
+                          `).join('')}
+                        </tbody>
+                      </table>
+                    ` : '<div>Nenhum pagamento registrado.</div>'}
                   </div>
                 </div>
               `).join('')}
             </div>
           </div>
-        ` : ''}
+        ` : '<div>Nenhum empréstimo encontrado.</div>'}
       </div>
     `;
-
     clientesUI.showModal(detailsContent, `Detalhes do Cliente - ${cliente.nome || 'N/A'}`);
   }
 };
