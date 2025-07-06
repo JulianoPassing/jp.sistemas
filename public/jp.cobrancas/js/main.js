@@ -1177,7 +1177,6 @@ async function renderHistoricoEmprestimos() {
     }
     tbody.innerHTML = '';
     emprestimos.forEach(emprestimo => {
-      // Cálculo de atraso e juros diário
       let valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
       let jurosPercent = Number(emprestimo.juros_mensal || 0);
       let jurosTotal = valorInvestido * (jurosPercent / 100);
@@ -1201,7 +1200,6 @@ async function renderHistoricoEmprestimos() {
         valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
         infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
       }
-      // Proteção para valores nulos/undefined
       let valor = !isNaN(valorAtualizado) ? new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
