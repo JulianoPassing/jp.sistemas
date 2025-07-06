@@ -113,27 +113,15 @@ const clientesUI = {
   },
 
   renderClienteRow(cliente) {
-    const emprestimosAtivos = cliente.emprestimos_ativos || 0;
-    const emprestimosAtrasados = cliente.emprestimos_atrasados || 0;
-    
     return `
       <tr data-id="${cliente.id}">
+        <td>${cliente.razao || cliente.nome || cliente.name || 'N/A'}</td>
+        <td>${cliente.cnpj || cliente.cpf || 'N/A'}</td>
+        <td>${cliente.telefone || cliente.phone || 'N/A'}</td>
+        <td>${cliente.email || 'N/A'}</td>
+        <td>${(cliente.cidade || '') + (cliente.estado ? '/' + cliente.estado : '') || 'N/A'}</td>
         <td>
-          <div class="cliente-info">
-            <div class="cliente-nome">${cliente.razao || cliente.name || 'N/A'}</div>
-            <div class="cliente-email">${cliente.email || 'N/A'}</div>
-          </div>
-        </td>
-        <td>${cliente.phone || 'N/A'}</td>
-        <td>${cliente.cpf_cnpj || 'N/A'}</td>
-        <td>
-          <span class="badge badge-success">${emprestimosAtivos}</span>
-        </td>
-        <td>
-          ${emprestimosAtrasados > 0 ? 
-            `<span class="badge badge-danger">${emprestimosAtrasados}</span>` : 
-            '<span class="badge badge-success">0</span>'
-          }
+          <span class="badge badge-success">Ativo</span>
         </td>
         <td>
           <div class="actions">
