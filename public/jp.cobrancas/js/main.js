@@ -1227,6 +1227,39 @@ async function renderHistoricoEmprestimos() {
     if (totalBox) {
       totalBox.textContent = `Valor total dos empréstimos: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
     }
+    // Calcular valor total e valor total com juros
+    let totalComJuros = 0;
+    (emprestimos || []).forEach(emp => {
+      const valor = Number(emp.valor || 0);
+      const jurosPercent = Number(emp.juros_mensal || 0);
+      let valorJuros = valor * (jurosPercent / 100);
+      let valorAtualizado = valor + valorJuros;
+      // Se vencido e não quitado, soma juros diário
+      if (emp.data_vencimento) {
+        const dataVenc = new Date(emp.data_vencimento);
+        if (dataVenc < hoje && (emp.status || '').toLowerCase() !== 'quitado') {
+          const diffTime = hoje.getTime() - dataVenc.getTime();
+          const diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          const jurosDiario = Math.ceil(valorJuros / 30);
+          valorAtualizado += jurosDiario * diasAtraso;
+        }
+      }
+      total += valor;
+      totalComJuros += valorAtualizado;
+    });
+    const totaisBox = document.getElementById('totais-emprestimos-box');
+    if (totaisBox) {
+      totaisBox.innerHTML = `
+        <div style="background: #f1f5f9; border-radius: 10px; padding: 1.2rem 2rem; box-shadow: 0 2px 8px #0001; min-width: 260px; text-align: center;">
+          <div style="font-size: 1.1rem; color: #64748b; margin-bottom: 0.3rem;">Valor total dos empréstimos</div>
+          <div style="font-size: 2rem; font-weight: 700; color: #002f4b;">R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+        </div>
+        <div style="background: #e0f7fa; border-radius: 10px; padding: 1.2rem 2rem; box-shadow: 0 2px 8px #0001; min-width: 260px; text-align: center;">
+          <div style="font-size: 1.1rem; color: #0097a7; margin-bottom: 0.3rem;">Valor total dos empréstimos + Juros</div>
+          <div style="font-size: 2rem; font-weight: 700; color: #006064;">R$ ${totalComJuros.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+        </div>
+      `;
+    }
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
   }
