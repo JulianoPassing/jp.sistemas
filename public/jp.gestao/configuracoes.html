@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JP Gestão - Configurações</title>
+    <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="app-layout">
+    <header>
+        <div class="header-content">
+            <a href="dashboard.html" class="logo" style="display: flex; align-items: center;">
+                <img src="https://i.imgur.com/TwZLW6a.png" alt="JP Gestão" style="height: 3rem; width: auto; object-fit: contain;">
+            </a>
+            <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Abrir menu"><span class="menu-icon"></span></button>
+            <div class="nav-wrapper">
+                <nav>
+                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="produtos.html" class="nav-link">Produtos</a>
+                    <a href="pedidos.html" class="nav-link">Pedidos</a>
+                    <a href="clientes.html" class="nav-link">Clientes</a>
+                    <a href="mesas.html" class="nav-link">Mesas</a>
+                    <a href="caixa.html" class="nav-link">Caixa</a>
+                    <a href="relatorios.html" class="nav-link">Relatórios</a>
+                    <a href="configuracoes.html" class="nav-link active">Configurações</a>
+                    <a href="#" class="nav-link" onclick="sair()">Sair</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <div class="dashboard-header">
+                <div class="welcome-message" id="welcomeMessage">Bem-vindo(a)!</div>
+                <div class="dashboard-title">Configurações do Sistema</div>
+                <div class="dashboard-subtitle">Personalize e configure seu sistema</div>
+            </div>
+            
+            <!-- Menu de Configurações -->
+            <div class="menu-grid">
+                <div class="menu-card" onclick="showEmpresaModal()">
+                    <i class="fas fa-building"></i>
+                    <h3>Dados da Empresa</h3>
+                    <p>Configure informações da sua empresa</p>
+                </div>
+                <div class="menu-card" onclick="showUsuariosModal()">
+                    <i class="fas fa-users-cog"></i>
+                    <h3>Usuários</h3>
+                    <p>Gerencie usuários e permissões</p>
+                </div>
+                <div class="menu-card" onclick="showBackupModal()">
+                    <i class="fas fa-database"></i>
+                    <h3>Backup</h3>
+                    <p>Faça backup dos seus dados</p>
+                </div>
+                <div class="menu-card" onclick="showNotificacoesModal()">
+                    <i class="fas fa-bell"></i>
+                    <h3>Notificações</h3>
+                    <p>Configure alertas e notificações</p>
+                </div>
+                <div class="menu-card" onclick="showIntegracaoModal()">
+                    <i class="fas fa-plug"></i>
+                    <h3>Integrações</h3>
+                    <p>Configure integrações externas</p>
+                </div>
+                <div class="menu-card" onclick="showSegurancaModal()">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>Segurança</h3>
+                    <p>Configurações de segurança</p>
+                </div>
+            </div>
+            
+            <!-- Configurações Rápidas -->
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title">Configurações Rápidas</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Configurações Gerais -->
+                    <div>
+                        <h4 class="font-semibold mb-4">Configurações Gerais</h4>
+                        <div class="space-y-4">
+                            <div class="form-group">
+                                <label class="form-label">Modo Escuro</label>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="modoEscuro" class="form-input" style="width: auto;">
+                                    <span>Ativar modo escuro</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Notificações Push</label>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="notificacoesPush" class="form-input" style="width: auto;" checked>
+                                    <span>Receber notificações</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Auto-refresh</label>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="autoRefresh" class="form-input" style="width: auto;">
+                                    <span>Atualizar automaticamente</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Configurações de Negócio -->
+                    <div>
+                        <h4 class="font-semibold mb-4">Configurações de Negócio</h4>
+                        <div class="space-y-4">
+                            <div class="form-group">
+                                <label for="moeda" class="form-label">Moeda</label>
+                                <select id="moeda" class="form-input">
+                                    <option value="BRL" selected>Real Brasileiro (R$)</option>
+                                    <option value="USD">Dólar Americano ($)</option>
+                                    <option value="EUR">Euro (€)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="fusoHorario" class="form-label">Fuso Horário</label>
+                                <select id="fusoHorario" class="form-input">
+                                    <option value="America/Sao_Paulo" selected>Brasília (GMT-3)</option>
+                                    <option value="America/Manaus">Manaus (GMT-4)</option>
+                                    <option value="America/Belem">Belém (GMT-3)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="idioma" class="form-label">Idioma</label>
+                                <select id="idioma" class="form-input">
+                                    <option value="pt-BR" selected>Português (Brasil)</option>
+                                    <option value="en">English</option>
+                                    <option value="es">Español</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Informações do Sistema -->
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title">Informações do Sistema</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div style="background-color: var(--gray-50); padding: 1rem; border-radius: var(--border-radius);">
+                        <div class="text-sm text-gray-600">Versão do Sistema</div>
+                        <div class="font-semibold">1.0.0</div>
+                    </div>
+                    <div style="background-color: var(--gray-50); padding: 1rem; border-radius: var(--border-radius);">
+                        <div class="text-sm text-gray-600">Última Atualização</div>
+                        <div class="font-semibold">2024-01-15</div>
+                    </div>
+                    <div style="background-color: var(--gray-50); padding: 1rem; border-radius: var(--border-radius);">
+                        <div class="text-sm text-gray-600">Status</div>
+                        <div class="font-semibold text-green-600">Online</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="text-center p-4 mt-8">
+        © 2024 JP Gestão. Todos os direitos reservados.
+    </footer>
+    
+    <script src="./js/main.js"></script>
+    <script>
+        // Verificar autenticação
+        if (sessionStorage.getItem('loggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+        
+        // Configurar mensagem de boas-vindas
+        function updateWelcomeMessage() {
+            const username = sessionStorage.getItem('userDisplay') || sessionStorage.getItem('username') || 'Usuário';
+            const capitalizedUsername = username.charAt(0).toUpperCase() + username.slice(1);
+            document.getElementById('welcomeMessage').textContent = `Bem-vindo(a), ${capitalizedUsername}!`;
+        }
+        
+        // Carregar configurações
+        function loadConfiguracoes() {
+            // Carregar configurações salvas
+            const modoEscuro = localStorage.getItem('modoEscuro') === 'true';
+            const notificacoesPush = localStorage.getItem('notificacoesPush') !== 'false';
+            const autoRefresh = localStorage.getItem('autoRefresh') === 'true';
+            const moeda = localStorage.getItem('moeda') || 'BRL';
+            const fusoHorario = localStorage.getItem('fusoHorario') || 'America/Sao_Paulo';
+            const idioma = localStorage.getItem('idioma') || 'pt-BR';
+            
+            // Aplicar configurações
+            document.getElementById('modoEscuro').checked = modoEscuro;
+            document.getElementById('notificacoesPush').checked = notificacoesPush;
+            document.getElementById('autoRefresh').checked = autoRefresh;
+            document.getElementById('moeda').value = moeda;
+            document.getElementById('fusoHorario').value = fusoHorario;
+            document.getElementById('idioma').value = idioma;
+            
+            // Aplicar modo escuro se ativado
+            if (modoEscuro) {
+                document.body.classList.add('dark-mode');
+            }
+        }
+        
+        // Salvar configurações
+        function saveConfiguracoes() {
+            const modoEscuro = document.getElementById('modoEscuro').checked;
+            const notificacoesPush = document.getElementById('notificacoesPush').checked;
+            const autoRefresh = document.getElementById('autoRefresh').checked;
+            const moeda = document.getElementById('moeda').value;
+            const fusoHorario = document.getElementById('fusoHorario').value;
+            const idioma = document.getElementById('idioma').value;
+            
+            localStorage.setItem('modoEscuro', modoEscuro);
+            localStorage.setItem('notificacoesPush', notificacoesPush);
+            localStorage.setItem('autoRefresh', autoRefresh);
+            localStorage.setItem('moeda', moeda);
+            localStorage.setItem('fusoHorario', fusoHorario);
+            localStorage.setItem('idioma', idioma);
+            
+            // Aplicar modo escuro
+            if (modoEscuro) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+            
+            showNotification('Configurações salvas com sucesso!', 'success');
+        }
+        
+        // Mostrar modal de dados da empresa
+        function showEmpresaModal() {
+            const content = `
+                <form id="empresaForm">
+                    <div class="form-group">
+                        <label for="nomeEmpresa" class="form-label">Nome da Empresa *</label>
+                        <input type="text" id="nomeEmpresa" name="nome" class="form-input" value="JP Gestão" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cnpj" class="form-label">CNPJ</label>
+                        <input type="text" id="cnpj" name="cnpj" class="form-input" placeholder="00.000.000/0000-00">
+                    </div>
+                    <div class="form-group">
+                        <label for="telefone" class="form-label">Telefone</label>
+                        <input type="text" id="telefone" name="telefone" class="form-input" placeholder="(11) 99999-9999">
+                    </div>
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" id="email" name="email" class="form-input" placeholder="contato@empresa.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="endereco" class="form-label">Endereço</label>
+                        <textarea id="endereco" name="endereco" class="form-input" rows="3" placeholder="Endereço completo da empresa"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="site" class="form-label">Website</label>
+                        <input type="url" id="site" name="site" class="form-input" placeholder="https://www.empresa.com">
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Dados</button>
+                    </div>
+                </form>
+            `;
+            showModal('Dados da Empresa', content);
+            
+            // Adicionar evento de submit
+            document.getElementById('empresaForm').addEventListener('submit', handleEmpresaSubmit);
+        }
+        
+        // Manipular dados da empresa
+        async function handleEmpresaSubmit(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const empresaData = Object.fromEntries(formData.entries());
+            
+            try {
+                const response = await fetch('/api/configuracoes/empresa', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(empresaData)
+                });
+                
+                if (response.ok) {
+                    showNotification('Dados da empresa atualizados com sucesso!', 'success');
+                    closeModal(e.target);
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Erro ao atualizar dados', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar dados da empresa:', error);
+                showNotification('Erro ao atualizar dados da empresa', 'error');
+            }
+        }
+        
+        // Mostrar modal de usuários
+        function showUsuariosModal() {
+            const content = `
+                <div>
+                    <p>Gerenciamento de usuários em desenvolvimento.</p>
+                    <p>Funcionalidades futuras:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Criar novos usuários</li>
+                        <li>Gerenciar permissões</li>
+                        <li>Definir níveis de acesso</li>
+                        <li>Histórico de atividades</li>
+                    </ul>
+                </div>
+            `;
+            showModal('Gerenciamento de Usuários', content);
+        }
+        
+        // Mostrar modal de backup
+        function showBackupModal() {
+            const content = `
+                <div>
+                    <p>Sistema de backup em desenvolvimento.</p>
+                    <p>Funcionalidades futuras:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Backup automático</li>
+                        <li>Restauração de dados</li>
+                        <li>Backup na nuvem</li>
+                        <li>Agendamento de backups</li>
+                    </ul>
+                </div>
+            `;
+            showModal('Sistema de Backup', content);
+        }
+        
+        // Mostrar modal de notificações
+        function showNotificacoesModal() {
+            const content = `
+                <div>
+                    <p>Configurações de notificações em desenvolvimento.</p>
+                    <p>Funcionalidades futuras:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Notificações por email</li>
+                        <li>Alertas de estoque baixo</li>
+                        <li>Notificações de pedidos</li>
+                        <li>Relatórios automáticos</li>
+                    </ul>
+                </div>
+            `;
+            showModal('Configurações de Notificações', content);
+        }
+        
+        // Mostrar modal de integrações
+        function showIntegracaoModal() {
+            const content = `
+                <div>
+                    <p>Integrações externas em desenvolvimento.</p>
+                    <p>Funcionalidades futuras:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Integração com iFood</li>
+                        <li>Integração com WhatsApp</li>
+                        <li>Integração com sistemas de pagamento</li>
+                        <li>API para desenvolvedores</li>
+                    </ul>
+                </div>
+            `;
+            showModal('Integrações Externas', content);
+        }
+        
+        // Mostrar modal de segurança
+        function showSegurancaModal() {
+            const content = `
+                <div>
+                    <p>Configurações de segurança em desenvolvimento.</p>
+                    <p>Funcionalidades futuras:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Autenticação de dois fatores</li>
+                        <li>Logs de segurança</li>
+                        <li>Política de senhas</li>
+                        <li>Backup de segurança</li>
+                    </ul>
+                </div>
+            `;
+            showModal('Configurações de Segurança', content);
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            updateWelcomeMessage();
+            loadConfiguracoes();
+            
+            // Salvar configurações quando alteradas
+            const configInputs = document.querySelectorAll('#modoEscuro, #notificacoesPush, #autoRefresh, #moeda, #fusoHorario, #idioma');
+            configInputs.forEach(input => {
+                input.addEventListener('change', saveConfiguracoes);
+            });
+        });
+    </script>
+</body>
+</html> 
