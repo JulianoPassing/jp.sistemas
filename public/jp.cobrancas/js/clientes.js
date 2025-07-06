@@ -159,8 +159,11 @@ const clientesUI = {
   },
 
   renderClientesTable(clientes) {
+    const clientesValidos = clientes.filter(
+      c => c && c.nome && c.nome !== 'undefined' && c.nome.trim() !== ''
+    );
     if (clientesTableBody) {
-      if (clientes.length === 0) {
+      if (clientesValidos.length === 0) {
         clientesTableBody.innerHTML = `
           <tr>
             <td colspan="6" class="text-center text-gray-500">
@@ -171,7 +174,7 @@ const clientesUI = {
         return;
       }
 
-      clientesTableBody.innerHTML = clientes.map(cliente => 
+      clientesTableBody.innerHTML = clientesValidos.map(cliente => 
         this.renderClienteRow(cliente)
       ).join('');
     }
