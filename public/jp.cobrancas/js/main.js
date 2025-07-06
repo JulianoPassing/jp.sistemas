@@ -270,16 +270,18 @@ const dashboardController = {
       this.updateRecentEmprestimos(data.emprestimosRecentes || []);
       this.updateCobrancasPendentes(data.cobrancasPendentes || []);
       
-      // Calcular clientes em atraso: apenas clientes com empréstimo atrasado
+      // Calcular clientes em atraso: aceitar cliente_id, cliente ou cliente_nome como identificador único do cliente
       const clientesEmAtrasoSet = new Set();
       emprestimos.forEach(emprestimo => {
         const dataVencimento = new Date(emprestimo.data_vencimento);
+        // Tenta pegar o identificador do cliente de várias formas
+        const clienteId = emprestimo.cliente_id || emprestimo.cliente || emprestimo.cliente_nome || null;
         if (
           dataVencimento < hoje &&
           (emprestimo.status || '').toUpperCase() !== 'QUITADO' &&
-          emprestimo.cliente_id
+          clienteId
         ) {
-          clientesEmAtrasoSet.add(emprestimo.cliente_id);
+          clientesEmAtrasoSet.add(clienteId);
         }
       });
       data.cobrancas.clientes_em_atraso = clientesEmAtrasoSet.size;
