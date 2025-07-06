@@ -88,7 +88,9 @@ const authSystem = {
     const welcomeElement = document.getElementById('welcomeMessage');
     if (welcomeElement) {
       const username = sessionStorage.getItem('username') || 'Usuário';
-      welcomeElement.textContent = `Bem-vindo(a), ${username}!`;
+      // Capitalizar primeira letra do nome
+      const capitalizedUsername = username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
+      welcomeElement.textContent = `Bem-vindo(a), ${capitalizedUsername}!`;
     }
   }
 };

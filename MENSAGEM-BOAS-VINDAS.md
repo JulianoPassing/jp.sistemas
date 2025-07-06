@@ -46,7 +46,7 @@ Adicionado estilo para a mensagem de boas-vindas:
 
 ### 3. Funcionalidade JavaScript
 
-Implementada função para exibir o nome do usuário:
+Implementada função para exibir o nome do usuário com capitalização automática:
 
 ```javascript
 // Exibir mensagem de boas-vindas
@@ -54,16 +54,25 @@ showWelcomeMessage() {
   const welcomeElement = document.getElementById('welcomeMessage');
   if (welcomeElement) {
     const username = sessionStorage.getItem('username') || 'Usuário';
-    welcomeElement.textContent = `Bem-vindo(a), ${username}!`;
+    // Capitalizar primeira letra do nome
+    const capitalizedUsername = username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
+    welcomeElement.textContent = `Bem-vindo(a), ${capitalizedUsername}!`;
   }
 }
 ```
 
 **Funcionalidades:**
 - Busca o nome do usuário no sessionStorage
-- Exibe "Bem-vindo(a), [nome]!" 
+- **Capitalização automática**: Primeira letra sempre maiúscula, resto minúscula
+- Exibe "Bem-vindo(a), [Nome]!" (sempre com primeira letra maiúscula)
 - Fallback para "Usuário" se não encontrar o nome
 - Chamada automaticamente na inicialização da aplicação
+
+**Exemplos de capitalização:**
+- `diego` → "Diego"
+- `DIEGO` → "Diego" 
+- `Diego` → "Diego"
+- `cobranca` → "Cobranca"
 
 ### 4. Integração com Sistema de Autenticação
 
@@ -97,7 +106,7 @@ Gerencie todas as informações do sistema.
 
 **Depois:**
 ```
-Bem-vindo(a), diego!
+Bem-vindo(a), Diego!
 Dashboard
 Gerencie todas as informações do sistema.
 ```
@@ -160,14 +169,17 @@ Este script testa:
    - Senha: `diego123`
 
 3. **Verifique a mensagem:**
-   - Deve aparecer "Bem-vindo(a), diego!" no topo
+   - Deve aparecer "Bem-vindo(a), Diego!" no topo
    - A mensagem deve estar estilizada em verde
    - Deve aparecer em todas as páginas
+   - O nome sempre aparece com primeira letra maiúscula
 
-4. **Teste com outro usuário:**
+4. **Teste com outros usuários:**
    - Faça logout
    - Login com `cobranca` / `cobranca123`
-   - Verifique se a mensagem muda para "Bem-vindo(a), cobranca!"
+   - Verifique se a mensagem muda para "Bem-vindo(a), Cobranca!"
+   - Teste com `DIEGO` (maiúsculo) - deve aparecer "Diego"
+   - Teste com `diego` (minúsculo) - deve aparecer "Diego"
 
 ## Personalização
 
@@ -175,7 +187,8 @@ Este script testa:
 Para modificar o texto da mensagem, edite a função `showWelcomeMessage()`:
 
 ```javascript
-welcomeElement.textContent = `Olá, ${username}! Seja bem-vindo ao sistema.`;
+const capitalizedUsername = username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
+welcomeElement.textContent = `Olá, ${capitalizedUsername}! Seja bem-vindo ao sistema.`;
 ```
 
 ### Alterar o Estilo
