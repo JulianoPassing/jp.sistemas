@@ -240,8 +240,32 @@ const dashboardController = {
       }
       
       const data = await apiService.getDashboardData();
+      // Buscar todos os empréstimos para calcular o valor total a receber com juros em aberto
+      const emprestimos = await apiService.getEmprestimos();
+      let valorTotalReceber = 0;
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      emprestimos.forEach(emprestimo => {
+        const valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
+        const jurosPercent = Number(emprestimo.juros_mensal || 0);
+        const jurosTotal = valorInvestido * (jurosPercent / 100);
+        const dataVencimento = new Date(emprestimo.data_vencimento);
+        let valorAtualizado = valorInvestido + jurosTotal;
+        if (dataVencimento < hoje && (emprestimo.status || '').toUpperCase() !== 'QUITADO') {
+          const diffTime = hoje.getTime() - dataVencimento.getTime();
+          const diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          const jurosDiario = Math.ceil(jurosTotal / 30);
+          const jurosAplicado = jurosDiario * diasAtraso;
+          valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
+        }
+        if ((emprestimo.status || '').toUpperCase() !== 'QUITADO') {
+          valorTotalReceber += valorAtualizado;
+        }
+      });
+      // Substituir o valor do card por esse valor calculado
+      data.cobrancas = data.cobrancas || {};
+      data.cobrancas.valor_total_cobrancas = valorTotalReceber;
       appState.data.dashboard = data;
-      
       this.updateDashboardCards(data);
       this.updateRecentEmprestimos(data.emprestimosRecentes || []);
       this.updateCobrancasPendentes(data.cobrancasPendentes || []);
