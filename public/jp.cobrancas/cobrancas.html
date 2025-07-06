@@ -43,7 +43,7 @@
       <div class="section">
         <div class="section-header">
           <h3 class="section-title">Cobranças</h3>
-          <a href="adicionar-cliente.html" class="btn btn-primary">Nova Cobrança</a>
+          <button id="nova-cobranca-btn" class="btn btn-primary">Nova Cobrança</button>
         </div>
         <div class="table-container">
           <table class="table">
@@ -77,6 +77,213 @@
       if (menuBtn && navWrapper) {
         menuBtn.addEventListener('click', function() {
           navWrapper.classList.toggle('open');
+        });
+      }
+
+      // Carregar lista de cobranças
+      renderCobrancasEmAbertoLista();
+
+      // Modal de Nova Cobrança
+      const novaCobrancaBtn = document.getElementById('nova-cobranca-btn');
+      if (novaCobrancaBtn) {
+        novaCobrancaBtn.addEventListener('click', async () => {
+          // Buscar clientes
+          let clientes = [];
+          try {
+            clientes = await apiService.getClientes();
+          } catch (e) {
+            ui.showNotification('Erro ao carregar clientes', 'error');
+          }
+          
+          const clienteOptions = clientes.map(c => `<option value="${c.id}">${c.nome || c.razao || c.name}</option>`).join('');
+          
+          const modalContent = `
+            <form id="modal-cobranca-form">
+              <div class="form-group">
+                <label>Cliente *</label>
+                <select name="clienteId" id="modal-cliente-select" class="form-input" required>
+                  <option value="">Selecione um cliente existente</option>
+                  ${clienteOptions}
+                </select>
+                <small class="text-gray-500">Ou preencha os dados abaixo para cadastrar um novo cliente</small>
+              </div>
+              
+              <div class="form-group">
+                <label>Nome do Cliente (se novo cliente) *</label>
+                <input type="text" name="nome" id="modal-nome" class="form-input" placeholder="Nome completo">
+              </div>
+              
+              <div class="form-group">
+                <label>CPF/CNPJ (se novo cliente)</label>
+                <input type="text" name="cpf_cnpj" id="modal-cpf" class="form-input" placeholder="CPF ou CNPJ">
+              </div>
+              
+              <div class="form-group">
+                <label>Telefone (se novo cliente)</label>
+                <input type="text" name="telefone" id="modal-telefone" class="form-input" placeholder="Telefone">
+              </div>
+              
+              <div class="form-group">
+                <label>Valor do Empréstimo (R$) *</label>
+                <input type="number" name="valor" id="modal-valor" class="form-input" step="0.01" min="0" required placeholder="ex.: 1000.00">
+              </div>
+              
+              <div class="form-group">
+                <label>Juros Mensal (%) *</label>
+                <input type="number" name="juros_mensal" id="modal-juros" class="form-input" step="0.01" min="0" required placeholder="ex.: 2.5">
+              </div>
+              
+              <div class="form-group">
+                <label>Multa por Atraso (%) *</label>
+                <input type="number" name="multa_atraso" id="modal-multa" class="form-input" step="0.01" min="0" required placeholder="ex.: 5.0">
+              </div>
+              
+              <div class="form-group">
+                <label>Data do Empréstimo *</label>
+                <input type="date" name="data_emprestimo" id="modal-data-emprestimo" class="form-input" required>
+              </div>
+              
+              <div class="form-group">
+                <label>Data de Vencimento *</label>
+                <input type="date" name="data_vencimento" id="modal-data-vencimento" class="form-input" required>
+              </div>
+              
+              <div class="form-group">
+                <label>Observações</label>
+                <textarea name="observacoes" class="form-input" rows="3" placeholder="Observações sobre o empréstimo"></textarea>
+              </div>
+              
+              <div class="form-group">
+                <button type="submit" id="btn-criar-cobranca" class="btn btn-primary">Criar Cobrança</button>
+                <button type="button" id="btn-cancelar" class="btn btn-secondary ml-2">Cancelar</button>
+              </div>
+            </form>
+          `;
+          
+          const modal = ui.showModal(modalContent, 'Nova Cobrança');
+          const form = modal.querySelector('#modal-cobranca-form');
+          
+          // Preencher data atual no campo de empréstimo
+          const hoje = new Date().toISOString().split('T')[0];
+          modal.querySelector('#modal-data-emprestimo').value = hoje;
+          
+          // Preencher campos ao selecionar cliente
+          const select = modal.querySelector('#modal-cliente-select');
+          const nomeInput = modal.querySelector('#modal-nome');
+          const cpfInput = modal.querySelector('#modal-cpf');
+          const telefoneInput = modal.querySelector('#modal-telefone');
+          
+          select.addEventListener('change', () => {
+            const selectedId = select.value;
+            if (!selectedId) {
+              // Limpar campos se nenhum cliente selecionado
+              nomeInput.value = '';
+              cpfInput.value = '';
+              telefoneInput.value = '';
+              return;
+            }
+            
+            // Preencher campos com dados do cliente selecionado
+            const cliente = clientes.find(c => c.id == selectedId);
+            if (cliente) {
+              nomeInput.value = cliente.nome || '';
+              cpfInput.value = cliente.cpf_cnpj || '';
+              telefoneInput.value = cliente.telefone || '';
+            }
+          });
+          
+          // Processar envio do formulário
+          form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const clienteId = formData.get('clienteId');
+            const nome = formData.get('nome');
+            const cpf_cnpj = formData.get('cpf_cnpj');
+            const telefone = formData.get('telefone');
+            
+            // Validar se tem cliente selecionado ou dados para novo cliente
+            if (!clienteId && (!nome || nome.trim() === '')) {
+              alert('Selecione um cliente existente ou preencha o nome para um novo cliente');
+              return;
+            }
+            
+            try {
+              const submitBtn = form.querySelector('#btn-criar-cobranca');
+              const originalText = submitBtn.textContent;
+              submitBtn.textContent = 'Criando...';
+              submitBtn.disabled = true;
+              
+              let clienteIdFinal = clienteId;
+              
+              // Se não tem cliente selecionado, criar novo cliente
+              if (!clienteId) {
+                const novoCliente = {
+                  nome: nome,
+                  cpf_cnpj: cpf_cnpj,
+                  telefone: telefone
+                };
+                
+                const clienteResponse = await fetch('/api/cobrancas/clientes', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify(novoCliente)
+                });
+                
+                if (!clienteResponse.ok) {
+                  throw new Error('Erro ao criar cliente');
+                }
+                
+                const clienteResult = await clienteResponse.json();
+                clienteIdFinal = clienteResult.id;
+              }
+              
+              // Criar empréstimo
+              const emprestimoData = {
+                cliente_id: clienteIdFinal,
+                valor: parseFloat(formData.get('valor')),
+                data_emprestimo: formData.get('data_emprestimo'),
+                data_vencimento: formData.get('data_vencimento'),
+                juros_mensal: parseFloat(formData.get('juros_mensal')),
+                multa_atraso: parseFloat(formData.get('multa_atraso')),
+                observacoes: formData.get('observacoes')
+              };
+              
+              const emprestimoResponse = await fetch('/api/cobrancas/emprestimos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(emprestimoData)
+              });
+              
+              if (!emprestimoResponse.ok) {
+                throw new Error('Erro ao criar empréstimo');
+              }
+              
+              const emprestimoResult = await emprestimoResponse.json();
+              
+              // Fechar modal e mostrar sucesso
+              modal.remove();
+              alert('Cobrança criada com sucesso!');
+              
+              // Recarregar lista de cobranças
+              renderCobrancasEmAbertoLista();
+              
+            } catch (error) {
+              console.error('Erro ao criar cobrança:', error);
+              alert('Erro ao criar cobrança: ' + error.message);
+            } finally {
+              const submitBtn = form.querySelector('#btn-criar-cobranca');
+              submitBtn.textContent = originalText;
+              submitBtn.disabled = false;
+            }
+          });
+          
+          // Botão cancelar
+          modal.querySelector('#btn-cancelar').addEventListener('click', () => {
+            modal.remove();
+          });
         });
       }
     });
