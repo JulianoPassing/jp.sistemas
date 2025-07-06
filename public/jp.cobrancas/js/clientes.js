@@ -229,8 +229,17 @@ const clientesUI = {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const formData = new FormData(form);
-      const clienteData = Object.fromEntries(formData.entries());
-      
+      // Montar objeto com campo 'nome' para o backend
+      const clienteData = {
+        nome: formData.get('razao') || formData.get('nome') || '',
+        cpf_cnpj: formData.get('cpf_cnpj') || '',
+        email: formData.get('email') || '',
+        telefone: formData.get('phone') || '',
+        endereco: formData.get('address') || '',
+        cidade: formData.get('cidade') || '',
+        estado: formData.get('estado') || '',
+        cep: formData.get('cep') || ''
+      };
       if (isEdit) {
         clientesApp.updateCliente(cliente.id, clienteData);
       } else {
@@ -351,8 +360,8 @@ const clientesApp = {
 
   async createCliente(clienteData) {
     // Validação: nome obrigatório
-    if (!clienteData.razao || clienteData.razao.trim() === '' || clienteData.razao === 'undefined') {
-      clientesUI.showNotification('Preencha o nome/razão social do cliente corretamente!', 'error');
+    if (!clienteData.nome || clienteData.nome.trim() === '' || clienteData.nome === 'undefined') {
+      clientesUI.showNotification('Preencha o nome do cliente corretamente!', 'error');
       return;
     }
     try {
@@ -361,7 +370,6 @@ const clientesApp = {
       this.renderClientes();
       this.updateStats();
       clientesUI.showNotification('Cliente cadastrado com sucesso!');
-      
       // Fechar modal
       document.querySelector('.modal').remove();
     } catch (error) {
