@@ -727,6 +727,12 @@ const emprestimoController = {
           `;
         }
         // Modal HTML
+        const telefone = emp.telefone || emp.celular || emp.whatsapp || '';
+        const nome = emp.cliente_nome || '';
+        const msgWhatsapp = encodeURIComponent(
+          `Olá ${nome}, sua dívida total é de R$ ${utils.formatCurrency(valorAtualizado)}. Juros do mês: ${jurosPercent}% (R$ ${utils.formatCurrency(jurosTotal)}).`
+        );
+        const linkWhatsapp = telefone ? `https://wa.me/55${telefone.replace(/\D/g,'')}?text=${msgWhatsapp}` : '#';
         const detalhes = `
           <div class="emprestimo-modal-box" style="padding: 1.5rem; max-width: 420px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 2px 16px #002f4b22;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
