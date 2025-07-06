@@ -46,6 +46,7 @@ async function createCobrancasDatabase() {
         estado VARCHAR(2),
         cep VARCHAR(9),
         status VARCHAR(50) DEFAULT 'Ativo',
+        observacoes TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_nome (nome),
@@ -648,7 +649,22 @@ router.put('/clientes/:id/lista-negra', ensureDatabase, async (req, res) => {
     const { id } = req.params;
     const { status, motivo } = req.body;
     
+    console.log(`DEBUG: Gerenciando lista negra para cliente ${id}`);
+    console.log(`DEBUG: Status: ${status}, Motivo: ${motivo}`);
+    
     const connection = await createCobrancasConnection();
+    
+    // Verificar se o cliente existe
+    const [clienteRows] = await connection.execute(`
+      SELECT id, nome, status FROM clientes_cobrancas WHERE id = ?
+    `, [id]);
+    
+    if (clienteRows.length === 0) {
+      await connection.end();
+      return res.status(404).json({ error: 'Cliente não encontrado' });
+    }
+    
+    console.log(`DEBUG: Cliente encontrado: ${clienteRows[0].nome} (Status atual: ${clienteRows[0].status})`);
     
     // Atualizar status do cliente
     await connection.execute(`
@@ -660,11 +676,25 @@ router.put('/clientes/:id/lista-negra', ensureDatabase, async (req, res) => {
       WHERE id = ?
     `, [status, motivo, id]);
     
+    console.log(`DEBUG: Cliente atualizado com sucesso`);
+    
     await connection.end();
-    res.json({ message: `Cliente ${status === 'Lista Negra' ? 'adicionado à' : 'removido da'} lista negra com sucesso` });
+    res.json({ 
+      message: `Cliente ${status === 'Lista Negra' ? 'adicionado à' : 'removido da'} lista negra com sucesso`,
+      cliente_id: id,
+      novo_status: status
+    });
   } catch (error) {
     console.error('Erro ao gerenciar lista negra:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error('Detalhes do erro:', {
+      message: error.message,
+      code: error.code,
+      sqlMessage: error.sqlMessage
+    });
+    res.status(500).json({ 
+      error: 'Erro interno do servidor',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
