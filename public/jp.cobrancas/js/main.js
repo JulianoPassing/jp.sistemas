@@ -114,7 +114,7 @@ const apiService = {
 
   // Dashboard
   async getDashboardData() {
-    return this.request('/dashboard');
+    return this.request('/cobrancas/dashboard');
   },
 
   // Clientes
