@@ -338,6 +338,27 @@ router.get('/cobrancas/atrasadas', ensureDatabase, async (req, res) => {
   }
 });
 
+// Cobranças pendentes do dia (com data de vencimento até o dia atual)
+router.get('/cobrancas/pendentes-dia', ensureDatabase, async (req, res) => {
+  try {
+    const connection = await createCobrancasConnection();
+    const [cobrancas] = await connection.execute(`
+      SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
+      FROM cobrancas cb
+      LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
+      WHERE cb.status = 'Pendente' 
+        AND cb.data_vencimento <= CURDATE()
+        AND cb.cliente_id IS NOT NULL
+      ORDER BY cb.data_vencimento ASC
+    `);
+    await connection.end();
+    res.json(cobrancas);
+  } catch (error) {
+    console.error('Erro ao buscar cobranças pendentes do dia:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Registrar pagamento
 router.post('/cobrancas/:id/pagamento', ensureDatabase, async (req, res) => {
   try {
