@@ -246,6 +246,7 @@ const dashboardController = {
       const hoje = new Date();
       hoje.setHours(0,0,0,0);
       emprestimos.forEach(emprestimo => {
+        // Validação e fallback seguro para campos numéricos
         const valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
         const jurosPercent = Number(emprestimo.juros_mensal || 0);
         const jurosTotal = valorInvestido * (jurosPercent / 100);
@@ -688,9 +689,10 @@ const emprestimoController = {
         ui.showNotification('Empréstimo não encontrado', 'error');
         return;
       }
-      // Validação e fallback seguro para campos
+      // Validação e fallback seguro para campos numéricos
       const valorInvestido = Number(emp.valor_inicial || emp.valor || 0);
       const jurosPercent = Number(emp.juros_mensal || 0);
+      const multaAtraso = Number(emp.multa_atraso || 0);
       const jurosTotal = valorInvestido * (jurosPercent / 100);
       const dataVencimento = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
       const hoje = new Date();
