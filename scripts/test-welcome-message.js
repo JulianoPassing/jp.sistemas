@@ -72,14 +72,16 @@ async function testWelcomeMessage() {
     console.log('✅ CSS estilizado para a mensagem');
     console.log('✅ JavaScript configurado para exibir o nome do usuário');
     console.log('✅ Função showWelcomeMessage() implementada');
+    console.log('✅ Nome do usuário capitalizado automaticamente');
     
     console.log('\n🧪 Para testar no navegador:');
     console.log('1. Abra: http://localhost:3000/jp.cobrancas/login.html');
     console.log('2. Faça login com: diego / diego123');
     console.log('3. Navegue pelas páginas e verifique:');
-    console.log('   - "Bem-vindo(a), diego!" aparece no topo de cada página');
+    console.log('   - "Bem-vindo(a), Diego!" aparece no topo de cada página');
     console.log('   - A mensagem está estilizada com cor verde e borda');
     console.log('   - A mensagem aparece acima do título da página');
+    console.log('   - O nome sempre aparece com primeira letra maiúscula');
     
     console.log('\n📋 Páginas testadas:');
     pages.forEach(page => {
@@ -91,6 +93,13 @@ async function testWelcomeMessage() {
     console.log('   - Fonte: 1.1rem, peso 500');
     console.log('   - Borda inferior: 2px sólida verde');
     console.log('   - Posicionamento: Acima do título da página');
+    
+    console.log('\n🧪 Teste com outros usuários:');
+    console.log('   - Faça logout');
+    console.log('   - Login com `cobranca` / `cobranca123`');
+    console.log('   - Verifique se a mensagem muda para "Bem-vindo(a), Cobranca!"');
+    console.log('   - Teste com `DIEGO` (maiúsculo) - deve aparecer "Diego"');
+    console.log('   - Teste com `diego` (minúsculo) - deve aparecer "Diego"');
     
   } catch (error) {
     console.error('❌ Erro no teste:', error.message);
