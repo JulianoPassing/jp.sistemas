@@ -1178,11 +1178,11 @@ async function renderHistoricoEmprestimos() {
     tbody.innerHTML = '';
     emprestimos.forEach(emprestimo => {
       // Cálculo de atraso e juros diário
-      const valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
-      const jurosPercent = Number(emprestimo.juros_mensal || 0);
-      const jurosTotal = valorInvestido * (jurosPercent / 100);
-      const dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
-      const hoje = new Date();
+      let valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
+      let jurosPercent = Number(emprestimo.juros_mensal || 0);
+      let jurosTotal = valorInvestido * (jurosPercent / 100);
+      let dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
+      let hoje = new Date();
       hoje.setHours(0,0,0,0);
       let status = (emprestimo.status || '').toUpperCase();
       let valorAtualizado = valorInvestido + jurosTotal;
