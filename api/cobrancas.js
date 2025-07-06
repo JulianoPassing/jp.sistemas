@@ -275,7 +275,8 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
 // Clientes
 router.get('/clientes', ensureDatabase, async (req, res) => {
   try {
-    const connection = await createCobrancasConnection();
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
     const [clientes] = await connection.execute(`
       SELECT * FROM clientes_cobrancas 
       ORDER BY nome ASC
@@ -295,7 +296,8 @@ router.post('/clientes', ensureDatabase, async (req, res) => {
     if (!nome || typeof nome !== 'string' || ['undefined', 'n/a', 'na'].includes(nome.trim().toLowerCase()) || nome.trim() === '') {
       return res.status(400).json({ error: 'Nome do cliente inválido. Não é permitido cadastrar clientes sem nome ou com nome "undefined" ou "N/A".' });
     }
-    const connection = await createCobrancasConnection();
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
     const [result] = await connection.execute(`
       INSERT INTO clientes_cobrancas (nome, cpf_cnpj, email, telefone, endereco, cidade, estado, cep)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -312,7 +314,8 @@ router.post('/clientes', ensureDatabase, async (req, res) => {
 // Empréstimos
 router.get('/emprestimos', ensureDatabase, async (req, res) => {
   try {
-    const connection = await createCobrancasConnection();
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
     const [emprestimos] = await connection.execute(`
       SELECT e.*, c.nome as cliente_nome, c.telefone as telefone
       FROM emprestimos e
@@ -331,7 +334,8 @@ router.get('/emprestimos', ensureDatabase, async (req, res) => {
 router.get('/emprestimos/:id', ensureDatabase, async (req, res) => {
   try {
     const { id } = req.params;
-    const connection = await createCobrancasConnection();
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
     
     const [emprestimos] = await connection.execute(`
       SELECT e.*, c.nome as cliente_nome, c.telefone as telefone
@@ -357,7 +361,8 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
   try {
     const { cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes } = req.body;
     
-    const connection = await createCobrancasConnection();
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
     
     // Inserir empréstimo
     const [emprestimoResult] = await connection.execute(`
@@ -382,7 +387,8 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
 // Cobranças
 router.get('/cobrancas', ensureDatabase, async (req, res) => {
   try {
-    const connection = await createCobrancasConnection();
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
     // Atualizar dias de atraso e valores
     await connection.execute(`
       UPDATE cobrancas 
@@ -416,7 +422,8 @@ router.get('/cobrancas', ensureDatabase, async (req, res) => {
 // Cobranças atrasadas
 router.get('/cobrancas/atrasadas', ensureDatabase, async (req, res) => {
   try {
-    const connection = await createCobrancasConnection();
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
     const [cobrancas] = await connection.execute(`
       SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
       FROM cobrancas cb
@@ -438,7 +445,8 @@ router.post('/cobrancas/:id/pagamento', ensureDatabase, async (req, res) => {
     const { id } = req.params;
     const { valor_pago, data_pagamento, forma_pagamento, observacoes } = req.body;
     
-    const connection = await createCobrancasConnection();
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
     
     // Registrar pagamento
     await connection.execute(`
@@ -465,7 +473,8 @@ router.post('/emprestimos/:id/pagamento-juros', ensureDatabase, async (req, res)
     const { id } = req.params;
     const { valor_juros_pago, data_pagamento, forma_pagamento, observacoes } = req.body;
     
-    const connection = await createCobrancasConnection();
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
     
     // Buscar dados do empréstimo
     const [emprestimoRows] = await connection.execute(`
@@ -633,7 +642,8 @@ router.put('/emprestimos/:id/status', ensureDatabase, async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const connection = await createCobrancasConnection();
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
     await connection.execute(
       'UPDATE emprestimos SET status = ? WHERE id = ?',
       [status, id]
@@ -670,7 +680,8 @@ router.put('/emprestimos/:id/status', ensureDatabase, async (req, res) => {
 router.delete('/emprestimos/:id', ensureDatabase, async (req, res) => {
   try {
     const { id } = req.params;
-    const connection = await createCobrancasConnection();
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
     await connection.execute('DELETE FROM emprestimos WHERE id = ?', [id]);
     await connection.end();
     res.json({ success: true });
@@ -689,7 +700,8 @@ router.put('/clientes/:id/lista-negra', ensureDatabase, async (req, res) => {
     console.log(`DEBUG: Gerenciando lista negra para cliente ${id}`);
     console.log(`DEBUG: Status: ${status}, Motivo: ${motivo}`);
     
-    const connection = await createCobrancasConnection();
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
     
     // Verificar se o cliente existe
     const [clienteRows] = await connection.execute(`
@@ -739,7 +751,8 @@ router.put('/clientes/:id/lista-negra', ensureDatabase, async (req, res) => {
 router.delete('/clientes/:id', ensureDatabase, async (req, res) => {
   const { id } = req.params;
   try {
-    const connection = await createCobrancasConnection();
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
     // Verifica se o cliente possui empréstimos vinculados
     const [emprestimos] = await connection.execute(
       'SELECT COUNT(*) as total FROM emprestimos WHERE cliente_id = ?',
@@ -764,7 +777,8 @@ router.get('/clientes/:id', ensureDatabase, async (req, res) => {
   try {
     const { id } = req.params;
     console.log('DEBUG /clientes/:id - id recebido:', id);
-    const connection = await createCobrancasConnection();
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
     // Buscar dados do cliente
     const [rows] = await connection.execute('SELECT * FROM clientes_cobrancas WHERE id = ?', [id]);
     if (rows.length === 0) {
