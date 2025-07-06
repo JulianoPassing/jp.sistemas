@@ -272,6 +272,18 @@ fetch('/api/cobrancas/session', {
     </div>
   </main>
 
+  <!-- Botão flutuante para novo cliente -->
+  <button id="btn-flutuante-novo-cliente" style="position: fixed; bottom: 32px; right: 32px; z-index: 1001; background: #10b981; color: #fff; border: none; border-radius: 50%; width: 64px; height: 64px; font-size: 2.5rem; box-shadow: 0 4px 16px #0002; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+    +
+  </button>
+  <script>
+  document.getElementById('btn-flutuante-novo-cliente').onclick = function() {
+    if (window.clientesUI && typeof window.clientesUI.renderClienteForm === 'function') {
+      window.clientesUI.renderClienteForm();
+    }
+  };
+  </script>
+
   <footer>
     <p>&copy; 2025 JP. Sistemas. Todos os direitos reservados. | jp-sistemas.com</p>
   </footer>
