@@ -1177,11 +1177,12 @@ async function renderHistoricoEmprestimos() {
     }
     tbody.innerHTML = '';
     emprestimos.forEach(emprestimo => {
-      let valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
-      let jurosPercent = Number(emprestimo.juros_mensal || 0);
-      let jurosTotal = valorInvestido * (jurosPercent / 100);
-      let dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
-      let hoje = new Date();
+      // Cálculo de atraso e juros diário
+      const valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
+      const jurosPercent = Number(emprestimo.juros_mensal || 0);
+      const jurosTotal = valorInvestido * (jurosPercent / 100);
+      const dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
+      const hoje = new Date();
       hoje.setHours(0,0,0,0);
       let status = (emprestimo.status || '').toUpperCase();
       let valorAtualizado = valorInvestido + jurosTotal;
@@ -1192,7 +1193,7 @@ async function renderHistoricoEmprestimos() {
       if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
         status = 'ATRASADO';
         // Calcular dias de atraso
-        let diffTime = hoje.getTime() - dataVencimento.getTime();
+        const diffTime = hoje.getTime() - dataVencimento.getTime();
         diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         // Juros diário: juros total dividido por 30 dias, arredondado para cima
         jurosDiario = Math.ceil(jurosTotal / 30);
@@ -1200,14 +1201,14 @@ async function renderHistoricoEmprestimos() {
         valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
         infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
       }
-      let valor = !isNaN(valorAtualizado) ? new Intl.NumberFormat('pt-BR', {
+      const valor = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
-      }).format(valorAtualizado) : 'R$ 0,00';
-      let data = emprestimo.data_emprestimo ? new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR') : '-';
-      let vencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-';
-      let statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : (status === 'QUITADO' ? 'info' : 'secondary')));
-      let row = document.createElement('tr');
+      }).format(valorAtualizado);
+      const data = emprestimo.data_emprestimo ? new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR') : '-';
+      const vencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-';
+      const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : (status === 'QUITADO' ? 'info' : 'secondary')));
+      const row = document.createElement('tr');
       row.innerHTML = `
         <td>${emprestimo.cliente_nome || 'N/A'}</td>
         <td>${valor}${infoJuros}</td>
@@ -1220,50 +1221,7 @@ async function renderHistoricoEmprestimos() {
       `;
       tbody.appendChild(row);
     });
-    // Calcular valor total
-    const total = (emprestimos || []).reduce((acc, emp) => acc + Number(emp.valor || 0), 0);
-    const totalBox = document.getElementById('total-emprestimos-box');
-    if (totalBox) {
-      totalBox.textContent = `Valor total dos empréstimos: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-    }
-    // Calcular valor total e valor total com juros
-    let totalComJuros = 0;
-    let hoje = new Date();
-    hoje.setHours(0,0,0,0);
-    (emprestimos || []).forEach(emp => {
-      // Garantir conversão correta
-      let valor = Number(emp.valor ? String(emp.valor).replace(',', '.').replace(/[^0-9.\-]/g, '') : 0);
-      let jurosPercent = Number(emp.juros_mensal ? String(emp.juros_mensal).replace(',', '.').replace(/[^0-9.\-]/g, '') : 0);
-      let valorJuros = valor * (jurosPercent / 100);
-      let valorAtualizado = valor + valorJuros;
-      // Se vencido e não quitado, soma juros diário
-      if (emp.data_vencimento) {
-        let dataVenc = new Date(emp.data_vencimento);
-        if (dataVenc < hoje && (emp.status || '').toLowerCase() !== 'quitado') {
-          let diffTime = hoje.getTime() - dataVenc.getTime();
-          let diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          let jurosDiario = Math.ceil(valorJuros / 30);
-          valorAtualizado += jurosDiario * diasAtraso;
-        }
-      }
-      if (!isNaN(valor)) total += valor;
-      if (!isNaN(valorAtualizado)) totalComJuros += valorAtualizado;
-    });
-    const totaisBox = document.getElementById('totais-emprestimos-box');
-    if (totaisBox) {
-      totaisBox.innerHTML = `
-        <div style="background: #f1f5f9; border-radius: 10px; padding: 1.2rem 2rem; box-shadow: 0 2px 8px #0001; min-width: 260px; text-align: center;">
-          <div style="font-size: 1.1rem; color: #64748b; margin-bottom: 0.3rem;">Valor total dos empréstimos</div>
-          <div style="font-size: 2rem; font-weight: 700; color: #002f4b;">R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-        </div>
-        <div style="background: #e0f7fa; border-radius: 10px; padding: 1.2rem 2rem; box-shadow: 0 2px 8px #0001; min-width: 260px; text-align: center;">
-          <div style="font-size: 1.1rem; color: #0097a7; margin-bottom: 0.3rem;">Valor total dos empréstimos + Juros</div>
-          <div style="font-size: 2rem; font-weight: 700; color: #006064;">R$ ${totalComJuros.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-        </div>
-      `;
-    }
   } catch (err) {
-    console.error('Erro ao carregar empréstimos:', err);
     tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
   }
 }
