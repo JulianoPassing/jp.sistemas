@@ -1,4 +1,4 @@
-image.png// Configurações da API
+// Configurações da API
 const API_BASE_URL = '/api';
 
 // Estado global da aplicação
