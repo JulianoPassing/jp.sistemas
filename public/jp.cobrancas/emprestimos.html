@@ -45,6 +45,36 @@
           <h3 class="section-title">Empréstimos</h3>
           <button id="toggleForm" class="btn btn-primary">Novo Empréstimo</button>
         </div>
+        
+        <!-- Caixa de Busca -->
+        <div class="search-container" style="margin-bottom: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+          <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 250px;">
+              <input 
+                type="text" 
+                id="search-emprestimos" 
+                class="form-input" 
+                placeholder="Buscar por cliente, valor, status..."
+                style="width: 100%;"
+              >
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <select id="filter-status" class="form-input" style="min-width: 120px;">
+                <option value="">Todos os Status</option>
+                <option value="Ativo">Ativo</option>
+                <option value="Pendente">Pendente</option>
+                <option value="Em Atraso">Em Atraso</option>
+                <option value="Quitado">Quitado</option>
+                <option value="Cancelado">Cancelado</option>
+              </select>
+              <button id="clear-search" class="btn btn-secondary" style="white-space: nowrap;">Limpar</button>
+            </div>
+          </div>
+          <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">
+            <span id="search-results-info">Mostrando todos os empréstimos</span>
+          </div>
+        </div>
+        
         <div class="table-container">
           <table class="table">
             <thead>
@@ -83,6 +113,126 @@
 
       // Carregar histórico de empréstimos
       renderHistoricoEmprestimos();
+      
+      // Funcionalidade de busca
+      const searchInput = document.getElementById('search-emprestimos');
+      const filterStatus = document.getElementById('filter-status');
+      const clearSearchBtn = document.getElementById('clear-search');
+      const searchResultsInfo = document.getElementById('search-results-info');
+      
+      let allEmprestimos = []; // Armazenar todos os empréstimos
+      let filteredEmprestimos = []; // Empréstimos filtrados
+      
+      // Função para aplicar filtros
+      function applyFilters() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const statusFilter = filterStatus.value;
+        
+        filteredEmprestimos = allEmprestimos.filter(emp => {
+          // Filtro por termo de busca
+          const matchesSearch = !searchTerm || 
+            (emp.cliente_nome && emp.cliente_nome.toLowerCase().includes(searchTerm)) ||
+            (emp.valor && emp.valor.toString().includes(searchTerm)) ||
+            (emp.status && emp.status.toLowerCase().includes(searchTerm)) ||
+            (emp.data_emprestimo && emp.data_emprestimo.includes(searchTerm)) ||
+            (emp.data_vencimento && emp.data_vencimento.includes(searchTerm));
+          
+          // Filtro por status
+          const matchesStatus = !statusFilter || emp.status === statusFilter;
+          
+          return matchesSearch && matchesStatus;
+        });
+        
+        // Atualizar tabela
+        renderFilteredEmprestimos();
+        
+        // Atualizar informação de resultados
+        updateSearchResultsInfo();
+      }
+      
+      // Função para renderizar empréstimos filtrados
+      function renderFilteredEmprestimos() {
+        const tbody = document.getElementById('historico-emprestimos');
+        if (!tbody) return;
+        
+        if (filteredEmprestimos.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = '';
+        filteredEmprestimos.forEach(emp => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${emp.cliente_nome || 'N/A'}</td>
+            <td>R$ ${utils.formatCurrency(emp.valor || 0)}</td>
+            <td>${emp.data_emprestimo ? utils.formatDate(emp.data_emprestimo) : '-'}</td>
+            <td>${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</td>
+            <td><span class="badge badge-${getStatusBadgeClass(emp.status)}">${emp.status || 'N/A'}</span></td>
+            <td>
+              <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+      
+      // Função para obter classe do badge baseado no status
+      function getStatusBadgeClass(status) {
+        switch(status) {
+          case 'Ativo': return 'success';
+          case 'Pendente': return 'warning';
+          case 'Em Atraso': return 'danger';
+          case 'Quitado': return 'info';
+          case 'Cancelado': return 'secondary';
+          default: return 'secondary';
+        }
+      }
+      
+      // Função para atualizar informação de resultados
+      function updateSearchResultsInfo() {
+        const total = allEmprestimos.length;
+        const filtered = filteredEmprestimos.length;
+        
+        if (filtered === total) {
+          searchResultsInfo.textContent = `Mostrando todos os ${total} empréstimos`;
+        } else {
+          searchResultsInfo.textContent = `Mostrando ${filtered} de ${total} empréstimos`;
+        }
+      }
+      
+      // Função para limpar busca
+      function clearSearch() {
+        searchInput.value = '';
+        filterStatus.value = '';
+        filteredEmprestimos = [...allEmprestimos];
+        renderFilteredEmprestimos();
+        updateSearchResultsInfo();
+      }
+      
+      // Event listeners
+      searchInput.addEventListener('input', applyFilters);
+      filterStatus.addEventListener('change', applyFilters);
+      clearSearchBtn.addEventListener('click', clearSearch);
+      
+      // Sobrescrever a função renderHistoricoEmprestimos para incluir busca
+      const originalRenderHistoricoEmprestimos = window.renderHistoricoEmprestimos;
+      window.renderHistoricoEmprestimos = async function() {
+        try {
+          const emprestimos = await apiService.getEmprestimos();
+          allEmprestimos = emprestimos || [];
+          filteredEmprestimos = [...allEmprestimos];
+          
+          renderFilteredEmprestimos();
+          updateSearchResultsInfo();
+        } catch (err) {
+          console.error('Erro ao carregar empréstimos:', err);
+          const tbody = document.getElementById('historico-emprestimos');
+          if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
+          }
+        }
+      };
     });
   </script>
 </body>
