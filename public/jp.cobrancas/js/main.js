@@ -354,11 +354,11 @@ const dashboardController = {
     }
 
     emprestimos.forEach(emprestimo => {
-      // Cálculo de atraso e juros diário
-      const valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
+      // Validação e fallback seguro para campos numéricos
+      const valorInvestido = Number(emprestimo.valor || 0);
       const jurosPercent = Number(emprestimo.juros_mensal || 0);
       const jurosTotal = valorInvestido * (jurosPercent / 100);
-      const dataVencimento = new Date(emprestimo.data_vencimento);
+      const dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
       const hoje = new Date();
       hoje.setHours(0,0,0,0);
       let status = (emprestimo.status || '').toUpperCase();
@@ -367,7 +367,7 @@ const dashboardController = {
       let diasAtraso = 0;
       let jurosDiario = 0;
       let jurosAplicado = 0;
-      if (dataVencimento < hoje && status !== 'QUITADO') {
+      if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
         status = 'ATRASADO';
         // Calcular dias de atraso
         const diffTime = hoje.getTime() - dataVencimento.getTime();
@@ -691,7 +691,7 @@ const emprestimoController = {
         return;
       }
       // Validação e fallback seguro para campos numéricos
-      const valorInvestido = Number(emp.valor_inicial || emp.valor || 0);
+      const valorInvestido = Number(emp.valor || 0);
       const jurosPercent = Number(emp.juros_mensal || 0);
       const multaAtraso = Number(emp.multa_atraso || 0);
       const jurosTotal = valorInvestido * (jurosPercent / 100);
@@ -734,20 +734,14 @@ const emprestimoController = {
             <h2 style="font-size: 1.4rem; font-weight: bold; margin-bottom: 0.2em; color: #002f4b;">${emp.cliente_nome || 'N/A'}</h2>
             <div style="font-size: 1.1rem; font-weight: 600; color: #222; margin-bottom: 0.2em;">PCL-Nº #${emp.id} ${emp.parcelas ? `(${emp.parcelas}ª parcela)` : ''}</div>
             <div style="font-size: 1rem; color: #444; margin-bottom: 0.2em;">Deve ser pago em <b>${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</b></div>
-            <div style="font-size: 1rem; color: #444;">Valor Investido <b>R$ ${utils.formatCurrency(emp.valor_inicial || emp.valor)}</b></div>
-            <div style="font-size: 1rem; color: #444;">Juros <b>${emp.juros_mensal || 0}%</b> (R$ ${utils.formatCurrency((emp.valor_inicial || emp.valor) * ((emp.juros_mensal || 0) / 100))})</div>
+            <div style="font-size: 1rem; color: #444;">Valor Investido <b>R$ ${utils.formatCurrency(valorInvestido)}</b></div>
+            <div style="font-size: 1rem; color: #444;">Juros <b>${jurosPercent}%</b> (R$ ${utils.formatCurrency(jurosTotal)})</div>
             ${infoJuros}
-          </div>
-          <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid #eee;">
-          <div style="margin-bottom: 1.2rem;">
-            <div style="font-size: 1.05rem; font-weight: 600; color: #002f4b; margin-bottom: 0.5em;">Detalhes</div>
-            <div style="font-size: 1rem; color: #444; margin-bottom: 0.2em;">Celular/Whatsapp <a href="https://wa.me/55${(emp.telefone || '').replace(/\D/g,'')}" target="_blank" style="color: #1886e6; text-decoration: underline;">${emp.telefone || '-'}</a></div>
-            <div style="font-size: 1rem; color: #444;">Afiliado <span style="color: #888;">${emp.afiliado || 'Nenhum afiliado informado'}</span></div>
           </div>
           <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid #eee;">
           <div style="margin-bottom: 1.2rem; text-align: center;">
             <div style="font-size: 1.1rem; font-weight: 700; color: #222; margin-bottom: 0.2em;">PARCELA 1 DE ${emp.parcelas || 1}</div>
-            <div style="font-size: 1.3rem; font-weight: bold; color: #002f4b;">Total a Receber: <span style="color: #10b981;">R$ ${utils.formatCurrency(emp.valor)}</span></div>
+            <div style="font-size: 1.3rem; font-weight: bold; color: #002f4b;">Total a Receber: <span style="color: #10b981;">R$ ${utils.formatCurrency(valorAtualizado)}</span></div>
           </div>
           <div style="display: flex; flex-direction: column; gap: 0.7rem; margin-top: 1.5rem;">
             <a class="btn" style="background: #25d366; color: #fff; font-weight: 600; font-size: 1.1rem; border-radius: 8px;" id="modal-notificar" href="${linkWhatsapp}" target="_blank" rel="noopener noreferrer">Notificar <b>WhatsApp</b></a>
