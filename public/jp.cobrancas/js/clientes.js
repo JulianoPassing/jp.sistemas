@@ -351,6 +351,11 @@ const clientesApp = {
   },
 
   async createCliente(clienteData) {
+    // Validação: nome obrigatório
+    if (!clienteData.nome || clienteData.nome.trim() === '' || clienteData.nome === 'undefined') {
+      clientesUI.showNotification('Preencha o nome do cliente corretamente!', 'error');
+      return;
+    }
     try {
       const newCliente = await clientesApiService.createCliente(clienteData);
       clientes.unshift(newCliente);
