@@ -36,7 +36,7 @@
       <div class="dashboard-header">
         <div class="dashboard-title">Adicionar Cliente</div>
         <div class="dashboard-subtitle">
-          Preencha os dados para cadastrar um novo cliente.
+          Preencha os dados obrigatórios para cadastrar um novo cliente.
         </div>
       </div>
       <!-- Formulário de Cadastro de Cliente -->
@@ -53,59 +53,6 @@
           <div class="form-group">
             <label for="telefone" class="form-label">Telefone *</label>
             <input type="tel" id="telefone" name="telefone" class="form-input" required>
-          </div>
-          <div class="form-group">
-            <label for="email" class="form-label">E-mail</label>
-            <input type="email" id="email" name="email" class="form-input">
-          </div>
-          <div class="form-group md:col-span-2">
-            <label for="endereco" class="form-label">Endereço</label>
-            <input type="text" id="endereco" name="endereco" class="form-input">
-          </div>
-          <div class="form-group">
-            <label for="cidade" class="form-label">Cidade</label>
-            <input type="text" id="cidade" name="cidade" class="form-input">
-          </div>
-          <div class="form-group">
-            <label for="estado" class="form-label">Estado</label>
-            <select id="estado" name="estado" class="form-input">
-              <option value="">Selecione...</option>
-              <option value="AC">Acre</option>
-              <option value="AL">Alagoas</option>
-              <option value="AP">Amapá</option>
-              <option value="AM">Amazonas</option>
-              <option value="BA">Bahia</option>
-              <option value="CE">Ceará</option>
-              <option value="DF">Distrito Federal</option>
-              <option value="ES">Espírito Santo</option>
-              <option value="GO">Goiás</option>
-              <option value="MA">Maranhão</option>
-              <option value="MT">Mato Grosso</option>
-              <option value="MS">Mato Grosso do Sul</option>
-              <option value="MG">Minas Gerais</option>
-              <option value="PA">Pará</option>
-              <option value="PB">Paraíba</option>
-              <option value="PR">Paraná</option>
-              <option value="PE">Pernambuco</option>
-              <option value="PI">Piauí</option>
-              <option value="RJ">Rio de Janeiro</option>
-              <option value="RN">Rio Grande do Norte</option>
-              <option value="RS">Rio Grande do Sul</option>
-              <option value="RO">Rondônia</option>
-              <option value="RR">Roraima</option>
-              <option value="SC">Santa Catarina</option>
-              <option value="SP">São Paulo</option>
-              <option value="SE">Sergipe</option>
-              <option value="TO">Tocantins</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="cep" class="form-label">CEP</label>
-            <input type="text" id="cep" name="cep" class="form-input">
-          </div>
-          <div class="form-group md:col-span-2">
-            <label for="observacoes" class="form-label">Observações</label>
-            <textarea id="observacoes" name="observacoes" class="form-input" rows="3"></textarea>
           </div>
           <div class="form-group md:col-span-2">
             <button type="submit" class="btn btn-primary">Cadastrar Cliente</button>
@@ -126,6 +73,60 @@
       if (menuBtn && navWrapper) {
         menuBtn.addEventListener('click', function() {
           navWrapper.classList.toggle('open');
+        });
+      }
+
+      // Adicionar listener para o formulário de cadastro
+      const form = document.getElementById('form-adicionar-cliente');
+      if (form) {
+        form.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          const formData = new FormData(form);
+          const clienteData = {
+            nome: formData.get('nome'),
+            cpf_cnpj: formData.get('cpf'),
+            telefone: formData.get('telefone')
+          };
+
+          try {
+            // Mostrar loading
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Cadastrando...';
+            submitBtn.disabled = true;
+
+            // Fazer a requisição para a API
+            const response = await fetch('/api/cobrancas/clientes', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+              body: JSON.stringify(clienteData)
+            });
+
+            if (!response.ok) {
+              throw new Error(`Erro ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            
+            // Mostrar sucesso
+            alert('Cliente cadastrado com sucesso!');
+            
+            // Redirecionar para a lista de clientes
+            window.location.href = 'clientes.html';
+            
+          } catch (error) {
+            console.error('Erro ao cadastrar cliente:', error);
+            alert('Erro ao cadastrar cliente: ' + error.message);
+          } finally {
+            // Restaurar botão
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+          }
         });
       }
     });
