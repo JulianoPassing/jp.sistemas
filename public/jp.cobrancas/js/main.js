@@ -317,8 +317,7 @@ const dashboardController = {
       'cobrancas-pendentes-dia': data.cobrancasPendentesDia?.length || 0
     };
 
-    console.log('Dados para atualização dos cards:', data);
-    console.log('Cobranças pendentes do dia:', data.cobrancasPendentesDia);
+
 
     Object.entries(cards).forEach(([id, value]) => {
       const element = document.getElementById(id);
