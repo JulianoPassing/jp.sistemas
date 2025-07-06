@@ -313,24 +313,42 @@ const dashboardController = {
     }
 
     emprestimos.forEach(emprestimo => {
+      const valorOriginal = Number(emprestimo.valor || 0);
+      const jurosTotal = Number(emprestimo.juros_mensal || 0);
+      const dataVencimento = new Date(emprestimo.data_vencimento);
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      let status = (emprestimo.status || '').toUpperCase();
+      let valorAtualizado = valorOriginal;
+      let infoJuros = '';
+      if (dataVencimento < hoje && status !== 'QUITADO') {
+        status = 'ATRASADO';
+        // Calcular dias de atraso
+        const diffTime = hoje.getTime() - dataVencimento.getTime();
+        const diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        // Juros diário: 3,33% do juros total por dia de atraso
+        const jurosDiario = jurosTotal * (diasAtraso * 0.0333);
+        valorAtualizado = valorOriginal + jurosDiario;
+        infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
+      }
       const valor = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
-      }).format(emprestimo.valor || 0);
-      
+      }).format(valorAtualizado);
       const data = new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR');
-      
+      const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : 'info'));
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${emprestimo.cliente_nome || 'N/A'}</td>
-        <td>${valor}</td>
+        <td>${valor}${infoJuros}</td>
+        <td>${emprestimo.parcelas || '-'}</td>
         <td>${data}</td>
-        <td><span class="badge badge-${emprestimo.status === 'Ativo' ? 'success' : 'warning'}">${emprestimo.status}</span></td>
+        <td>${emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-'}</td>
+        <td><span class="badge badge-${statusClass}">${status}</span></td>
         <td>
           <button class="btn btn-primary btn-sm" onclick="emprestimoController.viewEmprestimo(${emprestimo.id})">Ver</button>
         </td>
       `;
-      
       tbody.appendChild(row);
     });
   },
@@ -766,23 +784,34 @@ async function renderEmprestimosLista() {
     }
     tbody.innerHTML = '';
     emprestimos.forEach(emprestimo => {
-      const valor = new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(emprestimo.valor || 0);
-      const data = new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR');
-      const vencimentoDate = new Date(emprestimo.data_vencimento);
+      const valorOriginal = Number(emprestimo.valor || 0);
+      const jurosTotal = Number(emprestimo.juros_mensal || 0);
+      const dataVencimento = new Date(emprestimo.data_vencimento);
       const hoje = new Date();
       hoje.setHours(0,0,0,0);
       let status = (emprestimo.status || '').toUpperCase();
-      if (vencimentoDate < hoje && status !== 'QUITADO') {
+      let valorAtualizado = valorOriginal;
+      let infoJuros = '';
+      if (dataVencimento < hoje && status !== 'QUITADO') {
         status = 'ATRASADO';
+        // Calcular dias de atraso
+        const diffTime = hoje.getTime() - dataVencimento.getTime();
+        const diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        // Juros diário: 3,33% do juros total por dia de atraso
+        const jurosDiario = jurosTotal * (diasAtraso * 0.0333);
+        valorAtualizado = valorOriginal + jurosDiario;
+        infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
       }
+      const valor = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(valorAtualizado);
+      const data = new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR');
       const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : 'info'));
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${emprestimo.cliente_nome || 'N/A'}</td>
-        <td>${valor}</td>
+        <td>${valor}${infoJuros}</td>
         <td>${emprestimo.parcelas || '-'}</td>
         <td>${data}</td>
         <td>${emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-'}</td>
