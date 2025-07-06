@@ -314,14 +314,11 @@ const dashboardController = {
 
     emprestimos.forEach(emprestimo => {
       // Cálculo de atraso e juros diário
-      const valorOriginal = Number(emprestimo.valor || 0);
-      const jurosPercent = Number(emprestimo.juros_mensal || 0);
-      const jurosTotal = valorOriginal * (jurosPercent / 100);
       const dataVencimento = new Date(emprestimo.data_vencimento);
       const hoje = new Date();
       hoje.setHours(0,0,0,0);
       let status = (emprestimo.status || '').toUpperCase();
-      let valorAtualizado = valorOriginal;
+      let valorAtualizado = emprestimo.valor || 0;
       let infoJuros = '';
       let diasAtraso = 0;
       let jurosDiario = 0;
@@ -331,13 +328,21 @@ const dashboardController = {
         // Calcular dias de atraso
         const diffTime = hoje.getTime() - dataVencimento.getTime();
         diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        // Juros diário: 3,33% do juros total por dia de atraso
-        jurosDiario = jurosTotal * 0.0333;
+        // Juros diário: juros total dividido por 30 dias
+        jurosDiario = emprestimo.valor * (emprestimo.juros_mensal / 100) / 30;
         jurosAplicado = jurosDiario * diasAtraso;
-        valorAtualizado = valorOriginal + jurosAplicado;
+        valorAtualizado = emprestimo.valor + jurosAplicado;
         // Atualizar o valor do empréstimo para refletir o valor atualizado
         emprestimo.valor = valorAtualizado;
-        infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
+        infoJuros = `
+          <div style='margin-top:1em; color:#ef4444; font-size:1rem;'>
+            <b>Em atraso:</b> ${diasAtraso} dia(s)<br>
+            Juros total previsto: <b>R$ ${emprestimo.valor * (emprestimo.juros_mensal / 100).toFixed(2)}</b><br>
+            Juros diário: <b>R$ ${jurosDiario.toFixed(2)}</b><br>
+            Juros aplicado (atraso): <b>R$ ${jurosAplicado.toFixed(2)}</b><br>
+            <span style='font-size:1.1em;'>Valor atualizado: <b>R$ ${valorAtualizado.toFixed(2)}</b></span>
+          </div>
+        `;
       }
       const valor = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
@@ -640,9 +645,9 @@ const emprestimoController = {
       const parcelaAtual = emp.parcela_atual || 1;
       const totalParcelas = emp.total_parcelas || 1;
       const parcelaInfo = `PARCELA ${parcelaAtual} DE ${totalParcelas}`;
-      const valorInvestido = utils.formatCurrency(emp.valor || 0);
+      const valorInvestido = emp.valor || 0;
       const jurosPercent = emp.juros_mensal || 0;
-      const jurosValor = (emp.valor || 0) * (jurosPercent / 100);
+      const jurosValor = valorInvestido * (jurosPercent / 100);
       const jurosReceber = utils.formatCurrency(jurosValor);
       const totalReceber = utils.formatCurrency(emp.valor_total || emp.valor || 0);
       const telefone = emp.telefone || emp.celular || emp.whatsapp || '';
@@ -656,13 +661,11 @@ const emprestimoController = {
       );
       const linkWhatsapp = telefone ? `https://wa.me/55${telefone.replace(/\D/g,'')}?text=${msgWhatsapp}` : '#';
       // Cálculo de atraso e juros diário
-      const valorOriginal = Number(emp.valor || 0);
-      const jurosTotal = Number(emp.juros_mensal || 0);
       const dataVencimento = new Date(emp.data_vencimento);
       const hoje = new Date();
       hoje.setHours(0,0,0,0);
       let status = (emp.status || '').toUpperCase();
-      let valorAtualizado = valorOriginal;
+      let valorAtualizado = valorInvestido;
       let infoJuros = '';
       let diasAtraso = 0;
       let jurosDiario = 0;
@@ -672,18 +675,18 @@ const emprestimoController = {
         // Calcular dias de atraso
         const diffTime = hoje.getTime() - dataVencimento.getTime();
         diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        // Juros diário: 3,33% do juros total por dia de atraso
-        jurosDiario = jurosTotal * 0.0333;
+        // Juros diário: juros total dividido por 30 dias
+        jurosDiario = jurosValor / 30;
         jurosAplicado = jurosDiario * diasAtraso;
-        valorAtualizado = valorOriginal + jurosAplicado;
+        valorAtualizado = valorInvestido + jurosAplicado;
         // Atualizar o valor do empréstimo para refletir o valor atualizado
         emp.valor = valorAtualizado;
         infoJuros = `
           <div style='margin-top:1em; color:#ef4444; font-size:1rem;'>
             <b>Em atraso:</b> ${diasAtraso} dia(s)<br>
-            Juros total previsto: <b>R$ ${jurosTotal.toFixed(2)}</b><br>
-            Juros diário: <b>3,33% do juros total por dia = R$ ${jurosDiario.toFixed(2)}</b><br>
-            Juros aplicado: <b>R$ ${jurosAplicado.toFixed(2)}</b><br>
+            Juros total previsto: <b>R$ ${jurosValor.toFixed(2)}</b><br>
+            Juros diário: <b>R$ ${jurosDiario.toFixed(2)}</b><br>
+            Juros aplicado (atraso): <b>R$ ${jurosAplicado.toFixed(2)}</b><br>
             <span style='font-size:1.1em;'>Valor atualizado: <b>R$ ${valorAtualizado.toFixed(2)}</b></span>
           </div>
         `;
@@ -828,23 +831,26 @@ async function renderEmprestimosLista() {
     }
     tbody.innerHTML = '';
     emprestimos.forEach(emprestimo => {
-      const valorOriginal = Number(emprestimo.valor || 0);
-      const jurosTotal = Number(emprestimo.juros_mensal || 0);
+      // Cálculo de atraso e juros diário
       const dataVencimento = new Date(emprestimo.data_vencimento);
       const hoje = new Date();
       hoje.setHours(0,0,0,0);
       let status = (emprestimo.status || '').toUpperCase();
-      let valorAtualizado = valorOriginal;
+      let valorAtualizado = emprestimo.valor || 0;
       let infoJuros = '';
+      let diasAtraso = 0;
+      let jurosDiario = 0;
+      let jurosAplicado = 0;
       if (dataVencimento < hoje && status !== 'QUITADO') {
         status = 'ATRASADO';
         // Calcular dias de atraso
         const diffTime = hoje.getTime() - dataVencimento.getTime();
-        const diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         // Juros diário: 3,33% do juros total por dia de atraso
-        const jurosDiario = jurosTotal * 0.0333;
-        const jurosAplicado = jurosDiario * diasAtraso;
-        valorAtualizado = valorOriginal + jurosAplicado;
+        const jurosPercent = emprestimo.juros_mensal || 0;
+        jurosDiario = emprestimo.valor * (jurosPercent / 100) * 0.0333;
+        jurosAplicado = jurosDiario * diasAtraso;
+        valorAtualizado = emprestimo.valor + jurosAplicado;
         // Atualizar o valor do empréstimo para refletir o valor atualizado
         emprestimo.valor = valorAtualizado;
         infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
@@ -896,7 +902,14 @@ async function renderCobrancasEmAbertoLista() {
       const vencimento = emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-';
       const diasAtraso = emp.dias_atraso || 0;
       let badge = '';
-      const status = (emp.status || '').toLowerCase();
+      let status = (emp.status || '').toLowerCase();
+      // Verifica se está vencido
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      const dataVenc = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
+      if (dataVenc && dataVenc < hoje) {
+        status = 'atrasado';
+      }
       if (status === 'quitado') {
         badge = '<span class="badge" style="background:#10b981;color:#fff;">Quitado</span>';
       } else if (status === 'em atraso' || status === 'atrasado') {
