@@ -13,35 +13,35 @@ const totalClientesSpan = document.getElementById('total-clientes');
 // API Service específico para clientes
 const clientesApiService = {
   async getClientes() {
-    return apiService.request('/clientes');
+    return apiService.request('/cobrancas/clientes');
   },
 
   async getCliente(id) {
-    return apiService.request(`/clientes/${id}`);
+    return apiService.request(`/cobrancas/clientes/${id}`);
   },
 
   async createCliente(clienteData) {
-    return apiService.request('/clientes', {
+    return apiService.request('/cobrancas/clientes', {
       method: 'POST',
       body: JSON.stringify(clienteData)
     });
   },
 
   async updateCliente(id, clienteData) {
-    return apiService.request(`/clientes/${id}`, {
+    return apiService.request(`/cobrancas/clientes/${id}`, {
       method: 'PUT',
       body: JSON.stringify(clienteData)
     });
   },
 
   async deleteCliente(id) {
-    return apiService.request(`/clientes/${id}`, {
+    return apiService.request(`/cobrancas/clientes/${id}`, {
       method: 'DELETE'
     });
   },
 
   async searchClientes(term) {
-    return apiService.request(`/clientes/search/${term}`);
+    return apiService.request(`/cobrancas/clientes/search/${term}`);
   }
 };
 
