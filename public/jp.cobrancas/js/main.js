@@ -238,33 +238,14 @@ const dashboardController = {
       if (dashboardElement) {
         ui.showLoading(dashboardElement);
       }
+      
       const data = await apiService.getDashboardData();
-      // Calcular valor a receber: soma de todos os empréstimos em aberto (valor atualizado)
-      const emprestimos = await apiService.getEmprestimos();
-      let valorReceber = 0;
-      const hoje = new Date();
-      hoje.setHours(0,0,0,0);
-      emprestimos.forEach(emp => {
-        const valorOriginal = Number(emp.valor || 0);
-        const jurosPercent = Number(emp.juros_mensal || 0);
-        const jurosTotal = valorOriginal * (jurosPercent / 100);
-        const dataVencimento = new Date(emp.data_vencimento);
-        let valorAtualizado = valorOriginal;
-        if (dataVencimento < hoje && (emp.status || '').toUpperCase() !== 'QUITADO') {
-          const diffTime = hoje.getTime() - dataVencimento.getTime();
-          const diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          const jurosDiario = jurosTotal / 30;
-          const jurosAplicado = jurosDiario * diasAtraso;
-          valorAtualizado = valorOriginal + jurosAplicado;
-        }
-        valorReceber += valorAtualizado;
-      });
-      data.cobrancas = data.cobrancas || {};
-      data.cobrancas.valor_total_cobrancas = valorReceber;
       appState.data.dashboard = data;
+      
       this.updateDashboardCards(data);
       this.updateRecentEmprestimos(data.emprestimosRecentes || []);
       this.updateCobrancasPendentes(data.cobrancasPendentes || []);
+      
     } catch (error) {
       console.error('Erro ao carregar dashboard:', error);
       ui.showNotification('Erro ao carregar dados do dashboard', 'error');
@@ -350,10 +331,11 @@ const dashboardController = {
         // Calcular dias de atraso
         const diffTime = hoje.getTime() - dataVencimento.getTime();
         diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        // Juros diário: juros total dividido por 30 dias
-        jurosDiario = jurosTotal / 30;
+        // Juros diário: 3,33% do juros total por dia de atraso
+        jurosDiario = jurosTotal * 0.0333;
         jurosAplicado = jurosDiario * diasAtraso;
         valorAtualizado = valorOriginal + jurosAplicado;
+        // Atualizar o valor do empréstimo para refletir o valor atualizado
         emprestimo.valor = valorAtualizado;
         infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
       }
@@ -645,7 +627,6 @@ const app = {
 const emprestimoController = {
   async viewEmprestimo(id) {
     try {
-      // Sempre buscar a lista mais recente
       const emprestimos = await apiService.getEmprestimos();
       const emp = emprestimos.find(e => String(e.id) === String(id));
       if (!emp) {
@@ -691,12 +672,21 @@ const emprestimoController = {
         // Calcular dias de atraso
         const diffTime = hoje.getTime() - dataVencimento.getTime();
         diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        // Juros diário: juros total dividido por 30 dias
-        jurosDiario = jurosTotal / 30;
+        // Juros diário: 3,33% do juros total por dia de atraso
+        jurosDiario = jurosTotal * 0.0333;
         jurosAplicado = jurosDiario * diasAtraso;
         valorAtualizado = valorOriginal + jurosAplicado;
-        emprestimo.valor = valorAtualizado;
-        infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
+        // Atualizar o valor do empréstimo para refletir o valor atualizado
+        emp.valor = valorAtualizado;
+        infoJuros = `
+          <div style='margin-top:1em; color:#ef4444; font-size:1rem;'>
+            <b>Em atraso:</b> ${diasAtraso} dia(s)<br>
+            Juros total previsto: <b>R$ ${jurosTotal.toFixed(2)}</b><br>
+            Juros diário: <b>3,33% do juros total por dia = R$ ${jurosDiario.toFixed(2)}</b><br>
+            Juros aplicado: <b>R$ ${jurosAplicado.toFixed(2)}</b><br>
+            <span style='font-size:1.1em;'>Valor atualizado: <b>R$ ${valorAtualizado.toFixed(2)}</b></span>
+          </div>
+        `;
       }
       // Modal HTML
       const detalhes = `
@@ -771,13 +761,7 @@ const emprestimoController = {
           });
           // Voltar valor do empréstimo para o valor original na interface
           emp.valor = Number(emp.valor_inicial || emp.valor_original || emp.valor);
-          // Adicionar +1 mês ao vencimento
-          if (emp.data_vencimento) {
-            const venc = new Date(emp.data_vencimento);
-            venc.setMonth(venc.getMonth() + 1);
-            emp.data_vencimento = venc.toISOString().split('T')[0];
-          }
-          ui.showNotification('Pagamento de só juros registrado! Empréstimo segue em aberto e prazo prorrogado.', 'success');
+          ui.showNotification('Pagamento de só juros registrado! Empréstimo segue em aberto.', 'success');
           modal.remove();
           if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
         } catch (err) {
@@ -857,8 +841,8 @@ async function renderEmprestimosLista() {
         // Calcular dias de atraso
         const diffTime = hoje.getTime() - dataVencimento.getTime();
         const diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        // Juros diário: juros total dividido por 30 dias
-        const jurosDiario = jurosTotal / 30;
+        // Juros diário: 3,33% do juros total por dia de atraso
+        const jurosDiario = jurosTotal * 0.0333;
         const jurosAplicado = jurosDiario * diasAtraso;
         valorAtualizado = valorOriginal + jurosAplicado;
         // Atualizar o valor do empréstimo para refletir o valor atualizado
