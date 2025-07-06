@@ -313,6 +313,7 @@ const dashboardController = {
     }
 
     emprestimos.forEach(emprestimo => {
+      // Cálculo de atraso e juros diário
       const valorOriginal = Number(emprestimo.valor || 0);
       const jurosTotal = Number(emprestimo.juros_mensal || 0);
       const dataVencimento = new Date(emprestimo.data_vencimento);
@@ -321,15 +322,25 @@ const dashboardController = {
       let status = (emprestimo.status || '').toUpperCase();
       let valorAtualizado = valorOriginal;
       let infoJuros = '';
+      let diasAtraso = 0;
+      let jurosDiario = 0;
       if (dataVencimento < hoje && status !== 'QUITADO') {
         status = 'ATRASADO';
         // Calcular dias de atraso
         const diffTime = hoje.getTime() - dataVencimento.getTime();
-        const diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         // Juros diário: 3,33% do juros total por dia de atraso
-        const jurosDiario = jurosTotal * (diasAtraso * 0.0333);
+        jurosDiario = jurosTotal * (diasAtraso * 0.0333);
         valorAtualizado = valorOriginal + jurosDiario;
-        infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
+        infoJuros = `
+          <div style='margin-top:1em; color:#ef4444; font-size:1rem;'>
+            <b>Em atraso:</b> ${diasAtraso} dia(s)<br>
+            Juros total previsto: <b>R$ ${jurosTotal.toFixed(2)}</b><br>
+            Juros diário: <b>3,33% do juros total por dia</b><br>
+            Juros aplicado: <b>R$ ${jurosDiario.toFixed(2)}</b><br>
+            <span style='font-size:1.1em;'>Valor atualizado: <b>R$ ${valorAtualizado.toFixed(2)}</b></span>
+          </div>
+        `;
       }
       const valor = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
@@ -647,6 +658,35 @@ const emprestimoController = {
         `Bom dia ${nome}, hoje é a data de pagamento da sua parcela ${parcelaAtual} de ${totalParcelas}. Valor total da dívida: ${totalReceber}\nJuros do mês: ${jurosPercent}% (${jurosReceber})\nConta para Depósito: Chave PIX: ${pix}\nObservação: O não pagamento resultará em uma multa de ${multa} por dia.`
       );
       const linkWhatsapp = telefone ? `https://wa.me/55${telefone.replace(/\D/g,'')}?text=${msgWhatsapp}` : '#';
+      // Cálculo de atraso e juros diário
+      const valorOriginal = Number(emp.valor || 0);
+      const jurosTotal = Number(emp.juros_mensal || 0);
+      const dataVencimento = new Date(emp.data_vencimento);
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      let status = (emp.status || '').toUpperCase();
+      let valorAtualizado = valorOriginal;
+      let infoJuros = '';
+      let diasAtraso = 0;
+      let jurosDiario = 0;
+      if (dataVencimento < hoje && status !== 'QUITADO') {
+        status = 'ATRASADO';
+        // Calcular dias de atraso
+        const diffTime = hoje.getTime() - dataVencimento.getTime();
+        diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        // Juros diário: 3,33% do juros total por dia de atraso
+        jurosDiario = jurosTotal * (diasAtraso * 0.0333);
+        valorAtualizado = valorOriginal + jurosDiario;
+        infoJuros = `
+          <div style='margin-top:1em; color:#ef4444; font-size:1rem;'>
+            <b>Em atraso:</b> ${diasAtraso} dia(s)<br>
+            Juros total previsto: <b>R$ ${jurosTotal.toFixed(2)}</b><br>
+            Juros diário: <b>3,33% do juros total por dia</b><br>
+            Juros aplicado: <b>R$ ${jurosDiario.toFixed(2)}</b><br>
+            <span style='font-size:1.1em;'>Valor atualizado: <b>R$ ${valorAtualizado.toFixed(2)}</b></span>
+          </div>
+        `;
+      }
       // Modal HTML
       const detalhes = `
         <div class="emprestimo-modal-box" style="padding: 1.5rem; max-width: 420px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 2px 16px #002f4b22;">
@@ -660,6 +700,7 @@ const emprestimoController = {
             <div style="font-size: 1rem; color: #444; margin-bottom: 0.2em;">Deve ser pago em <b>${utils.formatDate(emp.data_vencimento)}</b></div>
             <div style="font-size: 1rem; color: #444;">Valor Investido <b>R$ ${utils.formatCurrency(emp.valor_inicial || emp.valor)}</b></div>
             <div style="font-size: 1rem; color: #444;">Juros <b>${emp.juros_mensal}%</b> (R$ ${utils.formatCurrency((emp.valor_inicial || emp.valor) * (emp.juros_mensal / 100))})</div>
+            ${infoJuros}
           </div>
           <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid #eee;">
           <div style="margin-bottom: 1.2rem;">
