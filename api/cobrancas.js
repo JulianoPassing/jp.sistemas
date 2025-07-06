@@ -222,7 +222,10 @@ router.get('/clientes', ensureDatabase, async (req, res) => {
 router.post('/clientes', ensureDatabase, async (req, res) => {
   try {
     const { nome, cpf_cnpj, email, telefone, endereco, cidade, estado, cep } = req.body;
-    
+    // Validação do nome do cliente
+    if (!nome || typeof nome !== 'string' || ['undefined', 'n/a', 'na'].includes(nome.trim().toLowerCase()) || nome.trim() === '') {
+      return res.status(400).json({ error: 'Nome do cliente inválido. Não é permitido cadastrar clientes sem nome ou com nome "undefined" ou "N/A".' });
+    }
     const connection = await createCobrancasConnection();
     const [result] = await connection.execute(`
       INSERT INTO clientes_cobrancas (nome, cpf_cnpj, email, telefone, endereco, cidade, estado, cep)
