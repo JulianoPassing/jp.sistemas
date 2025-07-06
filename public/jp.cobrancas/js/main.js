@@ -81,6 +81,15 @@ const authSystem = {
         clearTimeout(hiddenTimer);
       }
     });
+  },
+
+  // Exibir mensagem de boas-vindas
+  showWelcomeMessage() {
+    const welcomeElement = document.getElementById('welcomeMessage');
+    if (welcomeElement) {
+      const username = sessionStorage.getItem('username') || 'Usuário';
+      welcomeElement.textContent = `Bem-vindo(a), ${username}!`;
+    }
   }
 };
 
@@ -595,6 +604,9 @@ const app = {
       
       // Configurar sistema de logout automático apenas se autenticado
       authSystem.setupAutoLogout();
+      
+      // Exibir mensagem de boas-vindas
+      authSystem.showWelcomeMessage();
       
       // Configurar data atual
       this.setCurrentDate();
