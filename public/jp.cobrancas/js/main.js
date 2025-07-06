@@ -1360,4 +1360,20 @@ function renderAtrasadosLista() {
 // Chamar renderAtrasadosLista se existir a tabela na página
 if (document.getElementById('atrasados-lista')) {
   renderAtrasadosLista();
+}
+
+// Atualizar valor do card 'valor-total' em emprestimos.html
+if (document.getElementById('valor-total')) {
+  apiService.getEmprestimos().then(emprestimos => {
+    const total = (emprestimos || []).reduce((acc, emp) => {
+      const status = (emp.status || '').toLowerCase();
+      if ((status === 'ativo' || status === 'pendente') && status !== 'quitado') {
+        const valor = Number(emp.valor || 0);
+        const juros = Number(emp.juros_mensal || 0);
+        acc += valor + (valor * (juros / 100));
+      }
+      return acc;
+    }, 0);
+    document.getElementById('valor-total').textContent = utils.formatCurrency(total);
+  });
 } 
