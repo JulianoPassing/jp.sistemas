@@ -416,6 +416,93 @@ router.post('/cobrancas/:id/pagamento', ensureDatabase, async (req, res) => {
   }
 });
 
+// Pagamento de juros com extensão de prazo
+router.post('/emprestimos/:id/pagamento-juros', ensureDatabase, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { valor_juros_pago, data_pagamento, forma_pagamento, observacoes } = req.body;
+    
+    const connection = await createCobrancasConnection();
+    
+    // Buscar dados do empréstimo
+    const [emprestimoRows] = await connection.execute(`
+      SELECT e.*, c.nome as cliente_nome 
+      FROM emprestimos e 
+      LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id 
+      WHERE e.id = ?
+    `, [id]);
+    
+    if (emprestimoRows.length === 0) {
+      await connection.end();
+      return res.status(404).json({ error: 'Empréstimo não encontrado' });
+    }
+    
+    const emprestimo = emprestimoRows[0];
+    
+    // Calcular juros acumulados
+    const valorInicial = parseFloat(emprestimo.valor) || 0;
+    const jurosMensal = parseFloat(emprestimo.juros_mensal) || 0;
+    const jurosAcumulados = valorInicial * (jurosMensal / 100);
+    
+    // Verificar se o valor pago é suficiente para cobrir os juros
+    if (parseFloat(valor_juros_pago) < jurosAcumulados) {
+      await connection.end();
+      return res.status(400).json({ 
+        error: `Valor insuficiente. Juros acumulados: R$ ${jurosAcumulados.toFixed(2)}` 
+      });
+    }
+    
+    // Registrar pagamento de juros
+    await connection.execute(`
+      INSERT INTO pagamentos (cobranca_id, valor_pago, data_pagamento, forma_pagamento, observacoes)
+      VALUES (?, ?, ?, ?, ?)
+    `, [emprestimo.id, valor_juros_pago, data_pagamento, forma_pagamento, `Pagamento de juros: ${observacoes || ''}`]);
+    
+    // Calcular nova data de vencimento (+30 dias)
+    const dataVencimentoAtual = new Date(emprestimo.data_vencimento);
+    const novaDataVencimento = new Date(dataVencimentoAtual);
+    novaDataVencimento.setDate(novaDataVencimento.getDate() + 30);
+    
+    // Atualizar empréstimo: nova data de vencimento, status Ativo, valor inicial + juros
+    const novoValor = valorInicial + jurosAcumulados;
+    
+    await connection.execute(`
+      UPDATE emprestimos 
+      SET 
+        data_vencimento = ?,
+        valor = ?,
+        status = 'Ativo',
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `, [novaDataVencimento.toISOString().split('T')[0], novoValor, id]);
+    
+    // Atualizar cobrança relacionada
+    await connection.execute(`
+      UPDATE cobrancas 
+      SET 
+        data_vencimento = ?,
+        valor_original = ?,
+        valor_atualizado = ?,
+        status = 'Pendente',
+        updated_at = CURRENT_TIMESTAMP
+      WHERE emprestimo_id = ?
+    `, [novaDataVencimento.toISOString().split('T')[0], novoValor, novoValor, id]);
+    
+    await connection.end();
+    
+    res.json({ 
+      message: 'Pagamento de juros registrado com sucesso',
+      nova_data_vencimento: novaDataVencimento.toISOString().split('T')[0],
+      novo_valor: novoValor,
+      juros_pagos: valor_juros_pago
+    });
+    
+  } catch (error) {
+    console.error('Erro ao registrar pagamento de juros:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Rota de login
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;

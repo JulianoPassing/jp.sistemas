@@ -873,21 +873,132 @@ const emprestimoController = {
         // Botão Só Juros
         modal.querySelector('#modal-btn-sojuros').onclick = async (e) => {
           e.preventDefault();
-          try {
-            await fetch(`/api/cobrancas/emprestimos/${emp.id}/status`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({ status: 'Só Juros' })
-            });
-            // Voltar valor do empréstimo para o valor original na interface
-            emp.valor = Number(emp.valor_inicial || emp.valor_original || emp.valor);
-            ui.showNotification('Pagamento de só juros registrado! Empréstimo segue em aberto.', 'success');
-            modal.remove();
-            if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
-          } catch (err) {
-            ui.showNotification('Erro ao registrar só juros', 'error');
-          }
+          
+          // Calcular juros acumulados
+          const valorInicial = Number(emp.valor || 0);
+          const jurosPercent = Number(emp.juros_mensal || 0);
+          const jurosAcumulados = valorInicial * (jurosPercent / 100);
+          
+          // Criar modal de pagamento de juros
+          const modalPagamento = `
+            <div style="padding: 1.5rem; max-width: 500px; margin: 0 auto;">
+              <h3 style="margin-bottom: 1rem; color: #002f4b;">Pagamento de Juros com Extensão</h3>
+              
+              <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <h4 style="margin-bottom: 0.5rem; color: #002f4b;">Resumo do Empréstimo</h4>
+                <p><strong>Cliente:</strong> ${emp.cliente_nome || 'N/A'}</p>
+                <p><strong>Valor Inicial:</strong> R$ ${utils.formatCurrency(valorInicial)}</p>
+                <p><strong>Juros Mensal:</strong> ${jurosPercent}%</p>
+                <p><strong>Juros Acumulados:</strong> R$ ${utils.formatCurrency(jurosAcumulados)}</p>
+                <p><strong>Vencimento Atual:</strong> ${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</p>
+                <p><strong>Novo Vencimento:</strong> ${(() => {
+                  const dataVenc = new Date(emp.data_vencimento);
+                  dataVenc.setDate(dataVenc.getDate() + 30);
+                  return utils.formatDate(dataVenc.toISOString().split('T')[0]);
+                })()}</p>
+                <p><strong>Novo Valor da Dívida:</strong> R$ ${utils.formatCurrency(valorInicial + jurosAcumulados)}</p>
+              </div>
+              
+              <form id="form-pagamento-juros">
+                <div class="form-group">
+                  <label>Valor dos Juros a Pagar (R$) *</label>
+                  <input type="number" id="valor-juros" class="form-input" step="0.01" min="${jurosAcumulados}" value="${jurosAcumulados}" required>
+                  <small class="text-gray-500">Mínimo: R$ ${utils.formatCurrency(jurosAcumulados)}</small>
+                </div>
+                
+                <div class="form-group">
+                  <label>Data do Pagamento *</label>
+                  <input type="date" id="data-pagamento" class="form-input" value="${new Date().toISOString().split('T')[0]}" required>
+                </div>
+                
+                <div class="form-group">
+                  <label>Forma de Pagamento</label>
+                  <select id="forma-pagamento" class="form-input">
+                    <option value="Dinheiro">Dinheiro</option>
+                    <option value="PIX">PIX</option>
+                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                    <option value="Cartão de Débito">Cartão de Débito</option>
+                    <option value="Transferência">Transferência</option>
+                    <option value="Outro">Outro</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label>Observações</label>
+                  <textarea id="observacoes-juros" class="form-input" rows="3" placeholder="Observações sobre o pagamento"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                  <button type="submit" class="btn btn-primary" style="flex: 1;">Confirmar Pagamento</button>
+                  <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                </div>
+              </form>
+            </div>
+          `;
+          
+          const modalJuros = ui.showModal(modalPagamento, 'Pagamento de Juros');
+          const formJuros = modalJuros.querySelector('#form-pagamento-juros');
+          
+          // Processar pagamento de juros
+          formJuros.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const valorJuros = parseFloat(document.getElementById('valor-juros').value);
+            const dataPagamento = document.getElementById('data-pagamento').value;
+            const formaPagamento = document.getElementById('forma-pagamento').value;
+            const observacoes = document.getElementById('observacoes-juros').value;
+            
+            if (valorJuros < jurosAcumulados) {
+              alert(`Valor insuficiente. O mínimo é R$ ${utils.formatCurrency(jurosAcumulados)}`);
+              return;
+            }
+            
+            try {
+              const submitBtn = formJuros.querySelector('button[type="submit"]');
+              const originalText = submitBtn.textContent;
+              submitBtn.textContent = 'Processando...';
+              submitBtn.disabled = true;
+              
+              const response = await fetch(`/api/cobrancas/emprestimos/${emp.id}/pagamento-juros`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                  valor_juros_pago: valorJuros,
+                  data_pagamento: dataPagamento,
+                  forma_pagamento: formaPagamento,
+                  observacoes: observacoes
+                })
+              });
+              
+              if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Erro ao processar pagamento');
+              }
+              
+              const result = await response.json();
+              
+              // Fechar modais
+              modalJuros.remove();
+              modal.remove();
+              
+              // Mostrar sucesso
+              ui.showNotification(`Pagamento de juros registrado! Novo vencimento: ${utils.formatDate(result.nova_data_vencimento)}`, 'success');
+              
+              // Recarregar dados
+              setTimeout(async () => {
+                await recarregarDadosPagina();
+              }, 1000);
+              
+            } catch (error) {
+              console.error('Erro ao processar pagamento de juros:', error);
+              alert('Erro ao processar pagamento: ' + error.message);
+            } finally {
+              const submitBtn = formJuros.querySelector('button[type="submit"]');
+              submitBtn.textContent = originalText;
+              submitBtn.disabled = false;
+            }
+          });
         };
         // Botão Não Pagou
         modal.querySelector('#modal-btn-naopagou').onclick = async (e) => {
