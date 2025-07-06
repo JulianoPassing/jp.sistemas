@@ -561,12 +561,14 @@ router.get('/clientes/:id', ensureDatabase, async (req, res) => {
 });
 
 // Log das rotas registradas
-console.log('Rotas de cobranças registradas:');
-console.log('- GET /dashboard');
-console.log('- GET /cobrancas/pendentes-dia');
-console.log('- GET /cobrancas/atrasadas');
-console.log('- GET /cobrancas');
-console.log('- GET /test');
-console.log('- GET /session');
+console.log('🚀 Rotas de cobranças registradas:');
+console.log('   - GET /dashboard');
+console.log('   - GET /cobrancas/pendentes-dia');
+console.log('   - GET /cobrancas/atrasadas');
+console.log('   - GET /cobrancas');
+console.log('   - GET /test');
+console.log('   - GET /session');
+console.log('   - POST /login');
+console.log('   - POST /logout');
 
 module.exports = router; 
