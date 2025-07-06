@@ -235,6 +235,10 @@ main {
   color: var(--red-600);
 }
 
+.card-change.warning {
+  color: var(--yellow-500);
+}
+
 /* Seções */
 .section {
   background-color: var(--white);
