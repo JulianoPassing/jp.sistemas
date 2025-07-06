@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JP-Cobranças - Dashboard</title>
+  <link rel="icon" type="image/png" href="https://i.imgur.com/6N82fk2.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="app-layout">
+  <header>
+    <div class="header-content">
+      <a href="index.html" class="logo" style="display: flex; align-items: center;">
+        <img src="https://i.imgur.com/EQ1tjZX.png" alt="JP-Cobranças" style="height: 5rem; width: auto; object-fit: contain;">
+      </a>
+      <nav>
+        <a href="dashboard-novo.html" class="nav-link active">Dashboard</a>
+        <a href="clientes.html" class="nav-link">Clientes</a>
+        <a href="adicionar-cliente.html" class="nav-link">Adicionar Cliente</a>
+        <a href="cobrancas.html" class="nav-link">Cobranças</a>
+        <a href="atrasados.html" class="nav-link">Atrasados</a>
+        <a href="lista-negra.html" class="nav-link">Lista Negra</a>
+        <a href="emprestimos.html" class="nav-link">Histórico de Empréstimos</a>
+        <a href="afiliados.html" class="nav-link">Lista de Afiliados</a>
+        <a href="plataforma.html" class="nav-link">Dados da Plataforma</a>
+        <a href="#" class="nav-link" onclick="sair()">Sair</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="container">
+      <div class="dashboard-header">
+        <div class="dashboard-title">Dashboard</div>
+        <div class="dashboard-subtitle">
+          <span id="currentDate"></span>
+          <small>(mês atual)</small>
+        </div>
+      </div>
+      <!-- Cards de Estatísticas -->
+      <div class="cards">
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Total Investido</div>
+          </div>
+          <div class="card-value" id="total-investido">R$ 0,00</div>
+          <div class="card-change positive">+0% este mês</div>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Empréstimos Ativos</div>
+          </div>
+          <div class="card-value" id="total-emprestimos">0</div>
+          <div class="card-change positive">+8% este mês</div>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Valor a Receber</div>
+          </div>
+          <div class="card-value" id="valor-receber">R$ 0,00</div>
+          <div class="card-change positive">+15% este mês</div>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Clientes em Atraso</div>
+          </div>
+          <div class="card-value" id="clientes-atraso">0</div>
+          <div class="card-change negative">-5% este mês</div>
+        </div>
+      </div>
+      <!-- Seção de Empréstimos Recentes -->
+      <div class="section">
+        <div class="section-header">
+          <h3 class="section-title">Empréstimos Recentes</h3>
+          <a href="emprestimos.html" class="btn btn-primary">Novo Empréstimo</a>
+        </div>
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Valor</th>
+                <th>Data</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="emprestimos-recentes">
+              <tr>
+                <td colspan="5" class="text-center text-gray-500">Carregando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Seção de Cobranças Pendentes -->
+      <div class="section">
+        <div class="section-header">
+          <h3 class="section-title">Cobranças Pendentes</h3>
+        </div>
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Valor</th>
+                <th>Vencimento</th>
+                <th>Dias Atraso</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="cobrancas-pendentes">
+              <tr>
+                <td colspan="6" class="text-center text-gray-500">Carregando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="text-center p-4 mt-8">
+    © 2024 JP-Cobranças. Todos os direitos reservados.
+  </footer>
+  <script src="./js/main.js"></script>
+</body>
+</html> 

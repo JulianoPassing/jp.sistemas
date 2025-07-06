@@ -1376,4 +1376,19 @@ if (document.getElementById('valor-total')) {
     }, 0);
     document.getElementById('valor-total').textContent = utils.formatCurrency(total);
   });
+}
+
+// Forçar atualização do card de cobranças pendentes ao carregar a página de cobranças
+if (window.location.pathname.includes('cobrancas.html')) {
+  apiService.getCobrancas().then(lista => {
+    const hoje = new Date();
+    hoje.setHours(0,0,0,0);
+    const totalPendentes = (lista || []).filter(cobranca => {
+      const dataVenc = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
+      const status = (cobranca.status || '').toUpperCase();
+      return dataVenc && dataVenc <= hoje && (status === 'PENDENTE' || status === 'EM ABERTO');
+    }).length;
+    const card = document.getElementById('cobrancas-pendentes');
+    if (card) card.innerHTML = String(totalPendentes);
+  });
 } 

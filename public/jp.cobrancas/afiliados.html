@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JP-Cobranças - Atrasados</title>
+  <title>JP-Cobranças - Lista de Afiliados</title>
   <link rel="icon" type="image/png" href="https://i.imgur.com/6N82fk2.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,10 +21,10 @@
         <a href="clientes.html" class="nav-link">Clientes</a>
         <a href="adicionar-cliente.html" class="nav-link">Adicionar Cliente</a>
         <a href="cobrancas.html" class="nav-link">Cobranças</a>
-        <a href="atrasados.html" class="nav-link active">Atrasados</a>
+        <a href="atrasados.html" class="nav-link">Atrasados</a>
         <a href="lista-negra.html" class="nav-link">Lista Negra</a>
         <a href="emprestimos.html" class="nav-link">Histórico de Empréstimos</a>
-        <a href="afiliados.html" class="nav-link">Lista de Afiliados</a>
+        <a href="afiliados.html" class="nav-link active">Lista de Afiliados</a>
         <a href="plataforma.html" class="nav-link">Dados da Plataforma</a>
         <a href="#" class="nav-link" onclick="sair()">Sair</a>
       </nav>
@@ -33,30 +33,30 @@
   <main>
     <div class="container">
       <div class="dashboard-header">
-        <div class="dashboard-title">Atrasados</div>
+        <div class="dashboard-title">Lista de Afiliados</div>
         <div class="dashboard-subtitle">
-          Gerencie clientes com pagamentos em atraso.
+          Gerencie os afiliados do sistema.
         </div>
       </div>
-      <!-- Tabela de Atrasados -->
+      <!-- Tabela de Afiliados -->
       <div class="section">
         <div class="section-header">
-          <h3 class="section-title">Clientes em Atraso</h3>
-          <a href="cobrancas.html" class="btn btn-primary">Nova Cobrança</a>
+          <h3 class="section-title">Afiliados</h3>
+          <a href="adicionar-cliente.html" class="btn btn-primary">Novo Afiliado</a>
         </div>
         <div class="table-container">
           <table class="table">
             <thead>
               <tr>
-                <th>Cliente</th>
-                <th>Valor</th>
-                <th>Vencimento</th>
-                <th>Dias Atraso</th>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Telefone</th>
+                <th>Comissão</th>
                 <th>Status</th>
                 <th>Ações</th>
               </tr>
             </thead>
-            <tbody id="lista-atrasados">
+            <tbody id="lista-afiliados">
               <tr>
                 <td colspan="6" class="text-center text-gray-500">Carregando...</td>
               </tr>
