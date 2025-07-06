@@ -1,4 +1,4 @@
-// Configurações da API
+image.png// Configurações da API
 const API_BASE_URL = '/api';
 
 // Estado global da aplicação
@@ -862,12 +862,14 @@ async function renderEmprestimosLista() {
   tbody.innerHTML = '<tr><td colspan="7">Carregando...</td></tr>';
   try {
     const emprestimos = await apiService.getEmprestimos();
-    if (!emprestimos || emprestimos.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+    // Filtrar apenas empréstimos ativos
+    const ativos = (emprestimos || []).filter(e => (e.status || '').toLowerCase() === 'ativo');
+    if (!ativos || ativos.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo ativo encontrado</td></tr>';
       return;
     }
     tbody.innerHTML = '';
-    emprestimos.forEach(emprestimo => {
+    ativos.forEach(emprestimo => {
       // Cálculo de atraso e juros diário
       const valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
       const jurosPercent = Number(emprestimo.juros_mensal || 0);
