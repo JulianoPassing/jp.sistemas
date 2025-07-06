@@ -310,6 +310,32 @@ router.get('/emprestimos', ensureDatabase, async (req, res) => {
   }
 });
 
+// Buscar empréstimo por ID
+router.get('/emprestimos/:id', ensureDatabase, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const connection = await createCobrancasConnection();
+    
+    const [emprestimos] = await connection.execute(`
+      SELECT e.*, c.nome as cliente_nome, c.telefone as telefone
+      FROM emprestimos e
+      LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
+      WHERE e.id = ?
+    `, [id]);
+    
+    await connection.end();
+    
+    if (emprestimos.length === 0) {
+      return res.status(404).json({ error: 'Empréstimo não encontrado' });
+    }
+    
+    res.json(emprestimos[0]);
+  } catch (error) {
+    console.error('Erro ao buscar empréstimo:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 router.post('/emprestimos', ensureDatabase, async (req, res) => {
   try {
     const { cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes } = req.body;
@@ -463,8 +489,8 @@ router.post('/emprestimos/:id/pagamento-juros', ensureDatabase, async (req, res)
     const novaDataVencimento = new Date(dataVencimentoAtual);
     novaDataVencimento.setDate(novaDataVencimento.getDate() + 30);
     
-    // Atualizar empréstimo: nova data de vencimento, status Ativo, valor inicial + juros
-    const novoValor = valorInicial + jurosAcumulados;
+    // Atualizar empréstimo: nova data de vencimento, status Ativo, valor volta ao inicial
+    // O valor da dívida volta ao valor inicial do empréstimo (não acumula juros)
     
     await connection.execute(`
       UPDATE emprestimos 
@@ -474,7 +500,7 @@ router.post('/emprestimos/:id/pagamento-juros', ensureDatabase, async (req, res)
         status = 'Ativo',
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `, [novaDataVencimento.toISOString().split('T')[0], novoValor, id]);
+    `, [novaDataVencimento.toISOString().split('T')[0], valorInicial, id]);
     
     // Atualizar cobrança relacionada
     await connection.execute(`
@@ -486,14 +512,14 @@ router.post('/emprestimos/:id/pagamento-juros', ensureDatabase, async (req, res)
         status = 'Pendente',
         updated_at = CURRENT_TIMESTAMP
       WHERE emprestimo_id = ?
-    `, [novaDataVencimento.toISOString().split('T')[0], novoValor, novoValor, id]);
+    `, [novaDataVencimento.toISOString().split('T')[0], valorInicial, valorInicial, id]);
     
     await connection.end();
     
     res.json({ 
       message: 'Pagamento de juros registrado com sucesso',
       nova_data_vencimento: novaDataVencimento.toISOString().split('T')[0],
-      novo_valor: novoValor,
+      novo_valor: valorInicial,
       juros_pagos: valor_juros_pago
     });
     
@@ -612,6 +638,32 @@ router.delete('/emprestimos/:id', ensureDatabase, async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Erro ao remover empréstimo:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para gerenciar lista negra
+router.put('/clientes/:id/lista-negra', ensureDatabase, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, motivo } = req.body;
+    
+    const connection = await createCobrancasConnection();
+    
+    // Atualizar status do cliente
+    await connection.execute(`
+      UPDATE clientes_cobrancas 
+      SET 
+        status = ?,
+        observacoes = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `, [status, motivo, id]);
+    
+    await connection.end();
+    res.json({ message: `Cliente ${status === 'Lista Negra' ? 'adicionado à' : 'removido da'} lista negra com sucesso` });
+  } catch (error) {
+    console.error('Erro ao gerenciar lista negra:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
