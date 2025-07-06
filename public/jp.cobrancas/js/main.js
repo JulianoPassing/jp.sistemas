@@ -1221,6 +1221,12 @@ async function renderHistoricoEmprestimos() {
       `;
       tbody.appendChild(row);
     });
+    // Calcular valor total
+    const total = (emprestimos || []).reduce((acc, emp) => acc + Number(emp.valor || 0), 0);
+    const totalBox = document.getElementById('total-emprestimos-box');
+    if (totalBox) {
+      totalBox.textContent = `Valor total dos empréstimos: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    }
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
   }
