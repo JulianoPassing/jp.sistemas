@@ -1724,9 +1724,15 @@ document.addEventListener('DOMContentLoaded', () => {
           await apiService.createEmprestimo(payload);
           ui.showNotification('Empréstimo adicionado com sucesso!', 'success');
           modal.remove();
-          if (document.getElementById('emprestimos-lista')) {
-            renderEmprestimosLista();
-          }
+          // Atualizar lista de empréstimos de forma robusta
+          setTimeout(() => {
+            if (document.getElementById('emprestimos-lista')) {
+              renderEmprestimosLista();
+            } else {
+              // Fallback: recarregar a página se a lista não estiver pronta
+              location.reload();
+            }
+          }, 300);
         } catch (err) {
           ui.showNotification('Erro ao adicionar empréstimo', 'error');
         }
