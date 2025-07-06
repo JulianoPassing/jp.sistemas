@@ -168,6 +168,17 @@ main {
   font-size: 1rem;
 }
 
+/* Mensagem de boas-vindas */
+.welcome-message {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 2px solid var(--primary);
+  display: inline-block;
+}
+
 /* Cards */
 .cards {
   display: grid;
