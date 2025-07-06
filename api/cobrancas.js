@@ -499,12 +499,29 @@ router.get('/clientes/:id', ensureDatabase, async (req, res) => {
   try {
     const { id } = req.params;
     const connection = await createCobrancasConnection();
+    // Buscar dados do cliente
     const [rows] = await connection.execute('SELECT * FROM clientes_cobrancas WHERE id = ?', [id]);
-    await connection.end();
     if (rows.length === 0) {
+      await connection.end();
       return res.status(404).json({ error: 'Cliente não encontrado' });
     }
-    res.json(rows[0]);
+    const cliente = rows[0];
+    // Buscar empréstimos do cliente
+    const [emprestimos] = await connection.execute('SELECT * FROM emprestimos WHERE cliente_id = ? ORDER BY created_at DESC', [id]);
+    // Buscar pagamentos relacionados a esses empréstimos (por cobrança)
+    let pagamentos = [];
+    if (emprestimos.length > 0) {
+      const emprestimoIds = emprestimos.map(e => e.id);
+      // Buscar cobranças desses empréstimos
+      const [cobrancas] = await connection.execute(`SELECT * FROM cobrancas WHERE cliente_id = ?`, [id]);
+      const cobrancaIds = cobrancas.map(c => c.id);
+      if (cobrancaIds.length > 0) {
+        const [pagamentosRows] = await connection.execute(`SELECT * FROM pagamentos WHERE cobranca_id IN (${cobrancaIds.map(() => '?').join(',')}) ORDER BY data_pagamento DESC`, cobrancaIds);
+        pagamentos = pagamentosRows;
+      }
+    }
+    await connection.end();
+    res.json({ ...cliente, emprestimos, pagamentos });
   } catch (error) {
     console.error('Erro ao buscar cliente:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
