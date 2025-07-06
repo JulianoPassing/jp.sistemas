@@ -507,8 +507,11 @@ router.get('/clientes/:id', ensureDatabase, async (req, res) => {
       return res.status(404).json({ error: 'Cliente não encontrado' });
     }
     const cliente = rows[0];
-    // Buscar empréstimos do cliente
-    const [emprestimos] = await connection.execute('SELECT * FROM emprestimos WHERE cliente_id = ? ORDER BY created_at DESC', [id]);
+    // Buscar empréstimos do cliente (apenas ativos e pendentes)
+    const [emprestimos] = await connection.execute(
+      'SELECT * FROM emprestimos WHERE cliente_id = ? AND status IN (?, ?) ORDER BY created_at DESC',
+      [id, 'Ativo', 'Pendente']
+    );
     console.log('DEBUG /clientes/:id - emprestimos encontrados:', emprestimos);
     // Buscar pagamentos relacionados a esses empréstimos (por cobrança)
     let pagamentos = [];
