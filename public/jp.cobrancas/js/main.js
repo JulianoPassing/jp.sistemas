@@ -1234,17 +1234,17 @@ async function renderHistoricoEmprestimos() {
     hoje.setHours(0,0,0,0);
     (emprestimos || []).forEach(emp => {
       // Garantir conversão correta
-      const valor = Number(emp.valor ? String(emp.valor).replace(',', '.').replace(/[^0-9.\-]/g, '') : 0);
-      const jurosPercent = Number(emp.juros_mensal ? String(emp.juros_mensal).replace(',', '.').replace(/[^0-9.\-]/g, '') : 0);
+      let valor = Number(emp.valor ? String(emp.valor).replace(',', '.').replace(/[^0-9.\-]/g, '') : 0);
+      let jurosPercent = Number(emp.juros_mensal ? String(emp.juros_mensal).replace(',', '.').replace(/[^0-9.\-]/g, '') : 0);
       let valorJuros = valor * (jurosPercent / 100);
       let valorAtualizado = valor + valorJuros;
       // Se vencido e não quitado, soma juros diário
       if (emp.data_vencimento) {
-        const dataVenc = new Date(emp.data_vencimento);
+        let dataVenc = new Date(emp.data_vencimento);
         if (dataVenc < hoje && (emp.status || '').toLowerCase() !== 'quitado') {
-          const diffTime = hoje.getTime() - dataVenc.getTime();
-          const diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          const jurosDiario = Math.ceil(valorJuros / 30);
+          let diffTime = hoje.getTime() - dataVenc.getTime();
+          let diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          let jurosDiario = Math.ceil(valorJuros / 30);
           valorAtualizado += jurosDiario * diasAtraso;
         }
       }
