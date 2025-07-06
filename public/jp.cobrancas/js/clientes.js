@@ -160,7 +160,11 @@ const clientesUI = {
 
   renderClientesTable(clientes) {
     const clientesValidos = clientes.filter(
-      c => c && c.nome && c.nome !== 'undefined' && c.nome.trim() !== ''
+      c =>
+        c &&
+        (c.nome || c.name) &&
+        (c.nome || c.name) !== 'undefined' &&
+        (c.nome || c.name).trim() !== ''
     );
     if (clientesTableBody) {
       if (clientesValidos.length === 0) {
