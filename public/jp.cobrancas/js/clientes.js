@@ -252,24 +252,32 @@ const clientesUI = {
     const detailsContent = `
       <div class="cliente-details">
         <div class="detail-row">
-          <strong>Nome:</strong> ${cliente.razao || cliente.name || 'N/A'}
+          <strong>Nome:</strong> ${cliente.nome || 'N/A'}
         </div>
         <div class="detail-row">
           <strong>Email:</strong> ${cliente.email || 'N/A'}
         </div>
         <div class="detail-row">
-          <strong>Telefone:</strong> ${cliente.phone || 'N/A'}
+          <strong>Telefone:</strong> ${cliente.telefone || 'N/A'}
         </div>
         <div class="detail-row">
           <strong>CPF/CNPJ:</strong> ${cliente.cpf_cnpj || 'N/A'}
         </div>
         <div class="detail-row">
-          <strong>Endereço:</strong> ${cliente.address || 'N/A'}
+          <strong>Endereço:</strong> ${cliente.endereco || 'N/A'}
         </div>
         <div class="detail-row">
-          <strong>Data de Cadastro:</strong> ${new Date(cliente.created_at).toLocaleDateString('pt-BR')}
+          <strong>Cidade:</strong> ${cliente.cidade || 'N/A'}
         </div>
-        
+        <div class="detail-row">
+          <strong>Estado:</strong> ${cliente.estado || 'N/A'}
+        </div>
+        <div class="detail-row">
+          <strong>CEP:</strong> ${cliente.cep || 'N/A'}
+        </div>
+        <div class="detail-row">
+          <strong>Data de Cadastro:</strong> ${cliente.created_at ? new Date(cliente.created_at).toLocaleDateString('pt-BR') : 'N/A'}
+        </div>
         ${cliente.emprestimos && cliente.emprestimos.length > 0 ? `
           <div class="emprestimos-section">
             <h4>Empréstimos</h4>
@@ -295,7 +303,7 @@ const clientesUI = {
       </div>
     `;
 
-    clientesUI.showModal(detailsContent, `Detalhes do Cliente - ${cliente.razao || cliente.name || 'N/A'}`);
+    clientesUI.showModal(detailsContent, `Detalhes do Cliente - ${cliente.nome || 'N/A'}`);
   }
 };
 
