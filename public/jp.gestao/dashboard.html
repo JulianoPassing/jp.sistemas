@@ -223,29 +223,30 @@
         // Carregar dados do dashboard
         async function loadDashboardData() {
             try {
-                // Carregar estatísticas
-                const statsResponse = await fetch('/api/dashboard/stats');
+                // Carregar estatísticas usando a API existente
+                const statsResponse = await fetch('/api/relatorios/estatisticas', { credentials: 'include' });
                 if (statsResponse.ok) {
                     const stats = await statsResponse.json();
-                    document.getElementById('vendas-hoje').textContent = `R$ ${stats.vendasHoje || '0,00'}`;
-                    document.getElementById('pedidos-ativos').textContent = stats.pedidosAtivos || '0';
-                    document.getElementById('produtos-estoque').textContent = stats.produtosEstoque || '0';
-                    document.getElementById('clientes-cadastrados').textContent = stats.clientesCadastrados || '0';
+                    document.getElementById('vendas-hoje').textContent = `R$ ${parseFloat(stats.vendasMes || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                    document.getElementById('pedidos-ativos').textContent = stats.pedidosMesProcessamento || '0';
+                    document.getElementById('produtos-estoque').textContent = stats.totalProdutos || '0';
+                    document.getElementById('clientes-cadastrados').textContent = stats.totalClientes || '0';
                 }
 
-                // Carregar pedidos recentes
-                const pedidosResponse = await fetch('/api/pedidos/recentes');
+                // Carregar pedidos recentes usando a API de pedidos
+                const pedidosResponse = await fetch('/api/pedidos', { credentials: 'include' });
                 if (pedidosResponse.ok) {
                     const pedidos = await pedidosResponse.json();
+                    const pedidosRecentes = pedidos.slice(0, 5); // Pegar apenas os 5 mais recentes
                     const tbody = document.getElementById('pedidos-recentes');
-                    if (pedidos.length > 0) {
-                        tbody.innerHTML = pedidos.map(pedido => `
+                    if (pedidosRecentes.length > 0) {
+                        tbody.innerHTML = pedidosRecentes.map(pedido => `
                             <tr>
                                 <td>#${pedido.id}</td>
-                                <td>${pedido.cliente || 'N/A'}</td>
-                                <td>R$ ${pedido.valor || '0,00'}</td>
-                                <td><span class="badge badge-${pedido.status === 'Concluído' ? 'success' : pedido.status === 'Em andamento' ? 'warning' : 'info'}">${pedido.status}</span></td>
-                                <td>${new Date(pedido.data).toLocaleDateString('pt-BR')}</td>
+                                <td>${pedido.nome_cliente || 'N/A'}</td>
+                                <td>R$ ${parseFloat(pedido.valor_total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                <td><span class="badge badge-${pedido.status === 'Concluído' || pedido.status === 'concluído' ? 'success' : pedido.status === 'Em Processamento' || pedido.status === 'em processamento' ? 'warning' : 'info'}">${pedido.status}</span></td>
+                                <td>${new Date(pedido.data_pedido).toLocaleDateString('pt-BR')}</td>
                                 <td>
                                     <a href="pedidos.html?id=${pedido.id}" class="btn btn-secondary btn-sm">Ver</a>
                                 </td>
@@ -256,19 +257,23 @@
                     }
                 }
 
-                // Carregar produtos com baixo estoque
-                const produtosResponse = await fetch('/api/produtos/baixo-estoque');
+                // Carregar produtos com baixo estoque usando a API de produtos
+                const produtosResponse = await fetch('/api/produtos', { credentials: 'include' });
                 if (produtosResponse.ok) {
                     const produtos = await produtosResponse.json();
+                    const produtosBaixoEstoque = produtos.filter(produto => 
+                        (produto.estoque || 0) <= (produto.estoque_minimo || 0)
+                    ).slice(0, 5); // Pegar apenas os 5 com menor estoque
+                    
                     const tbody = document.getElementById('produtos-baixo-estoque');
-                    if (produtos.length > 0) {
-                        tbody.innerHTML = produtos.map(produto => `
+                    if (produtosBaixoEstoque.length > 0) {
+                        tbody.innerHTML = produtosBaixoEstoque.map(produto => `
                             <tr>
                                 <td>${produto.nome}</td>
-                                <td>${produto.estoque}</td>
-                                <td>${produto.estoque_minimo}</td>
-                                <td>R$ ${produto.preco || '0,00'}</td>
-                                <td><span class="badge badge-${produto.estoque <= 0 ? 'danger' : 'warning'}">${produto.estoque <= 0 ? 'Sem estoque' : 'Baixo estoque'}</span></td>
+                                <td>${produto.estoque || 0}</td>
+                                <td>${produto.estoque_minimo || 0}</td>
+                                <td>R$ ${parseFloat(produto.preco_venda || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                <td><span class="badge badge-${(produto.estoque || 0) <= 0 ? 'danger' : 'warning'}">${(produto.estoque || 0) <= 0 ? 'Sem estoque' : 'Baixo estoque'}</span></td>
                             </tr>
                         `).join('');
                     } else {

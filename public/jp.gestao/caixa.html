@@ -159,7 +159,7 @@
         async function loadCaixaData() {
             try {
                 // Carregar estatísticas
-                const statsResponse = await fetch('/api/caixa/stats');
+                const statsResponse = await fetch('/api/caixa/stats', { credentials: 'include' });
                 if (statsResponse.ok) {
                     const stats = await statsResponse.json();
                     document.getElementById('saldo-atual').textContent = formatCurrency(stats.saldoAtual || 0);
@@ -169,7 +169,7 @@
                 }
                 
                 // Carregar movimentações
-                const movResponse = await fetch('/api/caixa/movimentacoes');
+                const movResponse = await fetch('/api/caixa/movimentacoes', { credentials: 'include' });
                 if (movResponse.ok) {
                     movimentacoesData = await movResponse.json();
                     renderMovimentacoes();
@@ -321,6 +321,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify(paymentData)
                 });
                 
@@ -389,6 +390,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify(withdrawalData)
                 });
                 
@@ -470,6 +472,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify(expenseData)
                 });
                 
@@ -545,6 +548,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify(transferData)
                 });
                 
@@ -629,7 +633,8 @@
             confirmAction(`Tem certeza que deseja excluir esta movimentação?`, async () => {
                 try {
                     const response = await fetch(`/api/caixa/movimentacoes/${id}`, {
-                        method: 'DELETE'
+                        method: 'DELETE',
+                        credentials: 'include'
                     });
                     
                     if (response.ok) {

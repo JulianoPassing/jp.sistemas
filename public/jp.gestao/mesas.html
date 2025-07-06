@@ -196,7 +196,7 @@
         // Carregar mesas
         async function loadMesas() {
             try {
-                const response = await fetch('/api/mesas');
+                const response = await fetch('/api/mesas', { credentials: 'include' });
                 if (response.ok) {
                     mesasData = await response.json();
                     updateStats();
@@ -282,6 +282,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify({ status: newStatus })
                 });
                 
@@ -343,6 +344,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify(mesaData)
                 });
                 
@@ -459,6 +461,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify(mesaData)
                 });
                 
@@ -484,7 +487,8 @@
             confirmAction(`Tem certeza que deseja excluir a mesa ${mesa.numero}?`, async () => {
                 try {
                     const response = await fetch(`/api/mesas/${id}`, {
-                        method: 'DELETE'
+                        method: 'DELETE',
+                        credentials: 'include'
                     });
                     
                     if (response.ok) {
