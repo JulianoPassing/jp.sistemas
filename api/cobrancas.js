@@ -178,12 +178,13 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
       LIMIT 5
     `);
 
-    // Cobranças pendentes (apenas com cliente)
+    // Cobranças pendentes (apenas com cliente e empréstimo ativo/pendente)
     const [cobrancasPendentes] = await connection.execute(`
       SELECT cb.*, c.nome as cliente_nome, c.telefone as telefone
       FROM cobrancas cb
       LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
-      WHERE cb.status = 'Pendente' AND cb.cliente_id IS NOT NULL
+      LEFT JOIN emprestimos e ON cb.emprestimo_id = e.id
+      WHERE cb.status = 'Pendente' AND cb.cliente_id IS NOT NULL AND e.status IN ('Ativo', 'Pendente')
       ORDER BY cb.data_vencimento ASC
       LIMIT 10
     `);
@@ -288,7 +289,6 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
 router.get('/cobrancas', ensureDatabase, async (req, res) => {
   try {
     const connection = await createCobrancasConnection();
-    
     // Atualizar dias de atraso e valores
     await connection.execute(`
       UPDATE cobrancas 
@@ -302,15 +302,15 @@ router.get('/cobrancas', ensureDatabase, async (req, res) => {
           (valor_original * (multa_calculada / 100))
       WHERE status = 'Pendente'
     `);
-    
+    // Buscar apenas cobranças de empréstimos ativos/pendentes
     const [cobrancas] = await connection.execute(`
       SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
       FROM cobrancas cb
       LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
-      WHERE cb.status = 'Pendente' AND cb.cliente_id IS NOT NULL
+      LEFT JOIN emprestimos e ON cb.emprestimo_id = e.id
+      WHERE cb.status = 'Pendente' AND cb.cliente_id IS NOT NULL AND e.status IN ('Ativo', 'Pendente')
       ORDER BY cb.data_vencimento ASC
     `);
-    
     await connection.end();
     res.json(cobrancas);
   } catch (error) {
