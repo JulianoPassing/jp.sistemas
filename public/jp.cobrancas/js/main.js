@@ -887,16 +887,21 @@ const emprestimoController = {
               <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
                 <h4 style="margin-bottom: 0.5rem; color: #002f4b;">Resumo do Empréstimo</h4>
                 <p><strong>Cliente:</strong> ${emp.cliente_nome || 'N/A'}</p>
-                <p><strong>Valor Inicial:</strong> R$ ${utils.formatCurrency(valorInicial)}</p>
+                <p><strong>Valor Inicial do Empréstimo:</strong> R$ ${utils.formatCurrency(valorInicial)}</p>
                 <p><strong>Juros Mensal:</strong> ${jurosPercent}%</p>
-                <p><strong>Juros Acumulados:</strong> R$ ${utils.formatCurrency(jurosAcumulados)}</p>
+                <p><strong>Juros Acumulados a Pagar:</strong> R$ ${utils.formatCurrency(jurosAcumulados)}</p>
                 <p><strong>Vencimento Atual:</strong> ${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</p>
                 <p><strong>Novo Vencimento:</strong> ${(() => {
                   const dataVenc = new Date(emp.data_vencimento);
                   dataVenc.setDate(dataVenc.getDate() + 30);
                   return utils.formatDate(dataVenc.toISOString().split('T')[0]);
                 })()}</p>
-                <p><strong>Novo Valor da Dívida:</strong> R$ ${utils.formatCurrency(valorInicial + jurosAcumulados)}</p>
+                <p><strong>Novo Valor da Dívida:</strong> R$ ${utils.formatCurrency(valorInicial)} <em>(volta ao valor inicial)</em></p>
+                <div style="background: #e3f2fd; padding: 0.75rem; border-radius: 6px; margin-top: 0.75rem; border-left: 4px solid #2196f3;">
+                  <p style="margin: 0; font-size: 0.9rem; color: #1565c0;">
+                    <strong>Como funciona:</strong> Ao pagar apenas os juros, o valor da dívida volta ao valor inicial do empréstimo e o prazo é estendido em 30 dias.
+                  </p>
+                </div>
               </div>
               
               <form id="form-pagamento-juros">
@@ -1050,6 +1055,41 @@ const cobrancaController = {
     window.location.href = 'cobrancas.html';
   }
 };
+
+// Função para adicionar cliente à lista negra
+async function adicionarListaNegra(id) {
+  try {
+    if (!confirm('Tem certeza que deseja adicionar este cliente à lista negra?')) {
+      return;
+    }
+    
+    const response = await fetch(`/api/cobrancas/clientes/${id}/lista-negra`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ 
+        status: 'Lista Negra',
+        motivo: 'Adicionado manualmente pelo usuário'
+      })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erro ao adicionar à lista negra');
+    }
+    
+    ui.showNotification('Cliente adicionado à lista negra com sucesso!', 'success');
+    
+    // Recarregar lista de clientes
+    if (document.getElementById('lista-clientes')) {
+      await renderClientesLista();
+    }
+    
+  } catch (error) {
+    console.error('Erro ao adicionar à lista negra:', error);
+    ui.showNotification('Erro ao adicionar à lista negra: ' + error.message, 'error');
+  }
+}
 
 const clienteController = {
   async viewCliente(id) {
@@ -1268,9 +1308,13 @@ async function renderClientesLista() {
         <td>${cliente.nome || 'N/A'}</td>
         <td>${cliente.cpf_cnpj || '-'}</td>
         <td>${cliente.telefone || '-'}</td>
-        <td><span class="badge badge-success">${cliente.status || 'Ativo'}</span></td>
+        <td><span class="badge badge-${cliente.status === 'Lista Negra' ? 'danger' : 'success'}">${cliente.status || 'Ativo'}</span></td>
         <td>
           <button class="btn btn-primary btn-sm" onclick="viewCliente(${cliente.id})">Ver</button>
+          ${cliente.status === 'Lista Negra' 
+            ? '<button class="btn btn-success btn-sm" onclick="removerListaNegra(' + cliente.id + ')">Remover da Lista</button>'
+            : '<button class="btn btn-warning btn-sm" onclick="adicionarListaNegra(' + cliente.id + ')">Lista Negra</button>'
+          }
           <button class="btn btn-danger btn-sm" onclick="deleteCliente(${cliente.id})">Remover</button>
         </td>
       `;
@@ -1278,6 +1322,82 @@ async function renderClientesLista() {
     });
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-red-500">Erro ao carregar clientes</td></tr>';
+  }
+}
+
+// Função para renderizar a lista negra
+async function renderListaNegra() {
+  const tbody = document.getElementById('lista-negra-clientes');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="6">Carregando...</td></tr>';
+  try {
+    const clientes = await apiService.getClientes();
+    if (!clientes || clientes.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum cliente encontrado</td></tr>';
+      return;
+    }
+    
+    // Filtrar apenas clientes na lista negra
+    const listaNegra = clientes.filter(cliente => cliente.status === 'Lista Negra');
+    
+    if (listaNegra.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum cliente na lista negra</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = '';
+    listaNegra.forEach(cliente => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${cliente.nome || 'N/A'}</td>
+        <td>${cliente.cpf_cnpj || '-'}</td>
+        <td>${cliente.observacoes || 'Adicionado manualmente'}</td>
+        <td>${cliente.updated_at ? utils.formatDate(cliente.updated_at) : '-'}</td>
+        <td><span class="badge badge-danger">Lista Negra</span></td>
+        <td>
+          <button class="btn btn-primary btn-sm" onclick="viewCliente(${cliente.id})">Ver</button>
+          <button class="btn btn-success btn-sm" onclick="removerListaNegra(${cliente.id})">Remover da Lista</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar lista negra</td></tr>';
+  }
+}
+
+// Função para remover cliente da lista negra
+async function removerListaNegra(id) {
+  try {
+    if (!confirm('Tem certeza que deseja remover este cliente da lista negra?')) {
+      return;
+    }
+    
+    const response = await fetch(`/api/cobrancas/clientes/${id}/lista-negra`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ 
+        status: 'Ativo',
+        motivo: 'Removido da lista negra'
+      })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erro ao remover da lista negra');
+    }
+    
+    ui.showNotification('Cliente removido da lista negra com sucesso!', 'success');
+    
+    // Recarregar lista negra
+    if (document.getElementById('lista-negra-clientes')) {
+      await renderListaNegra();
+    }
+    
+  } catch (error) {
+    console.error('Erro ao remover da lista negra:', error);
+    ui.showNotification('Erro ao remover da lista negra: ' + error.message, 'error');
   }
 }
 
@@ -1367,6 +1487,11 @@ async function recarregarDadosPagina() {
     // Recarregar atrasados se estiver na página de atrasados
     if (document.getElementById('atrasados-lista')) {
       await renderAtrasadosLista();
+    }
+    
+    // Recarregar lista negra se estiver na página de lista negra
+    if (document.getElementById('lista-negra-clientes')) {
+      await renderListaNegra();
     }
     
     console.log('Dados recarregados com sucesso!');
@@ -1629,7 +1754,10 @@ window.renderHistoricoEmprestimos = renderHistoricoEmprestimos;
 window.renderClientesLista = renderClientesLista;
 window.renderCobrancasEmAbertoLista = renderCobrancasEmAbertoLista;
 window.renderAtrasadosLista = renderAtrasadosLista;
+window.renderListaNegra = renderListaNegra;
 window.recarregarDadosPagina = recarregarDadosPagina;
+window.adicionarListaNegra = adicionarListaNegra;
+window.removerListaNegra = removerListaNegra;
 
 // Adicionar função para renderizar cobranças pendentes e valor a receber de forma estruturada
 function renderCobrancasResumo(lista, targetId) {
