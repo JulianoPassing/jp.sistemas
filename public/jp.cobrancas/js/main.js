@@ -1297,18 +1297,33 @@ async function renderClientesLista() {
   tbody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
   try {
     const clientes = await apiService.getClientes();
+    const emprestimos = await apiService.getEmprestimos();
     if (!clientes || clientes.length === 0) {
       tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhum cliente encontrado</td></tr>';
       return;
     }
     tbody.innerHTML = '';
     clientes.forEach(cliente => {
+      // Verifica se o cliente tem empréstimo vencido
+      const emprestimosCliente = (emprestimos || []).filter(e => e.cliente_id === cliente.id);
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      let status = cliente.status || 'Ativo';
+      if (status === 'Ativo') {
+        const temVencido = emprestimosCliente.some(e => {
+          if (!e.data_vencimento) return false;
+          const dataVenc = new Date(e.data_vencimento);
+          return dataVenc < hoje && (e.status || '').toLowerCase() !== 'quitado';
+        });
+        if (temVencido) status = 'Em Atraso';
+      }
+      const badgeClass = status === 'Lista Negra' ? 'danger' : (status === 'Em Atraso' ? 'warning' : 'success');
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${cliente.nome || 'N/A'}</td>
         <td>${cliente.cpf_cnpj || '-'}</td>
         <td>${cliente.telefone || '-'}</td>
-        <td><span class="badge badge-${cliente.status === 'Lista Negra' ? 'danger' : 'success'}">${cliente.status || 'Ativo'}</span></td>
+        <td><span class="badge badge-${badgeClass}">${status}</span></td>
         <td>
           <button class="btn btn-primary btn-sm" onclick="viewCliente(${cliente.id})">Ver</button>
           ${cliente.status === 'Lista Negra' 
