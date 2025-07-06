@@ -1,5 +1,5 @@
 // Configurações da API
-const API_BASE_URL = '/api/cobrancas';
+const API_BASE_URL = '/api';
 
 // Estado global da aplicação
 const appState = {
@@ -263,13 +263,14 @@ const dashboardController = {
       'total-clientes': data.clientes?.total_clientes || 0,
       'total-emprestimos': data.emprestimos?.total_emprestimos || 0,
       'valor-receber': data.cobrancas?.valor_total_cobrancas || 0,
-      'clientes-atraso': data.cobrancas?.cobrancas_pendentes || 0
+      'clientes-atraso': data.cobrancas?.cobrancas_pendentes || 0,
+      'total-investido': data.emprestimos?.valor_total_emprestimos || 0
     };
 
     Object.entries(cards).forEach(([id, value]) => {
       const element = document.getElementById(id);
       if (element) {
-        if (id === 'valor-receber') {
+        if (id === 'valor-receber' || id === 'total-investido') {
           // Formatar como moeda
           const formattedValue = new Intl.NumberFormat('pt-BR', {
             style: 'currency',
