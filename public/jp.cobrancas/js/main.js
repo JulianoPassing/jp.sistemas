@@ -1201,10 +1201,11 @@ async function renderHistoricoEmprestimos() {
         valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
         infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
       }
-      const valor = new Intl.NumberFormat('pt-BR', {
+      // Proteção para valores nulos/undefined
+      const valor = !isNaN(valorAtualizado) ? new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
-      }).format(valorAtualizado);
+      }).format(valorAtualizado) : 'R$ 0,00';
       const data = emprestimo.data_emprestimo ? new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR') : '-';
       const vencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-';
       const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : (status === 'QUITADO' ? 'info' : 'secondary')));
@@ -1264,6 +1265,7 @@ async function renderHistoricoEmprestimos() {
       `;
     }
   } catch (err) {
+    console.error('Erro ao carregar empréstimos:', err);
     tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
   }
 }
