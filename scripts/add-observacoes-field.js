@@ -1,17 +1,20 @@
 // Script para adicionar campo observacoes à tabela clientes_cobrancas
 const mysql = require('mysql2/promise');
+const { getCobrancasDatabaseConfig } = require('../database-config.js');
 
 async function addObservacoesField() {
   try {
     console.log('=== ADICIONANDO CAMPO OBSERVAÇÕES ===\n');
     
-    // Configuração do banco
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: 'jpsistemas_cobrancas'
+    // Configuração do banco usando as configurações do sistema
+    const dbConfig = getCobrancasDatabaseConfig();
+    console.log('Configuração do banco:', {
+      host: dbConfig.host,
+      user: dbConfig.user,
+      database: dbConfig.database
     });
+    
+    const connection = await mysql.createConnection(dbConfig);
     
     console.log('1. Verificando se o campo observacoes já existe...');
     
