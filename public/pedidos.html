@@ -1375,7 +1375,7 @@
           }
         }
         if (quantidadeInput && !quantidadeInput.value) quantidadeInput.value = '1';
-        calcularSubtotalItem(itemId);
+        setTimeout(() => calcularSubtotalItem(itemId), 0);
       }
     }
 
