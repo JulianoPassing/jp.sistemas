@@ -114,40 +114,42 @@
       </div>
       <hr>
       <div class="modal-body">
-        <div class="mt-3">
-          <label class="label-primary" for="type">Tipo de Emprestimo</label>
-          <select class="input-primary" id="type" name="type">
-            <option value="" disabled>Nenhum tipo selecionado</option>
-            <option value="fixed">Fixo</option>
-            <option value="in_installments">Parcelado</option>
-          </select>
-        </div>
-
-        <hr class="mt-4 mb-3">
-        
         <form id="transaction-form" method="post" autocomplete="off">
+          <div class="form-group">
+            <label>Cliente (selecione ou preencha manualmente)</label>
+            <select name="clienteId" id="modal-cliente-select" class="form-input">
+              <option value="">Novo cliente (preencher abaixo)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Nome *</label>
+            <input type="text" name="nome" id="modal-nome" class="form-input" required placeholder="Nome do cliente">
+          </div>
+          <div class="form-group">
+            <label>CPF (Opcional)</label>
+            <input type="text" name="cpf" id="modal-cpf" class="form-input" placeholder="CPF do cliente">
+          </div>
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" name="telefone" id="modal-telefone" class="form-input" placeholder="Telefone do cliente">
+          </div>
           <div class="mt-3">
-            <label class="label-primary" for="value">Valor (R$)</label>
-            <input class="input-primary" id="value" type="text" name="valueFormatted" autocomplete="off" placeholder="ex.: 1000">
+            <label class="label-primary" for="type">Tipo de Emprestimo</label>
+            <select class="input-primary" id="type" name="type">
+              <option value="" disabled>Nenhum tipo selecionado</option>
+              <option value="fixed">Fixo</option>
+              <option value="in_installments">Parcelado</option>
+            </select>
           </div>
-
           <div class="flex gap-2 mt-3">
-            <button class="bg-terciary hover:bg-terciary-100 text-white w-full p-2 rounded-lg cursor-pointer" type="button" onclick="setChargeCalcType('fixed')">
-              <span class="font-medium text-center">Valor Fixo (R$)</span>
-            </button>
-            <button class="bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer" type="button" onclick="setChargeCalcType('fixed-installment')">
-              <span class="font-medium text-center">Parcela Fixa (R$)</span>
-            </button>
-            <button class="bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer" type="button" onclick="setChargeCalcType('percentage')">
-              <span class="font-medium text-center">Porcentagem (%)</span>
-            </button>
+            <button type="button" id="btn-tipo-fixo" class="bg-terciary hover:bg-terciary-100 text-white w-full p-2 rounded-lg cursor-pointer">Valor Fixo (R$)</button>
+            <button type="button" id="btn-tipo-parcela-fixa" class="bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer">Parcela Fixa (R$)</button>
+            <button type="button" id="btn-tipo-porcentagem" class="bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer">Porcentagem (%)</button>
           </div>
-
           <div id="final-value-section" class="mt-3 space-y-3">
             <label class="label-primary" for="finalValue">Valor Final de Cobrança (R$)</label>
             <input class="input-primary" id="finalValue" type="text" name="finalValueFormatted" autocomplete="off" placeholder="ex.: 1000">
           </div>
-
           <div class="grid grid-cols-2 gap-3 mt-3">
             <div>
               <label class="label-primary" for="payBy">Qtd. de Parcelas</label>
@@ -164,12 +166,10 @@
               </select>
             </div>
           </div>
-
           <div class="mt-3">
             <label class="label-primary" for="startPaymentsAt">Data da Primeira Parcela</label>
             <input class="input-primary" id="startPaymentsAt" type="date" name="startPaymentsAt" autocomplete="off">
           </div>
-
           <div class="grid grid-cols-4 gap-4 mt-3">
             <div class="col-span-3">
               <label class="label-primary" for="afiliado">Afiliado</label>
@@ -182,11 +182,8 @@
               <input class="input-primary" id="percentageAfiliado" type="number" step=".01" name="percentageAfiliado" autocomplete="off">
             </div>
           </div>
-
           <small class="font-semibold text-terciary text-xs">* Caso seja número decimal utilize ponto, exemplo <strong>(20,5)</strong> deve ser informado <strong>(20.5)</strong>.</small>
-
           <hr class="my-3">
-
           <div>
             <div class="flex justify-between items-center">
               <h3 class="form-header !mb-0">Simulador</h3>
@@ -194,7 +191,6 @@
                 Simular
               </button>
             </div>
-
             <div id="simulate-info" class="mt-3">
               <p class="mt-3 text-terciary text-sm">
                 Para maior facilidade você pode simular as parcelas antes de adicionar o emprestimo.
@@ -210,9 +206,7 @@
               </div>
             </div>
           </div>
-
           <hr class="my-3">
-
           <div class="flex items-center gap-4 mt-5">
             <button type="submit" class="button-primary text-primary disabled:hover:bg-gray-200 disabled:text-gray-400 disabled:bg-gray-200 text-sm w-full text-terciary">
               Adicionar Emprestimo
@@ -228,7 +222,7 @@
   </footer>
   <script src="./js/main.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
       const menuBtn = document.getElementById('mobile-menu-toggle');
       const navWrapper = document.querySelector('.nav-wrapper');
       if (menuBtn && navWrapper) {
@@ -474,6 +468,43 @@
 
       // Fechar modal ao clicar no overlay
       document.querySelector('.modal-overlay').addEventListener('click', closeModal);
+
+      // Carregar clientes para o select
+      let clientes = [];
+      try {
+        clientes = await apiService.getClientes();
+      } catch (e) {
+        clientes = [];
+      }
+      const clienteSelect = document.getElementById('modal-cliente-select');
+      if (clienteSelect) {
+        clienteSelect.innerHTML = '<option value="">Novo cliente (preencher abaixo)</option>' + clientes.map(c => `<option value="${c.id}">${c.nome || c.razao || c.name}</option>`).join('');
+      }
+      // Preencher campos ao selecionar cliente
+      if (clienteSelect) {
+        clienteSelect.addEventListener('change', function() {
+          const selectedId = clienteSelect.value;
+          const nomeInput = document.getElementById('modal-nome');
+          const cpfInput = document.getElementById('modal-cpf');
+          const telefoneInput = document.getElementById('modal-telefone');
+          if (!selectedId) {
+            nomeInput.value = '';
+            cpfInput.value = '';
+            telefoneInput.value = '';
+            nomeInput.readOnly = false;
+            cpfInput.readOnly = false;
+            telefoneInput.readOnly = false;
+          } else {
+            const cliente = clientes.find(c => String(c.id) === String(selectedId));
+            nomeInput.value = cliente?.nome || cliente?.razao || cliente?.name || '';
+            cpfInput.value = cliente?.cpf || cliente?.cpf_cnpj || '';
+            telefoneInput.value = cliente?.telefone || cliente?.phone || '';
+            nomeInput.readOnly = true;
+            cpfInput.readOnly = true;
+            telefoneInput.readOnly = true;
+          }
+        });
+      }
     });
   </script>
 </body>
