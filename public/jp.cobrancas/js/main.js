@@ -1683,12 +1683,28 @@ document.addEventListener('DOMContentLoaded', () => {
             </select>
           </div>
           <div class="form-group">
-            <label>Valor (R$)</label>
+            <label>Tipo de Cálculo</label>
+            <select name="tipoCalculo" id="modal-tipo-calculo" class="form-input">
+              <option value="valor_inicial">Valor Inicial + Juros</option>
+              <option value="valor_final">Valor Final Fixo</option>
+              <option value="parcela_fixa">Valor da Parcela Fixo</option>
+            </select>
+          </div>
+          <div class="form-group" id="grupo-valor-inicial">
+            <label>Valor Inicial (R$)</label>
             <input type="text" name="valor" id="modal-valor" class="form-input" required placeholder="ex.: 1000">
           </div>
-          <div class="form-group">
+          <div class="form-group" id="grupo-valor-final" style="display: none;">
+            <label>Valor Final (R$)</label>
+            <input type="text" name="valorFinal" id="modal-valor-final" class="form-input" placeholder="ex.: 1500">
+          </div>
+          <div class="form-group" id="grupo-valor-parcela" style="display: none;">
+            <label>Valor da Parcela (R$)</label>
+            <input type="text" name="valorParcela" id="modal-valor-parcela" class="form-input" placeholder="ex.: 500">
+          </div>
+          <div class="form-group" id="grupo-porcentagem">
             <label>Porcentagem de Juros (%)</label>
-            <input type="number" name="porcentagem" id="modal-porcentagem" class="form-input" step="0.01" min="0" required placeholder="ex.: 20">
+            <input type="number" name="porcentagem" id="modal-porcentagem" class="form-input" step="0.01" min="0" placeholder="ex.: 20">
           </div>
           <div class="form-group">
             <label>Multa por Atraso (%)</label>
@@ -1744,50 +1760,170 @@ document.addEventListener('DOMContentLoaded', () => {
           telefoneInput.value = cliente?.telefone || cliente?.phone || '';
         }
       });
-      // Máscara de moeda para valor
-      const valorInput = modal.querySelector('#modal-valor');
-      valorInput.addEventListener('input', (e) => {
-        let v = e.target.value.replace(/\D/g, '');
-        v = (parseInt(v, 10) / 100).toFixed(2);
-        e.target.value = v.replace('.', ',');
+      // Controle de exibição dos campos baseado no tipo de cálculo
+      const tipoCalculoSelect = modal.querySelector('#modal-tipo-calculo');
+      const grupoValorInicial = modal.querySelector('#grupo-valor-inicial');
+      const grupoValorFinal = modal.querySelector('#grupo-valor-final');
+      const grupoValorParcela = modal.querySelector('#grupo-valor-parcela');
+      const grupoPorcentagem = modal.querySelector('#grupo-porcentagem');
+      const porcentagemInput = modal.querySelector('#modal-porcentagem');
+      
+      tipoCalculoSelect.addEventListener('change', () => {
+        const tipo = tipoCalculoSelect.value;
+        
+        // Esconder todos os grupos
+        grupoValorInicial.style.display = 'none';
+        grupoValorFinal.style.display = 'none';
+        grupoValorParcela.style.display = 'none';
+        grupoPorcentagem.style.display = 'none';
+        
+        // Mostrar grupos baseado no tipo
+        switch(tipo) {
+          case 'valor_inicial':
+            grupoValorInicial.style.display = 'block';
+            grupoPorcentagem.style.display = 'block';
+            porcentagemInput.required = true;
+            break;
+          case 'valor_final':
+            grupoValorFinal.style.display = 'block';
+            porcentagemInput.required = false;
+            break;
+          case 'parcela_fixa':
+            grupoValorParcela.style.display = 'block';
+            porcentagemInput.required = false;
+            break;
+        }
       });
+      
+      // Máscara de moeda para todos os campos de valor
+      const valorInput = modal.querySelector('#modal-valor');
+      const valorFinalInput = modal.querySelector('#modal-valor-final');
+      const valorParcelaInput = modal.querySelector('#modal-valor-parcela');
+      
+      function aplicarMascaraMoeda(input) {
+        input.addEventListener('input', (e) => {
+          let v = e.target.value.replace(/\D/g, '');
+          v = (parseInt(v, 10) / 100).toFixed(2);
+          e.target.value = v.replace('.', ',');
+        });
+      }
+      
+      aplicarMascaraMoeda(valorInput);
+      aplicarMascaraMoeda(valorFinalInput);
+      aplicarMascaraMoeda(valorParcelaInput);
       // Simulador de parcelas
       const btnSimular = modal.querySelector('#btn-simular');
       const previewDiv = modal.querySelector('#simulador-preview');
       const btnAdicionar = modal.querySelector('#btn-adicionar-emprestimo');
       btnSimular.addEventListener('click', () => {
         // Pega valores do formulário
-        const valor = parseFloat(valorInput.value.replace(',', '.')) || 0;
-        const juros = parseFloat(modal.querySelector('#modal-porcentagem').value) || 0;
+        const tipoCalculo = tipoCalculoSelect.value;
         const parcelas = parseInt(modal.querySelector('#modal-parcelas').value) || 1;
         const tipo = modal.querySelector('#modal-tipo').value;
-        let total = valor;
-        let valorJuros = 0;
+        
+        let valorInicial = 0;
+        let valorFinal = 0;
         let valorParcela = 0;
-        if (tipo === 'parcelado') {
-          valorJuros = valor * (juros / 100);
-          total = valor + valorJuros;
-          valorParcela = total / parcelas;
-        } else {
-          valorJuros = valor * (juros / 100);
-          total = valor + valorJuros;
-          valorParcela = total;
+        let juros = 0;
+        let jurosValor = 0;
+        
+        switch(tipoCalculo) {
+          case 'valor_inicial':
+            valorInicial = parseFloat(valorInput.value.replace(',', '.')) || 0;
+            juros = parseFloat(porcentagemInput.value) || 0;
+            jurosValor = valorInicial * (juros / 100);
+            valorFinal = valorInicial + jurosValor;
+            valorParcela = valorFinal / parcelas;
+            break;
+            
+          case 'valor_final':
+            valorFinal = parseFloat(valorFinalInput.value.replace(',', '.')) || 0;
+            valorParcela = valorFinal / parcelas;
+            // Para valor final fixo, não há juros percentual
+            break;
+            
+          case 'parcela_fixa':
+            valorParcela = parseFloat(valorParcelaInput.value.replace(',', '.')) || 0;
+            valorFinal = valorParcela * parcelas;
+            // Para parcela fixa, não há juros percentual
+            break;
         }
+        
         previewDiv.style.display = 'block';
-        previewDiv.innerHTML = `
-          <div class="simulador-preview-box">
-            <strong>Resumo da Simulação:</strong><br>
-            Valor: <b>R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
-            Juros: <b>${juros}%</b> (R$ ${valorJuros.toLocaleString('pt-BR', {minimumFractionDigits: 2})})<br>
-            Total a pagar: <b>R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
+        let simulacaoHTML = `
+          <div class="simulador-preview-box" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #007bff;">
+            <strong>Resumo da Simulação:</strong><br><br>
+        `;
+        
+        switch(tipoCalculo) {
+          case 'valor_inicial':
+            simulacaoHTML += `
+              Valor Inicial: <b>R$ ${valorInicial.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
+              Juros: <b>${juros}%</b> (R$ ${jurosValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})})<br>
+            `;
+            break;
+            
+          case 'valor_final':
+            simulacaoHTML += `
+              Valor Final Fixo: <b>R$ ${valorFinal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
+            `;
+            break;
+            
+          case 'parcela_fixa':
+            simulacaoHTML += `
+              Valor da Parcela Fixo: <b>R$ ${valorParcela.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
+            `;
+            break;
+        }
+        
+        simulacaoHTML += `
+            Total a pagar: <b>R$ ${valorFinal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
             Nº de Parcelas: <b>${parcelas}</b><br>
             Valor da Parcela: <b>R$ ${valorParcela.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b>
           </div>
         `;
+        
+        previewDiv.innerHTML = simulacaoHTML;
       });
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = Object.fromEntries(new FormData(form).entries());
+        
+        // Validação baseada no tipo de cálculo
+        const tipoCalculo = formData.tipoCalculo;
+        let isValid = true;
+        let errorMessage = '';
+        
+        switch(tipoCalculo) {
+          case 'valor_inicial':
+            if (!formData.valor || parseFloat(formData.valor.replace(',', '.')) <= 0) {
+              isValid = false;
+              errorMessage = 'Preencha o valor inicial corretamente';
+            } else if (!formData.porcentagem || parseFloat(formData.porcentagem) < 0) {
+              isValid = false;
+              errorMessage = 'Preencha a porcentagem de juros corretamente';
+            }
+            break;
+            
+          case 'valor_final':
+            if (!formData.valorFinal || parseFloat(formData.valorFinal.replace(',', '.')) <= 0) {
+              isValid = false;
+              errorMessage = 'Preencha o valor final corretamente';
+            }
+            break;
+            
+          case 'parcela_fixa':
+            if (!formData.valorParcela || parseFloat(formData.valorParcela.replace(',', '.')) <= 0) {
+              isValid = false;
+              errorMessage = 'Preencha o valor da parcela corretamente';
+            }
+            break;
+        }
+        
+        if (!isValid) {
+          ui.showNotification(errorMessage, 'error');
+          return;
+        }
         let cliente_id = formData.clienteId;
         // Se não selecionou cliente, criar cliente
         if (!cliente_id) {
@@ -1829,18 +1965,51 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // Garantir que cliente_id seja inteiro
         cliente_id = parseInt(cliente_id, 10);
+        // Calcular valores baseado no tipo de cálculo
+        const tipoCalculoCalculo = formData.tipoCalculo;
+        let valorInicial = 0;
+        let valorFinal = 0;
+        let valorParcela = 0;
+        let jurosMensal = 0;
+        
+        switch(tipoCalculoCalculo) {
+          case 'valor_inicial':
+            valorInicial = parseFloat(formData.valor.replace(',', '.')) || 0;
+            jurosMensal = parseFloat(formData.porcentagem) || 0;
+            valorFinal = valorInicial * (1 + jurosMensal / 100);
+            valorParcela = valorFinal / parseInt(formData.parcelas);
+            break;
+            
+          case 'valor_final':
+            valorFinal = parseFloat(formData.valorFinal.replace(',', '.')) || 0;
+            valorParcela = valorFinal / parseInt(formData.parcelas);
+            // Para valor final fixo, o valor inicial é o mesmo que o final
+            valorInicial = valorFinal;
+            break;
+            
+          case 'parcela_fixa':
+            valorParcela = parseFloat(formData.valorParcela.replace(',', '.')) || 0;
+            valorFinal = valorParcela * parseInt(formData.parcelas);
+            // Para parcela fixa, o valor inicial é o mesmo que o final
+            valorInicial = valorFinal;
+            break;
+        }
+        
         // Montar payload do empréstimo
         const payload = {
           cliente_id,
-          valor: parseFloat(formData.valor.replace(',', '.')),
+          valor: valorInicial,
+          valor_final: valorFinal,
+          valor_parcela: valorParcela,
           data_emprestimo: formData.dataVencimento,
           data_vencimento: formData.dataVencimento,
-          juros_mensal: formData.porcentagem,
+          juros_mensal: jurosMensal,
           multa_atraso: formData.multa,
           observacoes: formData.observacoes || '',
-          tipo: formData.tipo,
-          parcelas: parseInt(formData.parcelas) || 1,
-          frequencia: formData.frequencia
+          tipo_emprestimo: formData.tipo === 'parcelado' ? 'in_installments' : 'fixed',
+          numero_parcelas: parseInt(formData.parcelas) || 1,
+          frequencia: formData.frequencia,
+          tipo_calculo: tipoCalculoCalculo
         };
         try {
           await apiService.createEmprestimo(payload);

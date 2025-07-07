@@ -434,6 +434,8 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
     const { 
       cliente_id, 
       valor, 
+      valor_final,
+      valor_parcela,
       data_emprestimo, 
       data_vencimento, 
       juros_mensal, 
@@ -442,8 +444,8 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
       tipo_emprestimo = 'fixed',
       numero_parcelas = 1,
       frequencia = 'monthly',
-      valor_parcela = 0,
-      data_primeira_parcela
+      data_primeira_parcela,
+      tipo_calculo
     } = req.body;
     
     // Validação dos dados obrigatórios
@@ -471,42 +473,55 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
     
     console.log('Cliente encontrado:', clienteRows[0]);
     
+    // Calcular valores baseado no tipo de cálculo
+    let valorInicial = parseFloat(valor) || 0;
+    let valorFinalCalculado = parseFloat(valor_final) || valorInicial;
+    let valorParcelaCalculado = parseFloat(valor_parcela) || 0;
+    let jurosMensalFinal = parseFloat(juros_mensal) || 0;
+    
+    // Ajustar valores baseado no tipo de cálculo
+    if (tipo_calculo === 'valor_final' && valor_final) {
+      valorInicial = valorFinalCalculado;
+      valorParcelaCalculado = valorFinalCalculado / parseInt(numero_parcelas);
+    } else if (tipo_calculo === 'parcela_fixa' && valor_parcela) {
+      valorInicial = valorParcelaCalculado * parseInt(numero_parcelas);
+      valorFinalCalculado = valorInicial;
+    } else if (tipo_calculo === 'valor_inicial') {
+      valorFinalCalculado = valorInicial * (1 + jurosMensalFinal / 100);
+      valorParcelaCalculado = valorFinalCalculado / parseInt(numero_parcelas);
+    }
+    
     // Calcular data de vencimento baseada no tipo de empréstimo
     let dataVencimentoFinal = data_vencimento;
     if (tipo_emprestimo === 'in_installments' && data_primeira_parcela) {
       dataVencimentoFinal = data_primeira_parcela;
     }
     
-    // Calcular valor da parcela se não fornecido
-    let valorParcelaFinal = valor_parcela;
-    if (tipo_emprestimo === 'in_installments' && valor_parcela === 0) {
-      valorParcelaFinal = parseFloat(valor) / parseInt(numero_parcelas);
-    }
-    
     console.log('Cliente encontrado, inserindo empréstimo...');
     
     // Inserir empréstimo
     console.log('Tentando inserir empréstimo com dados:', {
-      cliente_id, valor, data_emprestimo, data_vencimento: dataVencimentoFinal, 
-      juros_mensal: juros_mensal || 0, 
+      cliente_id, valor: valorInicial, data_emprestimo, data_vencimento: dataVencimentoFinal, 
+      juros_mensal: jurosMensalFinal, 
       multa_atraso: multa_atraso || 0, 
       observacoes: observacoes || '',
       tipo_emprestimo,
       numero_parcelas,
       frequencia,
-      valor_parcela: valorParcelaFinal
+      valor_parcela: valorParcelaCalculado,
+      valor_final: valorFinalCalculado
     });
     
     const [emprestimoResult] = await connection.execute(`
       INSERT INTO emprestimos (
         cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes,
-        tipo_emprestimo, numero_parcelas, frequencia, valor_parcela
+        tipo_emprestimo, numero_parcelas, frequencia, valor_parcela, tipo_calculo
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
-      cliente_id, valor, data_emprestimo, dataVencimentoFinal, 
-      juros_mensal || 0, multa_atraso || 0, observacoes || '',
-      tipo_emprestimo, numero_parcelas, frequencia, valorParcelaFinal
+      cliente_id, valorInicial, data_emprestimo, dataVencimentoFinal, 
+      jurosMensalFinal, multa_atraso || 0, observacoes || '',
+      tipo_emprestimo, numero_parcelas, frequencia, valorParcelaCalculado, tipo_calculo || 'valor_inicial'
     ]);
     
     console.log('Empréstimo inserido com ID:', emprestimoResult.insertId);
@@ -541,7 +556,7 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
         parcelas.push([
           emprestimoResult.insertId,
           i,
-          valorParcelaFinal,
+          valorParcelaCalculado,
           dataVencimentoParcela.toISOString().split('T')[0]
         ]);
       }
@@ -569,15 +584,15 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
     console.log('Tentando criar cobrança com dados:', {
       emprestimo_id: emprestimoResult.insertId,
       cliente_id,
-      valor_original: valor,
-      valor_atualizado: valor,
+      valor_original: valorFinalCalculado,
+      valor_atualizado: valorFinalCalculado,
       data_vencimento: dataVencimentoFinal
     });
     
     await connection.execute(`
       INSERT INTO cobrancas (emprestimo_id, cliente_id, valor_original, valor_atualizado, data_vencimento, status)
       VALUES (?, ?, ?, ?, ?, 'Pendente')
-    `, [emprestimoResult.insertId, cliente_id, valor, valor, dataVencimentoFinal]);
+    `, [emprestimoResult.insertId, cliente_id, valorFinalCalculado, valorFinalCalculado, dataVencimentoFinal]);
     
     console.log('Cobrança criada automaticamente');
     
