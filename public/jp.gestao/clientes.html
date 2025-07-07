@@ -143,7 +143,7 @@
             tbody.innerHTML = filteredData.map(cliente => `
                 <tr>
                     <td>
-                        <div class="font-semibold">${cliente.nome}</div>
+                        <div class="font-semibold">${cliente.razao}</div>
                         <div class="text-sm text-gray-500">${cliente.cpf || 'CPF não informado'}</div>
                     </td>
                     <td>${cliente.telefone || 'Não informado'}</td>
@@ -184,7 +184,7 @@
             filteredData = clientesData.filter(cliente => {
                 // Filtro de busca
                 const matchesSearch = !searchTerm || 
-                    cliente.nome.toLowerCase().includes(searchTerm) ||
+                    (cliente.razao && cliente.razao.toLowerCase().includes(searchTerm)) ||
                     (cliente.email && cliente.email.toLowerCase().includes(searchTerm)) ||
                     (cliente.telefone && cliente.telefone.includes(searchTerm)) ||
                     (cliente.cpf && cliente.cpf.includes(searchTerm));
@@ -296,7 +296,7 @@
                 <div>
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <strong>Nome:</strong> ${cliente.nome}
+                            <strong>Nome:</strong> ${cliente.razao}
                         </div>
                         <div>
                             <strong>CPF:</strong> ${cliente.cpf || 'Não informado'}
@@ -343,7 +343,7 @@
                     ` : ''}
                 </div>
             `;
-            showModal(`Cliente: ${cliente.nome}`, content);
+            showModal(`Cliente: ${cliente.razao}`, content);
         }
         
         // Editar cliente
@@ -357,7 +357,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="form-group">
                             <label for="edit_nome" class="form-label">Nome Completo *</label>
-                            <input type="text" id="edit_nome" name="nome" class="form-input" value="${cliente.nome}" required>
+                            <input type="text" id="edit_nome" name="nome" class="form-input" value="${cliente.razao}" required>
                         </div>
                         <div class="form-group">
                             <label for="edit_cpf" class="form-label">CPF</label>
@@ -446,7 +446,7 @@
             const cliente = clientesData.find(c => c.id === id);
             if (!cliente) return;
             
-            confirmAction(`Tem certeza que deseja excluir o cliente "${cliente.nome}"?`, async () => {
+            confirmAction(`Tem certeza que deseja excluir o cliente "${cliente.razao}"?`, async () => {
                 try {
                     const response = await fetch(`/api/clientes/${id}`, {
                         method: 'DELETE',
@@ -475,7 +475,7 @@
             }
             
             const exportData = filteredData.map(cliente => ({
-                Nome: cliente.nome,
+                Nome: cliente.razao,
                 CPF: cliente.cpf || '',
                 Telefone: cliente.telefone || '',
                 Email: cliente.email || '',
