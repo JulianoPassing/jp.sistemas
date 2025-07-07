@@ -1220,7 +1220,7 @@
         const produto = produtos.find(p => p.id == produtoId);
         const preco = Number(produto?.preco_venda ?? produto?.preco ?? produto?.preco_custo ?? 0);
         if (produto) {
-          if (precoInput) precoInput.value = preco.toFixed(2);
+          if (precoInput) precoInput.value = preco.toFixed(2).replace(',', '.');
           if (nomeInput) nomeInput.value = produto.nome || '';
           calcularSubtotalItem(itemId);
         } else {
@@ -1329,7 +1329,7 @@
       const produtosOptions = produtos && produtos.length > 0 
         ? produtos.map(produto => {
             const preco = Number(produto.preco_venda ?? produto.preco ?? produto.preco_custo ?? 0);
-            return `<option value="${produto.id || ''}">${produto.nome || 'Produto sem nome'} - R$ ${!isNaN(preco) ? preco.toFixed(2) : '0.00'}</option>`;
+            return `<option value="${produto.id || ''}">${produto.nome || 'Produto sem nome'} - R$ ${!isNaN(preco) ? preco.toFixed(2).replace(',', '.') : '0.00'}</option>`;
           }).join('')
         : '<option value="">Nenhum produto disponível</option>';
 
@@ -1354,7 +1354,7 @@
           <div>
             <button type="button" class="btn btn-sm btn-danger" onclick="removerItem('${itemId}')">
               <i class="fas fa-trash"></i>
-            </button>
+          </button>
           </div>
         </div>
       `;
@@ -1371,7 +1371,7 @@
           if (produtoId) {
             const produto = produtos.find(p => p.id == produtoId);
             const preco = Number(produto?.preco_venda ?? produto?.preco ?? produto?.preco_custo ?? 0);
-            precoInput.value = preco.toFixed(2);
+            precoInput.value = preco.toFixed(2).replace(',', '.');
           }
         }
         if (quantidadeInput && !quantidadeInput.value) quantidadeInput.value = '1';
