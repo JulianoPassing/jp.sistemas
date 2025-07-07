@@ -399,29 +399,45 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
       multa_atraso: multa_atraso || 0, 
       observacoes: observacoes || ''
     });
-    
     const [emprestimoResult] = await connection.execute(`
       INSERT INTO emprestimos (cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal || 0, multa_atraso || 0, observacoes || '']);
-    
     console.log('Empréstimo inserido com ID:', emprestimoResult.insertId);
-    
-    // Criar cobrança automaticamente
-    console.log('Tentando criar cobrança com dados:', {
-      emprestimo_id: emprestimoResult.insertId,
-      cliente_id,
-      valor_original: valor,
-      valor_atualizado: valor,
-      data_vencimento
-    });
-    
-    await connection.execute(`
-      INSERT INTO cobrancas (emprestimo_id, cliente_id, valor_original, valor_atualizado, data_vencimento, status)
-      VALUES (?, ?, ?, ?, ?, 'Pendente')
-    `, [emprestimoResult.insertId, cliente_id, valor, valor, data_vencimento]);
-    
-    console.log('Cobrança criada automaticamente');
+
+    // NOVA LÓGICA: Parcelamento
+    const { numero_parcelas, frequencia, valor_final } = req.body;
+    if (numero_parcelas && parseInt(numero_parcelas) > 1) {
+      // Parcelado
+      const nParcelas = parseInt(numero_parcelas);
+      const freq = frequencia || 'monthly';
+      const valorTotal = valor_final ? parseFloat(valor_final) : parseFloat(valor);
+      const valorParcela = Math.round((valorTotal / nParcelas) * 100) / 100;
+      let dataVenc = new Date(data_vencimento);
+      for (let i = 0; i < nParcelas; i++) {
+        // Calcular data de vencimento da parcela
+        let vencimento = new Date(dataVenc);
+        if (i > 0) {
+          if (freq === 'monthly') vencimento.setMonth(vencimento.getMonth() + i);
+          else if (freq === 'biweekly') vencimento.setDate(vencimento.getDate() + 14 * i);
+          else if (freq === 'weekly') vencimento.setDate(vencimento.getDate() + 7 * i);
+          else if (freq === 'daily') vencimento.setDate(vencimento.getDate() + 1 * i);
+        }
+        const vencStr = vencimento.toISOString().split('T')[0];
+        await connection.execute(`
+          INSERT INTO cobrancas (emprestimo_id, cliente_id, valor_original, valor_atualizado, data_vencimento, status)
+          VALUES (?, ?, ?, ?, ?, 'Pendente')
+        `, [emprestimoResult.insertId, cliente_id, valorParcela, valorParcela, vencStr]);
+      }
+      console.log('Cobranças parceladas criadas');
+    } else {
+      // Fixo (1 parcela)
+      await connection.execute(`
+        INSERT INTO cobrancas (emprestimo_id, cliente_id, valor_original, valor_atualizado, data_vencimento, status)
+        VALUES (?, ?, ?, ?, ?, 'Pendente')
+      `, [emprestimoResult.insertId, cliente_id, valor, valor, data_vencimento]);
+      console.log('Cobrança criada automaticamente');
+    }
     
     await connection.end();
     res.json({ id: emprestimoResult.insertId, message: 'Empréstimo criado com sucesso' });
