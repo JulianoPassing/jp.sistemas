@@ -3,12 +3,290 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JP-Cobranças - Histórico de Empréstimos</title>
+  <title>JP-Cobranças - Sistema de Empréstimos</title>
   <link rel="icon" type="image/png" href="https://i.imgur.com/6N82fk2.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css">
+  <style>
+    /* Estilos modernos inspirados no EasierControl */
+    .section-primary {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    }
+
+    .form-header {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #061058;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .form-header-modal {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #061058;
+      margin-bottom: 1rem;
+    }
+
+    .label-primary {
+      display: block;
+      font-weight: 600;
+      color: #061058;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .input-primary {
+      width: 100%;
+      border-radius: 0.375rem;
+      border: 1px solid #6b7280;
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+      line-height: 1.5rem;
+      background-color: #fff;
+      transition: all 0.2s ease;
+    }
+
+    .input-primary:focus {
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+      border-color: #1c64f2;
+      box-shadow: 0 0 0 3px rgb(28 100 242 / 0.1);
+    }
+
+    .button-primary {
+      background-color: #061058;
+      color: white;
+      border: none;
+      border-radius: 0.375rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .button-primary:hover {
+      background-color: #0d2662;
+    }
+
+    .button-primary:disabled {
+      background-color: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    /* Tipos de empréstimo com design moderno */
+    .tipo-emprestimo-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .tipo-option {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .tipo-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .tipo-option label {
+      display: block;
+      padding: 1rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 0.5rem;
+      text-align: center;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background-color: #fff;
+      color: #374151;
+    }
+
+    .tipo-option input[type="radio"]:checked + label {
+      border-color: #061058;
+      background-color: #061058;
+      color: white;
+    }
+
+    .tipo-option:hover label {
+      border-color: #061058;
+    }
+
+    /* Grid responsivo */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    /* Simulação */
+    .simulacao-container {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      display: none;
+    }
+
+    .simulacao-container.show {
+      display: block;
+    }
+
+    .simulacao-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .simulacao-item {
+      text-align: center;
+      padding: 1rem;
+      background: white;
+      border-radius: 0.375rem;
+      border: 1px solid #e5e7eb;
+    }
+
+    .simulacao-label {
+      font-size: 0.75rem;
+      color: #6b7280;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .simulacao-value {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #061058;
+    }
+
+    /* Botões de ação */
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .btn-secondary {
+      background-color: #6b7280;
+      color: white;
+      border: none;
+      border-radius: 0.375rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background-color: #4b5563;
+    }
+
+    .btn-success {
+      background-color: #10b981;
+      color: white;
+      border: none;
+      border-radius: 0.375rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-success:hover {
+      background-color: #059669;
+    }
+
+    /* Cliente info */
+    .cliente-info {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .cliente-info h4 {
+      margin: 0 0 0.5rem 0;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .cliente-info p {
+      margin: 0.25rem 0;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .tipo-emprestimo-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .form-actions {
+        flex-direction: column;
+      }
+      
+      .simulacao-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* Loading states */
+    .loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #061058;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body class="app-layout">
   <header>
@@ -31,17 +309,123 @@
       </div>
     </div>
   </header>
+  
   <main>
     <div class="container">
       <div class="dashboard-header">
         <div class="welcome-message" id="welcomeMessage">Bem-vindo(a)!</div>
-        <div class="dashboard-title">Histórico de Empréstimos</div>
+        <div class="dashboard-title">Sistema de Empréstimos</div>
         <div class="dashboard-subtitle">
-          Visualize todo o histórico de empréstimos do sistema.
+          Gerencie empréstimos com diferentes tipos de cálculo e simulações avançadas.
         </div>
       </div>
+
+      <!-- Formulário de Novo Empréstimo -->
+      <div class="section-primary" id="emprestimoForm" style="display: none;">
+        <div class="form-header">Novo Empréstimo</div>
+        
+        <form id="novoEmprestimoForm">
+          <!-- Seção: Informações do Cliente -->
+          <div class="form-group">
+            <label class="label-primary">Cliente</label>
+            <select name="clienteId" id="clienteSelect" class="input-primary" required>
+              <option value="">Selecione um cliente</option>
+            </select>
+          </div>
+
+          <div class="cliente-info" id="clienteInfo" style="display: none;">
+            <h4>Informações do Cliente Selecionado</h4>
+            <p><strong>Nome:</strong> <span id="infoNome"></span></p>
+            <p><strong>CPF/CNPJ:</strong> <span id="infoCpf"></span></p>
+            <p><strong>Telefone:</strong> <span id="infoTelefone"></span></p>
+          </div>
+
+          <!-- Seção: Tipo de Empréstimo -->
+          <div class="form-group">
+            <label class="label-primary">Tipo de Empréstimo</label>
+            <div class="tipo-emprestimo-container">
+              <div class="tipo-option">
+                <input type="radio" id="tipo-fixo" name="tipoEmprestimo" value="fixo" checked>
+                <label for="tipo-fixo">Fixo</label>
+              </div>
+              <div class="tipo-option">
+                <input type="radio" id="tipo-parcelado-valor-fixo" name="tipoEmprestimo" value="parcelado-valor-fixo">
+                <label for="tipo-parcelado-valor-fixo">Parcelado - Valor Fixo</label>
+              </div>
+              <div class="tipo-option">
+                <input type="radio" id="tipo-parcelado-parcela-fixa" name="tipoEmprestimo" value="parcelado-parcela-fixa">
+                <label for="tipo-parcelado-parcela-fixa">Parcelado - Parcela Fixa</label>
+              </div>
+              <div class="tipo-option">
+                <input type="radio" id="tipo-parcelado-porcentagem" name="tipoEmprestimo" value="parcelado-porcentagem">
+                <label for="tipo-parcelado-porcentagem">Parcelado - Porcentagem</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Seção: Valores e Condições -->
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="label-primary">Valor Principal (R$)</label>
+              <input type="text" name="valorPrincipal" id="valorPrincipal" class="input-primary" placeholder="0,00" required>
+            </div>
+            <div class="form-group">
+              <label class="label-primary">Taxa de Juros (% ao mês)</label>
+              <input type="number" name="taxaJuros" id="taxaJuros" class="input-primary" step="0.01" min="0" placeholder="0,00" required>
+            </div>
+            <div class="form-group">
+              <label class="label-primary">Multa por Atraso (% ao dia)</label>
+              <input type="number" name="multaAtraso" id="multaAtraso" class="input-primary" step="0.01" min="0" placeholder="0,00" required>
+            </div>
+            <div class="form-group">
+              <label class="label-primary">Número de Parcelas</label>
+              <input type="number" name="numeroParcelas" id="numeroParcelas" class="input-primary" min="1" value="1" required>
+            </div>
+            <div class="form-group">
+              <label class="label-primary">Data de Vencimento</label>
+              <input type="date" name="dataVencimento" id="dataVencimento" class="input-primary" required>
+            </div>
+            <div class="form-group">
+              <label class="label-primary">Frequência de Pagamento</label>
+              <select name="frequencia" id="frequencia" class="input-primary">
+                <option value="mensal">Mensal</option>
+                <option value="quinzenal">Quinzenal</option>
+                <option value="semanal">Semanal</option>
+                <option value="diario">Diário</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Seção: Campos específicos por tipo -->
+          <div id="camposEspecificos">
+            <!-- Campos específicos serão inseridos dinamicamente -->
+          </div>
+
+          <!-- Seção: Observações -->
+          <div class="form-group">
+            <label class="label-primary">Observações</label>
+            <textarea name="observacoes" id="observacoes" class="input-primary" rows="3" placeholder="Observações adicionais sobre o empréstimo..."></textarea>
+          </div>
+
+          <!-- Botões de ação -->
+          <div class="form-actions">
+            <button type="button" id="btnSimular" class="btn-secondary">Simular Empréstimo</button>
+            <button type="button" id="btnCancelar" class="btn-secondary">Cancelar</button>
+            <button type="submit" id="btnSalvar" class="button-primary">Salvar Empréstimo</button>
+          </div>
+        </form>
+
+        <!-- Preview da Simulação -->
+        <div class="simulacao-container" id="simulacaoPreview">
+          <div class="form-header-modal">Resumo da Simulação</div>
+          <div class="simulacao-grid" id="simulacaoGrid">
+            <!-- Dados da simulação serão inseridos aqui -->
+          </div>
+        </div>
+      </div>
+
       <!-- Tabela de Histórico de Empréstimos -->
-      <div class="section">
+      <div class="section-primary">
         <div class="section-header">
           <h3 class="section-title">Empréstimos</h3>
           <button id="toggleForm" class="btn btn-primary">Novo Empréstimo</button>
@@ -82,6 +466,7 @@
               <tr>
                 <th>Cliente</th>
                 <th>Valor</th>
+                <th>Tipo</th>
                 <th>Data Empréstimo</th>
                 <th>Vencimento</th>
                 <th>Status</th>
@@ -90,7 +475,7 @@
             </thead>
             <tbody id="historico-emprestimos">
               <tr>
-                <td colspan="6" class="text-center text-gray-500">Carregando...</td>
+                <td colspan="7" class="text-center text-gray-500">Carregando...</td>
               </tr>
             </tbody>
           </table>
@@ -98,9 +483,11 @@
       </div>
     </div>
   </main>
+  
   <footer class="text-center p-4 mt-8">
     © 2024 JP-Cobranças. Todos os direitos reservados.
   </footer>
+  
   <script src="./js/main.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -157,7 +544,7 @@
         if (!tbody) return;
         
         if (filteredEmprestimos.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
           return;
         }
         
@@ -167,6 +554,7 @@
           row.innerHTML = `
             <td>${emp.cliente_nome || 'N/A'}</td>
             <td>R$ ${utils.formatCurrency(emp.valor || 0)}</td>
+            <td>${emp.tipo_emprestimo || 'Fixo'}</td>
             <td>${emp.data_emprestimo ? utils.formatDate(emp.data_emprestimo) : '-'}</td>
             <td>${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</td>
             <td><span class="badge badge-${getStatusBadgeClass(emp.status)}">${emp.status || 'N/A'}</span></td>
@@ -230,11 +618,325 @@
           console.error('Erro ao carregar empréstimos:', err);
           const tbody = document.getElementById('historico-emprestimos');
           if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
           }
         }
       };
+
+      // Inicializar formulário de novo empréstimo
+      initNovoEmprestimoForm();
     });
+
+    // Função para inicializar o formulário de novo empréstimo
+    function initNovoEmprestimoForm() {
+      const toggleFormBtn = document.getElementById('toggleForm');
+      const emprestimoForm = document.getElementById('emprestimoForm');
+      const novoEmprestimoForm = document.getElementById('novoEmprestimoForm');
+      const btnSimular = document.getElementById('btnSimular');
+      const btnCancelar = document.getElementById('btnCancelar');
+      const clienteSelect = document.getElementById('clienteSelect');
+      const tipoEmprestimoInputs = document.querySelectorAll('input[name="tipoEmprestimo"]');
+      const camposEspecificos = document.getElementById('camposEspecificos');
+      const simulacaoPreview = document.getElementById('simulacaoPreview');
+
+      // Toggle do formulário
+      toggleFormBtn.addEventListener('click', async () => {
+        if (emprestimoForm.style.display === 'none') {
+          emprestimoForm.style.display = 'block';
+          toggleFormBtn.textContent = 'Fechar Formulário';
+          await carregarClientes();
+          setDataVencimentoPadrao();
+        } else {
+          emprestimoForm.style.display = 'none';
+          toggleFormBtn.textContent = 'Novo Empréstimo';
+          resetForm();
+        }
+      });
+
+      // Carregar clientes
+      async function carregarClientes() {
+        try {
+          const clientes = await apiService.getClientes();
+          clienteSelect.innerHTML = '<option value="">Selecione um cliente</option>';
+          clientes.forEach(cliente => {
+            const option = document.createElement('option');
+            option.value = cliente.id;
+            option.textContent = cliente.nome || cliente.razao || cliente.name;
+            clienteSelect.appendChild(option);
+          });
+        } catch (error) {
+          console.error('Erro ao carregar clientes:', error);
+        }
+      }
+
+      // Preencher informações do cliente selecionado
+      clienteSelect.addEventListener('change', async () => {
+        const clienteId = clienteSelect.value;
+        const clienteInfo = document.getElementById('clienteInfo');
+        
+        if (!clienteId) {
+          clienteInfo.style.display = 'none';
+          return;
+        }
+
+        try {
+          const clientes = await apiService.getClientes();
+          const cliente = clientes.find(c => c.id == clienteId);
+          
+          if (cliente) {
+            document.getElementById('infoNome').textContent = cliente.nome || cliente.razao || cliente.name || '';
+            document.getElementById('infoCpf').textContent = cliente.cpf || cliente.cpf_cnpj || '';
+            document.getElementById('infoTelefone').textContent = cliente.telefone || cliente.phone || '';
+            
+            clienteInfo.style.display = 'block';
+          }
+        } catch (error) {
+          console.error('Erro ao buscar cliente:', error);
+        }
+      });
+
+      // Mudança no tipo de empréstimo
+      tipoEmprestimoInputs.forEach(input => {
+        input.addEventListener('change', () => {
+          atualizarCamposEspecificos();
+        });
+      });
+
+      // Atualizar campos específicos baseado no tipo
+      function atualizarCamposEspecificos() {
+        const tipoSelecionado = document.querySelector('input[name="tipoEmprestimo"]:checked').value;
+        let camposHTML = '';
+
+        switch (tipoSelecionado) {
+          case 'parcelado-valor-fixo':
+            camposHTML = `
+              <div class="form-group">
+                <label class="label-primary">Valor da Parcela (R$)</label>
+                <input type="text" name="valorParcela" id="valorParcela" class="input-primary" placeholder="0,00">
+              </div>
+            `;
+            break;
+          case 'parcelado-parcela-fixa':
+            camposHTML = `
+              <div class="form-group">
+                <label class="label-primary">Valor da Parcela (R$)</label>
+                <input type="text" name="valorParcelaFixa" id="valorParcelaFixa" class="input-primary" placeholder="0,00">
+              </div>
+            `;
+            break;
+          case 'parcelado-porcentagem':
+            camposHTML = `
+              <div class="form-group">
+                <label class="label-primary">Porcentagem de Juros Total (%)</label>
+                <input type="number" name="porcentagemJuros" id="porcentagemJuros" class="input-primary" step="0.01" min="0" placeholder="0,00">
+              </div>
+            `;
+            break;
+          default:
+            camposHTML = `
+              <div class="form-group">
+                <label class="label-primary">Valor Total com Juros (R$)</label>
+                <input type="text" name="valorTotal" id="valorTotal" class="input-primary" placeholder="0,00" readonly>
+              </div>
+            `;
+        }
+
+        camposEspecificos.innerHTML = camposHTML;
+      }
+
+      // Simular empréstimo
+      btnSimular.addEventListener('click', () => {
+        simularEmprestimo();
+      });
+
+      function simularEmprestimo() {
+        const valorPrincipal = parseFloat(document.getElementById('valorPrincipal').value.replace(',', '.')) || 0;
+        const taxaJuros = parseFloat(document.getElementById('taxaJuros').value) || 0;
+        const numeroParcelas = parseInt(document.getElementById('numeroParcelas').value) || 1;
+        const tipoSelecionado = document.querySelector('input[name="tipoEmprestimo"]:checked').value;
+
+        let simulacao = {
+          valorPrincipal: valorPrincipal,
+          taxaJuros: taxaJuros,
+          numeroParcelas: numeroParcelas,
+          tipo: tipoSelecionado
+        };
+
+        switch (tipoSelecionado) {
+          case 'fixo':
+            const jurosTotal = valorPrincipal * (taxaJuros / 100);
+            simulacao.valorTotal = valorPrincipal + jurosTotal;
+            simulacao.valorParcela = simulacao.valorTotal;
+            simulacao.jurosTotal = jurosTotal;
+            break;
+          case 'parcelado-valor-fixo':
+            const valorParcela = parseFloat(document.getElementById('valorParcela').value.replace(',', '.')) || 0;
+            simulacao.valorParcela = valorParcela;
+            simulacao.valorTotal = valorParcela * numeroParcelas;
+            simulacao.jurosTotal = simulacao.valorTotal - valorPrincipal;
+            break;
+          case 'parcelado-parcela-fixa':
+            const valorParcelaFixa = parseFloat(document.getElementById('valorParcelaFixa').value.replace(',', '.')) || 0;
+            simulacao.valorParcela = valorParcelaFixa;
+            simulacao.valorTotal = valorParcelaFixa * numeroParcelas;
+            simulacao.jurosTotal = simulacao.valorTotal - valorPrincipal;
+            break;
+          case 'parcelado-porcentagem':
+            const porcentagemJuros = parseFloat(document.getElementById('porcentagemJuros').value) || 0;
+            const jurosPorcentagem = valorPrincipal * (porcentagemJuros / 100);
+            simulacao.valorTotal = valorPrincipal + jurosPorcentagem;
+            simulacao.valorParcela = simulacao.valorTotal / numeroParcelas;
+            simulacao.jurosTotal = jurosPorcentagem;
+            break;
+        }
+
+        exibirSimulacao(simulacao);
+      }
+
+      function exibirSimulacao(simulacao) {
+        const simulacaoGrid = document.getElementById('simulacaoGrid');
+        simulacaoGrid.innerHTML = `
+          <div class="simulacao-item">
+            <div class="simulacao-label">Valor Principal</div>
+            <div class="simulacao-value">R$ ${simulacao.valorPrincipal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+          </div>
+          <div class="simulacao-item">
+            <div class="simulacao-label">Juros Total</div>
+            <div class="simulacao-value">R$ ${(simulacao.jurosTotal || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+          </div>
+          <div class="simulacao-item">
+            <div class="simulacao-label">Valor Total</div>
+            <div class="simulacao-value">R$ ${simulacao.valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+          </div>
+          <div class="simulacao-item">
+            <div class="simulacao-label">Valor da Parcela</div>
+            <div class="simulacao-value">R$ ${simulacao.valorParcela.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+          </div>
+          <div class="simulacao-item">
+            <div class="simulacao-label">Nº de Parcelas</div>
+            <div class="simulacao-value">${simulacao.numeroParcelas}</div>
+          </div>
+          <div class="simulacao-item">
+            <div class="simulacao-label">Tipo</div>
+            <div class="simulacao-value">${getTipoDisplayName(simulacao.tipo)}</div>
+          </div>
+        `;
+
+        simulacaoPreview.classList.add('show');
+      }
+
+      function getTipoDisplayName(tipo) {
+        const tipos = {
+          'fixo': 'Fixo',
+          'parcelado-valor-fixo': 'Parcelado - Valor Fixo',
+          'parcelado-parcela-fixa': 'Parcelado - Parcela Fixa',
+          'parcelado-porcentagem': 'Parcelado - Porcentagem'
+        };
+        return tipos[tipo] || tipo;
+      }
+
+      // Cancelar formulário
+      btnCancelar.addEventListener('click', () => {
+        resetForm();
+        document.getElementById('emprestimoForm').style.display = 'none';
+        document.getElementById('toggleForm').textContent = 'Novo Empréstimo';
+      });
+
+      // Reset do formulário
+      function resetForm() {
+        novoEmprestimoForm.reset();
+        document.getElementById('clienteInfo').style.display = 'none';
+        simulacaoPreview.classList.remove('show');
+        atualizarCamposEspecificos();
+      }
+
+      // Definir data de vencimento padrão (30 dias)
+      function setDataVencimentoPadrao() {
+        const hoje = new Date();
+        const vencimento = new Date(hoje);
+        vencimento.setDate(hoje.getDate() + 30);
+        
+        const dataVencimento = document.getElementById('dataVencimento');
+        dataVencimento.value = vencimento.toISOString().split('T')[0];
+      }
+
+      // Máscara de moeda para campos de valor
+      function aplicarMascaraMoeda(elemento) {
+        elemento.addEventListener('input', (e) => {
+          let valor = e.target.value.replace(/\D/g, '');
+          valor = (parseInt(valor, 10) / 100).toFixed(2);
+          e.target.value = valor.replace('.', ',');
+        });
+      }
+
+      // Aplicar máscaras
+      aplicarMascaraMoeda(document.getElementById('valorPrincipal'));
+      
+      // Atualizar campos específicos inicialmente
+      atualizarCamposEspecificos();
+
+      // Submit do formulário
+      novoEmprestimoForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(novoEmprestimoForm);
+        const dados = Object.fromEntries(formData.entries());
+        
+        // Validações básicas
+        if (!dados.clienteId) {
+          alert('Selecione um cliente');
+          return;
+        }
+
+        if (!dados.valorPrincipal || parseFloat(dados.valorPrincipal.replace(',', '.')) <= 0) {
+          alert('Informe um valor principal válido');
+          return;
+        }
+
+        try {
+          // Preparar dados do empréstimo
+          const emprestimoData = {
+            cliente_id: parseInt(dados.clienteId),
+            valor: parseFloat(dados.valorPrincipal.replace(',', '.')),
+            data_emprestimo: dados.dataVencimento,
+            data_vencimento: dados.dataVencimento,
+            juros_mensal: parseFloat(dados.taxaJuros) || 0,
+            multa_atraso: parseFloat(dados.multaAtraso) || 0,
+            tipo_emprestimo: dados.tipoEmprestimo,
+            numero_parcelas: parseInt(dados.numeroParcelas) || 1,
+            frequencia: dados.frequencia || 'mensal',
+            observacoes: dados.observacoes || ''
+          };
+
+          // Adicionar campos específicos baseado no tipo
+          switch (dados.tipoEmprestimo) {
+            case 'parcelado-valor-fixo':
+              emprestimoData.valor_parcela = parseFloat(dados.valorParcela?.replace(',', '.')) || 0;
+              break;
+            case 'parcelado-parcela-fixa':
+              emprestimoData.valor_parcela_fixa = parseFloat(dados.valorParcelaFixa?.replace(',', '.')) || 0;
+              break;
+            case 'parcelado-porcentagem':
+              emprestimoData.porcentagem_juros = parseFloat(dados.porcentagemJuros) || 0;
+              break;
+          }
+
+          await apiService.createEmprestimo(emprestimoData);
+          
+          alert('Empréstimo criado com sucesso!');
+          resetForm();
+          document.getElementById('emprestimoForm').style.display = 'none';
+          document.getElementById('toggleForm').textContent = 'Novo Empréstimo';
+          
+          // Recarregar lista de empréstimos
+          renderHistoricoEmprestimos();
+          
+        } catch (error) {
+          console.error('Erro ao criar empréstimo:', error);
+          alert('Erro ao criar empréstimo. Tente novamente.');
+        }
+      });
+    }
   </script>
 </body>
 </html> 
