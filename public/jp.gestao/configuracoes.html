@@ -93,56 +93,6 @@
             document.getElementById('welcomeMessage').textContent = `Bem-vindo(a), ${capitalizedUsername}!`;
         }
         
-        // Carregar configurações
-        function loadConfiguracoes() {
-            // Carregar configurações salvas
-            const modoEscuro = localStorage.getItem('modoEscuro') === 'true';
-            const notificacoesPush = localStorage.getItem('notificacoesPush') !== 'false';
-            const autoRefresh = localStorage.getItem('autoRefresh') === 'true';
-            const moeda = localStorage.getItem('moeda') || 'BRL';
-            const fusoHorario = localStorage.getItem('fusoHorario') || 'America/Sao_Paulo';
-            const idioma = localStorage.getItem('idioma') || 'pt-BR';
-            
-            // Aplicar configurações
-            document.getElementById('modoEscuro').checked = modoEscuro;
-            document.getElementById('notificacoesPush').checked = notificacoesPush;
-            document.getElementById('autoRefresh').checked = autoRefresh;
-            document.getElementById('moeda').value = moeda;
-            document.getElementById('fusoHorario').value = fusoHorario;
-            document.getElementById('idioma').value = idioma;
-            
-            // Aplicar modo escuro se ativado
-            if (modoEscuro) {
-                document.body.classList.add('dark-mode');
-            }
-        }
-        
-        // Salvar configurações
-        function saveConfiguracoes() {
-            const modoEscuro = document.getElementById('modoEscuro').checked;
-            const notificacoesPush = document.getElementById('notificacoesPush').checked;
-            const autoRefresh = document.getElementById('autoRefresh').checked;
-            const moeda = document.getElementById('moeda').value;
-            const fusoHorario = document.getElementById('fusoHorario').value;
-            const idioma = document.getElementById('idioma').value;
-            
-            localStorage.setItem('modoEscuro', modoEscuro);
-            localStorage.setItem('notificacoesPush', notificacoesPush);
-            localStorage.setItem('autoRefresh', autoRefresh);
-            localStorage.setItem('moeda', moeda);
-            localStorage.setItem('fusoHorario', fusoHorario);
-            localStorage.setItem('idioma', idioma);
-            
-            // Aplicar modo escuro
-            if (modoEscuro) {
-                document.body.classList.add('dark-mode');
-            } else {
-                document.body.classList.remove('dark-mode');
-            }
-            
-            showNotification('Configurações salvas com sucesso!', 'success');
-        }
-        
         // Carregar e salvar informações da empresa
         async function carregarEmpresa() {
             try {
@@ -195,13 +145,6 @@
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
             updateWelcomeMessage();
-            loadConfiguracoes();
-            
-            // Salvar configurações quando alteradas
-            const configInputs = document.querySelectorAll('#modoEscuro, #notificacoesPush, #autoRefresh, #moeda, #fusoHorario, #idioma');
-            configInputs.forEach(input => {
-                input.addEventListener('change', saveConfiguracoes);
-            });
         });
     </script>
 </body>

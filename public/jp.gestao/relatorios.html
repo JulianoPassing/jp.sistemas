@@ -275,29 +275,112 @@
         async function gerarRelatorio() {
             const periodo = getSelectedPeriod();
             if (!periodo) return;
-            
             try {
                 showNotification('Gerando relatório...', 'info');
-                
-                const response = await fetch('/api/relatorios/geral', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify(periodo)
-                });
-                
-                if (response.ok) {
-                    relatorioData = await response.json();
-                    atualizarResumo();
-                    atualizarGraficos();
-                    atualizarTabelaDetalhada();
-                    showNotification('Relatório gerado com sucesso!', 'success');
-                } else {
-                    const error = await response.json();
-                    showNotification(error.message || 'Erro ao gerar relatório', 'error');
+                // Buscar pedidos
+                const pedidosResponse = await fetch('/api/pedidos', { credentials: 'include' });
+                const pedidos = pedidosResponse.ok ? await pedidosResponse.json() : [];
+                // Buscar clientes
+                const clientesResponse = await fetch('/api/clientes', { credentials: 'include' });
+                const clientes = clientesResponse.ok ? await clientesResponse.json() : [];
+                // Buscar produtos
+                const produtosResponse = await fetch('/api/produtos', { credentials: 'include' });
+                const produtos = produtosResponse.ok ? await produtosResponse.json() : [];
+                // Filtrar pedidos pelo período
+                let dataInicio, dataFim;
+                const hoje = new Date();
+                if (periodo.tipo === 'hoje') {
+                    dataInicio = dataFim = hoje.toISOString().slice(0, 10);
+                } else if (periodo.tipo === 'semana') {
+                    const first = new Date(hoje.setDate(hoje.getDate() - hoje.getDay()));
+                    dataInicio = first.toISOString().slice(0, 10);
+                    dataFim = new Date().toISOString().slice(0, 10);
+                } else if (periodo.tipo === 'mes') {
+                    dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10);
+                    dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().slice(0, 10);
+                } else if (periodo.tipo === 'trimestre') {
+                    const mesAtual = hoje.getMonth();
+                    const inicioTrim = mesAtual - (mesAtual % 3);
+                    dataInicio = new Date(hoje.getFullYear(), inicioTrim, 1).toISOString().slice(0, 10);
+                    dataFim = new Date(hoje.getFullYear(), inicioTrim + 3, 0).toISOString().slice(0, 10);
+                } else if (periodo.tipo === 'ano') {
+                    dataInicio = new Date(hoje.getFullYear(), 0, 1).toISOString().slice(0, 10);
+                    dataFim = new Date(hoje.getFullYear(), 11, 31).toISOString().slice(0, 10);
+                } else if (periodo.tipo === 'personalizado') {
+                    dataInicio = periodo.dataInicio;
+                    dataFim = periodo.dataFim;
                 }
+                // Função para filtrar por data
+                function inRange(dateStr) {
+                    if (!dateStr) return false;
+                    const d = dateStr.slice(0, 10);
+                    return (!dataInicio || d >= dataInicio) && (!dataFim || d <= dataFim);
+                }
+                // Filtrar pedidos válidos (status concluído ou pago, dentro do período)
+                const pedidosValidos = pedidos.filter(p =>
+                    (['concluido', 'concluído', 'pago', 'finalizado', 'Concluído', 'Pago', 'Finalizado'].includes((p.status || '').toLowerCase())) &&
+                    inRange(p.created_at || p.data_pedido)
+                );
+                // Receita total
+                const receitaTotal = pedidosValidos.reduce((acc, p) => acc + (parseFloat(p.valor_total) || 0), 0);
+                // Total de pedidos
+                const totalPedidos = pedidosValidos.length;
+                // Ticket médio
+                const ticketMedio = totalPedidos > 0 ? receitaTotal / totalPedidos : 0;
+                // Novos clientes (clientes criados no período)
+                const novosClientes = clientes.filter(c => inRange(c.created_at)).length;
+                // Vendas por dia
+                const vendasPorDiaMap = {};
+                pedidosValidos.forEach(p => {
+                    const data = (p.created_at || p.data_pedido || '').slice(0, 10);
+                    if (!data) return;
+                    if (!vendasPorDiaMap[data]) vendasPorDiaMap[data] = { valor: 0, pedidos: 0 };
+                    vendasPorDiaMap[data].valor += parseFloat(p.valor_total) || 0;
+                    vendasPorDiaMap[data].pedidos += 1;
+                });
+                const vendasPorDia = Object.entries(vendasPorDiaMap).sort((a, b) => a[0].localeCompare(b[0])).map(([data, v]) => ({ data, valor: v.valor, pedidos: v.pedidos }));
+                // Produtos mais vendidos
+                const produtosVendidosMap = {};
+                pedidosValidos.forEach(p => {
+                    (p.itens || []).forEach(item => {
+                        const nome = item.produto || (produtos.find(prod => prod.id === item.produto_id)?.nome) || 'Desconhecido';
+                        if (!produtosVendidosMap[nome]) produtosVendidosMap[nome] = 0;
+                        produtosVendidosMap[nome] += item.quantidade || 1;
+                    });
+                });
+                const produtosMaisVendidos = Object.entries(produtosVendidosMap)
+                    .map(([nome, quantidade]) => ({ nome, quantidade }))
+                    .sort((a, b) => b.quantidade - a.quantidade);
+                // Dados detalhados por dia
+                const dadosDetalhados = vendasPorDia.map(v => {
+                    const pedidosDoDia = pedidosValidos.filter(p => (p.created_at || p.data_pedido || '').slice(0, 10) === v.data);
+                    const clientesDoDia = new Set(pedidosDoDia.map(p => p.nome_cliente || p.cliente_id || ''));
+                    const produtosDoDia = pedidosDoDia.reduce((acc, p) => acc + (p.itens ? p.itens.reduce((a, i) => a + (i.quantidade || 1), 0) : 0), 0);
+                    return {
+                        data: v.data,
+                        pedidos: v.pedidos,
+                        receita: v.valor,
+                        ticketMedio: v.pedidos > 0 ? v.valor / v.pedidos : 0,
+                        clientes: clientesDoDia.size,
+                        produtosVendidos: produtosDoDia
+                    };
+                });
+                // Montar relatorioData
+                relatorioData = {
+                    resumo: {
+                        receitaTotal,
+                        totalPedidos,
+                        ticketMedio,
+                        novosClientes
+                    },
+                    vendasPorDia,
+                    produtosMaisVendidos,
+                    dadosDetalhados
+                };
+                atualizarResumo();
+                atualizarGraficos();
+                atualizarTabelaDetalhada();
+                showNotification('Relatório gerado com sucesso!', 'success');
             } catch (error) {
                 console.error('Erro ao gerar relatório:', error);
                 showNotification('Erro ao gerar relatório', 'error');
