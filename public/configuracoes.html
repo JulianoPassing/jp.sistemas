@@ -3,451 +3,366 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Configurações - J.P Sistemas Comercial</title>
+  <title>Configuracoes - J.P Sistemas Comercial</title>
   <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="app-layout">
-    <header>
-      <div class="header-content">
-        <a href="index.html" class="logo">
-          <h1>J.P Sistemas Comercial</h1>
-        </a>
-        <div class="user-info">
-          <span>Bem-vindo, <span id="userDisplay"></span></span>
-          <a href="index.html" class="btn btn-secondary">
-            <i class="fas fa-sign-out-alt"></i>
-            Sair
-          </a>
-        </div>
-      </div>
-    </header>
-
-    <main>
-      <div class="container">
-        <div class="dashboard">
-          <div class="dashboard-header">
-            <h1 class="dashboard-title">Configurações</h1>
-            <p class="dashboard-subtitle">Gerencie as configurações do sistema</p>
-          </div>
-
-          <div class="section">
-            <div class="section-header">
-              <h2 class="section-title">
-                <i class="fas fa-user-cog"></i>
-                Configurações de Usuário
-              </h2>
-            </div>
-
-            <div class="config-area">
-              <h3 class="text-lg font-semibold mb-4">
-                <i class="fas fa-user"></i>
-                Alterar Senha
-              </h3>
-              
-              <div class="form-group">
-                <label class="form-label">Senha Atual</label>
-                <input type="password" id="senhaAtual" class="form-input" placeholder="Digite sua senha atual">
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Nova Senha</label>
-                <input type="password" id="novaSenha" class="form-input" placeholder="Digite a nova senha">
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Confirmar Nova Senha</label>
-                <input type="password" id="confirmarSenha" class="form-input" placeholder="Confirme a nova senha">
-              </div>
-
-              <button id="alterarSenha" class="btn btn-primary">
-                <i class="fas fa-save"></i>
-                Alterar Senha
-              </button>
-            </div>
-          </div>
-
-          <div class="section">
-            <div class="section-header">
-              <h2 class="section-title">
-                <i class="fas fa-building"></i>
-                Configurações da Empresa
-              </h2>
-            </div>
-
-            <div class="config-area">
-              <h3 class="text-lg font-semibold mb-4">
-                <i class="fas fa-info-circle"></i>
-                Dados da Empresa
-              </h3>
-              
-              <div class="grid grid-cols-2">
-                <div class="form-group">
-                  <label class="form-label">Nome da Empresa</label>
-                  <input type="text" id="nomeEmpresa" class="form-input" placeholder="Nome da empresa">
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">CNPJ</label>
-                  <input type="text" id="cnpjEmpresa" class="form-input" placeholder="00.000.000/0000-00">
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Telefone</label>
-                  <input type="text" id="telefoneEmpresa" class="form-input" placeholder="(00) 00000-0000">
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">E-mail</label>
-                  <input type="email" id="emailEmpresa" class="form-input" placeholder="contato@empresa.com">
-                </div>
-
-                <div class="form-group grid-cols-2">
-                  <label class="form-label">Endereço</label>
-                  <input type="text" id="enderecoEmpresa" class="form-input" placeholder="Rua, número, bairro">
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Cidade/Estado</label>
-                  <input type="text" id="cidadeEmpresa" class="form-input" placeholder="Cidade - Estado">
-                </div>
-              </div>
-
-              <button id="salvarEmpresa" class="btn btn-primary">
-                <i class="fas fa-save"></i>
-                Salvar Dados da Empresa
-              </button>
-            </div>
-          </div>
-
-          <div class="section">
-            <div class="section-header">
-              <h2 class="section-title">
-                <i class="fas fa-cogs"></i>
-                Configurações do Sistema
-              </h2>
-            </div>
-
-            <div class="config-area">
-              <h3 class="text-lg font-semibold mb-4">
-                <i class="fas fa-sliders-h"></i>
-                Preferências
-              </h3>
-              
-              <div class="grid grid-cols-2">
-                <div class="form-group">
-                  <label class="form-label">Moeda Padrão</label>
-                  <select id="moedaPadrao" class="form-input">
-                    <option value="BRL">Real (R$)</option>
-                    <option value="USD">Dólar ($)</option>
-                    <option value="EUR">Euro (€)</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Fuso Horário</label>
-                  <select id="fusoHorario" class="form-input">
-                    <option value="America/Sao_Paulo">Brasília (GMT-3)</option>
-                    <option value="America/Manaus">Manaus (GMT-4)</option>
-                    <option value="America/Belem">Belém (GMT-3)</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Idioma</label>
-                  <select id="idioma" class="form-input">
-                    <option value="pt-BR">Português (Brasil)</option>
-                    <option value="en">English</option>
-                    <option value="es">Español</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Tema</label>
-                  <select id="tema" class="form-input">
-                    <option value="light">Claro</option>
-                    <option value="dark">Escuro</option>
-                    <option value="auto">Automático</option>
-                  </select>
-                </div>
-              </div>
-
-              <button id="salvarPreferencias" class="btn btn-primary">
-                <i class="fas fa-save"></i>
-                Salvar Preferências
-              </button>
-            </div>
-          </div>
-
-          <div class="section">
-            <div class="section-header">
-              <h2 class="section-title">
-                <i class="fas fa-database"></i>
-                Backup e Restauração
-              </h2>
-            </div>
-
-            <div class="config-area">
-              <h3 class="text-lg font-semibold mb-4">
-                <i class="fas fa-download"></i>
-                Backup do Sistema
-              </h3>
-              
-              <div class="cards">
-                <div class="card">
-                  <div class="card-header">
-                    <i class="fas fa-download card-icon"></i>
-                    <h3 class="card-title">Backup Manual</h3>
-                  </div>
-                  <p class="text-gray-600 mb-4">Faça um backup completo dos dados do sistema</p>
-                  <button id="fazerBackup" class="btn btn-primary">
-                    <i class="fas fa-download"></i>
-                    Fazer Backup
-                  </button>
-                </div>
-
-                <div class="card">
-                  <div class="card-header">
-                    <i class="fas fa-upload card-icon"></i>
-                    <h3 class="card-title">Restaurar Backup</h3>
-                  </div>
-                  <p class="text-gray-600 mb-4">Restaura dados de um backup anterior</p>
-                  <input type="file" id="arquivoBackup" accept=".json,.sql" style="display: none;">
-                  <button id="restaurarBackup" class="btn btn-warning">
-                    <i class="fas fa-upload"></i>
-                    Selecionar Arquivo
-                  </button>
-                </div>
-              </div>
-
-              <div class="mt-6">
-                <h3 class="text-lg font-semibold mb-4">Backups Automáticos</h3>
-                <div class="form-group">
-                  <label class="form-label">
-                    <input type="checkbox" id="backupAutomatico" class="mr-2">
-                    Ativar backup automático
-                  </label>
-                </div>
-                
-                <div class="form-group">
-                  <label class="form-label">Frequência do Backup</label>
-                  <select id="frequenciaBackup" class="form-input">
-                    <option value="daily">Diário</option>
-                    <option value="weekly">Semanal</option>
-                    <option value="monthly">Mensal</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <footer>
-      <div class="container">
-        <p class="text-center">&copy; 2024 J.P Sistemas Comercial. Todos os direitos reservados.</p>
-      </div>
-    </footer>
-  </div>
-
-  <script>
-    // Verificar se o usuário está logado
-    document.addEventListener('DOMContentLoaded', function() {
-      const user = localStorage.getItem('user');
-      if (!user) {
-        window.location.href = 'index.html';
-        return;
-      }
-
-      try {
-        const userData = JSON.parse(user);
-        const userDisplay = document.getElementById('userDisplay');
-        if (userDisplay && userData.nome) {
-          // Capitalizar primeira letra do nome
-          const nome = userData.nome.charAt(0).toUpperCase() + userData.nome.slice(1);
-          userDisplay.textContent = nome;
-        }
-      } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
-        window.location.href = 'index.html';
-      }
-
-      // Carregar configurações salvas
-      carregarConfiguracoes();
-    });
-
-    // Carregar configurações
-    function carregarConfiguracoes() {
-      // Carregar dados da empresa
-      const dadosEmpresa = localStorage.getItem('dadosEmpresa');
-      if (dadosEmpresa) {
-        const dados = JSON.parse(dadosEmpresa);
-        document.getElementById('nomeEmpresa').value = dados.nome || '';
-        document.getElementById('cnpjEmpresa').value = dados.cnpj || '';
-        document.getElementById('telefoneEmpresa').value = dados.telefone || '';
-        document.getElementById('emailEmpresa').value = dados.email || '';
-        document.getElementById('enderecoEmpresa').value = dados.endereco || '';
-        document.getElementById('cidadeEmpresa').value = dados.cidade || '';
-      }
-
-      // Carregar preferências
-      const preferencias = localStorage.getItem('preferencias');
-      if (preferencias) {
-        const prefs = JSON.parse(preferencias);
-        document.getElementById('moedaPadrao').value = prefs.moeda || 'BRL';
-        document.getElementById('fusoHorario').value = prefs.fuso || 'America/Sao_Paulo';
-        document.getElementById('idioma').value = prefs.idioma || 'pt-BR';
-        document.getElementById('tema').value = prefs.tema || 'light';
-        document.getElementById('backupAutomatico').checked = prefs.backupAutomatico || false;
-        document.getElementById('frequenciaBackup').value = prefs.frequenciaBackup || 'daily';
-      }
-    }
-
-    // Alterar senha
-    document.getElementById('alterarSenha').addEventListener('click', function() {
-      const senhaAtual = document.getElementById('senhaAtual').value;
-      const novaSenha = document.getElementById('novaSenha').value;
-      const confirmarSenha = document.getElementById('confirmarSenha').value;
-
-      if (!senhaAtual || !novaSenha || !confirmarSenha) {
-        alert('Preencha todos os campos.');
-        return;
-      }
-
-      if (novaSenha !== confirmarSenha) {
-        alert('As senhas não coincidem.');
-        return;
-      }
-
-      if (novaSenha.length < 6) {
-        alert('A nova senha deve ter pelo menos 6 caracteres.');
-        return;
-      }
-
-      // Aqui você faria a chamada para a API para alterar a senha
-      alert('Senha alterada com sucesso!');
-      
-      // Limpar campos
-      document.getElementById('senhaAtual').value = '';
-      document.getElementById('novaSenha').value = '';
-      document.getElementById('confirmarSenha').value = '';
-    });
-
-    // Salvar dados da empresa
-    document.getElementById('salvarEmpresa').addEventListener('click', function() {
-      const dados = {
-        nome: document.getElementById('nomeEmpresa').value,
-        cnpj: document.getElementById('cnpjEmpresa').value,
-        telefone: document.getElementById('telefoneEmpresa').value,
-        email: document.getElementById('emailEmpresa').value,
-        endereco: document.getElementById('enderecoEmpresa').value,
-        cidade: document.getElementById('cidadeEmpresa').value
-      };
-
-      localStorage.setItem('dadosEmpresa', JSON.stringify(dados));
-      alert('Dados da empresa salvos com sucesso!');
-    });
-
-    // Salvar preferências
-    document.getElementById('salvarPreferencias').addEventListener('click', function() {
-      const preferencias = {
-        moeda: document.getElementById('moedaPadrao').value,
-        fuso: document.getElementById('fusoHorario').value,
-        idioma: document.getElementById('idioma').value,
-        tema: document.getElementById('tema').value,
-        backupAutomatico: document.getElementById('backupAutomatico').checked,
-        frequenciaBackup: document.getElementById('frequenciaBackup').value
-      };
-
-      localStorage.setItem('preferencias', JSON.stringify(preferencias));
-      alert('Preferências salvas com sucesso!');
-    });
-
-    // Fazer backup
-    document.getElementById('fazerBackup').addEventListener('click', function() {
-      // Simular criação de backup
-      const backup = {
-        data: new Date().toISOString(),
-        dados: {
-          empresa: localStorage.getItem('dadosEmpresa'),
-          preferencias: localStorage.getItem('preferencias')
-        }
-      };
-
-      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-
-      alert('Backup criado com sucesso!');
-    });
-
-    // Restaurar backup
-    document.getElementById('restaurarBackup').addEventListener('click', function() {
-      document.getElementById('arquivoBackup').click();
-    });
-
-    document.getElementById('arquivoBackup').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const backup = JSON.parse(e.target.result);
-          
-          if (backup.dados.empresa) {
-            localStorage.setItem('dadosEmpresa', backup.dados.empresa);
-          }
-          
-          if (backup.dados.preferencias) {
-            localStorage.setItem('preferencias', backup.dados.preferencias);
-          }
-
-          carregarConfiguracoes();
-          alert('Backup restaurado com sucesso!');
-        } catch (error) {
-          alert('Erro ao restaurar backup. Verifique se o arquivo é válido.');
-        }
-      };
-      reader.readAsText(file);
-    });
-  </script>
-
+  <link rel="stylesheet" href="mobile.css">
   <style>
-    .config-area {
-      background: var(--white);
-      border-radius: var(--border-radius-lg);
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--gray-200);
+    :root {
+              --primary-color: #005a9f;
+      --primary-dark: #003766;
+      --primary-light: #0077cc;
+      --secondary-color: #022656;
+      --accent-color: #1e4a8a;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --background: #f8fafc;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --shadow: rgba(0, 90, 159, 0.1);
+      --shadow-hover: rgba(0, 90, 159, 0.2);
+      --success-color: #059669;
+      --danger-color: #dc2626;
+      --light-color: #f9fafb;
+      --dark-color: #111827;
+      --bg-color: #f3f4f6;
+      --card-bg: #ffffff;
+      --border-color: #e0e0e0;
+      --border-radius: 12px;
     }
-
-    .config-area h3 {
-      color: var(--terciary);
-      margin-bottom: 1rem;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      background: linear-gradient(135deg, #005a9f 0%, #003766 100%);
+      color: var(--text-primary);
+      padding: 0;
+      min-height: 100vh;
+    }
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 20px 0;
+      box-shadow: 0 4px 20px rgba(0, 90, 159, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
     }
-
-    .config-area .cards {
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    .logo h1 {
+      color: var(--primary-color);
+      font-size: 24px;
+      font-weight: 700;
+      text-align: left;
     }
-
-    @media (max-width: 768px) {
-      .grid-cols-2 {
-        grid-template-columns: 1fr;
-      }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .user-info span {
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .user-info #userDisplay {
+      font-weight: 700;
+    }
+    .logout-btn {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 90, 159, 0.3);
+    }
+    .main-content {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    #logo-container { text-align: center; margin-bottom: 25px; }
+    #logo { 
+      max-width: 100%; 
+      height: auto; 
+      max-height: 80px; 
+      filter: brightness(0) invert(1);
+      opacity: 0.9;
+    }
+e    .card { 
+      background-color: var(--card-bg); 
+      border-radius: var(--border-radius); 
+      box-shadow: var(--shadow); 
+      padding: 25px; 
+      margin-bottom: 25px; 
+      border: 1px solid var(--border-color); 
+    }
+    .card-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .card-header h2 { 
+      font-size: 1.8em; 
+      color: var(--dark-color); 
+      font-weight: 600; 
+      text-align: center;
+    }
+    .btn { 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 8px; 
+      padding: 12px 20px; 
+      border-radius: 8px; 
+      border: none; 
+      font-family: "Poppins", sans-serif; 
+      font-weight: 500; 
+      font-size: 0.95em; 
+      cursor: pointer; 
+      transition: all 0.3s ease; 
+      text-decoration: none; 
+    }
+    .btn-primary { 
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); 
+      color: white; 
+    }
+    .btn-primary:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    .btn-success { 
+      background: linear-gradient(135deg, var(--success-color), #20c997); 
+      color: white; 
+    }
+    .btn-success:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+    }
+    .btn-danger { 
+      background: linear-gradient(135deg, var(--danger-color), #c82333); 
+      color: white; 
+    }
+    .btn-danger:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+    }
+    .config-area {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 20px;
+      min-height: 180px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .config-area h3 {
+      color: var(--primary-color);
+      margin-bottom: 10px;
+    }
+    .config-area label {
+      font-weight: 500;
+      color: var(--dark-color);
+      margin-top: 10px;
+      display: block;
+    }
+    .config-area input[type="text"], .config-area input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      margin-bottom: 10px;
+      font-size: 1em;
+      background: #fff;
+    }
+    .config-area button {
+      margin-top: 10px;
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: none;
+      background: var(--primary-color);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .config-area button:hover {
+      background: var(--primary-hover);
+    }
+    .footer {
+      width: 100%;
+      text-align: center;
+      padding: 18px 0 12px 0;
+      color: #fff;
+      font-size: 15px;
+      background: transparent;
+      font-family: 'Inter', sans-serif;
+      letter-spacing: 0.02em;
     }
   </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 150px; height: 67px; display: block; object-fit: contain; background: none; box-shadow: none; border-radius: 0; margin: 0;" />
+      </div>
+      <div class="user-info">
+        <span>Bem-vindo, <span id="userDisplay"></span></span>
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+        <a href="painel.html" class="logout-btn" style="background: var(--primary-light); margin-left: 8px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+      </div>
+    </div>
+  </header>
+  <main class="main-content">
+    <div class="card">
+      <div class="card-header">
+        <h2>Configuracoes do Sistema</h2>
+      </div>
+      <div class="config-area">
+        <div style="text-align: center; padding: 40px 20px;">
+          <i class="fas fa-lock" style="font-size: 48px; color: var(--primary-color); margin-bottom: 20px; display: block;"></i>
+          <h3 style="color: var(--primary-color); margin-bottom: 15px;">Configuracoes Bloqueadas</h3>
+          <p style="color: var(--text-secondary); font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+            Entre em contato com o Suporte e solicite as alteracoes.
+          </p>
+          <div style="background: rgba(0, 90, 159, 0.1); border: 1px solid rgba(0, 90, 159, 0.2); border-radius: 8px; padding: 15px; margin-top: 20px;">
+            <p style="margin: 0; color: var(--text-primary); font-size: 14px;">
+              <i class="fas fa-info-circle" style="color: var(--primary-color); margin-right: 8px;"></i>
+              Para alterar configuracoes do sistema, entre em contato com nossa equipe de suporte tecnico.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="config-area" id="empresa-config-area">
+        <form id="empresaForm" style="max-width: 500px; margin: 0 auto;">
+          <h3>Informações da Empresa</h3>
+          <label for="nome_fantasia">Nome Fantasia</label>
+          <input type="text" id="nome_fantasia" name="nome_fantasia" required />
+
+          <label for="razao_social">Razão Social</label>
+          <input type="text" id="razao_social" name="razao_social" required />
+
+          <label for="cnpj">CNPJ</label>
+          <input type="text" id="cnpj" name="cnpj" required maxlength="18" />
+
+          <label for="endereco">Endereço</label>
+          <input type="text" id="endereco" name="endereco" />
+
+          <label for="email">E-mail</label>
+          <input type="text" id="email" name="email" />
+
+          <label for="telefone">Telefone</label>
+          <input type="text" id="telefone" name="telefone" />
+
+          <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Salvar Informações</button>
+          <div id="empresaMsg" style="margin-top: 10px;"></div>
+        </form>
+      </div>
+    </div>
+  </main>
+  <footer class="footer">
+    © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ola,%20gostaria%20de%20mais%20informacoes%20sobre%20os%20sistemas." target="_blank" style="color: #fff; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
+  </footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Verificar se está logado
+      if (sessionStorage.getItem('loggedIn') !== 'true') {
+        window.location.href = 'index.html';
+      }
+
+      // Exibir nome do usuário
+      const username = sessionStorage.getItem('username') || 'Usuário';
+      document.getElementById('userDisplay').textContent = username;
+    });
+
+    async function logout() {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      sessionStorage.removeItem('loggedIn');
+      sessionStorage.removeItem('username');
+      window.location.href = 'sistema.html';
+    }
+
+    // --- Empresa: carregar e salvar informações ---
+    async function carregarEmpresa() {
+      try {
+        const res = await fetch('/api/empresa');
+        if (!res.ok) return;
+        const data = await res.json();
+        // Garante que data é um objeto e preenche os campos com string vazia se não existir
+        document.getElementById('nome_fantasia').value = data?.nome_fantasia ?? '';
+        document.getElementById('razao_social').value = data?.razao_social ?? '';
+        document.getElementById('cnpj').value = data?.cnpj ?? '';
+        document.getElementById('endereco').value = data?.endereco ?? '';
+        document.getElementById('email').value = data?.email ?? '';
+        document.getElementById('telefone').value = data?.telefone ?? '';
+      } catch (e) {
+        console.error('Erro ao carregar empresa:', e);
+      }
+    }
+    document.getElementById('empresaForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const body = {
+        nome_fantasia: form.nome_fantasia.value,
+        razao_social: form.razao_social.value,
+        cnpj: form.cnpj.value,
+        endereco: form.endereco.value,
+        email: form.email.value,
+        telefone: form.telefone.value
+      };
+      try {
+        const res = await fetch('/api/empresa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('empresaMsg').textContent = 'Informações salvas com sucesso!';
+          document.getElementById('empresaMsg').style.color = 'green';
+          await carregarEmpresa();
+        } else {
+          document.getElementById('empresaMsg').textContent = data.error || 'Erro ao salvar.';
+          document.getElementById('empresaMsg').style.color = 'red';
+        }
+      } catch (e) {
+        document.getElementById('empresaMsg').textContent = 'Erro ao salvar.';
+        document.getElementById('empresaMsg').style.color = 'red';
+      }
+    });
+    carregarEmpresa();
+  </script>
 </body>
 </html> 
