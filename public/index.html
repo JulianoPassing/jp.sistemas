@@ -4,280 +4,230 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JP. Sistemas - Tecnologia em Gestão</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png">
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-  <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="mobile.css">
   <style>
-    /* Estilos específicos para a landing page */
+    :root {
+        --primary-blue: #002f4b; 
+        --accent-blue: #00e6ff; 
+        --light-gray: #f0f2f5; 
+        --dark-text: #2c3e50; 
+        --light-text: #ecf0f1; 
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to bottom, #ffffff 0%, #ffffff 40%, #7c7c7c63 100%);
+      color: var(--dark-text); 
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.8rem 4vw; 
+      background: var(--primary-blue); 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      animation: fadeDown 0.7s cubic-bezier(.4,0,.2,1);
+      transition: background 0.3s ease; 
+    }
+    header.scrolled {
+        background: rgba(0, 47, 75, 0.98); 
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 1rem; 
+    }
+    .logo img {
+      height: 55px; 
+      transition: transform 0.3s ease;
+    }
+    .logo img:hover {
+        transform: scale(1.05);
+    }
+    .logo span {
+      font-size: 1.6rem; 
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--light-text); 
+    }
+    .tech-font {
+      font-family: 'Inter', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--light-text);
+      text-shadow: none;
+      text-transform: uppercase;
+    }
+    nav a {
+      color: var(--light-text);
+      text-decoration: none;
+      margin-left: 2rem;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      transition: color 0.2s ease, transform 0.2s ease; 
+      position: relative; 
+    }
+    nav a::after { 
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 2px;
+        bottom: -5px;
+        left: 0;
+        background-color: var(--accent-blue);
+        transition: width 0.3s ease-out;
+    }
+    nav a:hover::after {
+        width: 100%;
+    }
+    nav a:hover {
+      color: var(--accent-blue);
+      transform: translateY(-2px); 
+    }
     .hero {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 65vh;
+      min-height: 65vh; 
       text-align: center;
       position: relative;
       z-index: 1;
       padding: 2rem 1rem;
     }
-    
     .hero h1 {
-      font-size: 2.8rem;
-      font-weight: 800;
+      font-size: 2.8rem; 
+      font-weight: 800; 
       margin-bottom: 1.2rem;
-      color: var(--terciary);
-      line-height: 1.2;
+      color: var(--primary-blue); 
+      line-height: 1.2; 
     }
-    
     .hero p {
-      font-size: 1.15rem;
-      max-width: 700px;
+      font-size: 1.15rem; 
+      max-width: 700px; 
       margin: 0 auto 2.5rem auto;
-      color: var(--gray-700);
-      line-height: 1.6;
+      color: var(--dark-text);
+      line-height: 1.6; 
     }
-    
     .cta-btn {
-      background: var(--primary);
-      color: var(--white);
-      border: 2px solid var(--primary);
-      padding: 1.1rem 2.8rem;
-      border-radius: var(--border-radius-lg);
-      font-size: 1.05rem;
+      background: var(--primary-blue);
+      color: var(--light-text);
+      border: 2px solid var(--primary-blue);
+      padding: 1.1rem 2.8rem; 
+      border-radius: 12px;
+      font-size: 1.05rem; 
       font-weight: 700;
-      font-family: 'Poppins', sans-serif;
+      font-family: 'Inter', sans-serif;
       cursor: pointer;
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
       letter-spacing: 0.8px;
       text-transform: uppercase;
       position: relative;
       overflow: hidden;
-      transition: all 0.3s cubic-bezier(.4,0,.2,1);
-      text-decoration: none;
-      display: inline-block;
+      transition: all 0.3s cubic-bezier(.4,0,.2,1); 
     }
-    
     .cta-btn::before {
       content: '';
       position: absolute;
       top: 0; left: -75%;
       width: 50%; height: 100%;
-      background: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.15); 
       filter: blur(10px);
       transform: skewX(-20deg);
       transition: left 0.4s ease-out;
       z-index: 0;
     }
-    
     .cta-btn:hover::before {
       left: 120%;
     }
-    
     .cta-btn:hover {
-      color: var(--white);
-      background: var(--secondary);
-      border-color: var(--secondary);
-      box-shadow: var(--shadow-lg);
-      transform: translateY(-3px) scale(1.02);
-      text-decoration: none;
+      color: var(--primary-blue);
+      background: var(--accent-blue); 
+      border-color: var(--accent-blue);
+      box-shadow: 0 6px 15px rgba(0,230,255,0.3); 
+      transform: translateY(-3px) scale(1.02); 
     }
-    
     .cta-btn span {
       position: relative;
       z-index: 1;
     }
-    
     .features {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 2.5rem;
-      margin: 5rem 0 3rem 0;
+      gap: 2.5rem; 
+      margin: 5rem 0 3rem 0; 
       padding: 0 2vw;
     }
-    
     .feature-card {
-      background: var(--white);
-      border: 1px solid var(--gray-200);
-      border-radius: var(--border-radius-xl);
-      padding: 2rem;
-      width: 300px;
-      box-shadow: var(--shadow);
+      background: var(--primary-blue); 
+      border: 1px solid rgba(0, 47, 75, 0.85);
+      border-radius: 18px;
+      padding: 2rem; 
+      width: 300px; 
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12); 
       text-align: center;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease; 
       display: flex;
       flex-direction: column;
       align-items: center;
     }
-    
-    .feature-card .icon {
-      font-size: 3.5rem;
-      color: var(--primary);
-      margin-bottom: 1rem;
-      transition: transform 0.3s ease;
+    .feature-card .icon { 
+        font-size: 3.5rem;
+        color: var(--accent-blue);
+        margin-bottom: 1rem;
+        transition: transform 0.3s ease;
     }
-    
     .feature-card:hover .icon {
-      transform: scale(1.1);
+        transform: scale(1.1);
     }
-    
     .feature-card:hover {
-      transform: translateY(-8px) scale(1.04);
-      box-shadow: var(--shadow-lg);
+      transform: translateY(-8px) scale(1.04); 
+      box-shadow: 0 10px 40px rgba(0,0,0,0.25); 
     }
-    
     .feature-card h3 {
-      color: var(--terciary);
+      color: var(--light-text);
       margin-bottom: 0.8rem;
-      font-family: 'Poppins', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-weight: 700;
-      font-size: 1.3rem;
+      font-size: 1.3rem; 
     }
-    
     .feature-card p {
-      color: var(--gray-600);
-      font-size: 0.95rem;
-      font-family: 'Poppins', sans-serif;
+      color: var(--light-text);
+      font-size: 0.95rem; 
+      font-family: 'Inter', sans-serif;
       line-height: 1.5;
     }
-    
-    .typewriter-msg {
-      margin-top: 2.8rem;
-      min-height: 3.5rem;
-      font-size: 2.2rem;
-      font-weight: 700;
-      color: var(--terciary);
-      letter-spacing: 1px;
+    footer {
       text-align: center;
-      font-family: 'Poppins', sans-serif;
+      padding: 2.5rem 0 1.5rem 0; 
+      color: var(--light-text);
+      font-size: 0.9rem;
+      background: var(--primary-blue);
+      margin-top: 4rem;
+      font-family: 'Inter', sans-serif;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
     }
-    
-    #typewriter {
-      color: var(--terciary);
-      border-right: 3px solid var(--primary);
-      padding-right: 8px;
-      white-space: nowrap;
-      overflow: hidden;
-      display: inline-block;
-      animation: blink-caret 0.8s step-end infinite;
-    }
-    
-    @keyframes blink-caret {
-      from, to { border-color: transparent; }
-      50% { border-color: var(--primary); }
-    }
-    
-    .sistema-funcional-msg {
-      margin-top: 1.5rem;
-      text-align: center;
-      color: var(--gray-700);
-      font-size: 1.05rem;
-      font-family: 'Poppins', sans-serif;
-      letter-spacing: 0.5px;
-      font-weight: 500;
-    }
-    
-    .download-btn {
-      display: flex;
-      justify-content: center;
-      margin-top: 1.8rem;
+    footer a {
+      color: var(--accent-blue);
       text-decoration: none;
+      transition: color 0.2s ease;
     }
-    
-    #particles-js {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      z-index: 0;
-      pointer-events: none;
-      background: transparent;
-      opacity: 30%;
+    footer a:hover {
+        color: #008cff; 
     }
-    
-    body > *:not(#particles-js):not(.modal-bg) {
-      position: relative;
-      z-index: 1;
-    }
-    
-    .modal-bg {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.75);
-      z-index: 99999 !important;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      backdrop-filter: blur(5px);
-    }
-    
-    .modal-bg.active {
-      display: flex;
-    }
-    
-    .modal-box {
-      background: var(--white);
-      border: 1px solid var(--primary);
-      border-radius: var(--border-radius-xl);
-      padding: 3rem 2.5rem 2.5rem 2.5rem;
-      min-width: 350px;
-      max-width: 90vw;
-      color: var(--gray-900);
-      font-family: 'Poppins', sans-serif;
-      text-align: center;
-      position: relative;
-      animation: fadeInModal 0.4s cubic-bezier(.4,0,.2,1);
-      box-shadow: var(--shadow-lg);
-    }
-    
-    @keyframes fadeInModal {
-      from { opacity: 0; transform: scale(0.9); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    
-    .modal-box h2 {
-      color: var(--primary);
-      margin-bottom: 1.5rem;
-      font-size: 1.5rem;
-      font-weight: 700;
-    }
-    
-    .modal-box .login-info {
-      margin-bottom: 1.5rem;
-      font-size: 1.05rem;
-      color: var(--gray-700);
-    }
-    
-    .modal-box .login-info strong {
-      color: var(--primary);
-    }
-    
-    .modal-box .redirect-msg {
-      color: var(--primary);
-      font-size: 1.02rem;
-      margin-top: 1.5rem;
-      font-weight: 500;
-    }
-    
-    .modal-close {
-      position: absolute;
-      top: 0.9rem;
-      right: 1.4rem;
-      background: none;
-      border: none;
-      color: var(--primary);
-      font-size: 1.8rem;
-      cursor: pointer;
-      transition: color 0.2s, transform 0.2s;
-    }
-    
-    .modal-close:hover {
-      color: var(--terciary);
-      transform: rotate(90deg);
-    }
-    
     @media (max-width: 900px) {
       .features {
         flex-direction: column;
@@ -287,10 +237,9 @@
         width: 90vw;
       }
     }
-    
     @media (max-width: 600px) {
       .hero h1 {
-        font-size: 1.8rem;
+        font-size: 1.8rem; 
       }
       .typewriter-msg {
         font-size: 1.2rem;
@@ -318,25 +267,155 @@
       .feature-card p {
         font-size: 0.9rem;
       }
+      footer {
+        font-size: 0.85rem;
+        padding: 1.5rem 0 0.8rem 0;
+      }
+      header {
+        padding: 0.6rem 3vw;
+      }
+      .logo img {
+        height: 45px;
+      }
+      .logo span.tech-font {
+        font-size: 1.2rem;
+      }
+    }
+    #particles-js {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      background: transparent;
+      opacity: 30%;
+    }
+    body > *:not(#particles-js):not(.modal-bg) {
+      position: relative; 
+      z-index: 1; 
+    }
+    .typewriter-msg {
+      margin-top: 2.8rem; 
+      min-height: 3.5rem;
+      font-size: 2.2rem; 
+      font-weight: 700;
+      color: var(--primary-blue); 
+      letter-spacing: 1px;
+      text-align: center;
+      font-family: 'Inter', sans-serif;
+      text-shadow: none;
+    }
+    #typewriter {
+      color: var(--primary-blue);
+      text-shadow: none;
+      border-right: 3px solid var(--accent-blue); 
+      padding-right: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      display: inline-block;
+      animation: blink-caret 0.8s step-end infinite;
+    }
+    @keyframes blink-caret {
+      from, to { border-color: transparent; }
+      50% { border-color: var(--accent-blue); }
+    }
+    .sistema-funcional-msg {
+      margin-top: 1.5rem; 
+      text-align: center;
+      color: var(--dark-text);
+      font-size: 1.05rem; 
+      font-family: 'Inter', sans-serif;
+      letter-spacing: 0.5px;
+      text-shadow: none;
+      font-weight: 500;
+    }
+    .download-btn {
+      display: flex;
+      justify-content: center;
+      margin-top: 1.8rem; 
+      text-decoration: none;
+    }
+    
+    .modal-bg {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.75); 
+      z-index: 99999 !important;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      backdrop-filter: blur(5px); 
+    }
+    .modal-bg.active {
+      display: flex;
+    }
+    .modal-box {
+      background: linear-gradient(135deg, #0a2e4d 0%, #001f3f 100%); 
+      border: 1px solid var(--accent-blue); 
+      border-radius: 16px;
+      padding: 3rem 2.5rem 2.5rem 2.5rem; 
+      min-width: 350px;
+      max-width: 90vw;
+      color: var(--light-text);
+      font-family: 'Inter', sans-serif;
+      text-align: center;
+      position: relative;
+      animation: fadeInModal 0.4s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes fadeInModal {
+      from { opacity: 0; transform: scale(0.9); } 
+      to { opacity: 1; transform: scale(1); }
+    }
+    .modal-box h2 {
+      color: var(--accent-blue);
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem; 
+      font-weight: 700;
+    }
+    .modal-box .login-info {
+      margin-bottom: 1.5rem;
+      font-size: 1.05rem;
+      color: var(--light-text);
+    }
+    .modal-box .login-info strong {
+        color: var(--accent-blue);
+    }
+    .modal-box .redirect-msg {
+      color: var(--accent-blue);
+      font-size: 1.02rem;
+      margin-top: 1.5rem;
+      font-weight: 500;
+    }
+    .modal-close {
+      position: absolute;
+      top: 0.9rem;
+      right: 1.4rem;
+      background: none;
+      border: none;
+      color: var(--accent-blue);
+      font-size: 1.8rem; 
+      cursor: pointer;
+      transition: color 0.2s, transform 0.2s;
+    }
+    .modal-close:hover {
+      color: #fff;
+      transform: rotate(90deg); 
     }
   </style>
 </head>
 <body>
   <div id="particles-js"></div>
   <header>
-    <div class="header-content">
-      <div class="logo">
-        <img src="https://i.imgur.com/6N82fk2.png" alt="JP Sistemas Logo" />
-        <span>J.P SISTEMAS</span>
-      </div>
-      <nav>
-        <a href="sistema.html" class="nav-link">Acessar Sistema</a>
-        <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" rel="noopener" class="nav-link">Contato</a>
-        <a href="precos.html" class="nav-link">Planos</a>
-      </nav>
+    <div class="logo">
+      <img src="https://i.imgur.com/6N82fk2.png" alt="JP Sistemas Logo" />
+      <span class="tech-font">J.P SISTEMAS</span>
     </div>
+    <nav>
+      <a href="sistema.html">Acessar Sistema</a>
+      <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" rel="noopener">Contato</a>
+      <a href="precos.html">Planos</a>
+    </nav>  
   </header>
-  
   <section class="hero">
     <h1>Transforme sua gestão com tecnologia 100% em nuvem</h1>
     <p>
@@ -355,36 +434,27 @@
       <button class="cta-btn"><span>Download Windows</span></button>
     </a>
   </section>
-  
   <section class="features" id="recursos">
     <div class="feature-card">
-      <i class="fas fa-database icon"></i>
-      <h3>Banco de Dados Integrados</h3>
+      <i class="fas fa-database icon"></i> <h3>Banco de Dados Integrados</h3>
       <p>Centralize todas as informações do seu negócio em um só lugar, com integração total entre módulos e dados sempre atualizados em tempo real.</p>
     </div>
     <div class="feature-card">
-      <i class="fas fa-cloud icon"></i>
-      <h3>100% em Nuvem</h3>
+      <i class="fas fa-cloud icon"></i> <h3>100% em Nuvem</h3>
       <p>Acesse o sistema de qualquer dispositivo, a qualquer hora, com total segurança e sem necessidade de instalações locais.</p>
     </div>
     <div class="feature-card">
-      <i class="fas fa-shield-alt icon"></i>
-      <h3>Segurança e Backup</h3>
+      <i class="fas fa-shield-alt icon"></i> <h3>Segurança e Backup</h3>
       <p>Seus dados protegidos com criptografia avançada e backups automáticos, garantindo tranquilidade e conformidade.</p>
     </div>
     <div class="feature-card">
-      <i class="fas fa-desktop icon"></i>
-      <h3>Interface Moderna</h3>
+      <i class="fas fa-desktop icon"></i> <h3>Interface Moderna</h3>
       <p>Design intuitivo, responsivo e pensado para facilitar o dia a dia da sua equipe, com dashboards e relatórios inteligentes.</p>
     </div>
   </section>
-  
-  <footer>
-    <div class="container">
-      <p class="text-center">© 2025 JP. Sistemas. Todos os direitos reservados. | <a href="https://jp-sistemas.com/" style="color:var(--primary);">jp-sistemas.com</a></p>
-    </div>
+  <footer id="contato">
+    © 2025 JP. Sistemas. Todos os direitos reservados. | <a href="https://jp-sistemas.com/" style="color:var(--accent-blue);">jp-sistemas.com</a>
   </footer>
-  
   <div class="modal-bg" id="modal-bg">
     <div class="modal-box">
       <button class="modal-close" id="modal-close" title="Fechar">&times;</button>
@@ -396,8 +466,8 @@
       <div class="redirect-msg" id="redirect-msg">Você será redirecionado em 10 segundos...</div>
     </div>
   </div>
-
   <script>
+
     particlesJS('particles-js', {
       "particles": {
         "number": {
@@ -408,7 +478,7 @@
           }
         },
         "color": {
-          "value": "#43A047"
+          "value": "#00e6ff" 
         },
         "shape": {
           "type": "circle",
@@ -448,7 +518,7 @@
         "line_linked": {
           "enable": true,
           "distance": 150,
-          "color": "#43A047",
+          "color": "#00e6ff", 
           "opacity": 0.4,
           "width": 1
         },
@@ -509,6 +579,7 @@
       "retina_detect": true
     });
 
+    
     const typewriterTexts = [
       "Banco de Dados Integrados",
       "100% em Nuvem",
@@ -578,12 +649,13 @@
       });
     }
 
+    
     window.addEventListener('scroll', function() {
         const header = document.querySelector('header');
-        if (window.scrollY > 50) {
-            header.style.backgroundColor = 'var(--terciary-100)';
+        if (window.scrollY > 50) { 
+            header.classList.add('scrolled');
         } else {
-            header.style.backgroundColor = 'var(--terciary)';
+            header.classList.remove('scrolled');
         }
     });
   </script>
