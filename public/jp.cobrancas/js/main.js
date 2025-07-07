@@ -1358,7 +1358,7 @@ async function renderHistoricoEmprestimos() {
         <td>${vencimento}</td>
         <td><span class="badge badge-${statusClass}">${status}</span></td>
         <td>
-            <button class="btn btn-primary btn-sm" onclick="emprestimoController.viewEmprestimo(ID_AQUI)">Ver</button>
+            <button class="btn btn-primary btn-sm" onclick="emprestimoController.viewEmprestimo(${emprestimo.id})">Ver</button>
         </td>
       `;
       tbody.appendChild(row);
