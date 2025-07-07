@@ -273,22 +273,29 @@
     </footer>
 
     <script>
-      // Verificar se está logado
-      if (!sessionStorage.getItem('loggedIn')) {
-        window.location.href = 'sistema.html';
+      // Verificar autenticação via cookie/JWT
+      async function checkAuth() {
+        try {
+          const res = await fetch('/api/auth/check', { credentials: 'include' });
+          if (!res.ok) throw new Error('Não autenticado');
+          const data = await res.json();
+          if (!data.authenticated) throw new Error('Não autenticado');
+        } catch (err) {
+          window.location.href = 'sistema.html';
+        }
       }
+      checkAuth();
 
       // Exibir nome do usuário
       const username = sessionStorage.getItem('username') || 'Usuário';
       const userDisplay = document.getElementById('userDisplay');
-      
       // Capitalizar primeira letra do nome
       const capitalizedUsername = username.charAt(0).toUpperCase() + username.slice(1);
       userDisplay.textContent = capitalizedUsername;
 
       // Função de logout
-      function logout() {
-        sessionStorage.removeItem('loggedIn');
+      async function logout() {
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
         sessionStorage.removeItem('username');
         sessionStorage.removeItem('loginTime');
         window.location.href = 'sistema.html';
@@ -302,17 +309,14 @@
           const currentDate = new Date();
           const timeDiff = currentDate.getTime() - loginDate.getTime();
           const hoursDiff = timeDiff / (1000 * 3600);
-          
           if (hoursDiff >= 8) {
             alert('Sessão expirada. Faça login novamente.');
             logout();
           }
         }
       }
-
-      // Verificar sessão a cada 5 minutos
       setInterval(checkSessionTimeout, 5 * 60 * 1000);
-      checkSessionTimeout(); // Verificar imediatamente
+      checkSessionTimeout();
     </script>
   </body>
 </html>

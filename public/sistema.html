@@ -466,7 +466,7 @@
         });
 
         // Form submission
-        loginForm.addEventListener('submit', function(e) {
+        loginForm.addEventListener('submit', async function(e) {
           e.preventDefault();
           
           const username = usernameInput.value.trim();
@@ -482,20 +482,35 @@
           loginLoading.style.display = 'block';
           loginBtn.disabled = true;
 
-          // Simulate API call
-          setTimeout(() => {
-            if (username === 'teste' && password === 'teste') {
+          try {
+            const res = await fetch('/api/auth/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+              // Opcional: salvar nome do usuário para exibir no painel
+              sessionStorage.setItem('username', username);
+              sessionStorage.setItem('loginTime', new Date().toISOString());
               showMessage('Login realizado com sucesso! Redirecionando...', 'success');
               setTimeout(() => {
                 window.location.href = 'painel.html';
               }, 1500);
             } else {
-              showMessage('Usuário ou senha incorretos.', 'error');
+              showMessage(data.error || 'Usuário ou senha incorretos.', 'error');
               loginText.style.display = 'block';
               loginLoading.style.display = 'none';
               loginBtn.disabled = false;
             }
-          }, 1000);
+          } catch (err) {
+            showMessage('Erro ao conectar ao servidor.', 'error');
+            loginText.style.display = 'block';
+            loginLoading.style.display = 'none';
+            loginBtn.disabled = false;
+          }
         });
 
         function showMessage(message, type) {
