@@ -327,79 +327,183 @@
         <form id="novoEmprestimoForm">
           <!-- Seção: Informações do Cliente -->
           <div class="form-group">
-            <label class="label-primary">Cliente</label>
-            <select name="clienteId" id="clienteSelect" class="input-primary" required>
-              <option value="">Selecione um cliente</option>
-            </select>
+            <label class="label-primary">Tipo de Cliente</label>
+            <div class="tipo-emprestimo-container" style="grid-template-columns: repeat(2, 1fr);">
+              <div class="tipo-option">
+                <input type="radio" id="tipo-cliente-existente" name="tipoCliente" value="existente" checked>
+                <label for="tipo-cliente-existente">Cliente Existente</label>
+              </div>
+              <div class="tipo-option">
+                <input type="radio" id="tipo-cliente-novo" name="tipoCliente" value="novo">
+                <label for="tipo-cliente-novo">Novo Cliente</label>
+              </div>
+            </div>
           </div>
 
-          <div class="cliente-info" id="clienteInfo" style="display: none;">
-            <h4>Informações do Cliente Selecionado</h4>
-            <p><strong>Nome:</strong> <span id="infoNome"></span></p>
-            <p><strong>CPF/CNPJ:</strong> <span id="infoCpf"></span></p>
-            <p><strong>Telefone:</strong> <span id="infoTelefone"></span></p>
+          <!-- Cliente Existente -->
+          <div id="clienteExistente" class="form-group">
+            <label class="label-primary">Selecionar Cliente</label>
+            <select name="clienteId" id="clienteSelect" class="input-primary">
+              <option value="">Selecione um cliente</option>
+            </select>
+            
+            <div class="cliente-info" id="clienteInfo" style="display: none;">
+              <h4>Informações do Cliente Selecionado</h4>
+              <p><strong>Nome:</strong> <span id="infoNome"></span></p>
+              <p><strong>CPF/CNPJ:</strong> <span id="infoCpf"></span></p>
+              <p><strong>Telefone:</strong> <span id="infoTelefone"></span></p>
+            </div>
+          </div>
+
+          <!-- Novo Cliente -->
+          <div id="novoCliente" class="form-group" style="display: none;">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="label-primary">Nome Completo *</label>
+                <input type="text" name="nomeCliente" id="nomeCliente" class="input-primary" placeholder="Nome completo do cliente">
+              </div>
+              <div class="form-group">
+                <label class="label-primary">CPF/CNPJ *</label>
+                <input type="text" name="cpfCliente" id="cpfCliente" class="input-primary" placeholder="000.000.000-00 ou 00.000.000/0000-00">
+              </div>
+              <div class="form-group">
+                <label class="label-primary">Telefone</label>
+                <input type="text" name="telefoneCliente" id="telefoneCliente" class="input-primary" placeholder="(00) 00000-0000">
+              </div>
+              <div class="form-group">
+                <label class="label-primary">Email</label>
+                <input type="email" name="emailCliente" id="emailCliente" class="input-primary" placeholder="email@exemplo.com">
+              </div>
+              <div class="form-group">
+                <label class="label-primary">Endereço</label>
+                <input type="text" name="enderecoCliente" id="enderecoCliente" class="input-primary" placeholder="Rua, número, bairro">
+              </div>
+              <div class="form-group">
+                <label class="label-primary">Cidade</label>
+                <input type="text" name="cidadeCliente" id="cidadeCliente" class="input-primary" placeholder="Nome da cidade">
+              </div>
+              <div class="form-group">
+                <label class="label-primary">Estado</label>
+                <select name="estadoCliente" id="estadoCliente" class="input-primary">
+                  <option value="">Selecione o estado</option>
+                  <option value="AC">Acre</option>
+                  <option value="AL">Alagoas</option>
+                  <option value="AP">Amapá</option>
+                  <option value="AM">Amazonas</option>
+                  <option value="BA">Bahia</option>
+                  <option value="CE">Ceará</option>
+                  <option value="DF">Distrito Federal</option>
+                  <option value="ES">Espírito Santo</option>
+                  <option value="GO">Goiás</option>
+                  <option value="MA">Maranhão</option>
+                  <option value="MT">Mato Grosso</option>
+                  <option value="MS">Mato Grosso do Sul</option>
+                  <option value="MG">Minas Gerais</option>
+                  <option value="PA">Pará</option>
+                  <option value="PB">Paraíba</option>
+                  <option value="PR">Paraná</option>
+                  <option value="PE">Pernambuco</option>
+                  <option value="PI">Piauí</option>
+                  <option value="RJ">Rio de Janeiro</option>
+                  <option value="RN">Rio Grande do Norte</option>
+                  <option value="RS">Rio Grande do Sul</option>
+                  <option value="RO">Rondônia</option>
+                  <option value="RR">Roraima</option>
+                  <option value="SC">Santa Catarina</option>
+                  <option value="SP">São Paulo</option>
+                  <option value="SE">Sergipe</option>
+                  <option value="TO">Tocantins</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="label-primary">CEP</label>
+                <input type="text" name="cepCliente" id="cepCliente" class="input-primary" placeholder="00000-000">
+              </div>
+            </div>
           </div>
 
           <!-- Seção: Tipo de Empréstimo -->
           <div class="form-group">
             <label class="label-primary">Tipo de Empréstimo</label>
-            <div class="tipo-emprestimo-container">
+            <select name="tipoEmprestimo" id="tipoEmprestimo" class="input-primary" required>
+              <option value="" disabled selected>Nenhum tipo selecionado</option>
+              <option value="fixed">Fixo</option>
+              <option value="in_installments">Parcelado</option>
+            </select>
+          </div>
+
+          <!-- Seção: Valor -->
+          <div class="form-group">
+            <label class="label-primary">Valor (R$)</label>
+            <input type="text" name="valor" id="valor" class="input-primary" placeholder="ex.: 1000" required>
+          </div>
+
+          <!-- Seção: Tipo de Cálculo -->
+          <div class="form-group">
+            <label class="label-primary">Tipo de Cálculo</label>
+            <div class="tipo-emprestimo-container" style="grid-template-columns: repeat(3, 1fr);">
               <div class="tipo-option">
-                <input type="radio" id="tipo-fixo" name="tipoEmprestimo" value="fixo" checked>
-                <label for="tipo-fixo">Fixo</label>
+                <input type="radio" id="calc-valor-fixo" name="tipoCalculo" value="fixed" checked>
+                <label for="calc-valor-fixo">Valor Fixo (R$)</label>
               </div>
               <div class="tipo-option">
-                <input type="radio" id="tipo-parcelado-valor-fixo" name="tipoEmprestimo" value="parcelado-valor-fixo">
-                <label for="tipo-parcelado-valor-fixo">Parcelado - Valor Fixo</label>
+                <input type="radio" id="calc-parcela-fixa" name="tipoCalculo" value="fixed-installment">
+                <label for="calc-parcela-fixa">Parcela Fixa (R$)</label>
               </div>
               <div class="tipo-option">
-                <input type="radio" id="tipo-parcelado-parcela-fixa" name="tipoEmprestimo" value="parcelado-parcela-fixa">
-                <label for="tipo-parcelado-parcela-fixa">Parcelado - Parcela Fixa</label>
-              </div>
-              <div class="tipo-option">
-                <input type="radio" id="tipo-parcelado-porcentagem" name="tipoEmprestimo" value="parcelado-porcentagem">
-                <label for="tipo-parcelado-porcentagem">Parcelado - Porcentagem</label>
+                <input type="radio" id="calc-porcentagem" name="tipoCalculo" value="percentage">
+                <label for="calc-porcentagem">Porcentagem (%)</label>
               </div>
             </div>
           </div>
 
-          <!-- Seção: Valores e Condições -->
+          <!-- Seção: Valor Final de Cobrança -->
+          <div class="form-group" id="valorFinalSection">
+            <label class="label-primary">Valor Final de Cobrança (R$)</label>
+            <input type="text" name="valorFinal" id="valorFinal" class="input-primary" placeholder="ex.: 1000">
+          </div>
+
+          <!-- Seção: Parcelas e Frequência -->
           <div class="form-grid">
             <div class="form-group">
-              <label class="label-primary">Valor Principal (R$)</label>
-              <input type="text" name="valorPrincipal" id="valorPrincipal" class="input-primary" placeholder="0,00" required>
+              <label class="label-primary">Qtd. de Parcelas</label>
+              <input type="number" name="numeroParcelas" id="numeroParcelas" class="input-primary" min="1" value="1" placeholder="ex.: 12">
             </div>
             <div class="form-group">
-              <label class="label-primary">Taxa de Juros (% ao mês)</label>
-              <input type="number" name="taxaJuros" id="taxaJuros" class="input-primary" step="0.01" min="0" placeholder="0,00" required>
-            </div>
-            <div class="form-group">
-              <label class="label-primary">Multa por Atraso (% ao dia)</label>
-              <input type="number" name="multaAtraso" id="multaAtraso" class="input-primary" step="0.01" min="0" placeholder="0,00" required>
-            </div>
-            <div class="form-group">
-              <label class="label-primary">Número de Parcelas</label>
-              <input type="number" name="numeroParcelas" id="numeroParcelas" class="input-primary" min="1" value="1" required>
-            </div>
-            <div class="form-group">
-              <label class="label-primary">Data de Vencimento</label>
-              <input type="date" name="dataVencimento" id="dataVencimento" class="input-primary" required>
-            </div>
-            <div class="form-group">
-              <label class="label-primary">Frequência de Pagamento</label>
+              <label class="label-primary">Frequência</label>
               <select name="frequencia" id="frequencia" class="input-primary">
-                <option value="mensal">Mensal</option>
-                <option value="quinzenal">Quinzenal</option>
-                <option value="semanal">Semanal</option>
-                <option value="diario">Diário</option>
+                <option value="" disabled>Nenhuma frequência selecionada</option>
+                <option value="daily">Diário</option>
+                <option value="weekly">Semanal</option>
+                <option value="biweekly">Quinzenal</option>
+                <option value="monthly" selected>Mensal</option>
               </select>
             </div>
           </div>
 
-          <!-- Seção: Campos específicos por tipo -->
-          <div id="camposEspecificos">
-            <!-- Campos específicos serão inseridos dinamicamente -->
+          <!-- Seção: Data da Primeira Parcela -->
+          <div class="form-group">
+            <label class="label-primary">Data da Primeira Parcela</label>
+            <input type="date" name="dataPrimeiraParcela" id="dataPrimeiraParcela" class="input-primary" required>
           </div>
+
+          <!-- Seção: Afiliado (opcional) -->
+          <div class="form-grid">
+            <div class="form-group" style="grid-column: span 3;">
+              <label class="label-primary">Afiliado</label>
+              <select name="afiliado" id="afiliado" class="input-primary">
+                <option value="">Nenhum afiliado selecionado</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="label-primary">%</label>
+              <input type="number" name="percentualAfiliado" id="percentualAfiliado" class="input-primary" step="0.01" placeholder="0.00">
+            </div>
+          </div>
+
+          <small class="font-semibold text-terciary text-xs">* Caso seja número decimal utilize ponto, exemplo <strong>(20,5)</strong> deve ser informado <strong>(20.5)</strong>.</small>
+
+
 
           <!-- Seção: Observações -->
           <div class="form-group">
@@ -635,8 +739,12 @@
       const btnSimular = document.getElementById('btnSimular');
       const btnCancelar = document.getElementById('btnCancelar');
       const clienteSelect = document.getElementById('clienteSelect');
-      const tipoEmprestimoInputs = document.querySelectorAll('input[name="tipoEmprestimo"]');
-      const camposEspecificos = document.getElementById('camposEspecificos');
+      const tipoClienteInputs = document.querySelectorAll('input[name="tipoCliente"]');
+      const clienteExistente = document.getElementById('clienteExistente');
+      const novoCliente = document.getElementById('novoCliente');
+      const tipoEmprestimoSelect = document.getElementById('tipoEmprestimo');
+      const tipoCalculoInputs = document.querySelectorAll('input[name="tipoCalculo"]');
+      const valorFinalSection = document.getElementById('valorFinalSection');
       const simulacaoPreview = document.getElementById('simulacaoPreview');
 
       // Toggle do formulário
@@ -645,12 +753,44 @@
           emprestimoForm.style.display = 'block';
           toggleFormBtn.textContent = 'Fechar Formulário';
           await carregarClientes();
-          setDataVencimentoPadrao();
+          setDataPrimeiraParcelaPadrao();
         } else {
           emprestimoForm.style.display = 'none';
           toggleFormBtn.textContent = 'Novo Empréstimo';
           resetForm();
         }
+      });
+
+      // Controle de tipo de cliente (existente/novo)
+      tipoClienteInputs.forEach(input => {
+        input.addEventListener('change', () => {
+          const tipoCliente = document.querySelector('input[name="tipoCliente"]:checked').value;
+          if (tipoCliente === 'existente') {
+            clienteExistente.style.display = 'block';
+            novoCliente.style.display = 'none';
+          } else {
+            clienteExistente.style.display = 'none';
+            novoCliente.style.display = 'block';
+          }
+        });
+      });
+
+      // Controle de tipo de empréstimo
+      tipoEmprestimoSelect.addEventListener('change', () => {
+        const tipoEmprestimo = tipoEmprestimoSelect.value;
+        if (tipoEmprestimo === 'in_installments') {
+          valorFinalSection.style.display = 'block';
+        } else {
+          valorFinalSection.style.display = 'none';
+        }
+      });
+
+      // Controle de tipo de cálculo
+      tipoCalculoInputs.forEach(input => {
+        input.addEventListener('change', () => {
+          const tipoCalculo = document.querySelector('input[name="tipoCalculo"]:checked').value;
+          // Aqui você pode adicionar lógica específica para cada tipo de cálculo
+        });
       });
 
       // Carregar clientes
@@ -695,98 +835,41 @@
         }
       });
 
-      // Mudança no tipo de empréstimo
-      tipoEmprestimoInputs.forEach(input => {
-        input.addEventListener('change', () => {
-          atualizarCamposEspecificos();
-        });
-      });
-
-      // Atualizar campos específicos baseado no tipo
-      function atualizarCamposEspecificos() {
-        const tipoSelecionado = document.querySelector('input[name="tipoEmprestimo"]:checked').value;
-        let camposHTML = '';
-
-        switch (tipoSelecionado) {
-          case 'parcelado-valor-fixo':
-            camposHTML = `
-              <div class="form-group">
-                <label class="label-primary">Valor da Parcela (R$)</label>
-                <input type="text" name="valorParcela" id="valorParcela" class="input-primary" placeholder="0,00">
-              </div>
-            `;
-            break;
-          case 'parcelado-parcela-fixa':
-            camposHTML = `
-              <div class="form-group">
-                <label class="label-primary">Valor da Parcela (R$)</label>
-                <input type="text" name="valorParcelaFixa" id="valorParcelaFixa" class="input-primary" placeholder="0,00">
-              </div>
-            `;
-            break;
-          case 'parcelado-porcentagem':
-            camposHTML = `
-              <div class="form-group">
-                <label class="label-primary">Porcentagem de Juros Total (%)</label>
-                <input type="number" name="porcentagemJuros" id="porcentagemJuros" class="input-primary" step="0.01" min="0" placeholder="0,00">
-              </div>
-            `;
-            break;
-          default:
-            camposHTML = `
-              <div class="form-group">
-                <label class="label-primary">Valor Total com Juros (R$)</label>
-                <input type="text" name="valorTotal" id="valorTotal" class="input-primary" placeholder="0,00" readonly>
-              </div>
-            `;
-        }
-
-        camposEspecificos.innerHTML = camposHTML;
-      }
-
       // Simular empréstimo
       btnSimular.addEventListener('click', () => {
         simularEmprestimo();
       });
 
       function simularEmprestimo() {
-        const valorPrincipal = parseFloat(document.getElementById('valorPrincipal').value.replace(',', '.')) || 0;
-        const taxaJuros = parseFloat(document.getElementById('taxaJuros').value) || 0;
+        const valor = parseFloat(document.getElementById('valor').value.replace(',', '.')) || 0;
+        const valorFinal = parseFloat(document.getElementById('valorFinal').value.replace(',', '.')) || 0;
         const numeroParcelas = parseInt(document.getElementById('numeroParcelas').value) || 1;
-        const tipoSelecionado = document.querySelector('input[name="tipoEmprestimo"]:checked').value;
+        const tipoEmprestimo = document.getElementById('tipoEmprestimo').value;
+        const tipoCalculo = document.querySelector('input[name="tipoCalculo"]:checked').value;
 
         let simulacao = {
-          valorPrincipal: valorPrincipal,
-          taxaJuros: taxaJuros,
+          valor: valor,
           numeroParcelas: numeroParcelas,
-          tipo: tipoSelecionado
+          tipoEmprestimo: tipoEmprestimo,
+          tipoCalculo: tipoCalculo
         };
 
-        switch (tipoSelecionado) {
-          case 'fixo':
-            const jurosTotal = valorPrincipal * (taxaJuros / 100);
-            simulacao.valorTotal = valorPrincipal + jurosTotal;
-            simulacao.valorParcela = simulacao.valorTotal;
-            simulacao.jurosTotal = jurosTotal;
+        switch (tipoCalculo) {
+          case 'fixed':
+            simulacao.valorFinal = valorFinal || valor;
+            simulacao.valorParcela = simulacao.valorFinal;
+            simulacao.jurosTotal = simulacao.valorFinal - valor;
             break;
-          case 'parcelado-valor-fixo':
-            const valorParcela = parseFloat(document.getElementById('valorParcela').value.replace(',', '.')) || 0;
-            simulacao.valorParcela = valorParcela;
-            simulacao.valorTotal = valorParcela * numeroParcelas;
-            simulacao.jurosTotal = simulacao.valorTotal - valorPrincipal;
+          case 'fixed-installment':
+            simulacao.valorParcela = valorFinal / numeroParcelas;
+            simulacao.valorFinal = valorFinal;
+            simulacao.jurosTotal = valorFinal - valor;
             break;
-          case 'parcelado-parcela-fixa':
-            const valorParcelaFixa = parseFloat(document.getElementById('valorParcelaFixa').value.replace(',', '.')) || 0;
-            simulacao.valorParcela = valorParcelaFixa;
-            simulacao.valorTotal = valorParcelaFixa * numeroParcelas;
-            simulacao.jurosTotal = simulacao.valorTotal - valorPrincipal;
-            break;
-          case 'parcelado-porcentagem':
-            const porcentagemJuros = parseFloat(document.getElementById('porcentagemJuros').value) || 0;
-            const jurosPorcentagem = valorPrincipal * (porcentagemJuros / 100);
-            simulacao.valorTotal = valorPrincipal + jurosPorcentagem;
-            simulacao.valorParcela = simulacao.valorTotal / numeroParcelas;
-            simulacao.jurosTotal = jurosPorcentagem;
+          case 'percentage':
+            const porcentagem = valorFinal || 0;
+            simulacao.jurosTotal = valor * (porcentagem / 100);
+            simulacao.valorFinal = valor + simulacao.jurosTotal;
+            simulacao.valorParcela = simulacao.valorFinal / numeroParcelas;
             break;
         }
 
@@ -798,7 +881,7 @@
         simulacaoGrid.innerHTML = `
           <div class="simulacao-item">
             <div class="simulacao-label">Valor Principal</div>
-            <div class="simulacao-value">R$ ${simulacao.valorPrincipal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+            <div class="simulacao-value">R$ ${simulacao.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
           </div>
           <div class="simulacao-item">
             <div class="simulacao-label">Juros Total</div>
@@ -806,7 +889,7 @@
           </div>
           <div class="simulacao-item">
             <div class="simulacao-label">Valor Total</div>
-            <div class="simulacao-value">R$ ${simulacao.valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+            <div class="simulacao-value">R$ ${simulacao.valorFinal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
           </div>
           <div class="simulacao-item">
             <div class="simulacao-label">Valor da Parcela</div>
@@ -818,7 +901,7 @@
           </div>
           <div class="simulacao-item">
             <div class="simulacao-label">Tipo</div>
-            <div class="simulacao-value">${getTipoDisplayName(simulacao.tipo)}</div>
+            <div class="simulacao-value">${getTipoDisplayName(simulacao.tipoCalculo)}</div>
           </div>
         `;
 
@@ -827,10 +910,9 @@
 
       function getTipoDisplayName(tipo) {
         const tipos = {
-          'fixo': 'Fixo',
-          'parcelado-valor-fixo': 'Parcelado - Valor Fixo',
-          'parcelado-parcela-fixa': 'Parcelado - Parcela Fixa',
-          'parcelado-porcentagem': 'Parcelado - Porcentagem'
+          'fixed': 'Valor Fixo',
+          'fixed-installment': 'Parcela Fixa',
+          'percentage': 'Porcentagem'
         };
         return tipos[tipo] || tipo;
       }
@@ -847,17 +929,19 @@
         novoEmprestimoForm.reset();
         document.getElementById('clienteInfo').style.display = 'none';
         simulacaoPreview.classList.remove('show');
-        atualizarCamposEspecificos();
+        valorFinalSection.style.display = 'none';
+        clienteExistente.style.display = 'block';
+        novoCliente.style.display = 'none';
       }
 
-      // Definir data de vencimento padrão (30 dias)
-      function setDataVencimentoPadrao() {
+      // Definir data da primeira parcela padrão (30 dias)
+      function setDataPrimeiraParcelaPadrao() {
         const hoje = new Date();
-        const vencimento = new Date(hoje);
-        vencimento.setDate(hoje.getDate() + 30);
+        const primeiraParcela = new Date(hoje);
+        primeiraParcela.setDate(hoje.getDate() + 30);
         
-        const dataVencimento = document.getElementById('dataVencimento');
-        dataVencimento.value = vencimento.toISOString().split('T')[0];
+        const dataPrimeiraParcela = document.getElementById('dataPrimeiraParcela');
+        dataPrimeiraParcela.value = primeiraParcela.toISOString().split('T')[0];
       }
 
       // Máscara de moeda para campos de valor
@@ -870,10 +954,48 @@
       }
 
       // Aplicar máscaras
-      aplicarMascaraMoeda(document.getElementById('valorPrincipal'));
+      aplicarMascaraMoeda(document.getElementById('valor'));
+      aplicarMascaraMoeda(document.getElementById('valorFinal'));
       
-      // Atualizar campos específicos inicialmente
-      atualizarCamposEspecificos();
+      // Máscara para CPF/CNPJ
+      function aplicarMascaraCPF(elemento) {
+        elemento.addEventListener('input', (e) => {
+          let valor = e.target.value.replace(/\D/g, '');
+          if (valor.length <= 11) {
+            valor = valor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+          } else {
+            valor = valor.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+          }
+          e.target.value = valor;
+        });
+      }
+
+      // Máscara para telefone
+      function aplicarMascaraTelefone(elemento) {
+        elemento.addEventListener('input', (e) => {
+          let valor = e.target.value.replace(/\D/g, '');
+          if (valor.length <= 10) {
+            valor = valor.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+          } else {
+            valor = valor.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+          }
+          e.target.value = valor;
+        });
+      }
+
+      // Máscara para CEP
+      function aplicarMascaraCEP(elemento) {
+        elemento.addEventListener('input', (e) => {
+          let valor = e.target.value.replace(/\D/g, '');
+          valor = valor.replace(/(\d{5})(\d{3})/, '$1-$2');
+          e.target.value = valor;
+        });
+      }
+
+      // Aplicar máscaras para novo cliente
+      aplicarMascaraCPF(document.getElementById('cpfCliente'));
+      aplicarMascaraTelefone(document.getElementById('telefoneCliente'));
+      aplicarMascaraCEP(document.getElementById('cepCliente'));
 
       // Submit do formulário
       novoEmprestimoForm.addEventListener('submit', async (e) => {
@@ -883,43 +1005,63 @@
         const dados = Object.fromEntries(formData.entries());
         
         // Validações básicas
-        if (!dados.clienteId) {
-          alert('Selecione um cliente');
+        const tipoCliente = document.querySelector('input[name="tipoCliente"]:checked').value;
+        
+        if (tipoCliente === 'existente' && !dados.clienteId) {
+          alert('Selecione um cliente existente');
           return;
         }
 
-        if (!dados.valorPrincipal || parseFloat(dados.valorPrincipal.replace(',', '.')) <= 0) {
-          alert('Informe um valor principal válido');
+        if (tipoCliente === 'novo') {
+          if (!dados.nomeCliente || !dados.cpfCliente) {
+            alert('Para novo cliente, preencha pelo menos nome e CPF/CNPJ');
+            return;
+          }
+        }
+
+        if (!dados.valor || parseFloat(dados.valor.replace(',', '.')) <= 0) {
+          alert('Informe um valor válido');
+          return;
+        }
+
+        if (!dados.tipoEmprestimo) {
+          alert('Selecione o tipo de empréstimo');
           return;
         }
 
         try {
+          // Criar cliente se necessário
+          let clienteId = dados.clienteId;
+          if (tipoCliente === 'novo') {
+            const clienteData = {
+              nome: dados.nomeCliente,
+              cpf_cnpj: dados.cpfCliente.replace(/\D/g, ''),
+              telefone: dados.telefoneCliente.replace(/\D/g, ''),
+              email: dados.emailCliente || '',
+              endereco: dados.enderecoCliente || '',
+              cidade: dados.cidadeCliente || '',
+              estado: dados.estadoCliente || '',
+              cep: dados.cepCliente.replace(/\D/g, '') || ''
+            };
+            
+            const clienteResponse = await apiService.createCliente(clienteData);
+            clienteId = clienteResponse.id;
+          }
+
           // Preparar dados do empréstimo
           const emprestimoData = {
-            cliente_id: parseInt(dados.clienteId),
-            valor: parseFloat(dados.valorPrincipal.replace(',', '.')),
-            data_emprestimo: dados.dataVencimento,
-            data_vencimento: dados.dataVencimento,
-            juros_mensal: parseFloat(dados.taxaJuros) || 0,
-            multa_atraso: parseFloat(dados.multaAtraso) || 0,
+            cliente_id: parseInt(clienteId),
+            valor: parseFloat(dados.valor.replace(',', '.')),
             tipo_emprestimo: dados.tipoEmprestimo,
+            tipo_calculo: document.querySelector('input[name="tipoCalculo"]:checked').value,
+            valor_final: parseFloat(dados.valorFinal?.replace(',', '.')) || 0,
             numero_parcelas: parseInt(dados.numeroParcelas) || 1,
-            frequencia: dados.frequencia || 'mensal',
+            frequencia: dados.frequencia || 'monthly',
+            data_primeira_parcela: dados.dataPrimeiraParcela,
+            afiliado_id: dados.afiliado || null,
+            percentual_afiliado: parseFloat(dados.percentualAfiliado) || 0,
             observacoes: dados.observacoes || ''
           };
-
-          // Adicionar campos específicos baseado no tipo
-          switch (dados.tipoEmprestimo) {
-            case 'parcelado-valor-fixo':
-              emprestimoData.valor_parcela = parseFloat(dados.valorParcela?.replace(',', '.')) || 0;
-              break;
-            case 'parcelado-parcela-fixa':
-              emprestimoData.valor_parcela_fixa = parseFloat(dados.valorParcelaFixa?.replace(',', '.')) || 0;
-              break;
-            case 'parcelado-porcentagem':
-              emprestimoData.porcentagem_juros = parseFloat(dados.porcentagemJuros) || 0;
-              break;
-          }
 
           await apiService.createEmprestimo(emprestimoData);
           
@@ -935,8 +1077,8 @@
           console.error('Erro ao criar empréstimo:', error);
           alert('Erro ao criar empréstimo. Tente novamente.');
         }
-      });
-    }
-  </script>
+              });
+      }
+    </script>
 </body>
 </html> 
