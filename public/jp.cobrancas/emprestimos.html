@@ -1089,15 +1089,6 @@
             observacoes: dados.observacoes || ''
           };
 
-          // Se for parcelado, enviar campos extras
-          if (dados.tipoEmprestimo === 'in_installments') {
-            let valorFinal = dados.valorFinal || dados.valor;
-            if (typeof valorFinal === 'string') valorFinal = valorFinal.replace(',', '.');
-            payload.numero_parcelas = parseInt(dados.numeroParcelas) || 1;
-            payload.frequencia = dados.frequencia || 'monthly';
-            payload.valor_final = parseFloat(valorFinal);
-          }
-
           console.log('Payload enviado para API:', payload);
           await apiService.createEmprestimo(payload);
           
