@@ -569,14 +569,16 @@
           if (btnParceladoParcelaFixa.classList.contains('bg-terciary')) modo = 'parcela-fixa';
           if (btnParceladoPorcentagem.classList.contains('bg-terciary')) modo = 'porcentagem';
           let type = 'fixed';
-          if (modo !== 'fixo') type = 'in_installments';
+          if (modo === 'parcela-fixa') type = 'fixed-installment';
+          else if (modo === 'porcentagem') type = 'percentage';
+          else if (modo !== 'fixo') type = 'in_installments';
           function formatValorNum(v) {
             if (!v) return undefined;
             let n = parseFloat(v.toString().replace('.', '').replace(',', '.'));
             if (isNaN(n)) return undefined;
             return n;
           }
-              // Montar objeto transactionForm
+              // Montar objeto transactionForm com todos os campos possíveis
     const transactionFormPayload = {
       type,
       valueFormatted: formatValorNum(formData.get('valueFormatted')),
@@ -587,7 +589,16 @@
       startPaymentsAt: formData.get('startPaymentsAt') || undefined,
       clienteId: formData.get('clienteId') ? parseInt(formData.get('clienteId')) : undefined,
       afiliado: formData.get('afiliado') || undefined,
-      percentageAfiliado: formData.get('percentageAfiliado') || undefined
+      percentageAfiliado: formData.get('percentageAfiliado') || undefined,
+      // Campos adicionais que podem estar faltando
+      value: formatValorNum(formData.get('valueFormatted')),
+      finalValue: modo !== 'porcentagem' ? formatValorNum(formData.get('finalValueFormatted')) : undefined,
+      installments: formData.get('payBy') ? parseInt(formData.get('payBy')) : undefined,
+      cliente_id: formData.get('clienteId') ? parseInt(formData.get('clienteId')) : undefined,
+      // Valores em diferentes formatos
+      valor: formatValorNum(formData.get('valueFormatted')),
+      valor_final: modo !== 'porcentagem' ? formatValorNum(formData.get('finalValueFormatted')) : undefined,
+      parcelas: formData.get('payBy') ? parseInt(formData.get('payBy')) : undefined
     };
           // Remover campos undefined ou vazios
           Object.keys(transactionFormPayload).forEach(key => {
