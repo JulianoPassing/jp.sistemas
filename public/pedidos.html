@@ -676,10 +676,18 @@
   </footer>
 
   <script>
-    // Verificar se está logado
-    if (!sessionStorage.getItem('loggedIn')) {
-      window.location.href = 'sistema.html';
+    // Verificar autenticação via cookie/JWT
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/check', { credentials: 'include' });
+        if (!res.ok) throw new Error('Não autenticado');
+        const data = await res.json();
+        if (!data.authenticated) throw new Error('Não autenticado');
+      } catch (err) {
+        window.location.href = 'sistema.html';
+      }
     }
+    checkAuth();
 
     // Exibir nome do usuário
     const username = sessionStorage.getItem('username') || 'Usuário';
