@@ -965,6 +965,206 @@ const emprestimoController = {
     `;
   },
 
+  async editarEmprestimo(id) {
+    try {
+      // Buscar dados do empréstimo
+      const emprestimos = await apiService.getEmprestimos();
+      const emp = emprestimos.find(e => String(e.id) === String(id));
+      
+      if (!emp) {
+        ui.showNotification('Empréstimo não encontrado', 'error');
+        return;
+      }
+
+      // Buscar lista de clientes para o select
+      const clientes = await apiService.getClientes();
+      
+      // Criar modal de edição
+      const modalEdicao = `
+        <div style="padding: 1.5rem; max-width: 600px; margin: 0 auto;">
+          <h3 style="margin-bottom: 1.5rem; color: #002f4b; text-align: center;">Editar Empréstimo #${emp.id}</h3>
+          
+          <form id="form-editar-emprestimo">
+            <div class="form-group">
+              <label>Cliente *</label>
+              <select id="edit-cliente" class="form-input" required>
+                <option value="">Selecione um cliente</option>
+                ${clientes.map(cliente => `
+                  <option value="${cliente.id}" ${cliente.id == emp.cliente_id ? 'selected' : ''}>
+                    ${cliente.nome} - ${cliente.telefone || cliente.celular || 'Sem telefone'}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+            
+            <div class="grid grid-cols-2" style="gap: 1rem;">
+                             <div class="form-group">
+                 <label>Valor do Empréstimo (R$) *</label>
+                 <input type="text" id="edit-valor" class="form-input" value="R$ ${utils.formatCurrency(emp.valor || 0)}" required>
+               </div>
+              
+              <div class="form-group">
+                <label>Juros Mensal (%) *</label>
+                <input type="number" id="edit-juros" class="form-input" step="0.01" min="0" value="${emp.juros_mensal || ''}" required>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-2" style="gap: 1rem;">
+              <div class="form-group">
+                <label>Data de Vencimento *</label>
+                <input type="date" id="edit-data-vencimento" class="form-input" value="${emp.data_vencimento || ''}" required>
+              </div>
+              
+              <div class="form-group">
+                <label>Frequência de Pagamento *</label>
+                <select id="edit-frequencia" class="form-input" required>
+                  <option value="monthly" ${emp.frequencia_pagamento === 'monthly' ? 'selected' : ''}>Mensal</option>
+                  <option value="weekly" ${emp.frequencia_pagamento === 'weekly' ? 'selected' : ''}>Semanal</option>
+                  <option value="daily" ${emp.frequencia_pagamento === 'daily' ? 'selected' : ''}>Diário</option>
+                  <option value="biweekly" ${emp.frequencia_pagamento === 'biweekly' ? 'selected' : ''}>Quinzenal</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-2" style="gap: 1rem;">
+              <div class="form-group">
+                <label>Número de Parcelas *</label>
+                <input type="number" id="edit-parcelas" class="form-input" min="1" value="${emp.numero_parcelas || 1}" required>
+              </div>
+              
+              <div class="form-group">
+                <label>Status</label>
+                <select id="edit-status" class="form-input">
+                  <option value="Ativo" ${emp.status === 'Ativo' ? 'selected' : ''}>Ativo</option>
+                  <option value="Quitado" ${emp.status === 'Quitado' ? 'selected' : ''}>Quitado</option>
+                  <option value="Em Atraso" ${emp.status === 'Em Atraso' ? 'selected' : ''}>Em Atraso</option>
+                  <option value="Cancelado" ${emp.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Observações</label>
+              <textarea id="edit-observacoes" class="form-input" rows="3" placeholder="Observações sobre o empréstimo">${emp.observacoes || ''}</textarea>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+              <button type="submit" class="btn btn-primary" style="flex: 1;">Salvar Alterações</button>
+              <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      `;
+      
+      const modal = ui.showModal(modalEdicao, 'Editar Empréstimo');
+      
+      // Aplicar máscara de moeda no campo valor
+      const valorInput = modal.querySelector('#edit-valor');
+      this.aplicarMascaraMoeda(valorInput);
+      
+      // Processar formulário de edição
+      const form = modal.querySelector('#form-editar-emprestimo');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = {
+          cliente_id: document.getElementById('edit-cliente').value,
+          valor: this.parseMoeda(document.getElementById('edit-valor').value),
+          juros_mensal: parseFloat(document.getElementById('edit-juros').value),
+          data_vencimento: document.getElementById('edit-data-vencimento').value,
+          frequencia_pagamento: document.getElementById('edit-frequencia').value,
+          numero_parcelas: parseInt(document.getElementById('edit-parcelas').value),
+          status: document.getElementById('edit-status').value,
+          observacoes: document.getElementById('edit-observacoes').value
+        };
+        
+        // Validações
+        if (!formData.cliente_id) {
+          ui.showNotification('Selecione um cliente', 'error');
+          return;
+        }
+        
+        if (!formData.valor || formData.valor <= 0) {
+          ui.showNotification('Valor do empréstimo deve ser maior que zero', 'error');
+          return;
+        }
+        
+        if (!formData.juros_mensal || formData.juros_mensal < 0) {
+          ui.showNotification('Juros deve ser maior ou igual a zero', 'error');
+          return;
+        }
+        
+        if (!formData.data_vencimento) {
+          ui.showNotification('Data de vencimento é obrigatória', 'error');
+          return;
+        }
+        
+        if (!formData.numero_parcelas || formData.numero_parcelas < 1) {
+          ui.showNotification('Número de parcelas deve ser maior que zero', 'error');
+          return;
+        }
+        
+        try {
+          const submitBtn = form.querySelector('button[type="submit"]');
+          const originalText = submitBtn.textContent;
+          submitBtn.textContent = 'Salvando...';
+          submitBtn.disabled = true;
+          
+          // Enviar dados para a API
+          const response = await fetch(`/api/cobrancas/emprestimos/${id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(formData)
+          });
+          
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Erro ao atualizar empréstimo');
+          }
+          
+          // Sucesso
+          modal.remove();
+          ui.showNotification('Empréstimo atualizado com sucesso!', 'success');
+          
+          // Recarregar dados
+          setTimeout(async () => {
+            await recarregarDadosPagina();
+          }, 1000);
+          
+        } catch (error) {
+          console.error('Erro ao atualizar empréstimo:', error);
+          ui.showNotification('Erro ao atualizar empréstimo: ' + error.message, 'error');
+        } finally {
+          const submitBtn = form.querySelector('button[type="submit"]');
+          submitBtn.textContent = originalText;
+          submitBtn.disabled = false;
+        }
+      });
+      
+    } catch (error) {
+      console.error('Erro ao carregar dados para edição:', error);
+      ui.showNotification('Erro ao carregar dados para edição', 'error');
+    }
+  },
+
+  aplicarMascaraMoeda(input) {
+    input.addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\D/g, '');
+      value = (value / 100).toFixed(2) + '';
+      value = value.replace(".", ",");
+      value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+      e.target.value = 'R$ ' + value;
+    });
+  },
+
+  parseMoeda(valor) {
+    if (!valor) return 0;
+    return parseFloat(valor.replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
+  },
+
   async viewEmprestimo(id) {
     try {
       const emprestimos = await apiService.getEmprestimos();
@@ -1069,6 +1269,13 @@ const emprestimoController = {
           e.stopPropagation();
           // Não faz nada além de abrir o link
         });
+        
+        // Botão Editar
+        modal.querySelector('#modal-btn-editar').onclick = async (e) => {
+          e.preventDefault();
+          modal.remove();
+          await this.editarEmprestimo(emp.id);
+        };
         // Botão Quitado
         modal.querySelector('#modal-btn-quitado').onclick = async (e) => {
           e.preventDefault();
