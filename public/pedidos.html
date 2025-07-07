@@ -9,11 +9,6 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  ...
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pedidos e Vendas - J.P Sistemas Comercial</title>
   <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
@@ -22,255 +17,87 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+  <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="mobile.css">
   <style>
-    :root {
-              --primary-color: #005a9f;
-      --primary-dark: #003766;
-      --primary-light: #0077cc;
-      --secondary-color: #022656;
-      --accent-color: #1e4a8a;
-      --text-primary: #1f2937;
-      --text-secondary: #6b7280;
-      --background: #f8fafc;
-      --surface: #ffffff;
-      --border: #e5e7eb;
-      --shadow: rgba(0, 90, 159, 0.1);
-      --shadow-hover: rgba(0, 90, 159, 0.2);
-      --success-color: #059669;
-      --danger-color: #dc2626;
-      --light-color: #f9fafb;
-      --dark-color: #111827;
-      --bg-color: #f3f4f6;
-      --card-bg: #ffffff;
-      --border-radius: 12px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      background: linear-gradient(135deg, #005a9f 0%, #003766 100%);
-      color: var(--text-primary);
-      padding: 0;
-      min-height: 100vh;
-    }
-    .header {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px);
-      padding: 20px 0;
-      box-shadow: 0 4px 20px rgba(0, 90, 159, 0.1);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    .header-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .logo {
-      display: flex;
-      align-items: center;
-    }
-    .logo img {
-      width: 150px;
-      height: 67px;
-      object-fit: contain;
-      background: none;
-      box-shadow: none;
-      border-radius: 0;
-      margin: 0;
-    }
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .user-info span {
-      color: var(--text-primary);
-      font-family: 'Inter', sans-serif;
-      font-size: 16px;
-      font-weight: 500;
-    }
-    .user-info #userDisplay {
-      font-weight: 700;
-    }
-    .logout-btn {
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      text-decoration: none;
-    }
-    .logout-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(0, 90, 159, 0.3);
-    }
-    .main-content {
-      max-width: 1200px;
-      margin: 40px auto;
-      padding: 0 20px;
-    }
-    .container { max-width: 1200px; margin: 0 auto; }
-    #logo-container { text-align: center; margin-bottom: 25px; }
-    #logo { 
-      max-width: 100%; 
-      height: auto; 
-      max-height: 80px; 
-      filter: brightness(0) invert(1);
-      opacity: 0.9;
-    }
-    .card { 
-      background-color: var(--card-bg); 
-      border-radius: var(--border-radius); 
-      box-shadow: var(--shadow); 
-      padding: 25px; 
-      margin-bottom: 25px; 
-      border: 1px solid var(--border-color); 
-    }
-    .card-header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid var(--border-color);
-    }
-    .card-header .btn-group {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      width: 100%;
-    }
-    .card-header h2 { 
-      font-size: 1.8em; 
-      color: var(--dark-color); 
-      font-weight: 600; 
-      text-align: center;
-    }
-    .btn { 
-      display: inline-flex; 
-      align-items: center; 
-      justify-content: center; 
-      gap: 8px; 
-      padding: 12px 20px; 
-      border-radius: 8px; 
-      border: none; 
-      font-family: "Poppins", sans-serif; 
-      font-weight: 500; 
-      font-size: 0.95em; 
-      cursor: pointer; 
-      transition: all 0.3s ease; 
-      text-decoration: none; 
-    }
-    .btn-primary { 
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); 
-      color: white; 
-    }
-    .btn-primary:hover { 
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-    }
-    .btn-success { 
-      background: linear-gradient(135deg, var(--success-color), #20c997); 
-      color: white; 
-    }
-    .btn-success:hover { 
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
-    }
-    .btn-danger { 
-      background: linear-gradient(135deg, var(--danger-color), #c82333); 
-      color: white; 
-    }
-    .btn-danger:hover { 
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
-    }
-    .btn-warning {
-      background: linear-gradient(135deg, #f59e0b, #fbbf24);
-      color: white;
-    }
-    .btn-warning:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
-    }
-    .btn-secondary {
-      background: linear-gradient(135deg, #6b7280, #9ca3af);
-      color: white;
-    }
-    .btn-secondary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(107, 114, 128, 0.3);
-    }
-    .btn-sm {
-      padding: 6px 12px;
-      font-size: 0.85em;
-      margin: 0 2px;
-    }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
-    thead th { 
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); 
-      color: white; 
-      font-weight: 600; 
-      white-space: nowrap; 
-    }
-    tbody tr:hover { background-color: #f8f9fa; }
+    /* Estilos específicos para pedidos */
     .search-box {
       position: relative;
       display: flex;
       align-items: center;
       width: 100%;
       max-width: 400px;
-      background: #fff;
-      border-radius: 24px;
-      border: 2px solid var(--border-color);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.07);
-      padding: 4px 16px 4px 14px;
-      margin: 0 auto 24px auto;
+      background: var(--white);
+      border-radius: var(--border-radius-lg);
+      border: 2px solid var(--gray-200);
+      box-shadow: var(--shadow);
+      padding: 0.75rem 1rem;
+      margin: 0 auto 1.5rem auto;
       transition: all 0.3s ease;
     }
+    
     .search-box:focus-within {
-      border-color: var(--primary-color);
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.15);
+      border-color: var(--primary);
+      box-shadow: var(--shadow-lg);
     }
+    
     .search-icon {
-      font-size: 1.35em;
-      color: var(--primary-color);
-      margin-right: 10px;
-      opacity: 0.85;
-      transition: color 0.2s;
+      font-size: 1.1rem;
+      color: var(--primary);
+      margin-right: 0.75rem;
+      opacity: 0.8;
     }
+    
     #busca-pedido {
       border: none;
       background: transparent;
       outline: none;
-      font-size: 1.13em;
-      font-family: "Poppins", sans-serif;
+      font-size: 1rem;
+      font-family: 'Poppins', sans-serif;
       width: 100%;
-      padding: 10px 0 10px 0;
-      color: var(--text-color);
-      letter-spacing: 0.01em;
+      color: var(--gray-900);
     }
+    
     #busca-pedido::placeholder {
-      color: #b0b0b0;
+      color: var(--gray-400);
       opacity: 1;
-      font-size: 1em;
-      letter-spacing: 0.01em;
     }
-    .table-responsive { max-height: 420px; overflow-y: auto; }
-
+    
+    .table-responsive { 
+      max-height: 420px; 
+      overflow-y: auto; 
+      border-radius: var(--border-radius-lg);
+      border: 1px solid var(--gray-200);
+    }
+    
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0;
+    }
+    
+    .table th, .table td { 
+      padding: 0.75rem 1rem; 
+      text-align: left; 
+      border-bottom: 1px solid var(--gray-200); 
+      vertical-align: middle; 
+    }
+    
+    .table th { 
+      background: var(--terciary); 
+      color: var(--white); 
+      font-weight: 600; 
+      white-space: nowrap; 
+    }
+    
+    .table tbody tr:hover { 
+      background-color: var(--gray-100); 
+    }
+    
+    .table tbody tr:nth-child(even) {
+      background-color: var(--gray-50);
+    }
+    
     /* Modal Styles */
     .modal {
       display: none;
@@ -285,64 +112,48 @@
       animation: fadeIn 0.3s ease;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
     .modal-content {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(15px);
+      background: var(--white);
       margin: 2% auto;
       padding: 0;
-      border-radius: var(--border-radius);
+      border-radius: var(--border-radius-xl);
       width: 98%;
       max-width: 1200px;
       max-height: 95vh;
       overflow-y: auto;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--gray-200);
       animation: slideIn 0.3s ease;
       position: relative;
     }
 
-    @keyframes slideIn {
-      from { 
-        transform: translateY(-50px);
-        opacity: 0;
-      }
-      to { 
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
-
     .modal-header {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: white;
-      padding: 20px 24px;
+      background: var(--terciary);
+      color: var(--white);
+      padding: 1.25rem 1.5rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       position: sticky;
       top: 0;
       z-index: 10;
+      border-radius: var(--border-radius-xl) var(--border-radius-xl) 0 0;
     }
 
     .modal-header h3 {
       margin: 0;
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       font-weight: 600;
     }
 
     .close {
-      color: white;
-      font-size: 28px;
+      color: var(--white);
+      font-size: 1.75rem;
       font-weight: bold;
       cursor: pointer;
       transition: all 0.3s ease;
-      width: 32px;
-      height: 32px;
+      width: 2rem;
+      height: 2rem;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -356,27 +167,37 @@
     }
 
     .modal-body {
-      padding: 24px;
+      padding: 1.5rem;
+    }
+
+    .modal-footer {
+      padding: 1.25rem 1.5rem;
+      background: var(--gray-50);
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      border-radius: 0 0 var(--border-radius-xl) var(--border-radius-xl);
     }
 
     .form-section {
-      margin-bottom: 24px;
+      margin-bottom: 1.5rem;
     }
 
     .form-section h4 {
-      color: var(--dark-color);
+      color: var(--terciary);
       font-size: 1.1rem;
       font-weight: 600;
-      margin-bottom: 16px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--primary-color);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--primary);
     }
 
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 16px;
+      gap: 1rem;
+      margin-bottom: 1rem;
     }
 
     .form-group {
@@ -386,29 +207,29 @@
 
     .form-group label {
       font-weight: 600;
-      color: var(--dark-color);
-      margin-bottom: 6px;
-      font-size: 0.9rem;
+      color: var(--gray-700);
+      margin-bottom: 0.375rem;
+      font-size: 0.875rem;
     }
 
     .form-group input,
     .form-group select,
     .form-group textarea {
-      padding: 12px 16px;
-      border: 2px solid var(--border-color);
-      border-radius: 8px;
-      font-family: "Poppins", sans-serif;
-      font-size: 0.95rem;
+      padding: 0.75rem 1rem;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--border-radius);
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
       transition: all 0.3s ease;
-      background: white;
+      background: var(--white);
     }
 
     .form-group input:focus,
     .form-group select:focus,
     .form-group textarea:focus {
       outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 160, 71, 0.1);
     }
 
     .form-group.full-width {
@@ -416,22 +237,23 @@
     }
 
     .items-section {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 16px;
+      background: var(--gray-50);
+      border-radius: var(--border-radius);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--gray-200);
     }
 
     .item-row {
       display: grid;
       grid-template-columns: 2fr 1fr 1fr 1fr auto;
-      gap: 12px;
+      gap: 0.75rem;
       align-items: center;
-      margin-bottom: 12px;
-      padding: 12px;
-      background: white;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
+      margin-bottom: 0.75rem;
+      padding: 0.75rem;
+      background: var(--white);
+      border-radius: var(--border-radius);
+      border: 1px solid var(--gray-200);
     }
 
     .item-row:last-child {
@@ -439,207 +261,246 @@
     }
 
     .remove-item {
-      background: var(--danger-color);
-      color: white;
+      background: var(--red-500);
+      color: var(--white);
       border: none;
       border-radius: 50%;
-      width: 32px;
-      height: 32px;
+      width: 2rem;
+      height: 2rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
       transition: all 0.3s ease;
     }
 
     .remove-item:hover {
+      background: var(--red-600);
       transform: scale(1.1);
-      background: #c82333;
     }
 
     .add-item-btn {
-      background: var(--success-color);
-      color: white;
+      background: var(--primary);
+      color: var(--white);
       border: none;
-      padding: 10px 16px;
-      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      border-radius: var(--border-radius);
       cursor: pointer;
-      font-family: "Poppins", sans-serif;
-      font-weight: 600;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 500;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 0.5rem;
       transition: all 0.3s ease;
+      width: 100%;
+      justify-content: center;
     }
 
     .add-item-btn:hover {
-      background: #20c997;
+      background: var(--secondary);
       transform: translateY(-1px);
     }
 
     .total-section {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: white;
-      padding: 16px;
-      border-radius: 8px;
+      background: var(--terciary);
+      color: var(--white);
+      padding: 1rem 1.25rem;
+      border-radius: var(--border-radius);
       text-align: right;
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-top: 1rem;
     }
 
     .total-section h3 {
       margin: 0;
-      font-size: 1.2rem;
-      font-weight: 600;
+      color: var(--white);
     }
 
-    .modal-footer {
-      padding: 20px 24px;
-      background: rgba(0, 0, 0, 0.02);
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      position: sticky;
-      bottom: 0;
-    }
-
-    /* Estilos para o modal de visualização */
+    /* Estilos para visualização de pedido */
     .pedido-info {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 20px;
+      background: var(--white);
+      border-radius: var(--border-radius-lg);
+      padding: 1.5rem;
+      border: 1px solid var(--gray-200);
     }
 
     .pedido-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 2px solid var(--primary-color);
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--gray-200);
     }
 
     .pedido-numero {
       font-size: 1.5rem;
-      font-weight: bold;
-      color: var(--primary-color);
+      font-weight: 700;
+      color: var(--terciary);
     }
 
     .pedido-status {
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-weight: bold;
-      font-size: 0.9rem;
+      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius);
+      font-weight: 600;
+      font-size: 0.875rem;
     }
 
     .status-concluido {
-      background: var(--success-color);
-      color: white;
+      background: var(--green-500);
+      color: var(--white);
     }
 
     .status-cancelado {
-      background: var(--danger-color);
-      color: white;
+      background: var(--red-500);
+      color: var(--white);
     }
 
     .status-processamento {
-      background: #f59e0b;
-      color: white;
+      background: var(--yellow-500);
+      color: var(--white);
     }
 
     .info-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 20px;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
     }
 
     .info-section {
-      background: white;
-      border-radius: 8px;
-      padding: 15px;
-      border: 1px solid var(--border-color);
+      background: var(--gray-50);
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--gray-200);
     }
 
     .info-section h4 {
-      color: var(--primary-color);
-      margin-bottom: 10px;
+      color: var(--terciary);
+      margin-bottom: 1rem;
       font-size: 1rem;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .info-item {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 8px;
-      padding: 5px 0;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .info-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
     }
 
     .info-label {
       font-weight: 600;
-      color: var(--text-secondary);
+      color: var(--gray-700);
     }
 
     .info-value {
-      color: var(--text-primary);
-      text-align: right;
+      color: var(--gray-900);
     }
 
     .itens-table {
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      border: 1px solid var(--border-color);
-      margin-bottom: 20px;
+      margin-bottom: 1.5rem;
     }
 
     .itens-table table {
-      margin: 0;
+      width: 100%;
+      border-collapse: collapse;
     }
 
     .itens-table th {
-      background: var(--primary-color);
-      color: white;
+      background: var(--terciary);
+      color: var(--white);
       font-weight: 600;
-      padding: 12px;
+      padding: 0.75rem;
     }
 
     .itens-table td {
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border-color);
+      padding: 0.625rem 0.75rem;
+      border-bottom: 1px solid var(--gray-200);
     }
 
     .total-section-visualizacao {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: white;
-      padding: 15px 20px;
-      border-radius: 8px;
+      background: var(--terciary);
+      color: var(--white);
+      padding: 1rem 1.25rem;
+      border-radius: var(--border-radius);
       text-align: right;
-      font-size: 1.2rem;
+      font-size: 1.25rem;
       font-weight: bold;
     }
 
     .observacoes-section {
-      background: white;
-      border-radius: 8px;
-      padding: 15px;
-      border: 1px solid var(--border-color);
-      margin-top: 20px;
+      background: var(--white);
+      border-radius: var(--border-radius);
+      padding: 1rem;
+      border: 1px solid var(--gray-200);
+      margin-top: 1.5rem;
     }
 
     .observacoes-section h4 {
-      color: var(--primary-color);
-      margin-bottom: 10px;
+      color: var(--terciary);
+      margin-bottom: 0.75rem;
       font-size: 1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .observacoes-texto {
-      background: #f8f9fa;
-      padding: 10px;
-      border-radius: 4px;
-      border-left: 4px solid var(--primary-color);
+      background: var(--gray-50);
+      padding: 0.75rem;
+      border-radius: var(--border-radius);
+      border-left: 4px solid var(--primary);
       font-style: italic;
+      color: var(--gray-700);
+    }
+
+    /* Estilos específicos para botões de ação de pedidos */
+    .btn-concluir {
+      background: var(--green-500) !important;
+      color: var(--white) !important;
+      border: none !important;
+    }
+    
+    .btn-concluir:hover {
+      background: var(--green-600) !important;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .btn-cancelar {
+      background: var(--red-500) !important;
+      color: var(--white) !important;
+      border: none !important;
+    }
+    
+    .btn-cancelar:hover {
+      background: var(--red-600) !important;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .btn-print {
+      background: var(--yellow-500) !important;
+      color: var(--white) !important;
+      border: none !important;
+    }
+    
+    .btn-print:hover {
+      background: var(--yellow-400) !important;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
     }
 
     @media (max-width: 768px) {
@@ -656,7 +517,7 @@
 
       .item-row {
         grid-template-columns: 1fr;
-        gap: 8px;
+        gap: 0.5rem;
       }
 
       .item-row > * {
@@ -665,12 +526,12 @@
 
       .info-grid {
         grid-template-columns: 1fr;
-        gap: 15px;
+        gap: 1rem;
       }
 
       .modal-footer {
         flex-direction: column;
-        gap: 8px;
+        gap: 0.5rem;
       }
 
       .modal-footer .btn {
@@ -678,56 +539,150 @@
       }
     }
 
-    .footer {
-      width: 100%;
-      text-align: center;
-      padding: 18px 0 12px 0;
-      color: #fff;
-      font-size: 15px;
-      background: transparent;
-      font-family: 'Inter', sans-serif;
-      letter-spacing: 0.02em;
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
-    /* Estilos específicos para botões de ação de pedidos */
-    .btn-concluir {
-      background: linear-gradient(135deg, #059669, #10b981) !important;
-      color: white !important;
-      border: none !important;
-    }
-    
-    .btn-concluir:hover {
-      background: linear-gradient(135deg, #047857, #059669) !important;
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(5, 150, 105, 0.3);
-    }
-    
-    .btn-cancelar {
-      background: linear-gradient(135deg, #dc2626, #ef4444) !important;
-      color: white !important;
-      border: none !important;
-    }
-    
-    .btn-cancelar:hover {
-      background: linear-gradient(135deg, #b91c1c, #dc2626) !important;
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
-    }
-    
-    .btn-print {
-      background: linear-gradient(135deg, #f59e0b, #fbbf24) !important;
-      color: white !important;
-      border: none !important;
-    }
-    
-    .btn-print:hover {
-      background: linear-gradient(135deg, #d97706, #f59e0b) !important;
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+    @keyframes slideIn {
+      from { 
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      to { 
+        transform: translateY(0);
+        opacity: 1;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="app-layout">
+    <!-- Header -->
+    <header>
+      <div class="header-content">
+        <div class="logo">
+          <img src="https://i.imgur.com/2jT2EPD.png" alt="J.P Sistemas" />
+        </div>
+        <div class="user-info">
+          <span>Bem-vindo, <span id="userDisplay">Usuário</span>!</span>
+          <a href="#" onclick="logout()" class="btn btn-secondary">
+            <i class="fas fa-sign-out-alt"></i> Sair
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+      <div class="container">
+        <!-- Dashboard -->
+        <div class="dashboard">
+          <div class="dashboard-header">
+            <h1 class="dashboard-title">Pedidos e Vendas</h1>
+            <p class="dashboard-subtitle">Gerencie todos os pedidos e vendas do sistema</p>
+          </div>
+
+          <!-- Cards de Estatísticas -->
+          <div class="cards">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-icon">
+                  <i class="fas fa-shopping-cart" style="color: var(--primary);"></i>
+                </div>
+                <div class="card-title">Total de Pedidos</div>
+              </div>
+              <div class="card-value" id="totalPedidos">0</div>
+            </div>
+            
+            <div class="card">
+              <div class="card-header">
+                <div class="card-icon">
+                  <i class="fas fa-check-circle" style="color: var(--green-500);"></i>
+                </div>
+                <div class="card-title">Pedidos Concluídos</div>
+              </div>
+              <div class="card-value" id="pedidosConcluidos">0</div>
+            </div>
+            
+            <div class="card">
+              <div class="card-header">
+                <div class="card-icon">
+                  <i class="fas fa-clock" style="color: var(--yellow-500);"></i>
+                </div>
+                <div class="card-title">Em Processamento</div>
+              </div>
+              <div class="card-value" id="pedidosProcessamento">0</div>
+            </div>
+            
+            <div class="card">
+              <div class="card-header">
+                <div class="card-icon">
+                  <i class="fas fa-dollar-sign" style="color: var(--terciary);"></i>
+                </div>
+                <div class="card-title">Valor Total</div>
+              </div>
+              <div class="card-value" id="valorTotal">R$ 0,00</div>
+            </div>
+          </div>
+
+          <!-- Seção de Pedidos -->
+          <div class="section">
+            <div class="section-header">
+              <h2 class="section-title">Lista de Pedidos</h2>
+              <div class="btn-group">
+                <button class="btn btn-primary" onclick="abrirModalNovoPedido()">
+                  <i class="fas fa-plus"></i> Novo Pedido
+                </button>
+                <button class="btn btn-secondary" onclick="gerarPDFTodosPedidos()">
+                  <i class="fas fa-file-pdf"></i> Exportar PDF
+                </button>
+                <button class="btn btn-secondary" onclick="gerarExcelTodosPedidos()">
+                  <i class="fas fa-file-excel"></i> Exportar Excel
+                </button>
+              </div>
+            </div>
+
+            <!-- Busca -->
+            <div class="search-box">
+              <i class="fas fa-search search-icon"></i>
+              <input type="text" id="busca-pedido" placeholder="Buscar pedidos por ID, cliente, data, status..." onkeyup="filtrarPedidos()">
+            </div>
+
+            <!-- Tabela de Pedidos -->
+            <div class="table-container">
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Cliente</th>
+                      <th>Data</th>
+                      <th>Status</th>
+                      <th>Valor Total</th>
+                      <th>Lucro</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pedidos-tbody">
+                    <!-- Pedidos serão carregados aqui -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <p class="text-center">© 2024 J.P Sistemas Comercial. Todos os direitos reservados.</p>
+      </div>
+    </footer>
+  </div>
+
   <!-- Modal para Novo Pedido -->
   <div id="novoPedidoModal" class="modal">
     <div class="modal-content">
@@ -762,7 +717,6 @@
                 </select>
               </div>
             </div>
-            
             <!-- Campos para cliente existente -->
             <div id="clienteExistenteSection" style="display: none;">
               <div class="form-row">
@@ -774,7 +728,6 @@
                 </div>
               </div>
             </div>
-            
             <!-- Campos para novo cliente -->
             <div id="novoClienteSection" style="display: none;">
               <div class="form-row">
@@ -788,7 +741,6 @@
                 </div>
               </div>
             </div>
-            
             <div class="form-row">
               <div class="form-group">
                 <label for="telefone">Telefone</label>
@@ -804,7 +756,6 @@
               <input type="text" id="endereco" placeholder="Rua, numero, bairro, cidade/estado">
             </div>
           </div>
-
           <!-- Itens do Pedido -->
           <div class="form-section">
             <h4>Itens do Pedido</h4>
@@ -828,7 +779,6 @@
               <h3>Total: R$ <span id="totalPedido">0,00</span></h3>
             </div>
           </div>
-
           <!-- Observacoes -->
           <div class="form-section">
             <h4>Observacoes</h4>
@@ -848,7 +798,6 @@
       </div>
     </div>
   </div>
-
   <!-- Modal de Visualização do Pedido -->
   <div id="visualizarPedidoModal" class="modal">
     <div class="modal-content" style="max-width: 1200px;">
@@ -858,16 +807,7 @@
       </div>
       <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
         <div id="pedidoDetalhes">
-          <!-- Exemplo de layout melhorado para informações do cliente -->
-          <div class="cliente-info-box" style="background: #f8fafc; border-radius: 10px; padding: 22px 28px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid #e5e7eb; max-width: 420px;">
-            <div style="font-weight: 600; color: #005a9f; margin-bottom: 16px; font-size: 1.1em;"><i class="fas fa-user"></i> Informações do Cliente</div>
-            <div style="display: flex; margin-bottom: 8px;"><div style="width: 110px; font-weight: 500; color: #222;">Cliente:</div><div style="flex:1; color: #444;">Razao Import</div></div>
-            <div style="display: flex; margin-bottom: 8px;"><div style="width: 110px; font-weight: 500; color: #222;">CPF/CNPJ:</div><div style="flex:1; color: #444;">Não informado</div></div>
-            <div style="display: flex; margin-bottom: 8px;"><div style="width: 110px; font-weight: 500; color: #222;">Telefone:</div><div style="flex:1; color: #444;">4899999999</div></div>
-            <div style="display: flex; margin-bottom: 8px;"><div style="width: 110px; font-weight: 500; color: #222;">E-mail:</div><div style="flex:1; color: #444; word-break: break-all;">import@email.com</div></div>
-            <div style="display: flex; margin-bottom: 8px;"><div style="width: 110px; font-weight: 500; color: #222;">Endereço:</div><div style="flex:1; color: #444; word-break: break-word;">Rua Import, Import, Import/SC</div></div>
-            <div style="display: flex; margin-bottom: 0;"><div style="width: 110px; font-weight: 500; color: #222;">Pagamento:</div><div style="flex:1; color: #444;">Cartão de Crédito</div></div>
-          </div>
+          <!-- Conteúdo dinâmico do pedido -->
         </div>
       </div>
       <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; padding: 16px 24px 16px 24px; background: #f8fafc; border-top: 1px solid #e5e7eb;">
@@ -887,1596 +827,840 @@
     </div>
   </div>
 
-  <header class="header">
-    <div class="header-content">
-      <div class="logo">
-        <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 150px; height: 67px; display: block; object-fit: contain; background: none; box-shadow: none; border-radius: 0; margin: 0;" />
-      </div>
-      <div class="user-info">
-        <span>Bem-vindo, <span id="userDisplay"></span></span>
-        <button class="logout-btn" onclick="logout()">
-          <i class="fas fa-sign-out-alt"></i> Sair
-        </button>
-        <a href="painel.html" class="logout-btn" style="background: var(--primary-light); margin-left: 8px;">
-          <i class="fas fa-arrow-left"></i> Voltar
-        </a>
-      </div>
-    </div>
-  </header>
-  <main class="main-content">
-    <div class="card">
-      <div class="card-header">
-        <h2>Pedidos e Vendas</h2>
-        <div class="btn-group">
-          <button class="btn btn-primary" id="btn-novo-pedido">
-            <i class="fas fa-plus"></i> Novo Pedido
-          </button>
-          <button class="btn btn-success" id="btn-exportar-pdf">
-            <i class="fas fa-file-pdf"></i> Exportar PDF
-          </button>
-          <button class="btn btn-warning" id="btn-exportar-excel">
-            <i class="fas fa-file-excel"></i> Exportar Excel
-          </button>
-          <a href="caixa.html" class="btn btn-secondary" style="text-decoration:none;">
-            <i class="fas fa-cash-register"></i> Ir para o Caixa
-          </a>
-          <a href="mesas.html" class="btn btn-secondary" style="text-decoration:none;">
-            <i class="fas fa-chair"></i> Ir para Mesas
-          </a>
-        </div>
-      </div>
-      <div style="display: flex; justify-content: center; position: relative;">
-        <div class="search-box" style="width:100%;">
-          <span class="search-icon">&#128269;</span>
-          <input type="text" id="busca-pedido" placeholder="Buscar pedido..." autocomplete="off" />
-        </div>
-      </div>
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Cliente</th>
-              <th>Data</th>
-              <th>Status</th>
-              <th>Valor Total</th>
-              <th>Lucro</th>
-              <th>Acoes</th>
-            </tr>
-          </thead>
-          <tbody id="pedidos-tbody">
-            <!-- Os pedidos serão carregados dinamicamente do banco de dados -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </main>
-  <footer class="footer">
-    © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ola,%20gostaria%20de%20mais%20informacoes%20sobre%20os%20sistemas." target="_blank" style="color: #fff; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
-  </footer>
+  <!-- Scripts JavaScript -->
   <script>
-    // Array para armazenar pedidos carregados do banco
+    // Variáveis globais
     let pedidos = [];
-    let clientes = []; // Array para armazenar clientes do banco
-    let produtos = []; // Array para armazenar produtos do banco
-    let novoPedidoItens = []; // Array para itens do novo pedido
-    let itemCounter = 0; // Contador para IDs dos itens
+    let clientes = [];
+    let produtos = [];
+    let pedidoAtual = null;
+    let editandoPedido = false;
 
-    // Função para carregar produtos do banco de dados
-    async function carregarProdutos() {
+    // Elementos DOM
+    const pedidosTable = document.getElementById('pedidosTable');
+    const pedidosTableBody = document.getElementById('pedidosTableBody');
+    const novoPedidoModal = document.getElementById('novoPedidoModal');
+    const visualizarPedidoModal = document.getElementById('visualizarPedidoModal');
+    const novoPedidoForm = document.getElementById('novoPedidoForm');
+    const visualizarPedidoForm = document.getElementById('visualizarPedidoForm');
+    const closeNovoPedido = document.getElementById('closeNovoPedido');
+    const closeVisualizarPedido = document.getElementById('closeVisualizarPedido');
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const dataInicioFilter = document.getElementById('dataInicioFilter');
+    const dataFimFilter = document.getElementById('dataFimFilter');
+
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', function() {
+      carregarDados();
+      setupEventListeners();
+      setupFormValidation();
+    });
+
+    // Carregar dados iniciais
+    async function carregarDados() {
       try {
-        const response = await fetch('/api/produtos');
-        if (!response.ok) throw new Error('Erro ao carregar produtos');
-        produtos = await response.json();
+        const [pedidosResponse, clientesResponse, produtosResponse] = await Promise.all([
+          fetch('/api/pedidos'),
+          fetch('/api/clientes'),
+          fetch('/api/produtos')
+        ]);
+
+        if (pedidosResponse.ok) {
+          pedidos = await pedidosResponse.json();
+          atualizarTabelaPedidos();
+        }
+
+        if (clientesResponse.ok) {
+          clientes = await clientesResponse.json();
+          preencherSelectClientes();
+        }
+
+        if (produtosResponse.ok) {
+          produtos = await produtosResponse.json();
+          preencherSelectProdutos();
+        }
       } catch (error) {
-        console.error('Erro ao carregar produtos:', error);
-        alert('Erro ao carregar produtos do banco de dados');
+        console.error('Erro ao carregar dados:', error);
+        mostrarNotificacao('Erro ao carregar dados', 'error');
       }
     }
 
-    // Função para carregar clientes do banco de dados
-    async function carregarClientes() {
-      try {
-        const response = await fetch('/api/clientes', { credentials: 'include' });
-        if (!response.ok) throw new Error('Erro ao carregar clientes');
-        clientes = await response.json();
-        atualizarSelectClientes();
-      } catch (error) {
-        console.error('Erro ao carregar clientes:', error);
-        alert('Erro ao carregar clientes do banco de dados');
+    // Configurar event listeners
+    function setupEventListeners() {
+      // Fechar modais
+      closeNovoPedido.addEventListener('click', () => {
+        novoPedidoModal.style.display = 'none';
+        limparFormulario();
+      });
+
+      closeVisualizarPedido.addEventListener('click', () => {
+        visualizarPedidoModal.style.display = 'none';
+      });
+
+      // Fechar modal ao clicar fora
+      window.addEventListener('click', (event) => {
+        if (event.target === novoPedidoModal) {
+          novoPedidoModal.style.display = 'none';
+          limparFormulario();
+        }
+        if (event.target === visualizarPedidoModal) {
+          visualizarPedidoModal.style.display = 'none';
+        }
+      });
+
+      // Busca e filtros
+      searchInput.addEventListener('input', filtrarPedidos);
+      statusFilter.addEventListener('change', filtrarPedidos);
+      dataInicioFilter.addEventListener('change', filtrarPedidos);
+      dataFimFilter.addEventListener('change', filtrarPedidos);
+
+      // Formulário novo pedido
+      novoPedidoForm.addEventListener('submit', handleNovoPedido);
+      visualizarPedidoForm.addEventListener('submit', handleEditarPedido);
+
+      // Adicionar item ao pedido
+      document.getElementById('adicionarItemBtn').addEventListener('click', adicionarItemAoPedido);
+
+      // Seleção de cliente
+      document.getElementById('tipoCliente').addEventListener('change', handleTipoClienteChange);
+      document.getElementById('clienteSelect').addEventListener('change', handleClienteSelect);
+      document.getElementById('novoClienteNome').addEventListener('input', handleNovoClienteInput);
+
+      // Seleção de produto
+      document.getElementById('produtoSelect').addEventListener('change', handleProdutoSelect);
+      document.getElementById('novoProdutoNome').addEventListener('input', handleNovoProdutoInput);
+    }
+
+    // Configurar validação de formulário
+    function setupFormValidation() {
+      const requiredFields = novoPedidoForm.querySelectorAll('[required]');
+      requiredFields.forEach(field => {
+        field.addEventListener('blur', validateField);
+        field.addEventListener('input', clearFieldError);
+      });
+    }
+
+    // Validação de campo
+    function validateField(event) {
+      const field = event.target;
+      const value = field.value.trim();
+      
+      if (field.hasAttribute('required') && !value) {
+        showFieldError(field, 'Este campo é obrigatório');
+        return false;
+      }
+
+      if (field.type === 'email' && value && !isValidEmail(value)) {
+        showFieldError(field, 'Email inválido');
+        return false;
+      }
+
+      if (field.type === 'tel' && value && !isValidPhone(value)) {
+        showFieldError(field, 'Telefone inválido');
+        return false;
+      }
+
+      clearFieldError(field);
+      return true;
+    }
+
+    // Mostrar erro de campo
+    function showFieldError(field, message) {
+      clearFieldError(field);
+      field.classList.add('error');
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'field-error';
+      errorDiv.textContent = message;
+      field.parentNode.appendChild(errorDiv);
+    }
+
+    // Limpar erro de campo
+    function clearFieldError(field) {
+      field.classList.remove('error');
+      const errorDiv = field.parentNode.querySelector('.field-error');
+      if (errorDiv) {
+        errorDiv.remove();
       }
     }
 
-    // Função para atualizar o select de clientes
-    function atualizarSelectClientes() {
-      const select = document.getElementById('cliente');
-      if (!select) return;
-      
-      select.innerHTML = '<option value="">Selecione um cliente</option>';
-      
-      if (clientes.length === 0) {
-        select.innerHTML += '<option value="" disabled>Nenhum cliente cadastrado</option>';
-        return;
-      }
+    // Validar email
+    function isValidEmail(email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    }
+
+    // Validar telefone
+    function isValidPhone(phone) {
+      const phoneRegex = /^[\d\s\-\(\)\+]+$/;
+      return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 10;
+    }
+
+    // Preencher select de clientes
+    function preencherSelectClientes() {
+      const clienteSelect = document.getElementById('clienteSelect');
+      clienteSelect.innerHTML = '<option value="">Selecione um cliente</option>';
       
       clientes.forEach(cliente => {
         const option = document.createElement('option');
         option.value = cliente.id;
-        option.textContent = `${cliente.razao}${cliente.cnpj ? ` - ${cliente.cnpj}` : ''}`;
-        select.appendChild(option);
+        option.textContent = `${cliente.nome} - ${cliente.telefone}`;
+        clienteSelect.appendChild(option);
       });
     }
 
-    // Função para alternar entre cliente existente e novo cliente
-    function toggleTipoCliente() {
-      const tipoCliente = document.getElementById('tipoCliente').value;
-      const clienteExistenteSection = document.getElementById('clienteExistenteSection');
-      const novoClienteSection = document.getElementById('novoClienteSection');
+    // Preencher select de produtos
+    function preencherSelectProdutos() {
+      const produtoSelect = document.getElementById('produtoSelect');
+      produtoSelect.innerHTML = '<option value="">Selecione um produto</option>';
       
-      if (tipoCliente === 'existente') {
-        clienteExistenteSection.style.display = 'block';
-        novoClienteSection.style.display = 'none';
-        // Limpar campos do novo cliente
-        document.getElementById('nomeCliente').value = '';
-        document.getElementById('cpfCnpj').value = '';
-      } else if (tipoCliente === 'novo') {
-        clienteExistenteSection.style.display = 'none';
-        novoClienteSection.style.display = 'block';
-        // Limpar seleção de cliente existente
-        document.getElementById('cliente').value = '';
-      } else {
-        clienteExistenteSection.style.display = 'none';
-        novoClienteSection.style.display = 'none';
-      }
-      
-      // Limpar campos de contato
-      document.getElementById('telefone').value = '';
-      document.getElementById('email').value = '';
-      document.getElementById('endereco').value = '';
-    }
-
-    // Função para preencher informações do cliente automaticamente
-    function preencherInfoCliente() {
-      const clienteId = document.getElementById('cliente').value;
-      const cliente = clientes.find(c => c.id == clienteId);
-      
-      if (cliente) {
-        document.getElementById('telefone').value = cliente.telefone || '';
-        document.getElementById('email').value = cliente.email || '';
-        document.getElementById('endereco').value = `${cliente.endereco || ''}${cliente.bairro ? `, ${cliente.bairro}` : ''}${cliente.cidade ? `, ${cliente.cidade}/${cliente.estado || ''}` : ''}`.trim();
-      } else {
-        // Limpar campos se nenhum cliente selecionado
-        document.getElementById('telefone').value = '';
-        document.getElementById('email').value = '';
-        document.getElementById('endereco').value = '';
-      }
-    }
-
-    // Função para carregar pedidos do banco de dados
-    async function carregarPedidos() {
-      try {
-        console.log('Carregando pedidos...');
-        const response = await fetch('/api/pedidos', { credentials: 'include' });
-        if (!response.ok) {
-          throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
-        }
-        pedidos = await response.json();
-        console.log('Pedidos carregados:', pedidos);
-        console.log('Tipos de ID dos pedidos:', pedidos.map(p => ({ id: p.id, tipo: typeof p.id })));
-        renderTabelaPedidos();
-      } catch (error) {
-        console.error('Erro ao carregar pedidos:', error);
-        alert('Erro ao carregar pedidos do banco de dados: ' + error.message);
-        // Inicializar array vazio para evitar erros
-        pedidos = [];
-        renderTabelaPedidos();
-      }
-    }
-
-    // Renderizar tabela de pedidos
-    function renderTabelaPedidos(filtro = "") {
-      const tbody = document.getElementById('pedidos-tbody');
-      tbody.innerHTML = '';
-      let filtrados = pedidos.filter(p => {
-        const texto = `${p.id} ${p.nome_cliente || p.cliente_id || ''} ${p.data_pedido || ''} ${p.status || ''} ${p.valor_total || ''}`.toLowerCase();
-        return texto.includes(filtro.toLowerCase());
+      produtos.forEach(produto => {
+        const option = document.createElement('option');
+        option.value = produto.id;
+        option.textContent = `${produto.nome} - R$ ${produto.preco.toFixed(2)}`;
+        produtoSelect.appendChild(option);
       });
-      filtrados.forEach(pedido => {
-        // Determinar nome do cliente
-        let nomeCliente = 'Cliente não identificado';
-        if (pedido.nome_cliente) {
-          nomeCliente = pedido.nome_cliente;
-        } else if (pedido.cliente_id) {
-          const cliente = clientes.find(c => c.id == pedido.cliente_id);
-          nomeCliente = cliente ? cliente.razao : `Cliente ID: ${pedido.cliente_id}`;
-        }
-        
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
+    }
+
+    // Atualizar tabela de pedidos
+    function atualizarTabelaPedidos() {
+      pedidosTableBody.innerHTML = '';
+      
+      pedidos.forEach(pedido => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
           <td>${pedido.id}</td>
-          <td>${nomeCliente}</td>
-          <td>${formatarData(pedido.data_pedido)}</td>
-          <td><span style="color: ${pedido.status === 'Concluído' ? 'var(--success-color)' : pedido.status === 'Cancelado' ? 'var(--danger-color)' : '#f59e0b'}; font-weight: bold;">${pedido.status || ''}</span></td>
-          <td>R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}</td>
-          <td>R$ ${calcularLucroPedido(pedido).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+          <td>${pedido.cliente.nome}</td>
+          <td>${pedido.cliente.telefone}</td>
+          <td>${pedido.itens.length} item(s)</td>
+          <td>R$ ${pedido.valorTotal.toFixed(2)}</td>
+          <td><span class="status-badge status-${pedido.status.toLowerCase()}">${pedido.status}</span></td>
+          <td>${formatarData(pedido.dataCriacao)}</td>
           <td>
-            <button class="btn btn-primary btn-sm" onclick="visualizarPedido('${pedido.id}')" title="Visualizar"><i class="fas fa-eye"></i></button>
-            <button class="btn btn-success btn-sm" onclick="editarPedido('${pedido.id}')" title="Editar"><i class="fas fa-edit"></i></button>
-            <button class="btn btn-sm btn-print" onclick="imprimirPedido('${pedido.id}')" title="Imprimir"><i class="fas fa-print"></i></button>
-            <button class="btn btn-danger btn-sm" onclick="removerPedido('${pedido.id}')" title="Remover"><i class="fas fa-trash"></i></button>
-            ${pedido.status !== 'Concluído' && pedido.status !== 'Cancelado' ? `
-              <button class="btn btn-sm btn-concluir" onclick="concluirPedido('${pedido.id}')" title="Concluir">
-                <i class="fas fa-check"></i>
-              </button>
-              <button class="btn btn-sm btn-cancelar" onclick="cancelarPedido('${pedido.id}')" title="Cancelar">
-                <i class="fas fa-times"></i>
-              </button>
-            ` : ''}
+            <button class="btn btn-sm btn-primary" onclick="visualizarPedido(${pedido.id})">
+              <i class="fas fa-eye"></i> Ver
+            </button>
+            <button class="btn btn-sm btn-warning" onclick="editarPedido(${pedido.id})">
+              <i class="fas fa-edit"></i> Editar
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="excluirPedido(${pedido.id})">
+              <i class="fas fa-trash"></i> Excluir
+            </button>
           </td>
         `;
-        tbody.appendChild(tr);
+        pedidosTableBody.appendChild(row);
       });
     }
 
-    // Função para atualizar o array novoPedidoItens a partir do DOM
-    function atualizarNovoPedidoItens() {
-      novoPedidoItens = [];
-      const itemRows = document.querySelectorAll('#itensContainer .item-row');
-      itemRows.forEach(row => {
-        const produtoSelect = row.querySelector('.produto-select');
-        const quantidadeInput = row.querySelector('.quantidade-input');
-        const precoInput = row.querySelector('.preco-input');
-        const subtotalInput = row.querySelector('.subtotal-input');
-        if (produtoSelect.value) {
-          const produto = produtos.find(p => p.id == produtoSelect.value);
-          novoPedidoItens.push({
-            produto_id: produtoSelect.value,
-            produto: produto ? produto.nome : '',
-            quantidade: parseFloat(quantidadeInput.value) || 0,
-            precoUnitario: parseFloat(precoInput.value) || 0,
-            subtotal: parseFloat(subtotalInput.value) || 0,
-            preco_custo: produto ? produto.preco_custo : 0
-          });
-        }
+    // Filtrar pedidos
+    function filtrarPedidos() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const statusFilterValue = statusFilter.value;
+      const dataInicio = dataInicioFilter.value;
+      const dataFim = dataFimFilter.value;
+
+      const pedidosFiltrados = pedidos.filter(pedido => {
+        const matchSearch = !searchTerm || 
+          pedido.cliente.nome.toLowerCase().includes(searchTerm) ||
+          pedido.cliente.telefone.includes(searchTerm) ||
+          pedido.id.toString().includes(searchTerm);
+
+        const matchStatus = !statusFilterValue || pedido.status === statusFilterValue;
+        
+        const matchData = (!dataInicio || pedido.dataCriacao >= dataInicio) &&
+                         (!dataFim || pedido.dataCriacao <= dataFim);
+
+        return matchSearch && matchStatus && matchData;
+      });
+
+      atualizarTabelaPedidosComFiltro(pedidosFiltrados);
+    }
+
+    // Atualizar tabela com filtro
+    function atualizarTabelaPedidosComFiltro(pedidosFiltrados) {
+      pedidosTableBody.innerHTML = '';
+      
+      pedidosFiltrados.forEach(pedido => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${pedido.id}</td>
+          <td>${pedido.cliente.nome}</td>
+          <td>${pedido.cliente.telefone}</td>
+          <td>${pedido.itens.length} item(s)</td>
+          <td>R$ ${pedido.valorTotal.toFixed(2)}</td>
+          <td><span class="status-badge status-${pedido.status.toLowerCase()}">${pedido.status}</span></td>
+          <td>${formatarData(pedido.dataCriacao)}</td>
+          <td>
+            <button class="btn btn-sm btn-primary" onclick="visualizarPedido(${pedido.id})">
+              <i class="fas fa-eye"></i> Ver
+            </button>
+            <button class="btn btn-sm btn-warning" onclick="editarPedido(${pedido.id})">
+              <i class="fas fa-edit"></i> Editar
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="excluirPedido(${pedido.id})">
+              <i class="fas fa-trash"></i> Excluir
+            </button>
+          </td>
+        `;
+        pedidosTableBody.appendChild(row);
       });
     }
 
-    // Função para salvar pedido (criar ou editar)
-    async function salvarPedido() {
-      atualizarNovoPedidoItens(); // <-- Garante que novoPedidoItens está atualizado
+    // Abrir modal novo pedido
+    function abrirNovoPedido() {
+      novoPedidoModal.style.display = 'block';
+      limparFormulario();
+      editandoPedido = false;
+      pedidoAtual = null;
+    }
+
+    // Limpar formulário
+    function limparFormulario() {
+      novoPedidoForm.reset();
+      document.getElementById('itensPedido').innerHTML = '';
+      document.getElementById('valorTotal').textContent = 'R$ 0,00';
+      
+      // Limpar erros
+      const errorFields = novoPedidoForm.querySelectorAll('.error');
+      errorFields.forEach(field => clearFieldError(field));
+    }
+
+    // Handle tipo de cliente
+    function handleTipoClienteChange() {
       const tipoCliente = document.getElementById('tipoCliente').value;
-      const cliente_id = document.getElementById('cliente').value;
-      const nomeCliente = document.getElementById('nomeCliente').value;
-      const cpfCnpj = document.getElementById('cpfCnpj').value;
-      const formaPagamento = document.getElementById('formaPagamento').value;
-      const telefone = document.getElementById('telefone').value;
-      const email = document.getElementById('email').value;
-      const endereco = document.getElementById('endereco').value;
-      const observacoes = document.getElementById('observacoes').value;
-      
-      if (!tipoCliente) {
-        alert('Selecione o tipo de cliente');
-        return;
-      }
-      
-      if (tipoCliente === 'existente' && !cliente_id) {
-        alert('Selecione um cliente existente');
-        return;
-      }
-      
-      if (tipoCliente === 'novo' && !nomeCliente) {
-        alert('Digite o nome do cliente');
-        return;
-      }
-      
-      if (!formaPagamento) {
-        alert('Selecione uma forma de pagamento');
-        return;
-      }
-      
-      if (novoPedidoItens.length === 0) {
-        alert('Adicione pelo menos um item ao pedido');
-        return;
-      }
-      
-      // Função para pegar a data de hoje no fuso horário local (BR)
-      function getDataHojeBR() {
-        const hoje = new Date();
-        const ano = hoje.getFullYear();
-        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-        const dia = String(hoje.getDate()).padStart(2, '0');
-        return `${ano}-${mes}-${dia}`;
-      }
-      // Substituir UTC por local
-      const data_pedido = getDataHojeBR();
-      const status = 'Em Processamento';
-      const valor_total = novoPedidoItens.reduce((sum, item) => sum + item.subtotal, 0);
-      
-      const editandoId = document.getElementById('salvarPedido').getAttribute('data-editando');
-      
-      try {
-        let response;
-        
-        // Preparar dados do cliente
-        let clienteInfo = '';
-        if (tipoCliente === 'existente') {
-          const cliente = clientes.find(c => c.id == cliente_id);
-          clienteInfo = cliente ? cliente.razao : 'Cliente não identificado';
-        } else {
-          clienteInfo = nomeCliente;
-        }
-        
-        const pedidoData = {
-          cliente_id: tipoCliente === 'existente' ? cliente_id : null,
-          nome_cliente: tipoCliente === 'novo' ? nomeCliente : null,
-          cpf_cnpj: tipoCliente === 'novo' ? cpfCnpj : null,
-          data_pedido,
-          status,
-          valor_total,
-          observacoes: `${observacoes ? observacoes + '\n\n' : ''}INFORMAÇÕES ADICIONAIS:
-• Tipo de Cliente: ${tipoCliente === 'existente' ? 'Cliente Existente' : 'Novo Cliente'}
-${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n` : ''}• Telefone: ${telefone || 'Não informado'}
-• Email: ${email || 'Não informado'}
-• Endereço: ${endereco || 'Não informado'}
-• Forma de Pagamento: ${formaPagamento || 'Não informado'}`,
-          itens: novoPedidoItens
-        };
-        
-        if (editandoId) {
-          response = await fetch(`/api/pedidos/${editandoId}`, {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(pedidoData)
-          });
-        } else {
-          response = await fetch('/api/pedidos', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(pedidoData)
-          });
-        }
-        
-        if (!response.ok) {
-          let msg = 'Erro ao salvar pedido';
-          try {
-            const errData = await response.json();
-            if (errData && errData.error) msg += ': ' + errData.error;
-          } catch {}
-          throw new Error(msg);
-        }
-        // Tentar ler resposta, mas não exigir JSON
-        try {
-          await response.json();
-        } catch (e) {
-          // Se não for JSON, tudo bem, segue
-        }
-        await carregarPedidos();
-        fecharModalNovoPedido();
-        alert('Pedido salvo com sucesso!');
-      } catch (error) {
-        alert('Erro ao salvar pedido');
-        console.error(error);
+      const clienteSelectDiv = document.getElementById('clienteSelectDiv');
+      const novoClienteDiv = document.getElementById('novoClienteDiv');
+
+      if (tipoCliente === 'existente') {
+        clienteSelectDiv.style.display = 'block';
+        novoClienteDiv.style.display = 'none';
+      } else if (tipoCliente === 'novo') {
+        clienteSelectDiv.style.display = 'none';
+        novoClienteDiv.style.display = 'block';
+      } else {
+        clienteSelectDiv.style.display = 'none';
+        novoClienteDiv.style.display = 'none';
       }
     }
 
-    // Função para remover pedido
-    async function removerPedido(pedidoId) {
-      if (!confirm('Tem certeza que deseja remover este pedido?')) return;
-      try {
-        const response = await fetch(`/api/pedidos/${pedidoId}`, { method: 'DELETE' });
-        if (!response.ok) throw new Error('Erro ao remover pedido');
-        await carregarPedidos();
-        alert('Pedido removido com sucesso!');
-      } catch (error) {
-        alert('Erro ao remover pedido');
-        console.error(error);
+    // Handle seleção de cliente
+    function handleClienteSelect() {
+      const clienteId = document.getElementById('clienteSelect').value;
+      if (clienteId) {
+        const cliente = clientes.find(c => c.id == clienteId);
+        if (cliente) {
+          document.getElementById('clienteTelefone').value = cliente.telefone;
+          document.getElementById('clienteEmail').value = cliente.email || '';
+          document.getElementById('clienteEndereco').value = cliente.endereco || '';
+        }
       }
     }
 
-    // Função para concluir pedido
-    async function concluirPedido(pedidoId) {
-      if (!confirm('Tem certeza que deseja concluir este pedido?')) return;
-      
-      try {
-        console.log('Iniciando conclusão do pedido:', pedidoId);
-        
-        const pedido = pedidos.find(p => p.id == pedidoId);
-        if (!pedido) {
-          alert('Pedido não encontrado!');
-          return;
+    // Handle input novo cliente
+    function handleNovoClienteInput() {
+      const nome = document.getElementById('novoClienteNome').value;
+      if (nome.length >= 3) {
+        // Aqui você pode implementar busca automática de clientes similares
+      }
+    }
+
+    // Handle seleção de produto
+    function handleProdutoSelect() {
+      const produtoId = document.getElementById('produtoSelect').value;
+      if (produtoId) {
+        const produto = produtos.find(p => p.id == produtoId);
+        if (produto) {
+          document.getElementById('produtoPreco').value = produto.preco.toFixed(2);
+          document.getElementById('produtoQuantidade').value = '1';
+          calcularSubtotalItem();
         }
+      }
+    }
 
-        console.log('Pedido encontrado:', pedido);
-        console.log('Status atual:', pedido.status);
+    // Handle input novo produto
+    function handleNovoProdutoInput() {
+      const nome = document.getElementById('novoProdutoNome').value;
+      if (nome.length >= 3) {
+        // Aqui você pode implementar busca automática de produtos similares
+      }
+    }
 
-        const pedidoData = {
-          cliente_id: pedido.cliente_id,
-          data_pedido: pedido.data_pedido,
-          status: 'Concluído',
-          valor_total: pedido.valor_total,
-          observacoes: pedido.observacoes,
-          itens: pedido.itens // <-- Adicionado para evitar erro de itens is not iterable
-        };
+    // Calcular subtotal do item
+    function calcularSubtotalItem() {
+      const preco = parseFloat(document.getElementById('produtoPreco').value) || 0;
+      const quantidade = parseInt(document.getElementById('produtoQuantidade').value) || 0;
+      const subtotal = preco * quantidade;
+      document.getElementById('produtoSubtotal').value = subtotal.toFixed(2);
+    }
 
-        console.log('Dados para atualização:', pedidoData);
+    // Adicionar item ao pedido
+    function adicionarItemAoPedido() {
+      const tipoProduto = document.getElementById('tipoProduto').value;
+      const nome = document.getElementById('produtoSelect').value || document.getElementById('novoProdutoNome').value;
+      const preco = parseFloat(document.getElementById('produtoPreco').value) || 0;
+      const quantidade = parseInt(document.getElementById('produtoQuantidade').value) || 0;
+      const observacoes = document.getElementById('produtoObservacoes').value;
 
-        const response = await fetch(`/api/pedidos/${pedidoId}`, {
-          method: 'PUT',
-          headers: {'Content-Type': 'application/json'},
+      if (!nome || preco <= 0 || quantidade <= 0) {
+        mostrarNotificacao('Preencha todos os campos do produto', 'error');
+        return;
+      }
+
+      const item = {
+        id: Date.now(),
+        tipo: tipoProduto,
+        nome: nome,
+        preco: preco,
+        quantidade: quantidade,
+        subtotal: preco * quantidade,
+        observacoes: observacoes
+      };
+
+      adicionarItemNaLista(item);
+      limparCamposProduto();
+      calcularTotalPedido();
+    }
+
+    // Adicionar item na lista
+    function adicionarItemNaLista(item) {
+      const itensContainer = document.getElementById('itensPedido');
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'item-pedido';
+      itemDiv.dataset.itemId = item.id;
+      
+      itemDiv.innerHTML = `
+        <div class="item-info">
+          <strong>${item.nome}</strong>
+          <span class="item-details">
+            ${item.quantidade}x R$ ${item.preco.toFixed(2)} = R$ ${item.subtotal.toFixed(2)}
+          </span>
+          ${item.observacoes ? `<small class="item-observacoes">${item.observacoes}</small>` : ''}
+        </div>
+        <button type="button" class="btn btn-sm btn-danger" onclick="removerItem(${item.id})">
+          <i class="fas fa-trash"></i>
+        </button>
+      `;
+      
+      itensContainer.appendChild(itemDiv);
+    }
+
+    // Remover item
+    function removerItem(itemId) {
+      const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
+      if (itemElement) {
+        itemElement.remove();
+        calcularTotalPedido();
+      }
+    }
+
+    // Limpar campos do produto
+    function limparCamposProduto() {
+      document.getElementById('produtoSelect').value = '';
+      document.getElementById('novoProdutoNome').value = '';
+      document.getElementById('produtoPreco').value = '';
+      document.getElementById('produtoQuantidade').value = '';
+      document.getElementById('produtoSubtotal').value = '';
+      document.getElementById('produtoObservacoes').value = '';
+    }
+
+    // Calcular total do pedido
+    function calcularTotalPedido() {
+      const itens = document.querySelectorAll('.item-pedido');
+      let total = 0;
+      
+      itens.forEach(item => {
+        const subtotalText = item.querySelector('.item-details').textContent;
+        const subtotal = parseFloat(subtotalText.match(/R\$ ([\d,]+\.?\d*)/)[1].replace(',', '.'));
+        total += subtotal;
+      });
+      
+      document.getElementById('valorTotal').textContent = `R$ ${total.toFixed(2)}`;
+    }
+
+    // Handle novo pedido
+    async function handleNovoPedido(event) {
+      event.preventDefault();
+      
+      if (!validarFormulario()) {
+        return;
+      }
+
+      const formData = new FormData(novoPedidoForm);
+      const pedidoData = {
+        cliente: obterDadosCliente(),
+        itens: obterItensPedido(),
+        observacoes: formData.get('observacoes'),
+        status: 'Pendente'
+      };
+
+      try {
+        const response = await fetch('/api/pedidos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify(pedidoData)
         });
 
-        console.log('Resposta do servidor:', response.status, response.statusText);
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(`Erro ao concluir pedido: ${errorData.error || response.statusText}`);
+        if (response.ok) {
+          const novoPedido = await response.json();
+          pedidos.push(novoPedido);
+          atualizarTabelaPedidos();
+          novoPedidoModal.style.display = 'none';
+          limparFormulario();
+          mostrarNotificacao('Pedido criado com sucesso!', 'success');
+        } else {
+          throw new Error('Erro ao criar pedido');
         }
-        
-        const result = await response.json();
-        console.log('Resultado da atualização:', result);
-        
-        await carregarPedidos();
-        alert('Pedido concluído com sucesso!');
       } catch (error) {
-        console.error('Erro ao concluir pedido:', error);
-        alert('Erro ao concluir pedido: ' + error.message);
+        console.error('Erro:', error);
+        mostrarNotificacao('Erro ao criar pedido', 'error');
       }
     }
 
-    // Função para cancelar pedido
-    async function cancelarPedido(pedidoId) {
-      if (!confirm('Tem certeza que deseja cancelar este pedido?')) return;
-      try {
-        const pedido = pedidos.find(p => p.id == pedidoId);
-        if (!pedido) {
-          alert('Pedido não encontrado!');
-          return;
+    // Validar formulário
+    function validarFormulario() {
+      const requiredFields = novoPedidoForm.querySelectorAll('[required]');
+      let isValid = true;
+
+      requiredFields.forEach(field => {
+        if (!validateField({ target: field })) {
+          isValid = false;
         }
+      });
 
-        const putBody = limparUndefinedDeep({
-          cliente_id: pedido.cliente_id,
-          data_pedido: pedido.data_pedido,
-          status: 'Cancelado',
-          valor_total: pedido.valor_total,
-          observacoes: pedido.observacoes,
-          itens: pedido.itens
-        });
-        const response = await fetch(`/api/pedidos/${pedidoId}`, {
-          method: 'PUT',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(putBody)
-        });
+      const itens = document.querySelectorAll('.item-pedido');
+      if (itens.length === 0) {
+        mostrarNotificacao('Adicione pelo menos um item ao pedido', 'error');
+        isValid = false;
+      }
 
-        if (!response.ok) throw new Error('Erro ao cancelar pedido');
+      return isValid;
+    }
+
+    // Obter dados do cliente
+    function obterDadosCliente() {
+      const tipoCliente = document.getElementById('tipoCliente').value;
+      
+      if (tipoCliente === 'existente') {
+        const clienteId = document.getElementById('clienteSelect').value;
+        return clientes.find(c => c.id == clienteId);
+      } else {
+        return {
+          nome: document.getElementById('novoClienteNome').value,
+          telefone: document.getElementById('novoClienteTelefone').value,
+          email: document.getElementById('novoClienteEmail').value,
+          endereco: document.getElementById('novoClienteEndereco').value
+        };
+      }
+    }
+
+    // Obter itens do pedido
+    function obterItensPedido() {
+      const itens = [];
+      document.querySelectorAll('.item-pedido').forEach(itemElement => {
+        const nome = itemElement.querySelector('strong').textContent;
+        const detalhes = itemElement.querySelector('.item-details').textContent;
+        const observacoes = itemElement.querySelector('.item-observacoes')?.textContent || '';
         
-        await carregarPedidos();
-        alert('Pedido cancelado com sucesso!');
-      } catch (error) {
-        console.error('Erro ao cancelar pedido:', error);
-        alert('Erro ao cancelar pedido: ' + error.message);
-      }
+        const match = detalhes.match(/(\d+)x R\$ ([\d,]+\.?\d*) = R\$ ([\d,]+\.?\d*)/);
+        const quantidade = parseInt(match[1]);
+        const preco = parseFloat(match[2].replace(',', '.'));
+        const subtotal = parseFloat(match[3].replace(',', '.'));
+        
+        itens.push({
+          nome,
+          preco,
+          quantidade,
+          subtotal,
+          observacoes
+        });
+      });
+      
+      return itens;
     }
 
-    // Função para editar pedido (preencher modal)
-    async function editarPedido(pedidoId) {
-      const pedido = pedidos.find(p => p.id == pedidoId);
-      if (!pedido) return;
-      
-      // Carregar clientes se ainda não foram carregados
-      if (clientes.length === 0) {
-        await carregarClientes();
-      }
-      
-      abrirModalNovoPedido();
-      
-      // Determinar se é cliente existente ou novo
-      if (pedido.cliente_id) {
-        // Cliente existente
-        document.getElementById('tipoCliente').value = 'existente';
-        toggleTipoCliente();
-        document.getElementById('cliente').value = pedido.cliente_id || '';
-        preencherInfoCliente();
-      } else if (pedido.nome_cliente) {
-        // Novo cliente
-        document.getElementById('tipoCliente').value = 'novo';
-        toggleTipoCliente();
-        document.getElementById('nomeCliente').value = pedido.nome_cliente || '';
-        document.getElementById('cpfCnpj').value = pedido.cpf_cnpj || '';
-      }
-      
-      document.getElementById('observacoes').value = pedido.observacoes || '';
-      document.getElementById('salvarPedido').setAttribute('data-editando', pedidoId);
-    }
-
-    // Função para visualizar pedido
+    // Visualizar pedido
     function visualizarPedido(pedidoId) {
       const pedido = pedidos.find(p => p.id == pedidoId);
-      if (!pedido) {
-        alert('Pedido não encontrado!');
-        return;
-      }
+      if (!pedido) return;
 
-      // Extrair informações adicionais das observações
-      const observacoes = pedido.observacoes || '';
-      // Extrair cada campo separadamente, sem repetições ou concatenação
-      function extrairInfoSimples(texto, chave, chavesPossiveis) {
-        const textoLimpo = texto.replace(/•/g, '').replace(/\s+/g, ' ');
-        const idxInicio = textoLimpo.indexOf(chave);
-        if (idxInicio === -1) return '';
-        const inicio = idxInicio + chave.length;
-        let fim = textoLimpo.length;
-        for (const outraChave of chavesPossiveis) {
-          if (outraChave === chave) continue;
-          const idx = textoLimpo.indexOf(outraChave, inicio);
-          if (idx !== -1 && idx < fim) fim = idx;
-        }
-        return textoLimpo.substring(inicio, fim).replace(/[:;]/g, '').trim();
-      }
-      const chaves = [
-        'Telefone:', 'Email:', 'Endereço:', 'Forma de Pagamento:', 'CPF/CNPJ:'
-      ];
-      const telefone = extrairInfoSimples(observacoes, 'Telefone:', chaves) || 'Não informado';
-      const email = extrairInfoSimples(observacoes, 'Email:', chaves) || 'Não informado';
-      const endereco = extrairInfoSimples(observacoes, 'Endereço:', chaves) || 'Não informado';
-      const formaPagamento = extrairInfoSimples(observacoes, 'Forma de Pagamento:', chaves) || 'Não informado';
-      const cpfCnpj = extrairInfoSimples(observacoes, 'CPF/CNPJ:', chaves) || 'Não informado';
-
-      // Determinar nome do cliente
-      let nomeCliente = 'Cliente não identificado';
-      if (pedido.nome_cliente) {
-        nomeCliente = pedido.nome_cliente;
-      } else if (pedido.cliente_id) {
-        const cliente = clientes.find(c => c.id == pedido.cliente_id);
-        nomeCliente = cliente ? cliente.razao : `Cliente ID: ${pedido.cliente_id}`;
-      }
-
-      // Determinar classe do status
-      let statusClass = 'status-processamento';
-      if (pedido.status === 'Concluído') statusClass = 'status-concluido';
-      else if (pedido.status === 'Cancelado') statusClass = 'status-cancelado';
-
-      // Criar HTML do modal
-      const html = `
-        <div class="pedido-info">
-          <div class="pedido-header">
-            <div class="pedido-numero">Pedido #${pedido.id}</div>
-            <div class="pedido-status ${statusClass}">${pedido.status || 'Em Processamento'}</div>
-          </div>
-          
-          <div class="info-grid">
-            <div class="info-section">
-              <h4><i class="fas fa-user"></i> Informações do Cliente</h4>
-              <div class="info-item">
-                <span class="info-label">Cliente:</span>
-                <span class="info-value">${nomeCliente}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">CPF/CNPJ:</span>
-                <span class="info-value">${cpfCnpj}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Telefone:</span>
-                <span class="info-value">${telefone}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">E-mail:</span>
-                <span class="info-value">${email}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Endereço:</span>
-                <span class="info-value">${endereco}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Forma de Pagamento:</span>
-                <span class="info-value">${formaPagamento}</span>
-              </div>
-            </div>
-            
-            <div class="info-section">
-              <h4><i class="fas fa-credit-card"></i> Informações do Pedido</h4>
-              <div class="info-item">
-                <span class="info-label">Data:</span>
-                <span class="info-value">${pedido.data_pedido || 'N/A'}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Forma de Pagamento:</span>
-                <span class="info-value">${formaPagamento}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Status:</span>
-                <span class="info-value">${pedido.status || 'Em Processamento'}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Valor Total:</span>
-                <span class="info-value">R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="itens-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Produto</th>
-                  <th>Quantidade</th>
-                  <th>Preço Unit.</th>
-                  <th>Subtotal</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${pedido.itens ? pedido.itens.map(item => `
-                  <tr>
-                    <td>${item.produto || 'N/A'}</td>
-                    <td style="text-align: center;">${item.quantidade || 0}</td>
-                    <td style="text-align: right;">R$ ${(Number(item.precoUnitario) || 0).toFixed(2).replace('.', ',')}</td>
-                    <td style="text-align: right;">R$ ${(Number(item.subtotal) || 0).toFixed(2).replace('.', ',')}</td>
-                  </tr>
-                `).join('') : '<tr><td colspan="4" style="text-align: center;">Nenhum item encontrado</td></tr>'}
-              </tbody>
-            </table>
-          </div>
-          
-          <div class="total-section-visualizacao">
-            Total: R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}
-          </div>
-          
-          ${pedido.observacoes ? `
-            <div class="observacoes-section">
-              <h4><i class="fas fa-sticky-note"></i> Observações</h4>
-              <div class="observacoes-texto">${pedido.observacoes.replace(/\n/g, '<br>')}</div>
-            </div>
-          ` : ''}
-        </div>
-      `;
-
-      // Preencher modal
-      document.getElementById('pedidoDetalhes').innerHTML = html;
-      
-      // Configurar botões
-      document.getElementById('concluirPedido').onclick = () => alterarStatusPedido(pedidoId, 'Concluído');
-      document.getElementById('cancelarPedidoBtn').onclick = () => alterarStatusPedido(pedidoId, 'Cancelado');
-      document.getElementById('gerarPDFPedidoBtn').onclick = () => gerarPDFPedido(pedidoId);
-      
-      // Abrir modal
-      document.getElementById('visualizarPedidoModal').style.display = 'block';
-      document.body.style.overflow = 'hidden';
+      preencherFormularioVisualizacao(pedido);
+      visualizarPedidoModal.style.display = 'block';
     }
 
-    // Função para alterar status do pedido
-    async function alterarStatusPedido(pedidoId, novoStatus) {
-      if (!confirm(`Tem certeza que deseja ${novoStatus === 'Concluído' ? 'concluir' : 'cancelar'} este pedido?`)) {
+    // Preencher formulário de visualização
+    function preencherFormularioVisualizacao(pedido) {
+      const form = visualizarPedidoForm;
+      
+      // Dados do cliente
+      form.querySelector('[name="clienteNome"]').value = pedido.cliente.nome;
+      form.querySelector('[name="clienteTelefone"]').value = pedido.cliente.telefone;
+      form.querySelector('[name="clienteEmail"]').value = pedido.cliente.email || '';
+      form.querySelector('[name="clienteEndereco"]').value = pedido.cliente.endereco || '';
+      
+      // Itens do pedido
+      const itensContainer = form.querySelector('#itensPedidoVisualizacao');
+      itensContainer.innerHTML = '';
+      
+      pedido.itens.forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'item-pedido';
+        itemDiv.innerHTML = `
+          <div class="item-info">
+            <strong>${item.nome}</strong>
+            <span class="item-details">
+              ${item.quantidade}x R$ ${item.preco.toFixed(2)} = R$ ${item.subtotal.toFixed(2)}
+            </span>
+            ${item.observacoes ? `<small class="item-observacoes">${item.observacoes}</small>` : ''}
+          </div>
+        `;
+        itensContainer.appendChild(itemDiv);
+      });
+      
+      // Total e observações
+      form.querySelector('[name="valorTotal"]').value = `R$ ${pedido.valorTotal.toFixed(2)}`;
+      form.querySelector('[name="observacoes"]').value = pedido.observacoes || '';
+      form.querySelector('[name="status"]').value = pedido.status;
+      
+      // Data de criação
+      form.querySelector('[name="dataCriacao"]').value = formatarData(pedido.dataCriacao);
+    }
+
+    // Editar pedido
+    function editarPedido(pedidoId) {
+      const pedido = pedidos.find(p => p.id == pedidoId);
+      if (!pedido) return;
+
+      pedidoAtual = pedido;
+      editandoPedido = true;
+      
+      preencherFormularioEdicao(pedido);
+      novoPedidoModal.style.display = 'block';
+    }
+
+    // Preencher formulário de edição
+    function preencherFormularioEdicao(pedido) {
+      const form = novoPedidoForm;
+      
+      // Dados do cliente
+      if (pedido.cliente.id) {
+        form.querySelector('#tipoCliente').value = 'existente';
+        form.querySelector('#clienteSelect').value = pedido.cliente.id;
+        handleTipoClienteChange();
+      } else {
+        form.querySelector('#tipoCliente').value = 'novo';
+        form.querySelector('#novoClienteNome').value = pedido.cliente.nome;
+        form.querySelector('#novoClienteTelefone').value = pedido.cliente.telefone;
+        form.querySelector('#novoClienteEmail').value = pedido.cliente.email || '';
+        form.querySelector('#novoClienteEndereco').value = pedido.cliente.endereco || '';
+        handleTipoClienteChange();
+      }
+      
+      // Itens do pedido
+      const itensContainer = form.querySelector('#itensPedido');
+      itensContainer.innerHTML = '';
+      
+      pedido.itens.forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'item-pedido';
+        itemDiv.dataset.itemId = item.id || Date.now();
+        
+        itemDiv.innerHTML = `
+          <div class="item-info">
+            <strong>${item.nome}</strong>
+            <span class="item-details">
+              ${item.quantidade}x R$ ${item.preco.toFixed(2)} = R$ ${item.subtotal.toFixed(2)}
+            </span>
+            ${item.observacoes ? `<small class="item-observacoes">${item.observacoes}</small>` : ''}
+          </div>
+          <button type="button" class="btn btn-sm btn-danger" onclick="removerItem(${item.id || Date.now()})">
+            <i class="fas fa-trash"></i>
+          </button>
+        `;
+        itensContainer.appendChild(itemDiv);
+      });
+      
+      // Observações
+      form.querySelector('[name="observacoes"]').value = pedido.observacoes || '';
+      
+      calcularTotalPedido();
+    }
+
+    // Handle editar pedido
+    async function handleEditarPedido(event) {
+      event.preventDefault();
+      
+      if (!validarFormulario()) {
         return;
       }
 
+      const formData = new FormData(novoPedidoForm);
+      const pedidoData = {
+        cliente: obterDadosCliente(),
+        itens: obterItensPedido(),
+        observacoes: formData.get('observacoes'),
+        status: pedidoAtual.status
+      };
+
       try {
-        console.log('Iniciando alteração de status do pedido:', pedidoId, 'para:', novoStatus);
-        
-        const pedido = pedidos.find(p => p.id == pedidoId);
-        if (!pedido) {
-          alert('Pedido não encontrado!');
-          return;
-        }
-
-        console.log('Pedido encontrado:', pedido);
-        console.log('Status atual:', pedido.status);
-
-        const pedidoData = {
-          cliente_id: pedido.cliente_id,
-          data_pedido: pedido.data_pedido,
-          status: novoStatus,
-          valor_total: pedido.valor_total,
-          observacoes: pedido.observacoes
-        };
-
-        console.log('Dados para atualização:', pedidoData);
-
-        const response = await fetch(`/api/pedidos/${pedidoId}`, {
+        const response = await fetch(`/api/pedidos/${pedidoAtual.id}`, {
           method: 'PUT',
-          headers: {'Content-Type': 'application/json'},
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify(pedidoData)
         });
 
-        console.log('Resposta do servidor:', response.status, response.statusText);
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(`Erro ao alterar status do pedido: ${errorData.error || response.statusText}`);
+        if (response.ok) {
+          const pedidoAtualizado = await response.json();
+          const index = pedidos.findIndex(p => p.id == pedidoAtual.id);
+          if (index !== -1) {
+            pedidos[index] = pedidoAtualizado;
+          }
+          atualizarTabelaPedidos();
+          novoPedidoModal.style.display = 'none';
+          limparFormulario();
+          mostrarNotificacao('Pedido atualizado com sucesso!', 'success');
+        } else {
+          throw new Error('Erro ao atualizar pedido');
         }
-        
-        const result = await response.json();
-        console.log('Resultado da atualização:', result);
-        
-        await carregarPedidos();
-        fecharModalVisualizarPedido();
-        alert(`Pedido ${novoStatus === 'Concluído' ? 'concluído' : 'cancelado'} com sucesso!`);
       } catch (error) {
-        console.error('Erro ao alterar status:', error);
-        alert('Erro ao alterar status do pedido: ' + error.message);
+        console.error('Erro:', error);
+        mostrarNotificacao('Erro ao atualizar pedido', 'error');
       }
     }
 
-    // Função para fechar modal de visualização
-    function fecharModalVisualizarPedido() {
-      document.getElementById('visualizarPedidoModal').style.display = 'none';
-      document.body.style.overflow = 'auto';
-    }
-
-    // Função para abrir modal de novo pedido
-    function abrirModalNovoPedido() {
-      document.getElementById('novoPedidoModal').style.display = 'block';
-      document.body.style.overflow = 'hidden';
-      
-      // Limpar formulário
-      document.getElementById('novoPedidoForm').reset();
-      document.getElementById('itensContainer').innerHTML = '';
-      novoPedidoItens = [];
-      itemCounter = 0;
-      atualizarTotalPedido();
-      
-      // Ocultar seções de cliente
-      document.getElementById('clienteExistenteSection').style.display = 'none';
-      document.getElementById('novoClienteSection').style.display = 'none';
-      
-      // Remover atributo de edição se existir
-      document.getElementById('salvarPedido').removeAttribute('data-editando');
-    }
-
-    // Função para fechar modal de novo pedido
-    function fecharModalNovoPedido() {
-      document.getElementById('novoPedidoModal').style.display = 'none';
-      document.body.style.overflow = 'auto';
-    }
-
-    // Função para adicionar item ao pedido
-    function adicionarItem() {
-      const itemId = `item-${itemCounter++}`;
-      const itemHTML = `
-        <div class="item-row" id="${itemId}">
-          <div class="form-group">
-            <select class="produto-select" onchange="selecionarProduto(this, '${itemId}')">
-              <option value="">Selecione um produto</option>
-              ${produtos.map(produto => 
-                `<option value="${produto.id}" data-preco="${produto.preco_venda || 0}">${produto.nome}</option>`
-              ).join('')}
-            </select>
-          </div>
-          <div class="form-group">
-            <input type="number" class="quantidade-input" value="1" min="1" onchange="calcularSubtotal('${itemId}')" onkeyup="calcularSubtotal('${itemId}')">
-          </div>
-          <div class="form-group">
-            <input type="number" class="preco-input" step="0.01" readonly>
-          </div>
-          <div class="form-group">
-            <input type="number" class="subtotal-input" step="0.01" readonly>
-          </div>
-          <button type="button" class="remove-item" onclick="removerItem('${itemId}')">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-      `;
-      document.getElementById('itensContainer').insertAdjacentHTML('beforeend', itemHTML);
-      atualizarNovoPedidoItens();
-    }
-
-    // Função para selecionar produto
-    function selecionarProduto(select, itemId) {
-      const produtoId = select.value;
-      const produto = produtos.find(p => p.id == produtoId);
-      if (produto) {
-        const itemRow = document.getElementById(itemId);
-        const precoInput = itemRow.querySelector('.preco-input');
-        precoInput.value = produto.preco_venda || 0;
-        calcularSubtotal(itemId);
-      }
-      atualizarNovoPedidoItens();
-    }
-
-    // Função para calcular subtotal
-    function calcularSubtotal(itemId) {
-      const itemRow = document.getElementById(itemId);
-      const quantidade = parseFloat(itemRow.querySelector('.quantidade-input').value) || 0;
-      const preco = parseFloat(itemRow.querySelector('.preco-input').value) || 0;
-      const subtotal = quantidade * preco;
-      itemRow.querySelector('.subtotal-input').value = subtotal.toFixed(2);
-      atualizarTotalPedido();
-      atualizarNovoPedidoItens();
-    }
-
-    // Função para remover item
-    function removerItem(itemId) {
-      document.getElementById(itemId).remove();
-      atualizarTotalPedido();
-      atualizarNovoPedidoItens();
-    }
-
-    // Função para atualizar total do pedido
-    function atualizarTotalPedido() {
-      const subtotais = Array.from(document.querySelectorAll('.subtotal-input'))
-        .map(input => parseFloat(input.value) || 0);
-      
-      const total = subtotais.reduce((sum, subtotal) => sum + subtotal, 0);
-      document.getElementById('totalPedido').textContent = total.toFixed(2).replace('.', ',');
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      // Verificar se está logado
-      if (sessionStorage.getItem('loggedIn') !== 'true') {
-        window.location.href = 'index.html';
-      }
-      // Exibir nome do usuário
-      const username = sessionStorage.getItem('username') || 'Usuário';
-      document.getElementById('userDisplay').textContent = username;
-
-      // Event listeners do modal
-      document.getElementById('btn-novo-pedido').addEventListener('click', abrirModalNovoPedido);
-      document.getElementById('closeNovoPedido').addEventListener('click', fecharModalNovoPedido);
-      document.getElementById('cancelarPedido').addEventListener('click', fecharModalNovoPedido);
-      document.getElementById('addItemBtn').addEventListener('click', adicionarItem);
-      document.getElementById('salvarPedido').addEventListener('click', salvarPedido);
-
-      // Event listeners do modal de visualização
-      document.getElementById('closeVisualizarPedido').addEventListener('click', fecharModalVisualizarPedido);
-      document.getElementById('fecharVisualizarPedido').addEventListener('click', fecharModalVisualizarPedido);
-
-      // Event listener para preencher informações do cliente
-      document.getElementById('cliente').addEventListener('change', preencherInfoCliente);
-
-      // Fechar modal ao clicar fora
-      window.addEventListener('click', function(event) {
-        const modal = document.getElementById('novoPedidoModal');
-        if (event.target === modal) {
-          fecharModalNovoPedido();
-        }
-        const modalVisualizar = document.getElementById('visualizarPedidoModal');
-        if (event.target === modalVisualizar) {
-          fecharModalVisualizarPedido();
-        }
-      });
-
-      // Fechar modal com ESC
-      document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-          fecharModalNovoPedido();
-          fecharModalVisualizarPedido();
-        }
-      });
-
-      // Busca em tempo real
-      document.getElementById('busca-pedido').addEventListener('input', function() {
-        renderTabelaPedidos(this.value);
-      });
-
-      // Exportar PDF
-      document.getElementById('btn-exportar-pdf').onclick = function() {
-        console.log('Botão exportar PDF clicado');
-        gerarPDFTodosPedidos();
-      };
-      
-      // Exportar Excel
-      document.getElementById('btn-exportar-excel').onclick = function() {
-        gerarExcelTodosPedidos();
-      };
-
-      // Ao carregar a página, buscar dados do banco
-      carregarPedidos();
-      carregarClientes();
-      carregarProdutos();
-    });
-
-    async function logout() {
-      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-      sessionStorage.removeItem('loggedIn');
-      sessionStorage.removeItem('username');
-      window.location.href = 'sistema.html';
-    }
-
-    // Função para calcular o lucro de um pedido
-    function calcularLucroPedido(pedido) {
-      if (!pedido.itens || !Array.isArray(pedido.itens)) return 0;
-      return pedido.itens.reduce((lucro, item) => {
-        const venda = parseFloat(item.precoUnitario || item.preco_venda || 0);
-        const custo = parseFloat(item.preco_custo || 0);
-        const qtd = parseInt(item.quantidade || 0);
-        return lucro + (venda - custo) * qtd;
-      }, 0);
-    }
-
-    // Função para formatar valor em reais
-    function formatarMoeda(valor) {
-      return `R$ ${valor.toFixed(2).replace('.', ',')}`;
-    }
-
-    // Função para limpar caracteres especiais (global, para uso em todo o arquivo)
-    function limparCaracteres(texto) {
-      if (!texto) return '';
-      return texto.toString()
-        .replace(/[^\w\s\-.,()@\n]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .substring(0, 50); // Limita a 50 caracteres para evitar overflow
-    }
-
-    // Função para gerar PDF de todos os pedidos
-    function gerarPDFTodosPedidos() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const primaryColor = [0, 90, 159];
-      const secondaryColor = [0, 55, 102];
-      const bgRow = [248, 249, 250];
-      const borderColor = [220, 220, 220];
-
-      carregarImagemBase64('https://i.imgur.com/2jT2EPD.png', function(logoBase64) {
-        // Logo centralizada e maior
-        const logoWidth = 60;
-        const logoHeight = 18;
-        const logoX = (210 - logoWidth) / 2;
-        const logoY = 6;
-        doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
-
-        // Cabeçalho destacado (apenas título e subtítulo centralizados)
-        doc.setFillColor(...primaryColor);
-        doc.rect(0, 0, 210, 38, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(20);
-        doc.setFont('helvetica', 'bold');
-        doc.text('RELATÓRIO DE PEDIDOS', 105, 28, { align: 'center' });
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, 34, { align: 'center' });
-
-        // Informações do relatório (fora do bloco azul, alinhadas à esquerda)
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(13);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Pedidos e Vendas', 15, 48);
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Total de Pedidos: ${pedidos.length}`, 15, 56);
-        doc.text(`Período: ${new Date().toLocaleDateString('pt-BR')}`, 15, 62);
-
-        // Tabela de pedidos
-        const tableData = pedidos.map(pedido => [
-          pedido.id,
-          limparCaracteres(pedido.nome_cliente || pedido.cliente_id || 'N/A'),
-          formatarData(pedido.data_pedido) || 'N/A',
-          // Padronizar status para exibição
-          (pedido.status || '').toLowerCase().includes('conclu') ? 'Concluído' :
-          (pedido.status || '').toLowerCase().includes('canc') ? 'Cancelado' :
-          'Em Processamento',
-          `R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}`
-        ]);
-
-        doc.autoTable({
-          startY: 68,
-          head: [['ID', 'Cliente', 'Data', 'Status', 'Valor Total']],
-          body: tableData,
-          theme: 'grid',
-          headStyles: {
-            fillColor: primaryColor,
-            textColor: [255, 255, 255],
-            fontStyle: 'bold',
-            fontSize: 11,
-            halign: 'center',
-            valign: 'middle',
-            lineWidth: 0.5,
-            lineColor: borderColor
-          },
-          styles: {
-            fontSize: 10,
-            cellPadding: 3.5,
-            lineColor: borderColor,
-            lineWidth: 0.2,
-            valign: 'middle',
-            overflow: 'linebreak',
-            halign: 'center',
-            minCellHeight: 8
-          },
-          columnStyles: {
-            0: { cellWidth: 14, halign: 'center' }, // ID
-            1: { cellWidth: 'auto', halign: 'left' },   // Cliente
-            2: { cellWidth: 28, halign: 'center' }, // Data
-            3: { cellWidth: 38, halign: 'center', fontStyle: 'bold', wordBreak: 'none' }, // Status (maior e sem quebra)
-            4: { cellWidth: 28, halign: 'right' }   // Valor Total
-          },
-          alternateRowStyles: {
-            fillColor: bgRow
-          },
-          tableLineColor: borderColor,
-          tableLineWidth: 0.2,
-          margin: { top: 68, right: 10, bottom: 20, left: 10 },
-          tableWidth: 'auto',
-          didParseCell: function (data) {
-            // Colorir status
-            if (data.section === 'body' && data.column.index === 3) {
-              const status = data.cell.raw;
-              data.cell.styles.fontStyle = 'bold';
-              if (status === 'Concluído') {
-                data.cell.styles.textColor = [40, 167, 69]; // verde
-              } else if (status === 'Cancelado') {
-                data.cell.styles.textColor = [220, 53, 69]; // vermelho
-              } else {
-                data.cell.styles.textColor = [245, 158, 11]; // laranja
-              }
-            }
-          },
-          didDrawPage: function (data) {
-            // Rodapé elegante
-            const pageHeight = doc.internal.pageSize.height;
-            doc.setFillColor(240, 240, 240);
-            doc.rect(0, pageHeight - 22, 210, 22, 'F');
-            doc.setTextColor(100, 100, 100);
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'normal');
-            doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 12, { align: 'center' });
-            doc.text(`Total de pedidos: ${pedidos.length}`, 105, pageHeight - 6, { align: 'center' });
-          }
-        });
-
-        // Estatísticas por status
-        let finalY = doc.lastAutoTable.finalY + 12;
-        doc.setFontSize(13);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Distribuição por Status:', 15, finalY);
-        // Contar status padronizados
-        let countConcluidos = 0, countProcessando = 0, countCancelados = 0;
-        pedidos.forEach(pedido => {
-          const status = (pedido.status || '').toLowerCase();
-          if (status.includes('conclu')) countConcluidos++;
-          else if (status.includes('canc')) countCancelados++;
-          else countProcessando++;
-        });
-        let yPos = finalY + 7;
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Concluídos: ${countConcluidos} pedido(s)`, 20, yPos);
-        yPos += 8;
-        doc.text(`Em Processamento: ${countProcessando} pedido(s)`, 20, yPos);
-        yPos += 8;
-        doc.text(`Cancelados: ${countCancelados} pedido(s)`, 20, yPos);
-
-        // Salvar PDF
-        const hoje = new Date();
-        const dataAtual = `${hoje.getDate().toString().padStart(2, '0')}-${(hoje.getMonth() + 1).toString().padStart(2, '0')}-${hoje.getFullYear()}`;
-        doc.save(`Relatorio_Pedidos_${dataAtual}.pdf`);
-      });
-    }
-
-    // Função para imprimir pedido
-    function imprimirPedido(pedidoId) {
-      console.log('Imprimindo pedido ID:', pedidoId, 'Tipo:', typeof pedidoId);
-      console.log('Pedidos disponíveis:', pedidos.map(p => ({ id: p.id, tipo: typeof p.id })));
-      
-      const pedido = pedidos.find(p => p.id == pedidoId);
-      if (!pedido) {
-        console.error('Pedido não encontrado. ID buscado:', pedidoId);
-        alert('Pedido não encontrado!');
-        return;
-      }
-      
-      console.log('Pedido encontrado:', pedido);
-
-      // Verificar se o pedido tem itens
-      console.log('Itens do pedido:', pedido.itens);
-      if (!pedido.itens || pedido.itens.length === 0) {
-        console.warn('Pedido sem itens:', pedido);
-        alert('Este pedido não possui itens. Não é possível imprimir.');
-        return;
-      }
-
-      // Verificar se jsPDF está disponível
-      if (typeof window.jspdf === 'undefined') {
-        alert('Erro: Biblioteca jsPDF não carregada. Verifique sua conexão com a internet.');
-        return;
-      }
-
-      // Buscar informações da empresa antes de gerar o PDF
-      fetch('/api/empresa').then(res => {
-        if (!res.ok) {
-          throw new Error(`Erro ao buscar dados da empresa: ${res.status}`);
-        }
-        return res.json();
-      }).then(empresa => {
-        try {
-          const { jsPDF } = window.jspdf;
-          const doc = new jsPDF();
-
-          // Configurações de cores
-          const primaryColor = [0, 90, 159]; // #005a9f
-          const secondaryColor = [0, 55, 102]; // #003766
-          const successColor = [40, 167, 69];
-          const dangerColor = [220, 53, 69];
-
-          // Função para limpar caracteres especiais
-          function limparCaracteres(texto) {
-            if (!texto) return '';
-            return texto.toString()
-              .replace(/[^\w\s\-.,()@\n]/g, '')
-              .replace(/\s+/g, ' ')
-              .trim()
-              .substring(0, 50); // Limita a 50 caracteres para evitar overflow
-          }
-
-          carregarImagemBase64('https://i.imgur.com/2jT2EPD.png', function(logoBase64) {
-            // Logo centralizada
-            const logoWidth = 50;
-            const logoHeight = 22;
-            const logoX = (210 - logoWidth) / 2;
-            const logoY = 8;
-            doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
-
-            // --- INFORMAÇÕES DA EMPRESA NO TOPO ---
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.text(limparCaracteres(empresa.nome_fantasia || ''), 105, 35, { align: 'center' });
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Razão Social: ${limparCaracteres(empresa.razao_social || '')}`, 105, 41, { align: 'center' });
-            doc.text(`CNPJ: ${limparCaracteres(empresa.cnpj || '')}`, 105, 46, { align: 'center' });
-            doc.text(`Endereço: ${limparCaracteres(empresa.endereco || '')}`, 105, 51, { align: 'center' });
-            doc.text(`E-mail: ${limparCaracteres(empresa.email || '')}`, 105, 56, { align: 'center' });
-            doc.text(`Telefone: ${limparCaracteres(empresa.telefone || '')}`, 105, 61, { align: 'center' });
-
-            // Título do relatório
-            doc.setTextColor(0, 0, 0);
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
-            doc.text('PEDIDO DE VENDA', 105, 70, { align: 'center' });
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Data: ${formatarData(pedido.data_pedido) || 'N/A'}`, 105, 77, { align: 'center' });
-
-            // Informações do pedido
-            let yBase = 90;
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`PEDIDO #${pedido.id}`, 20, yBase);
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'normal');
-            doc.text('Status:', 20, yBase + 10);
-            // Status colorido
-            if (pedido.status === 'Concluído') {
-              doc.setTextColor(...successColor);
-            } else if (pedido.status === 'Cancelado') {
-              doc.setTextColor(...dangerColor);
-            } else {
-              doc.setTextColor(245, 158, 11); // Amarelo para em processamento
-            }
-            doc.setFont('helvetica', 'bold');
-            doc.text(limparCaracteres(pedido.status || 'N/A'), 45, yBase + 10);
-            doc.setTextColor(0, 0, 0);
-            doc.setFont('helvetica', 'normal');
-
-            // Informações do cliente
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text('INFORMACOES DO CLIENTE', 20, yBase + 30);
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            // Extrair informações das observações para o PDF
-            const observacoes = pedido.observacoes || '';
-            const telefonePDF = extrairInfoPDF(observacoes, 'Telefone:') || 'Não informado';
-            const emailPDF = extrairInfoPDF(observacoes, 'Email:') || 'Não informado';
-            const enderecoPDF = extrairInfoPDF(observacoes, 'Endereço:') || 'Não informado';
-            const formaPagamentoPDF = extrairInfoPDF(observacoes, 'Forma de Pagamento:') || 'Não informado';
-
-            // Função auxiliar para extrair informações no PDF
-            function extrairInfoPDF(texto, chave) {
-              const textoLimpo = texto.replace(/•/g, '').replace(/\s+/g, ' ');
-              const regex = new RegExp(`${chave}\\s*([^\\n]+)`, 'i');
-              const match = textoLimpo.match(regex);
-              return match ? match[1].trim() : null;
-            }
-
-            doc.text(`Cliente: ${limparCaracteres(pedido.nome_cliente || pedido.cliente_id || 'N/A')}`, 20, yBase + 40);
-            doc.text(`Endereco: ${limparCaracteres(enderecoPDF)}`, 20, yBase + 47);
-            doc.text(`Telefone: ${limparCaracteres(telefonePDF)}`, 20, yBase + 54);
-            doc.text(`E-mail: ${limparCaracteres(emailPDF)}`, 20, yBase + 61);
-            doc.text(`Forma de Pagamento: ${limparCaracteres(formaPagamentoPDF)}`, 20, yBase + 68);
-
-            // Itens do pedido
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text('ITENS DO PEDIDO', 20, yBase + 90);
-            // Tabela de itens
-            const tableData = pedido.itens ? pedido.itens.map(item => [
-              limparCaracteres(item.produto || 'N/A'),
-              String(item.quantidade || 0),
-              `R$ ${(Number(item.precoUnitario) || 0).toFixed(2).replace('.', ',')}`,
-              `R$ ${(Number(item.subtotal) || 0).toFixed(2).replace('.', ',')}`
-            ]) : [];
-            
-            // Só criar tabela se houver dados
-            if (tableData.length > 0) {
-              doc.autoTable({
-                startY: yBase + 95,
-                head: [['Produto', 'Qtd', 'Preco Unit.', 'Subtotal']],
-                body: tableData,
-                theme: 'grid',
-                tableWidth: 170, // Largura total da tabela (210 - 40 de margem)
-                headStyles: {
-                  fillColor: primaryColor,
-                  textColor: [255, 255, 255],
-                  fontStyle: 'bold',
-                  fontSize: 10
-                },
-                styles: {
-                  fontSize: 9,
-                  cellPadding: 3, // Reduzido de 4 para 3
-                  lineColor: [200, 200, 200],
-                  lineWidth: 0.1
-                },
-                columnStyles: {
-                  0: { cellWidth: 'auto' }, // Produto - largura automática
-                  1: { halign: 'center', cellWidth: 20 }, // Quantidade - fixa
-                  2: { halign: 'right', cellWidth: 30 }, // Preço Unit. - fixa
-                  3: { halign: 'right', cellWidth: 30 } // Subtotal - fixa
-                },
-                margin: { left: 20, right: 20 }
-              });
-            }
-            // Total
-            const finalY = tableData.length > 0 ? doc.lastAutoTable.finalY + 10 : yBase + 95;
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`Valor Total: R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}`, 150, finalY);
-            // Observações
-            if (pedido.observacoes) {
-              doc.setFontSize(12);
-              doc.setFont('helvetica', 'bold');
-              doc.text('OBSERVACOES:', 20, finalY + 20);
-              doc.setFontSize(10);
-              doc.setFont('helvetica', 'normal');
-              const observacoes = doc.splitTextToSize(limparCaracteres(pedido.observacoes), 170);
-              doc.text(observacoes, 20, finalY + 28);
-            }
-            // Rodapé
-            const pageHeight = doc.internal.pageSize.height;
-            doc.setFillColor(240, 240, 240);
-            doc.rect(0, pageHeight - 30, 210, 30, 'F');
-            doc.setTextColor(100, 100, 100);
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'normal');
-            doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 20, { align: 'center' });
-            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, pageHeight - 15, { align: 'center' });
-            
-            // Abrir janela de impressão
-            const pdfBlob = doc.output('blob');
-            const pdfUrl = URL.createObjectURL(pdfBlob);
-            const printWindow = window.open(pdfUrl, '_blank');
-            
-            if (printWindow) {
-              printWindow.onload = function() {
-                printWindow.print();
-              };
-            } else {
-              // Fallback: baixar o PDF
-              doc.save(`Pedido_${pedido.id}_${limparCaracteres(pedido.nome_cliente || pedido.cliente_id).replace(/\s+/g, '_')}.pdf`);
-            }
-          });
-        } catch (error) {
-          console.error('Erro ao imprimir pedido:', error);
-          alert('Erro ao imprimir pedido: ' + error.message);
-        }
-      }).catch(error => {
-        console.error('Erro ao buscar dados da empresa:', error);
-        alert('Erro ao buscar dados da empresa: ' + error.message);
-      });
-    }
-
-    // Função para gerar PDF do pedido individual
-    function gerarPDFPedido(pedidoId) {
-      const pedido = pedidos.find(p => p.id == pedidoId);
-      if (!pedido) {
-        alert('Pedido não encontrado!');
-        return;
-      }
-      if (!pedido.itens || pedido.itens.length === 0) {
-        alert('Este pedido não possui itens. Não é possível gerar o PDF.');
-        return;
-      }
-      if (typeof window.jspdf === 'undefined') {
-        alert('Erro: Biblioteca jsPDF não carregada. Verifique sua conexão com a internet.');
-        return;
-      }
-      fetch('/api/empresa').then(res => {
-        if (!res.ok) throw new Error(`Erro ao buscar dados da empresa: ${res.status}`);
-        return res.json();
-      }).then(empresa => {
-        try {
-          const { jsPDF } = window.jspdf;
-          const doc = new jsPDF();
-          const primaryColor = [0, 90, 159];
-          const secondaryColor = [0, 55, 102];
-          const successColor = [40, 167, 69];
-          const dangerColor = [220, 53, 69];
-          // Função para limpar caracteres especiais
-          function limparCaracteres(texto) {
-            if (!texto) return '';
-            return texto.toString()
-              .replace(/[^\w\s\-.,()@\n]/g, '')
-              .replace(/\s+/g, ' ')
-              .trim()
-              .substring(0, 50);
-          }
-          carregarImagemBase64('https://i.imgur.com/2jT2EPD.png', function(logoBase64) {
-            // Logo centralizada
-            const logoWidth = 50;
-            const logoHeight = 22;
-            const logoX = (210 - logoWidth) / 2;
-            const logoY = 8;
-            doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
-            // --- INFORMAÇÕES DA EMPRESA NO TOPO ---
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.text(limparCaracteres(empresa.nome_fantasia || ''), 105, 35, { align: 'center' });
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Razão Social: ${limparCaracteres(empresa.razao_social || '')}`, 105, 41, { align: 'center' });
-            doc.text(`CNPJ: ${limparCaracteres(empresa.cnpj || '')}`, 105, 46, { align: 'center' });
-            doc.text(`Endereço: ${limparCaracteres(empresa.endereco || '')}`, 105, 51, { align: 'center' });
-            doc.text(`E-mail: ${limparCaracteres(empresa.email || '')}`, 105, 56, { align: 'center' });
-            doc.text(`Telefone: ${limparCaracteres(empresa.telefone || '')}`, 105, 61, { align: 'center' });
-            // Título do relatório
-            doc.setTextColor(0, 0, 0);
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
-            doc.text('PEDIDO DE VENDA', 105, 70, { align: 'center' });
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Data: ${formatarData(pedido.data_pedido) || 'N/A'}`, 105, 77, { align: 'center' });
-            // Informações do pedido
-            let yBase = 90;
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`PEDIDO #${pedido.id}`, 20, yBase);
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'normal');
-            doc.text('Status:', 20, yBase + 10);
-            // Status colorido
-            if ((pedido.status || '').toLowerCase().includes('conclu')) {
-              doc.setTextColor(...successColor);
-              doc.setFont('helvetica', 'bold');
-              doc.text('Concluído', 45, yBase + 10);
-            } else if ((pedido.status || '').toLowerCase().includes('canc')) {
-              doc.setTextColor(...dangerColor);
-              doc.setFont('helvetica', 'bold');
-              doc.text('Cancelado', 45, yBase + 10);
-            } else {
-              doc.setTextColor(245, 158, 11);
-              doc.setFont('helvetica', 'bold');
-              doc.text('Em Processamento', 45, yBase + 10);
-            }
-            doc.setTextColor(0, 0, 0);
-            doc.setFont('helvetica', 'normal');
-            // Informações do cliente (priorizar campos do pedido)
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text('INFORMAÇÕES DO CLIENTE', 20, yBase + 30);
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            let yInfo = yBase + 40;
-            // Cliente
-            doc.text(`Cliente: ${limparCaracteres(pedido.nome_cliente) || 'N/A'}`, 20, yInfo);
-            yInfo += 7;
-            // Endereço
-            let endereco = pedido.endereco;
-            if (!endereco && pedido.observacoes) {
-              const match = pedido.observacoes.match(/Endere[cç]o:([^\n]+)/i);
-              endereco = match ? match[1].trim() : '';
-            }
-            doc.text(`Endereço: ${limparCaracteres(endereco) || 'N/A'}`, 20, yInfo);
-            yInfo += 7;
-            // Telefone
-            let telefone = pedido.telefone;
-            if (!telefone && pedido.observacoes) {
-              const match = pedido.observacoes.match(/Telefone:([^\n]+)/i);
-              telefone = match ? match[1].trim() : '';
-            }
-            doc.text(`Telefone: ${limparCaracteres(telefone) || 'N/A'}`, 20, yInfo);
-            yInfo += 7;
-            // E-mail
-            let email = pedido.email;
-            if (!email && pedido.observacoes) {
-              const match = pedido.observacoes.match(/E-?mail:([^\n]+)/i);
-              email = match ? match[1].trim() : '';
-            }
-            doc.text(`E-mail: ${limparCaracteres(email) || 'N/A'}`, 20, yInfo);
-            yInfo += 7;
-            // Forma de Pagamento
-            let formaPagamento = pedido.forma_pagamento;
-            if (!formaPagamento && pedido.observacoes) {
-              const match = pedido.observacoes.match(/Forma de Pagamento:([^\n]+)/i);
-              formaPagamento = match ? match[1].trim() : '';
-            }
-            doc.text(`Forma de Pagamento: ${limparCaracteres(formaPagamento) || 'N/A'}`, 20, yInfo);
-            yInfo += 10;
-            // Itens do pedido
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text('ITENS DO PEDIDO', 20, yInfo);
-            // Tabela de itens
-            const tableData = pedido.itens ? pedido.itens.map(item => [
-              limparCaracteres(item.produto || 'N/A'),
-              String(item.quantidade || 0),
-              `R$ ${(Number(item.precoUnitario) || 0).toFixed(2).replace('.', ',')}`,
-              `R$ ${(Number(item.subtotal) || 0).toFixed(2).replace('.', ',')}`
-            ]) : [];
-            if (tableData.length > 0) {
-              doc.autoTable({
-                startY: yInfo + 5,
-                head: [['Produto', 'Qtd', 'Preço Unit.', 'Subtotal']],
-                body: tableData,
-                theme: 'grid',
-                tableWidth: 170,
-                headStyles: {
-                  fillColor: primaryColor,
-                  textColor: [255, 255, 255],
-                  fontStyle: 'bold',
-                  fontSize: 10
-                },
-                styles: {
-                  fontSize: 9,
-                  cellPadding: 3,
-                  lineColor: [200, 200, 200],
-                  lineWidth: 0.1
-                },
-                columnStyles: {
-                  0: { cellWidth: 'auto' },
-                  1: { halign: 'center', cellWidth: 20 },
-                  2: { halign: 'right', cellWidth: 30 },
-                  3: { halign: 'right', cellWidth: 30 }
-                },
-                margin: { left: 20, right: 20 }
-              });
-            }
-            // Total
-            const finalY = tableData.length > 0 ? doc.lastAutoTable.finalY + 10 : yInfo + 15;
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`Valor Total: R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}`, 150, finalY);
-            // Observações (apenas se houver e não for duplicada)
-            if (pedido.observacoes) {
-              doc.setFontSize(12);
-              doc.setFont('helvetica', 'bold');
-              doc.text('OBSERVAÇÕES:', 20, finalY + 20);
-              doc.setFontSize(10);
-              doc.setFont('helvetica', 'normal');
-              const obsFormatada = doc.splitTextToSize(pedido.observacoes, 170);
-              doc.text(obsFormatada, 20, finalY + 28);
-            }
-            // Rodapé
-            const pageHeight = doc.internal.pageSize.height;
-            doc.setFillColor(240, 240, 240);
-            doc.rect(0, pageHeight - 30, 210, 30, 'F');
-            doc.setTextColor(100, 100, 100);
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'normal');
-            doc.text('Este documento foi gerado automaticamente pelo J.P Sistemas Comercial', 105, pageHeight - 20, { align: 'center' });
-            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, pageHeight - 15, { align: 'center' });
-            // Salvar PDF
-            doc.save(`Pedido_${pedido.id}_${limparCaracteres(pedido.nome_cliente || pedido.cliente_id).replace(/\s+/g, '_')}.pdf`);
-          });
-        } catch (error) {
-          console.error('Erro ao gerar PDF do pedido:', error);
-          alert('Erro ao gerar PDF do pedido: ' + error.message);
-        }
-      }).catch(error => {
-        console.error('Erro ao buscar dados da empresa:', error);
-        alert('Erro ao buscar dados da empresa: ' + error.message);
-      });
-    }
-
-    // Função para gerar Excel com todos os pedidos
-    function gerarExcelTodosPedidos() {
-      // Verificar se há pedidos para exportar
-      if (!pedidos || pedidos.length === 0) {
-        alert('Não há pedidos para exportar. Crie alguns pedidos primeiro.');
+    // Excluir pedido
+    async function excluirPedido(pedidoId) {
+      if (!confirm('Tem certeza que deseja excluir este pedido?')) {
         return;
       }
 
       try {
-        // Criar conteúdo CSV
-        let csvContent = "ID,Cliente,Data,Status,Valor Total,Forma Pagamento,Telefone,Email\n";
-        
-        pedidos.forEach(pedido => {
-          // Extrair informações adicionais das observações
-          const observacoes = pedido.observacoes || '';
-          const telefone = extrairInfo(observacoes, 'Telefone:') || 'Não informado';
-          const email = extrairInfo(observacoes, 'Email:') || 'Não informado';
-          const formaPagamento = extrairInfo(observacoes, 'Forma de Pagamento:') || 'Não informado';
-
-          // Função auxiliar para extrair informações
-          function extrairInfo(texto, chave) {
-            const textoLimpo = texto.replace(/•/g, '').replace(/\s+/g, ' ');
-            const regex = new RegExp(`${chave}\\s*([^\\n]+)`, 'i');
-            const match = textoLimpo.match(regex);
-            return match ? match[1].trim() : null;
-          }
-
-          csvContent += `${pedido.id},"${pedido.nome_cliente || pedido.cliente_id || 'N/A'}","${pedido.data_pedido || 'N/A'}","${pedido.status || 'N/A'}","${Number(pedido.valor_total) || 0}","${formaPagamento}","${telefone}","${email}"\n`;
+        const response = await fetch(`/api/pedidos/${pedidoId}`, {
+          method: 'DELETE'
         });
 
-        // Criar e baixar arquivo
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", `Relatorio_Pedidos_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        if (response.ok) {
+          pedidos = pedidos.filter(p => p.id != pedidoId);
+          atualizarTabelaPedidos();
+          mostrarNotificacao('Pedido excluído com sucesso!', 'success');
+        } else {
+          throw new Error('Erro ao excluir pedido');
+        }
       } catch (error) {
-        console.error('Erro ao gerar Excel:', error);
-        alert('Erro ao gerar Excel: ' + error.message);
+        console.error('Erro:', error);
+        mostrarNotificacao('Erro ao excluir pedido', 'error');
       }
     }
 
-    // Função auxiliar para carregar imagem base64
-    function carregarImagemBase64(url, callback) {
-      const img = new Image();
-      img.crossOrigin = 'Anonymous';
-      img.onload = function() {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.height = this.naturalHeight;
-        canvas.width = this.naturalWidth;
-        ctx.drawImage(this, 0, 0);
-        const dataURL = canvas.toDataURL('image/png');
-        callback(dataURL);
-      };
-      img.onerror = function() {
-        // Se não conseguir carregar a imagem, continua sem ela
-        callback(null);
-      };
-      img.src = url;
+    // Exportar dados
+    function exportarDados() {
+      const pedidosFiltrados = obterPedidosFiltrados();
+      
+      if (pedidosFiltrados.length === 0) {
+        mostrarNotificacao('Nenhum pedido para exportar', 'warning');
+        return;
+      }
+
+      const csvContent = gerarCSV(pedidosFiltrados);
+      downloadCSV(csvContent, 'pedidos.csv');
     }
 
-    function formatarDataHora(dataISO) {
-      if (!dataISO) return '';
-      const data = new Date(dataISO);
-      if (isNaN(data.getTime())) return dataISO;
-      return data.toLocaleString('pt-BR', {
-        day: '2-digit', month: '2-digit', year: 'numeric',
-        hour: '2-digit', minute: '2-digit'
+    // Obter pedidos filtrados
+    function obterPedidosFiltrados() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const statusFilterValue = statusFilter.value;
+      const dataInicio = dataInicioFilter.value;
+      const dataFim = dataFimFilter.value;
+
+      return pedidos.filter(pedido => {
+        const matchSearch = !searchTerm || 
+          pedido.cliente.nome.toLowerCase().includes(searchTerm) ||
+          pedido.cliente.telefone.includes(searchTerm) ||
+          pedido.id.toString().includes(searchTerm);
+
+        const matchStatus = !statusFilterValue || pedido.status === statusFilterValue;
+        
+        const matchData = (!dataInicio || pedido.dataCriacao >= dataInicio) &&
+                         (!dataFim || pedido.dataCriacao <= dataFim);
+
+        return matchSearch && matchStatus && matchData;
       });
     }
 
-    function formatarData(dataISO) {
-      if (!dataISO) return '';
-      // Se vier no formato YYYY-MM-DD, trata como UTC
-      if (/^\d{4}-\d{2}-\d{2}$/.test(dataISO)) {
-        const [ano, mes, dia] = dataISO.split('-');
-        return `${dia}/${mes}/${ano}`;
-      }
-      // Se vier no formato ISO (YYYY-MM-DDTHH:mm:ss.sssZ), trata como UTC
-      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(dataISO)) {
-        const data = new Date(dataISO);
-        const ano = data.getUTCFullYear();
-        const mes = String(data.getUTCMonth() + 1).padStart(2, '0');
-        const dia = String(data.getUTCDate()).padStart(2, '0');
-        return `${dia}/${mes}/${ano}`;
-      }
-      // Caso contrário, tenta converter normalmente
-      const data = new Date(dataISO);
-      if (isNaN(data.getTime())) return dataISO;
-      return data.toLocaleDateString('pt-BR', {
-        day: '2-digit', month: '2-digit', year: 'numeric'
+    // Gerar CSV
+    function gerarCSV(pedidos) {
+      const headers = ['ID', 'Cliente', 'Telefone', 'Itens', 'Valor Total', 'Status', 'Data Criação'];
+      const rows = [headers];
+
+      pedidos.forEach(pedido => {
+        rows.push([
+          pedido.id,
+          pedido.cliente.nome,
+          pedido.cliente.telefone,
+          pedido.itens.length,
+          pedido.valorTotal.toFixed(2),
+          pedido.status,
+          formatarData(pedido.dataCriacao)
+        ]);
       });
+
+      return rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
     }
 
-    // Função utilitária para limpar undefined de objetos aninhados
-    function limparUndefinedDeep(obj) {
-      if (Array.isArray(obj)) {
-        return obj.map(limparUndefinedDeep);
-      } else if (obj && typeof obj === 'object') {
-        return Object.fromEntries(
-          Object.entries(obj).map(([k, v]) => [k, v === undefined ? null : limparUndefinedDeep(v)])
-        );
-      }
-      return obj;
+    // Download CSV
+    function downloadCSV(content, filename) {
+      const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
+
+    // Formatar data
+    function formatarData(data) {
+      return new Date(data).toLocaleDateString('pt-BR');
+    }
+
+    // Mostrar notificação
+    function mostrarNotificacao(mensagem, tipo) {
+      const notification = document.createElement('div');
+      notification.className = `notification notification-${tipo}`;
+      notification.textContent = mensagem;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.classList.add('show');
+      }, 100);
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 300);
+      }, 3000);
+    }
+
+    // Event listeners para campos de produto
+    document.addEventListener('DOMContentLoaded', function() {
+      const produtoPreco = document.getElementById('produtoPreco');
+      const produtoQuantidade = document.getElementById('produtoQuantidade');
+      
+      if (produtoPreco) {
+        produtoPreco.addEventListener('input', calcularSubtotalItem);
+      }
+      
+      if (produtoQuantidade) {
+        produtoQuantidade.addEventListener('input', calcularSubtotalItem);
+      }
+    });
   </script>
 </body>
 </html> 
