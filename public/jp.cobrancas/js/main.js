@@ -182,19 +182,8 @@ const apiService = {
       ...options
     };
 
-    console.log('=== FAZENDO REQUISIÇÃO ===');
-    console.log('URL:', url);
-    console.log('Config:', config);
-    console.log('========================');
-
     try {
       const response = await fetch(url, config);
-      
-      console.log('=== RESPOSTA RECEBIDA ===');
-      console.log('Status:', response.status);
-      console.log('Status Text:', response.statusText);
-      console.log('Headers:', response.headers);
-      console.log('========================');
       
       if (!response.ok) {
         let errorMessage = `HTTP error! status: ${response.status}`;
@@ -2057,22 +2046,17 @@ document.addEventListener('DOMContentLoaded', () => {
           valor_parcela: valorParcela,
           data_emprestimo: formData.dataVencimento,
           data_vencimento: formData.dataVencimento,
+          data_primeira_parcela: formData.dataVencimento,
           juros_mensal: jurosMensal,
           multa_atraso: formData.multa,
           observacoes: formData.observacoes || '',
-          tipo_emprestimo: formData.tipo === 'parcelado' ? 'in_installments' : 'fixed',
+          tipo_emprestimo: parseInt(formData.parcelas) > 1 ? 'in_installments' : 'fixed',
           numero_parcelas: parseInt(formData.parcelas) || 1,
           frequencia: formData.frequencia || 'monthly',
           tipo_calculo: tipoCalculoCalculo
         };
         
-        console.log('=== DADOS ENVIADOS PARA API ===');
-        console.log('Payload completo:', JSON.stringify(payload, null, 2));
-        console.log('Tipo de cada campo:');
-        Object.keys(payload).forEach(key => {
-          console.log(`${key}: ${payload[key]} (tipo: ${typeof payload[key]})`);
-        });
-        console.log('================================');
+        console.log('Criando empréstimo:', payload);
         try {
           await apiService.createEmprestimo(payload);
           ui.showNotification('Empréstimo adicionado com sucesso!', 'success');
