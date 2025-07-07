@@ -947,25 +947,14 @@
         tipoCliente.addEventListener('change', handleTipoClienteChange);
       }
       
-      const clienteSelect = document.getElementById('clienteSelect');
+      const clienteSelect = document.getElementById('cliente');
       if (clienteSelect) {
         clienteSelect.addEventListener('change', handleClienteSelect);
       }
       
-      const novoClienteNome = document.getElementById('novoClienteNome');
+      const novoClienteNome = document.getElementById('nomeCliente');
       if (novoClienteNome) {
         novoClienteNome.addEventListener('input', handleNovoClienteInput);
-      }
-
-      // Seleção de produto
-      const produtoSelect = document.getElementById('produtoSelect');
-      if (produtoSelect) {
-        produtoSelect.addEventListener('change', handleProdutoSelect);
-      }
-      
-      const novoProdutoNome = document.getElementById('novoProdutoNome');
-      if (novoProdutoNome) {
-        novoProdutoNome.addEventListener('input', handleNovoProdutoInput);
       }
     }
 
@@ -1040,9 +1029,9 @@
 
     // Preencher select de clientes
     function preencherSelectClientes() {
-      const clienteSelect = document.getElementById('clienteSelect');
+      const clienteSelect = document.getElementById('cliente');
       if (!clienteSelect) {
-        console.warn('Elemento clienteSelect não encontrado');
+        console.warn('Elemento cliente não encontrado');
         return;
       }
       
@@ -1058,20 +1047,9 @@
 
     // Preencher select de produtos
     function preencherSelectProdutos() {
-      const produtoSelect = document.getElementById('produtoSelect');
-      if (!produtoSelect) {
-        console.warn('Elemento produtoSelect não encontrado');
-        return;
-      }
-      
-      produtoSelect.innerHTML = '<option value="">Selecione um produto</option>';
-      
-      produtos.forEach(produto => {
-        const option = document.createElement('option');
-        option.value = produto.id;
-        option.textContent = `${produto.nome} - R$ ${produto.preco.toFixed(2)}`;
-        produtoSelect.appendChild(option);
-      });
+      // Os produtos são carregados mas não há um select fixo
+      // Eles serão usados quando o usuário adicionar itens dinamicamente
+      console.log(`${produtos.length} produtos carregados`);
     }
 
     // Atualizar tabela de pedidos
@@ -1207,18 +1185,18 @@
     // Handle tipo de cliente
     function handleTipoClienteChange() {
       const tipoCliente = document.getElementById('tipoCliente').value;
-      const clienteSelectDiv = document.getElementById('clienteSelectDiv');
-      const novoClienteDiv = document.getElementById('novoClienteDiv');
+      const clienteExistenteSection = document.getElementById('clienteExistenteSection');
+      const novoClienteSection = document.getElementById('novoClienteSection');
 
       if (tipoCliente === 'existente') {
-        clienteSelectDiv.style.display = 'block';
-        novoClienteDiv.style.display = 'none';
+        if (clienteExistenteSection) clienteExistenteSection.style.display = 'block';
+        if (novoClienteSection) novoClienteSection.style.display = 'none';
       } else if (tipoCliente === 'novo') {
-        clienteSelectDiv.style.display = 'none';
-        novoClienteDiv.style.display = 'block';
+        if (clienteExistenteSection) clienteExistenteSection.style.display = 'none';
+        if (novoClienteSection) novoClienteSection.style.display = 'block';
       } else {
-        clienteSelectDiv.style.display = 'none';
-        novoClienteDiv.style.display = 'none';
+        if (clienteExistenteSection) clienteExistenteSection.style.display = 'none';
+        if (novoClienteSection) novoClienteSection.style.display = 'none';
       }
     }
 
@@ -1227,15 +1205,60 @@
       handleTipoClienteChange();
     }
 
+    // Função para selecionar produto
+    function selecionarProduto(select, itemId) {
+      const itemRow = document.querySelector(`[data-item-id="${itemId}"]`);
+      if (!itemRow) return;
+
+      const produtoId = select.value;
+      const precoInput = itemRow.querySelector('.produto-preco');
+      const nomeInput = itemRow.querySelector('.produto-nome');
+
+      if (produtoId) {
+        const produto = produtos.find(p => p.id == produtoId);
+        if (produto) {
+          if (precoInput) precoInput.value = produto.preco.toFixed(2);
+          if (nomeInput) nomeInput.value = produto.nome;
+          calcularSubtotalItem(itemId);
+        }
+      } else {
+        if (precoInput) precoInput.value = '';
+        if (nomeInput) nomeInput.value = '';
+        calcularSubtotalItem(itemId);
+      }
+    }
+
+    // Função para calcular subtotal de um item específico
+    function calcularSubtotalItem(itemId) {
+      const itemRow = document.querySelector(`[data-item-id="${itemId}"]`);
+      if (!itemRow) return;
+
+      const quantidadeInput = itemRow.querySelector('.produto-quantidade');
+      const precoInput = itemRow.querySelector('.produto-preco');
+      const subtotalInput = itemRow.querySelector('.produto-subtotal');
+
+      if (quantidadeInput && precoInput && subtotalInput) {
+        const quantidade = parseFloat(quantidadeInput.value) || 0;
+        const preco = parseFloat(precoInput.value) || 0;
+        const subtotal = quantidade * preco;
+        subtotalInput.value = subtotal.toFixed(2);
+        calcularTotalPedido();
+      }
+    }
+
     // Handle seleção de cliente
     function handleClienteSelect() {
-      const clienteId = document.getElementById('clienteSelect').value;
+      const clienteId = document.getElementById('cliente').value;
       if (clienteId) {
         const cliente = clientes.find(c => c.id == clienteId);
         if (cliente) {
-          document.getElementById('clienteTelefone').value = cliente.telefone;
-          document.getElementById('clienteEmail').value = cliente.email || '';
-          document.getElementById('clienteEndereco').value = cliente.endereco || '';
+          const telefoneElement = document.getElementById('telefone');
+          const emailElement = document.getElementById('email');
+          const enderecoElement = document.getElementById('endereco');
+          
+          if (telefoneElement) telefoneElement.value = cliente.telefone;
+          if (emailElement) emailElement.value = cliente.email || '';
+          if (enderecoElement) enderecoElement.value = cliente.endereco || '';
         }
       }
     }
@@ -1287,67 +1310,54 @@
 
     // Adicionar item ao pedido
     function adicionarItemAoPedido() {
-      const tipoProdutoElement = document.getElementById('tipoProduto');
-      const produtoSelectElement = document.getElementById('produtoSelect');
-      const novoProdutoNomeElement = document.getElementById('novoProdutoNome');
-      const precoElement = document.getElementById('produtoPreco');
-      const quantidadeElement = document.getElementById('produtoQuantidade');
-      const observacoesElement = document.getElementById('produtoObservacoes');
-
-      const tipoProduto = tipoProdutoElement ? tipoProdutoElement.value : '';
-      const nome = (produtoSelectElement && produtoSelectElement.value) || 
-                   (novoProdutoNomeElement && novoProdutoNomeElement.value) || '';
-      const preco = precoElement ? parseFloat(precoElement.value) || 0 : 0;
-      const quantidade = quantidadeElement ? parseInt(quantidadeElement.value) || 0 : 0;
-      const observacoes = observacoesElement ? observacoesElement.value : '';
-
-      if (!nome || preco <= 0 || quantidade <= 0) {
-        mostrarNotificacao('Preencha todos os campos do produto', 'error');
+      // Criar uma nova linha de item dinamicamente
+      const itensContainer = document.getElementById('itensContainer');
+      if (!itensContainer) {
+        console.warn('Container de itens não encontrado');
         return;
       }
 
-      const item = {
-        id: Date.now(),
-        tipo: tipoProduto,
-        nome: nome,
-        preco: preco,
-        quantidade: quantidade,
-        subtotal: preco * quantidade,
-        observacoes: observacoes
-      };
+      const itemId = Date.now();
+      const itemHTML = `
+        <div class="item-row" data-item-id="${itemId}">
+          <div>
+            <select class="produto-select" onchange="selecionarProduto(this, '${itemId}')">
+              <option value="">Selecione um produto</option>
+              ${produtos.map(produto => 
+                `<option value="${produto.id}">${produto.nome} - R$ ${produto.preco.toFixed(2)}</option>`
+              ).join('')}
+            </select>
+            <input type="text" class="produto-nome" placeholder="Ou digite o nome do produto" style="margin-top: 5px;">
+          </div>
+          <div>
+            <input type="number" class="produto-quantidade" value="1" min="1" onchange="calcularSubtotalItem('${itemId}')">
+          </div>
+          <div>
+            <input type="number" class="produto-preco" step="0.01" placeholder="0.00" onchange="calcularSubtotalItem('${itemId}')">
+          </div>
+          <div>
+            <input type="number" class="produto-subtotal" step="0.01" readonly>
+          </div>
+          <div>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removerItem('${itemId}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      `;
 
-      adicionarItemNaLista(item);
-      limparCamposProduto();
+      itensContainer.insertAdjacentHTML('beforeend', itemHTML);
       calcularTotalPedido();
     }
 
-          // Adicionar item na lista
-      function adicionarItemNaLista(item) {
-        const itensContainer = document.getElementById('itensContainer');
-        if (!itensContainer) {
-          console.warn('Elemento itensContainer não encontrado');
-          return;
-        }
-        
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'item-pedido';
-        itemDiv.dataset.itemId = item.id;
-        
-        itemDiv.innerHTML = `
-          <div class="item-info">
-            <strong>${item.nome}</strong>
-            <span class="item-details">
-              ${item.quantidade}x R$ ${item.preco.toFixed(2)} = R$ ${item.subtotal.toFixed(2)}
-            </span>
-            ${item.observacoes ? `<small class="item-observacoes">${item.observacoes}</small>` : ''}
-          </div>
-          <button type="button" class="btn btn-sm btn-danger" onclick="removerItem(${item.id})">
-            <i class="fas fa-trash"></i>
-          </button>
-        `;
-        
-        itensContainer.appendChild(itemDiv);
+              // Função para remover item (mantida para compatibilidade)
+    function removerItem(itemId) {
+      const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
+      if (itemElement) {
+        itemElement.remove();
+        calcularTotalPedido();
       }
+    }
 
     // Remover item
     function removerItem(itemId) {
@@ -1358,34 +1368,19 @@
       }
     }
 
-    // Limpar campos do produto
-    function limparCamposProduto() {
-      const campos = [
-        'produtoSelect',
-        'novoProdutoNome',
-        'produtoPreco',
-        'produtoQuantidade',
-        'produtoSubtotal',
-        'produtoObservacoes'
-      ];
-      
-      campos.forEach(campoId => {
-        const elemento = document.getElementById(campoId);
-        if (elemento) {
-          elemento.value = '';
-        }
-      });
-    }
+    // Função não mais necessária - removida
 
     // Calcular total do pedido
     function calcularTotalPedido() {
-      const itens = document.querySelectorAll('.item-pedido');
+      const itens = document.querySelectorAll('.item-row');
       let total = 0;
       
       itens.forEach(item => {
-        const subtotalText = item.querySelector('.item-details').textContent;
-        const subtotal = parseFloat(subtotalText.match(/R\$ ([\d,]+\.?\d*)/)[1].replace(',', '.'));
-        total += subtotal;
+        const subtotalInput = item.querySelector('.produto-subtotal');
+        if (subtotalInput) {
+          const subtotal = parseFloat(subtotalInput.value) || 0;
+          total += subtotal;
+        }
       });
       
       const totalElement = document.getElementById('totalPedido');
@@ -1480,24 +1475,27 @@
         return itens;
       }
       
-      itensContainer.querySelectorAll('.item-pedido').forEach(itemElement => {
-        const nome = itemElement.querySelector('strong').textContent;
-        const detalhes = itemElement.querySelector('.item-details').textContent;
-        const observacoes = itemElement.querySelector('.item-observacoes')?.textContent || '';
+      itensContainer.querySelectorAll('.item-row').forEach(itemElement => {
+        const nomeInput = itemElement.querySelector('.produto-nome');
+        const quantidadeInput = itemElement.querySelector('.produto-quantidade');
+        const precoInput = itemElement.querySelector('.produto-preco');
+        const subtotalInput = itemElement.querySelector('.produto-subtotal');
         
-        const match = detalhes.match(/(\d+)x R\$ ([\d,]+\.?\d*) = R\$ ([\d,]+\.?\d*)/);
-        if (match) {
-          const quantidade = parseInt(match[1]);
-          const preco = parseFloat(match[2].replace(',', '.'));
-          const subtotal = parseFloat(match[3].replace(',', '.'));
+        if (nomeInput && quantidadeInput && precoInput && subtotalInput) {
+          const nome = nomeInput.value.trim();
+          const quantidade = parseInt(quantidadeInput.value) || 0;
+          const preco = parseFloat(precoInput.value) || 0;
+          const subtotal = parseFloat(subtotalInput.value) || 0;
           
-          itens.push({
-            nome,
-            preco,
-            quantidade,
-            subtotal,
-            observacoes
-          });
+          if (nome && quantidade > 0 && preco > 0) {
+            itens.push({
+              nome,
+              preco,
+              quantidade,
+              subtotal,
+              observacoes: ''
+            });
+          }
         }
       });
       
