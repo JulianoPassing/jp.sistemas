@@ -1008,8 +1008,10 @@
 
     // Limpar erro de campo
     function clearFieldError(field) {
+      if (!field) return;
+      
       field.classList.remove('error');
-      const errorDiv = field.parentNode.querySelector('.field-error');
+      const errorDiv = field.parentNode?.querySelector('.field-error');
       if (errorDiv) {
         errorDiv.remove();
       }
@@ -1350,16 +1352,7 @@
       calcularTotalPedido();
     }
 
-              // Função para remover item (mantida para compatibilidade)
-    function removerItem(itemId) {
-      const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
-      if (itemElement) {
-        itemElement.remove();
-        calcularTotalPedido();
-      }
-    }
-
-    // Remover item
+    // Função para remover item (mantida para compatibilidade)
     function removerItem(itemId) {
       const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
       if (itemElement) {
