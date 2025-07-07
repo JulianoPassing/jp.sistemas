@@ -330,7 +330,7 @@ router.get('/emprestimos', ensureDatabase, async (req, res) => {
   }
 });
 
-// Buscar empréstimo por ID
+// Buscar empréstimo específico
 router.get('/emprestimos/:id', ensureDatabase, async (req, res) => {
   try {
     const { id } = req.params;
@@ -338,7 +338,7 @@ router.get('/emprestimos/:id', ensureDatabase, async (req, res) => {
     const connection = await createCobrancasConnection(username);
     
     const [emprestimos] = await connection.execute(`
-      SELECT e.*, c.nome as cliente_nome, c.telefone as telefone
+      SELECT e.*, c.nome as cliente_nome, c.telefone, c.email
       FROM emprestimos e
       LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
       WHERE e.id = ?
@@ -426,6 +426,7 @@ router.get('/cobrancas', ensureDatabase, async (req, res) => {
   try {
     const username = req.session.cobrancasUser;
     const connection = await createCobrancasConnection(username);
+    
     // Atualizar dias de atraso e valores
     await connection.execute(`
       UPDATE cobrancas 
@@ -439,15 +440,33 @@ router.get('/cobrancas', ensureDatabase, async (req, res) => {
           (valor_original * (multa_calculada / 100))
       WHERE status = 'Pendente'
     `);
-    // Buscar apenas cobranças de empréstimos ativos/pendentes e existentes
-    const [cobrancas] = await connection.execute(`
+    
+    // Verificar se há filtro por empréstimo
+    const { emprestimo_id } = req.query;
+    
+    let query = `
       SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
       FROM cobrancas cb
       INNER JOIN emprestimos e ON cb.emprestimo_id = e.id
       LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
-      WHERE cb.status = 'Pendente' AND cb.cliente_id IS NOT NULL AND e.status IN ('Ativo', 'Pendente')
-      ORDER BY cb.data_vencimento ASC
-    `);
+      WHERE cb.cliente_id IS NOT NULL AND e.status IN ('Ativo', 'Pendente')
+    `;
+    
+    let params = [];
+    
+    if (emprestimo_id) {
+      query += ` AND cb.emprestimo_id = ?`;
+      params.push(emprestimo_id);
+      console.log('*** BUSCANDO COBRANÇAS PARA EMPRÉSTIMO ***', emprestimo_id);
+    } else {
+      query += ` AND cb.status = 'Pendente'`;
+    }
+    
+    query += ` ORDER BY cb.data_vencimento ASC`;
+    
+    const [cobrancas] = await connection.execute(query, params);
+    console.log('Cobranças encontradas:', cobrancas.length);
+    
     await connection.end();
     res.json(cobrancas);
   } catch (error) {
