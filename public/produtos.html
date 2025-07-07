@@ -43,6 +43,8 @@
         --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         --border-radius: 16px;
         --border-radius-lg: 24px;
+        --primary-blue: #002f4b;
+        --light-text: #ecf0f1;
       }
 
       * {
@@ -53,9 +55,9 @@
 
       body {
         font-family: 'Inter', sans-serif;
-        background: linear-gradient(135deg, #005a9f 0%, #003766 100%);
+        background: var(--primary-blue);
         min-height: 100vh;
-        color: var(--text-primary);
+        color: var(--light-text);
         padding: 0;
       }
 
@@ -121,8 +123,8 @@
       }
 
       .logout-btn {
-        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-        color: white;
+        background: var(--primary-blue) !important;
+        color: var(--light-text) !important;
         border: none;
         padding: 8px 16px;
         border-radius: 8px;
@@ -201,6 +203,8 @@
         text-decoration: none;
         position: relative;
         overflow: hidden;
+        background: var(--primary-blue) !important;
+        color: var(--light-text) !important;
       }
 
       .btn::before {
@@ -748,6 +752,10 @@
         .form-actions .btn {
           width: 100%;
         }
+      }
+
+      .logo h1, h1, h2, h3, h4, h5, h6, .fa, .fas, .icon, .destaque {
+        color: var(--primary-blue) !important;
       }
     </style>
   </head>
