@@ -1089,6 +1089,14 @@
             observacoes: dados.observacoes || ''
           };
 
+          // Se for parcelado, enviar campos extras
+          if (dados.tipoEmprestimo === 'in_installments') {
+            payload.numero_parcelas = parseInt(dados.numeroParcelas) || 1;
+            payload.frequencia = dados.frequencia || 'monthly';
+            // Valor final pode ser o campo valorFinal ou calculado
+            payload.valor_final = parseFloat((dados.valorFinal || dados.valor).replace(',', '.'));
+          }
+
           console.log('Payload enviado para API:', payload);
           await apiService.createEmprestimo(payload);
           

@@ -875,10 +875,35 @@ const emprestimoController = {
     try {
       const emprestimos = await apiService.getEmprestimos();
       const emp = emprestimos.find(e => String(e.id) === String(id));
-      console.log('DEBUG EMPRESTIMO:', emp);
       if (!emp) {
         ui.showNotification('Empréstimo não encontrado', 'error');
         return;
+      }
+      // Buscar todas as parcelas (cobrancas) deste emprestimo
+      const cobrancas = (await apiService.getCobrancas() || []).filter(c => String(c.emprestimo_id) === String(id));
+      // Ordenar por data de vencimento
+      cobrancas.sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento));
+      // Montar HTML das parcelas
+      let parcelasHtml = '';
+      if (cobrancas.length > 0) {
+        parcelasHtml = '<div style="margin-bottom:1em;"><b>Parcelas:</b></div>';
+        parcelasHtml += cobrancas.map((parc, idx) => {
+          const status = (parc.status || '').toUpperCase();
+          return `
+            <div style="border:1px solid #eee; border-radius:8px; padding:0.7em 1em; margin-bottom:0.7em; background:#f9f9f9; display:flex; align-items:center; justify-content:space-between; gap:1em;">
+              <div>
+                <div><b>Parcela ${idx+1} de ${cobrancas.length}</b></div>
+                <div>Valor: <b>R$ ${utils.formatCurrency(parc.valor_original)}</b></div>
+                <div>Vencimento: <b>${utils.formatDate(parc.data_vencimento)}</b></div>
+                <div>Status: <span style="color:${status==='PENDENTE'?'#fbbf24':status==='PAGA'?'#10b981':'#ef4444'};font-weight:600;">${status}</span></div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:0.3em;">
+                <button class="btn" style="background:#10b981;color:#fff;" onclick="window.quitarParcela(${parc.id})" ${status==='PAGA'?'disabled':''}>Quitar</button>
+                <button class="btn" style="background:#6366f1;color:#fff;" onclick="window.editarParcela(${parc.id})">Editar</button>
+              </div>
+            </div>
+          `;
+        }).join('');
       }
       try {
         // Validação e fallback seguro para campos numéricos
@@ -1644,7 +1669,7 @@ document.addEventListener('DOMContentLoaded', () => {
   app.init();
 
   // O formulário de novo empréstimo agora está integrado diretamente no HTML
-  // A lógica foi movida para o arquivo emprestimos.html para melhor organização
+  // A lógica foi movida para o arquivo emprestimos.html para melhor organização  
 });
 
 // Exportar para uso global
@@ -1837,5 +1862,29 @@ function cobrar(id) {
     console.error('cobrancaController não está disponível');
   }
 }
+
+// Funções globais para quitar e editar parcela
+window.quitarParcela = async function(id) {
+  if (!confirm('Deseja marcar esta parcela como quitada?')) return;
+  try {
+    await fetch(`/api/cobrancas/${id}/pagamento`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ valor_pago: 0, data_pagamento: new Date().toISOString().split('T')[0], forma_pagamento: 'Manual', observacoes: 'Quitado via sistema' })
+    });
+    ui.showNotification('Parcela marcada como quitada!', 'success');
+    if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
+    if (document.querySelector('.modal')) document.querySelector('.modal').remove();
+  } catch (err) {
+    ui.showNotification('Erro ao quitar parcela', 'error');
+  }
+};
+window.editarParcela = function(id) {
+  // Exemplo de modal de edição simples
+  const cobranca = (window.apiService && window.apiService.getCobrancas) ? null : null;
+  // Para produção, buscar a cobrança pelo id e exibir modal de edição
+  alert('Funcionalidade de edição de parcela em desenvolvimento.');
+};
 
  
