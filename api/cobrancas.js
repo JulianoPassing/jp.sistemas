@@ -625,21 +625,56 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
       console.log('Parcela única criada para empréstimo fixo');
     }
     
-    // Criar cobrança automaticamente (apenas para a primeira parcela)
-    console.log('Tentando criar cobrança com dados:', {
-      emprestimo_id: emprestimoResult.insertId,
-      cliente_id,
-      valor_original: valorFinalCalculado,
-      valor_atualizado: valorFinalCalculado,
-      data_vencimento: dataVencimentoFinal
-    });
-    
-    await connection.execute(`
-      INSERT INTO cobrancas (emprestimo_id, cliente_id, valor_original, valor_atualizado, data_vencimento, status)
-      VALUES (?, ?, ?, ?, ?, 'Pendente')
-    `, [emprestimoResult.insertId, cliente_id, valorFinalCalculado, valorFinalCalculado, dataVencimentoFinal]);
-    
-    console.log('Cobrança criada automaticamente');
+    // Criar cobranças baseadas nas parcelas
+    if (tipo_emprestimo === 'in_installments' && parseInt(numero_parcelas) > 1) {
+      console.log('Criando cobranças para cada parcela...');
+      
+      const dataPrimeiraParcela = new Date(data_primeira_parcela || dataVencimentoFinal);
+      
+      for (let i = 1; i <= parseInt(numero_parcelas); i++) {
+        const dataVencimentoParcela = new Date(dataPrimeiraParcela);
+        
+        // Calcular data de vencimento baseada na frequência
+        switch (frequencia) {
+          case 'daily':
+            dataVencimentoParcela.setDate(dataVencimentoParcela.getDate() + (i - 1));
+            break;
+          case 'weekly':
+            dataVencimentoParcela.setDate(dataVencimentoParcela.getDate() + ((i - 1) * 7));
+            break;
+          case 'biweekly':
+            dataVencimentoParcela.setDate(dataVencimentoParcela.getDate() + ((i - 1) * 14));
+            break;
+          case 'monthly':
+          default:
+            dataVencimentoParcela.setMonth(dataVencimentoParcela.getMonth() + (i - 1));
+            break;
+        }
+        
+        await connection.execute(`
+          INSERT INTO cobrancas (emprestimo_id, cliente_id, valor_original, valor_atualizado, data_vencimento, status)
+          VALUES (?, ?, ?, ?, ?, 'Pendente')
+        `, [emprestimoResult.insertId, cliente_id, valorParcelaCalculado, valorParcelaCalculado, dataVencimentoParcela.toISOString().split('T')[0]]);
+      }
+      
+      console.log(`${numero_parcelas} cobranças criadas para as parcelas`);
+    } else {
+      // Para empréstimos fixos, criar uma cobrança única
+      console.log('Tentando criar cobrança única com dados:', {
+        emprestimo_id: emprestimoResult.insertId,
+        cliente_id,
+        valor_original: valorFinalCalculado,
+        valor_atualizado: valorFinalCalculado,
+        data_vencimento: dataVencimentoFinal
+      });
+      
+      await connection.execute(`
+        INSERT INTO cobrancas (emprestimo_id, cliente_id, valor_original, valor_atualizado, data_vencimento, status)
+        VALUES (?, ?, ?, ?, ?, 'Pendente')
+      `, [emprestimoResult.insertId, cliente_id, valorFinalCalculado, valorFinalCalculado, dataVencimentoFinal]);
+      
+      console.log('Cobrança única criada automaticamente');
+    }
     
     await connection.end();
     res.json({ 
