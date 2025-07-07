@@ -13,18 +13,18 @@
   <body>
     <div class="app-layout">
       <header>
-        <div class="header-content">
-          <div class="logo">
+      <div class="header-content">
+        <div class="logo">
             <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" />
-          </div>
+        </div>
           <nav>
             <span class="welcome-message">Bem-vindo, <span id="userDisplay"></span></span>
             <button class="btn btn-danger" onclick="logout()">
-              <i class="fas fa-sign-out-alt"></i> Sair
-            </button>
+            <i class="fas fa-sign-out-alt"></i> Sair
+          </button>
           </nav>
-        </div>
-      </header>
+      </div>
+    </header>
 
       <main>
         <div class="container">
@@ -32,89 +32,89 @@
             <div class="dashboard-header">
               <h1 class="dashboard-title">Painel Principal</h1>
               <p class="dashboard-subtitle">Gerencie seus clientes, produtos, pedidos e relatórios de forma eficiente</p>
-            </div>
+      </div>
 
-            <!-- Dashboard Pequeno -->
+      <!-- Dashboard Pequeno -->
             <div class="cards">
               <div class="card" title="Total de clientes cadastrados.">
                 <div class="card-header">
                   <div class="card-icon">
-                    <i class="fas fa-users"></i>
+          <i class="fas fa-users"></i>
                   </div>
                 </div>
                 <div class="card-value" id="dashboardClientes">--</div>
                 <div class="card-title">Clientes</div>
-              </div>
+        </div>
               
               <div class="card" title="Total de produtos cadastrados.">
                 <div class="card-header">
                   <div class="card-icon">
-                    <i class="fas fa-box"></i>
+          <i class="fas fa-box"></i>
                   </div>
                 </div>
                 <div class="card-value" id="dashboardProdutos">--</div>
                 <div class="card-title">Produtos</div>
-              </div>
+        </div>
               
               <div class="card" title="Total de pedidos realizados no mês.">
                 <div class="card-header">
                   <div class="card-icon">
-                    <i class="fas fa-shopping-cart"></i>
+          <i class="fas fa-shopping-cart"></i>
                   </div>
                 </div>
                 <div class="card-value" id="dashboardPedidos">--</div>
                 <div class="card-title">Pedidos</div>
-              </div>
+        </div>
               
               <div class="card" title="Valor total das vendas concluídas no mês.">
                 <div class="card-header">
                   <div class="card-icon">
-                    <i class="fas fa-coins"></i>
+          <i class="fas fa-coins"></i>
                   </div>
                 </div>
                 <div class="card-value" id="dashboardVendas">--</div>
                 <div class="card-title">Vendas do mês</div>
-              </div>
-            </div>
+        </div>
+      </div>
 
             <!-- Menu de Navegação -->
-            <div class="menu-grid">
-              <a href="painel-clientes.html" class="menu-card">
-                <i class="fas fa-users"></i>
-                <h3>Clientes</h3>
+      <div class="menu-grid">
+        <a href="painel-clientes.html" class="menu-card">
+          <i class="fas fa-users"></i>
+          <h3>Clientes</h3>
                 <p>Gerencie o cadastro de clientes, visualize informações e mantenha dados atualizados</p>
-              </a>
+        </a>
 
-              <a href="produtos.html" class="menu-card">
-                <i class="fas fa-box"></i>
-                <h3>Produtos</h3>
+        <a href="produtos.html" class="menu-card">
+          <i class="fas fa-box"></i>
+          <h3>Produtos</h3>
                 <p>Controle seu estoque de produtos, preços e informações detalhadas</p>
-              </a>
+        </a>
 
-              <a href="pedidos.html" class="menu-card">
-                <i class="fas fa-shopping-cart"></i>
-                <h3>Pedidos</h3>
+        <a href="pedidos.html" class="menu-card">
+          <i class="fas fa-shopping-cart"></i>
+          <h3>Pedidos</h3>
                 <p>Crie e gerencie pedidos, acompanhe status e gere relatórios</p>
-              </a>
+        </a>
 
-              <a href="relatorios.html" class="menu-card">
-                <i class="fas fa-chart-bar"></i>
+        <a href="relatorios.html" class="menu-card">
+          <i class="fas fa-chart-bar"></i>
                 <h3>Relatórios</h3>
                 <p>Visualize relatórios detalhados de vendas, clientes e produtos</p>
-              </a>
+        </a>
 
-              <a href="configuracoes.html" class="menu-card">
-                <i class="fas fa-cog"></i>
+        <a href="configuracoes.html" class="menu-card">
+          <i class="fas fa-cog"></i>
                 <h3>Configurações</h3>
                 <p>Configure preferências do sistema e gerencie usuários</p>
-              </a>
+        </a>
 
-              <a href="ajuda.html" class="menu-card">
-                <i class="fas fa-question-circle"></i>
-                <h3>Ajuda</h3>
-                <p>Encontre ajuda e suporte para usar o sistema</p>
-              </a>
-            </div>
+        <a href="ajuda.html" class="menu-card">
+          <i class="fas fa-question-circle"></i>
+          <h3>Ajuda</h3>
+          <p>Encontre ajuda e suporte para usar o sistema</p>
+        </a>
+      </div>
 
             <!-- Resumo Financeiro -->
             <div class="section">
@@ -128,27 +128,27 @@
                 <div class="card" title="Total de contas a pagar, somando todos os lançamentos em aberto.">
                   <div class="card-header">
                     <div class="card-icon">
-                      <i class="fas fa-arrow-circle-up"></i>
+            <i class="fas fa-arrow-circle-up"></i>
                     </div>
                   </div>
                   <div class="card-value text-red-600" id="dashboardPagar">--</div>
                   <div class="card-title">Contas a Pagar</div>
-                </div>
+          </div>
                 
                 <div class="card" title="Total de contas a receber, somando todos os lançamentos em aberto.">
                   <div class="card-header">
                     <div class="card-icon">
-                      <i class="fas fa-arrow-circle-down"></i>
+            <i class="fas fa-arrow-circle-down"></i>
                     </div>
                   </div>
                   <div class="card-value text-green-600" id="dashboardReceber">--</div>
                   <div class="card-title">Contas a Receber</div>
-                </div>
+          </div>
                 
                 <div class="card" title="Lucro estimado do mês, considerando vendas concluídas.">
                   <div class="card-header">
                     <div class="card-icon">
-                      <i class="fas fa-coins"></i>
+            <i class="fas fa-coins"></i>
                     </div>
                   </div>
                   <div class="card-value text-yellow-500" id="dashboardLucro">--</div>
@@ -166,8 +166,8 @@
             © 2025 J.P Sistemas. Todos os direitos reservados. 
             <a href="https://whatsa.me/5548996852138/?t=Ola,%20gostaria%20de%20mais%20informacoes%20sobre%20os%20sistemas." target="_blank" style="color: var(--white); text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
           </p>
-        </div>
-      </footer>
+      </div>
+    </footer>
     </div>
 
     <script>
