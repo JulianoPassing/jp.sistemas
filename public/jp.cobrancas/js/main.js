@@ -1833,5 +1833,31 @@ function cobrar(id) {
     console.error('cobrancaController não está disponível');
   }
 }
+// <-- aqui termina a função cobrar
 
- 
+} // <-- aqui fecha o document.addEventListener('DOMContentLoaded', ...)
+
+// Exportar para uso global
+window.app = app;
+window.dashboardController = dashboardController;
+window.emprestimoController = emprestimoController;
+window.cobrancaController = cobrancaController;
+window.clienteController = clienteController;
+window.ui = ui;
+window.utils = utils;
+window.authSystem = authSystem;
+
+// Exportar funções globais
+window.viewEmprestimo = viewEmprestimo;
+window.viewCliente = viewCliente;
+window.deleteCliente = deleteCliente;
+window.cobrar = cobrar;
+window.sair = sair;
+window.renderHistoricoEmprestimos = renderHistoricoEmprestimos;
+window.renderClientesLista = renderClientesLista;
+window.renderCobrancasEmAbertoLista = renderCobrancasEmAbertoLista;
+window.renderAtrasadosLista = renderAtrasadosLista;
+window.renderListaNegra = renderListaNegra;
+window.recarregarDadosPagina = recarregarDadosPagina;
+window.adicionarListaNegra = adicionarListaNegra;
+window.removerListaNegra = removerListaNegra;
