@@ -226,6 +226,10 @@ const apiService = {
     });
   },
 
+  async getParcelas(emprestimoId) {
+    return this.request(`/cobrancas/emprestimos/${emprestimoId}/parcelas`);
+  },
+
   // Cobranças
   async getCobrancas() {
     return this.request('/cobrancas');
@@ -916,6 +920,42 @@ const emprestimoController = {
             </div>
           `;
         }
+        // Buscar parcelas se for empréstimo parcelado
+        let parcelasInfo = '';
+        if (emp.tipo_emprestimo === 'in_installments' && emp.numero_parcelas > 1) {
+          try {
+            const parcelas = await apiService.getParcelas(emp.id);
+            const parcelasPendentes = parcelas.filter(p => p.status === 'Pendente').length;
+            const parcelasPagas = parcelas.filter(p => p.status === 'Paga').length;
+            const parcelasAtrasadas = parcelas.filter(p => p.status === 'Atrasada').length;
+            
+            parcelasInfo = `
+              <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                <h4 style="margin-bottom: 0.5rem; color: #002f4b;">Informações das Parcelas</h4>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center;">
+                  <div>
+                    <div style="font-size: 1.2rem; font-weight: bold; color: #6b7280;">${emp.numero_parcelas}</div>
+                    <div style="font-size: 0.8rem; color: #6b7280;">Total</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 1.2rem; font-weight: bold; color: #10b981;">${parcelasPagas}</div>
+                    <div style="font-size: 0.8rem; color: #10b981;">Pagas</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 1.2rem; font-weight: bold; color: #ef4444;">${parcelasAtrasadas}</div>
+                    <div style="font-size: 0.8rem; color: #ef4444;">Atrasadas</div>
+                  </div>
+                </div>
+                <div style="margin-top: 0.5rem; text-align: center;">
+                  <button class="btn" style="background: #6366f1; color: #fff; font-size: 0.9rem; padding: 0.3em 0.8em;" id="btn-ver-parcelas">Ver Todas as Parcelas</button>
+                </div>
+              </div>
+            `;
+          } catch (error) {
+            console.error('Erro ao buscar parcelas:', error);
+          }
+        }
+
         // Modal HTML
         const telefone = emp.telefone || emp.celular || emp.whatsapp || '';
         const nome = emp.cliente_nome || '';
@@ -933,15 +973,21 @@ const emprestimoController = {
             </div>
             <div style="margin-bottom: 1.2rem;">
               <h2 style="font-size: 1.4rem; font-weight: bold; margin-bottom: 0.2em; color: #002f4b;">${emp.cliente_nome || 'N/A'}</h2>
-              <div style="font-size: 1.1rem; font-weight: 600; color: #222; margin-bottom: 0.2em;">PCL-Nº #${emp.id} ${emp.parcelas ? `(${emp.parcelas}ª parcela)` : ''}</div>
+              <div style="font-size: 1.1rem; font-weight: 600; color: #222; margin-bottom: 0.2em;">
+                PCL-Nº #${emp.id} 
+                ${emp.tipo_emprestimo === 'in_installments' ? `(${emp.numero_parcelas} parcelas)` : ''}
+              </div>
               <div style="font-size: 1rem; color: #444; margin-bottom: 0.2em;">Deve ser pago em <b>${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</b></div>
               <div style="font-size: 1rem; color: #444;">Valor Investido <b>R$ ${utils.formatCurrency(valorInvestido)}</b></div>
               <div style="font-size: 1rem; color: #444;">Juros <b>${jurosPercent}%</b> (R$ ${utils.formatCurrency(jurosTotal)})</div>
               ${infoJuros}
             </div>
+            ${parcelasInfo}
             <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid #eee;">
             <div style="margin-bottom: 1.2rem; text-align: center;">
-              <div style="font-size: 1.1rem; font-weight: 700; color: #222; margin-bottom: 0.2em;">PARCELA 1 DE ${emp.parcelas || 1}</div>
+              <div style="font-size: 1.1rem; font-weight: 700; color: #222; margin-bottom: 0.2em;">
+                ${emp.tipo_emprestimo === 'in_installments' ? `EMPRÉSTIMO PARCELADO (${emp.numero_parcelas}x)` : 'EMPRÉSTIMO ÚNICO'}
+              </div>
               <div style="font-size: 1.3rem; font-weight: bold; color: #002f4b;">Total a Receber: <span style="color: #10b981;">R$ ${utils.formatCurrency(valorAtualizado)}</span></div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 0.7rem; margin-top: 1.5rem;">
@@ -956,6 +1002,59 @@ const emprestimoController = {
           </div>
         `;
         const modal = ui.showModal(detalhes, 'Detalhes do Empréstimo');
+        
+        // Botão para ver todas as parcelas
+        const btnVerParcelas = modal.querySelector('#btn-ver-parcelas');
+        if (btnVerParcelas) {
+          btnVerParcelas.addEventListener('click', async () => {
+            try {
+              const parcelas = await apiService.getParcelas(emp.id);
+              let parcelasHTML = `
+                <div style="max-height: 400px; overflow-y: auto;">
+                  <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                    <thead>
+                      <tr style="background: #f8f9fa;">
+                        <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #dee2e6;">Parcela</th>
+                        <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #dee2e6;">Valor</th>
+                        <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #dee2e6;">Vencimento</th>
+                        <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #dee2e6;">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+              `;
+              
+              parcelas.forEach(parcela => {
+                const statusColor = parcela.status === 'Paga' ? '#10b981' : 
+                                  parcela.status === 'Atrasada' ? '#ef4444' : '#6b7280';
+                const statusText = parcela.status === 'Pendente' ? 'Pendente' : 
+                                 parcela.status === 'Paga' ? 'Paga' : 'Atrasada';
+                
+                parcelasHTML += `
+                  <tr>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #dee2e6;">${parcela.numero_parcela}</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #dee2e6;">R$ ${utils.formatCurrency(parcela.valor_parcela)}</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #dee2e6;">${utils.formatDate(parcela.data_vencimento)}</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #dee2e6;">
+                      <span style="color: ${statusColor}; font-weight: 600;">${statusText}</span>
+                    </td>
+                  </tr>
+                `;
+              });
+              
+              parcelasHTML += `
+                    </tbody>
+                  </table>
+                </div>
+              `;
+              
+              ui.showModal(parcelasHTML, `Parcelas do Empréstimo #${emp.id}`);
+            } catch (error) {
+              console.error('Erro ao buscar parcelas:', error);
+              ui.showNotification('Erro ao carregar parcelas', 'error');
+            }
+          });
+        }
+        
         // Corrigir comportamento do botão WhatsApp para nunca recarregar
         const btnWhats = modal.querySelector('#modal-notificar');
         btnWhats.addEventListener('click', (e) => {

@@ -78,12 +78,17 @@ async function createCobrancasDatabase(username) {
         multa_atraso DECIMAL(5,2) DEFAULT 0.00,
         status VARCHAR(50) DEFAULT 'Ativo',
         observacoes TEXT,
+        tipo_emprestimo ENUM('fixed', 'in_installments') DEFAULT 'fixed',
+        numero_parcelas INT DEFAULT 1,
+        frequencia ENUM('daily', 'weekly', 'biweekly', 'monthly') DEFAULT 'monthly',
+        valor_parcela DECIMAL(10,2) DEFAULT 0.00,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (cliente_id) REFERENCES clientes_cobrancas(id) ON DELETE SET NULL,
         INDEX idx_cliente_id (cliente_id),
         INDEX idx_data_vencimento (data_vencimento),
-        INDEX idx_status (status)
+        INDEX idx_status (status),
+        INDEX idx_tipo_emprestimo (tipo_emprestimo)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
@@ -125,6 +130,28 @@ async function createCobrancasDatabase(username) {
         FOREIGN KEY (cobranca_id) REFERENCES cobrancas(id) ON DELETE SET NULL,
         INDEX idx_cobranca_id (cobranca_id),
         INDEX idx_data_pagamento (data_pagamento)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    await cobrancasConnection.execute(`
+      CREATE TABLE IF NOT EXISTS parcelas (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        emprestimo_id INT NOT NULL,
+        numero_parcela INT NOT NULL,
+        valor_parcela DECIMAL(10,2) NOT NULL,
+        data_vencimento DATE NOT NULL,
+        status ENUM('Pendente', 'Paga', 'Atrasada') DEFAULT 'Pendente',
+        valor_pago DECIMAL(10,2) DEFAULT 0.00,
+        data_pagamento DATE NULL,
+        juros_aplicados DECIMAL(10,2) DEFAULT 0.00,
+        multa_aplicada DECIMAL(10,2) DEFAULT 0.00,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (emprestimo_id) REFERENCES emprestimos(id) ON DELETE CASCADE,
+        INDEX idx_emprestimo_id (emprestimo_id),
+        INDEX idx_data_vencimento (data_vencimento),
+        INDEX idx_status (status),
+        UNIQUE KEY unique_emprestimo_parcela (emprestimo_id, numero_parcela)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
@@ -357,17 +384,53 @@ router.get('/emprestimos/:id', ensureDatabase, async (req, res) => {
   }
 });
 
+// Parcelas de um empréstimo
+router.get('/emprestimos/:id/parcelas', ensureDatabase, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
+    
+    const [parcelas] = await connection.execute(`
+      SELECT p.*, e.valor as valor_total_emprestimo, e.juros_mensal, e.multa_atraso
+      FROM parcelas p
+      LEFT JOIN emprestimos e ON p.emprestimo_id = e.id
+      WHERE p.emprestimo_id = ?
+      ORDER BY p.numero_parcela ASC
+    `, [id]);
+    
+    await connection.end();
+    res.json(parcelas);
+  } catch (error) {
+    console.error('Erro ao buscar parcelas:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 router.post('/emprestimos', ensureDatabase, async (req, res) => {
   try {
     console.log('=== INÍCIO DA CRIAÇÃO DE EMPRÉSTIMO ===');
     console.log('Dados recebidos para criar empréstimo:', req.body);
     console.log('Sessão do usuário:', req.session);
     
-    const { cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes } = req.body;
+    const { 
+      cliente_id, 
+      valor, 
+      data_emprestimo, 
+      data_vencimento, 
+      juros_mensal, 
+      multa_atraso, 
+      observacoes,
+      tipo_emprestimo = 'fixed',
+      numero_parcelas = 1,
+      frequencia = 'monthly',
+      valor_parcela = 0,
+      data_primeira_parcela
+    } = req.body;
     
     // Validação dos dados obrigatórios
-    if (!cliente_id || !valor || !data_emprestimo || !data_vencimento) {
-      console.error('Dados obrigatórios faltando:', { cliente_id, valor, data_emprestimo, data_vencimento });
+    if (!cliente_id || !valor || !data_emprestimo) {
+      console.error('Dados obrigatórios faltando:', { cliente_id, valor, data_emprestimo });
       return res.status(400).json({ error: 'Dados obrigatórios faltando' });
     }
     
@@ -390,41 +453,122 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
     
     console.log('Cliente encontrado:', clienteRows[0]);
     
+    // Calcular data de vencimento baseada no tipo de empréstimo
+    let dataVencimentoFinal = data_vencimento;
+    if (tipo_emprestimo === 'in_installments' && data_primeira_parcela) {
+      dataVencimentoFinal = data_primeira_parcela;
+    }
+    
+    // Calcular valor da parcela se não fornecido
+    let valorParcelaFinal = valor_parcela;
+    if (tipo_emprestimo === 'in_installments' && valor_parcela === 0) {
+      valorParcelaFinal = parseFloat(valor) / parseInt(numero_parcelas);
+    }
+    
     console.log('Cliente encontrado, inserindo empréstimo...');
     
     // Inserir empréstimo
     console.log('Tentando inserir empréstimo com dados:', {
-      cliente_id, valor, data_emprestimo, data_vencimento, 
+      cliente_id, valor, data_emprestimo, data_vencimento: dataVencimentoFinal, 
       juros_mensal: juros_mensal || 0, 
       multa_atraso: multa_atraso || 0, 
-      observacoes: observacoes || ''
+      observacoes: observacoes || '',
+      tipo_emprestimo,
+      numero_parcelas,
+      frequencia,
+      valor_parcela: valorParcelaFinal
     });
     
     const [emprestimoResult] = await connection.execute(`
-      INSERT INTO emprestimos (cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal || 0, multa_atraso || 0, observacoes || '']);
+      INSERT INTO emprestimos (
+        cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes,
+        tipo_emprestimo, numero_parcelas, frequencia, valor_parcela
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      cliente_id, valor, data_emprestimo, dataVencimentoFinal, 
+      juros_mensal || 0, multa_atraso || 0, observacoes || '',
+      tipo_emprestimo, numero_parcelas, frequencia, valorParcelaFinal
+    ]);
     
     console.log('Empréstimo inserido com ID:', emprestimoResult.insertId);
     
-    // Criar cobrança automaticamente
+    // Se for empréstimo parcelado, criar as parcelas
+    if (tipo_emprestimo === 'in_installments' && parseInt(numero_parcelas) > 1) {
+      console.log('Criando parcelas para empréstimo parcelado...');
+      
+      const dataPrimeiraParcela = new Date(data_primeira_parcela || dataVencimentoFinal);
+      const parcelas = [];
+      
+      for (let i = 1; i <= parseInt(numero_parcelas); i++) {
+        const dataVencimentoParcela = new Date(dataPrimeiraParcela);
+        
+        // Calcular data de vencimento baseada na frequência
+        switch (frequencia) {
+          case 'daily':
+            dataVencimentoParcela.setDate(dataVencimentoParcela.getDate() + (i - 1));
+            break;
+          case 'weekly':
+            dataVencimentoParcela.setDate(dataVencimentoParcela.getDate() + ((i - 1) * 7));
+            break;
+          case 'biweekly':
+            dataVencimentoParcela.setDate(dataVencimentoParcela.getDate() + ((i - 1) * 14));
+            break;
+          case 'monthly':
+          default:
+            dataVencimentoParcela.setMonth(dataVencimentoParcela.getMonth() + (i - 1));
+            break;
+        }
+        
+        parcelas.push([
+          emprestimoResult.insertId,
+          i,
+          valorParcelaFinal,
+          dataVencimentoParcela.toISOString().split('T')[0]
+        ]);
+      }
+      
+      // Inserir todas as parcelas
+      for (const parcela of parcelas) {
+        await connection.execute(`
+          INSERT INTO parcelas (emprestimo_id, numero_parcela, valor_parcela, data_vencimento)
+          VALUES (?, ?, ?, ?)
+        `, parcela);
+      }
+      
+      console.log(`${parcelas.length} parcelas criadas`);
+    } else {
+      // Para empréstimos fixos, criar uma parcela única
+      await connection.execute(`
+        INSERT INTO parcelas (emprestimo_id, numero_parcela, valor_parcela, data_vencimento)
+        VALUES (?, ?, ?, ?)
+      `, [emprestimoResult.insertId, 1, parseFloat(valor), dataVencimentoFinal]);
+      
+      console.log('Parcela única criada para empréstimo fixo');
+    }
+    
+    // Criar cobrança automaticamente (apenas para a primeira parcela)
     console.log('Tentando criar cobrança com dados:', {
       emprestimo_id: emprestimoResult.insertId,
       cliente_id,
       valor_original: valor,
       valor_atualizado: valor,
-      data_vencimento
+      data_vencimento: dataVencimentoFinal
     });
     
     await connection.execute(`
       INSERT INTO cobrancas (emprestimo_id, cliente_id, valor_original, valor_atualizado, data_vencimento, status)
       VALUES (?, ?, ?, ?, ?, 'Pendente')
-    `, [emprestimoResult.insertId, cliente_id, valor, valor, data_vencimento]);
+    `, [emprestimoResult.insertId, cliente_id, valor, valor, dataVencimentoFinal]);
     
     console.log('Cobrança criada automaticamente');
     
     await connection.end();
-    res.json({ id: emprestimoResult.insertId, message: 'Empréstimo criado com sucesso' });
+    res.json({ 
+      id: emprestimoResult.insertId, 
+      message: 'Empréstimo criado com sucesso',
+      parcelas_criadas: tipo_emprestimo === 'in_installments' ? parseInt(numero_parcelas) : 1
+    });
   } catch (error) {
     console.error('Erro ao criar empréstimo:', error);
     console.error('Stack trace:', error.stack);
