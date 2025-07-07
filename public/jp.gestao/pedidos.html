@@ -316,7 +316,7 @@
                         <select class="form-input" name="item_produto[]" required>
                             <option value="">Selecione o produto</option>
                             ${produtosData.map(produto => `
-                                <option value="${produto.id}" data-preco="${produto.preco}">${produto.nome} - R$ ${formatCurrency(produto.preco)}</option>
+                                <option value="${produto.id}" data-preco="${produto.preco_venda ?? produto.preco ?? produto.preco_custo ?? 0}">${produto.nome} - R$ ${formatCurrency(produto.preco_venda ?? produto.preco ?? produto.preco_custo ?? 0)}</option>
                             `).join('')}
                         </select>
                     </div>
@@ -469,7 +469,7 @@
                             ${pedido.itens ? pedido.itens.map(item => `
                                 <div style="display: flex; justify-content: space-between; padding: 0.5rem; border-bottom: 1px solid var(--gray-200);">
                                     <span>${item.produto} x${item.quantidade}</span>
-                                    <span>${formatCurrency(item.preco * item.quantidade)}</span>
+                                    <span>${formatCurrency((item.preco_venda ?? item.preco_unitario ?? item.preco_custo ?? item.preco ?? 0) * item.quantidade)}</span>
                                 </div>
                             `).join('') : 'Nenhum item'}
                         </div>
@@ -530,7 +530,7 @@
                                         <select class="form-input" name="item_produto[]" required>
                                             <option value="">Selecione o produto</option>
                                             ${produtosData.map(produto => `
-                                                <option value="${produto.id}" data-preco="${produto.preco}" ${produto.nome === item.produto ? 'selected' : ''}>${produto.nome} - R$ ${formatCurrency(produto.preco)}</option>
+                                                <option value="${produto.id}" data-preco="${produto.preco_venda ?? produto.preco ?? produto.preco_custo ?? 0}" ${produto.nome === item.produto ? 'selected' : ''}>${produto.nome} - R$ ${formatCurrency(produto.preco_venda ?? produto.preco ?? produto.preco_custo ?? 0)}</option>
                                             `).join('')}
                                         </select>
                                     </div>
@@ -538,10 +538,10 @@
                                         <input type="number" class="form-input" name="item_quantidade[]" placeholder="Qtd" min="1" value="${item.quantidade}" required onchange="updateEditItemTotal(${idx})">
                                     </div>
                                     <div style="width: 120px;">
-                                        <input type="number" class="form-input" name="item_preco[]" placeholder="Preço" step="0.01" min="0" value="${item.preco}" required onchange="updateEditItemTotal(${idx})">
+                                        <input type="number" class="form-input" name="item_preco[]" placeholder="Preço" step="0.01" min="0" value="${item.preco_venda ?? item.preco_unitario ?? item.preco_custo ?? item.preco ?? 0}" required onchange="updateEditItemTotal(${idx})">
                                     </div>
                                     <div style="width: 100px; text-align: right; font-weight: 600;" id="edit-item-total-${idx}">
-                                        ${formatCurrency(item.preco * item.quantidade)}
+                                        ${formatCurrency((item.preco_venda ?? item.preco_unitario ?? item.preco_custo ?? item.preco ?? 0) * item.quantidade)}
                                     </div>
                                     <button type="button" class="btn btn-danger btn-sm" onclick="removeEditOrderItem(${idx})">
                                         <i class="fas fa-trash"></i>
@@ -564,8 +564,6 @@
                 </form>
             `;
             showModal(`Editar Pedido #${pedido.id}`, content);
-            // Adicionar eventos de itens
-            // ...
             document.getElementById('editOrderForm').addEventListener('submit', function(e) { handleEditOrder(e, pedido.id); });
         }
         
