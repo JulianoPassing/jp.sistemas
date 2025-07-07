@@ -3,290 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JP-Cobranças - Sistema de Empréstimos</title>
+  <title>JP-Cobranças - Histórico de Empréstimos</title>
   <link rel="icon" type="image/png" href="https://i.imgur.com/6N82fk2.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css">
-  <style>
-    /* Estilos modernos inspirados no EasierControl */
-    .section-primary {
-      background: white;
-      border-radius: 12px;
-      border: 1px solid #e5e7eb;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    }
-
-    .form-header {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #061058;
-      margin-bottom: 1.5rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 2px solid #e5e7eb;
-    }
-
-    .form-header-modal {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: #061058;
-      margin-bottom: 1rem;
-    }
-
-    .label-primary {
-      display: block;
-      font-weight: 600;
-      color: #061058;
-      margin-bottom: 0.5rem;
-      font-size: 0.875rem;
-    }
-
-    .input-primary {
-      width: 100%;
-      border-radius: 0.375rem;
-      border: 1px solid #6b7280;
-      padding: 0.5rem 0.75rem;
-      font-size: 1rem;
-      line-height: 1.5rem;
-      background-color: #fff;
-      transition: all 0.2s ease;
-    }
-
-    .input-primary:focus {
-      outline: 2px solid transparent;
-      outline-offset: 2px;
-      border-color: #1c64f2;
-      box-shadow: 0 0 0 3px rgb(28 100 242 / 0.1);
-    }
-
-    .button-primary {
-      background-color: #061058;
-      color: white;
-      border: none;
-      border-radius: 0.375rem;
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .button-primary:hover {
-      background-color: #0d2662;
-    }
-
-    .button-primary:disabled {
-      background-color: #9ca3af;
-      cursor: not-allowed;
-    }
-
-    /* Tipos de empréstimo com design moderno */
-    .tipo-emprestimo-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .tipo-option {
-      position: relative;
-      cursor: pointer;
-    }
-
-    .tipo-option input[type="radio"] {
-      position: absolute;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    .tipo-option label {
-      display: block;
-      padding: 1rem;
-      border: 2px solid #e5e7eb;
-      border-radius: 0.5rem;
-      text-align: center;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      background-color: #fff;
-      color: #374151;
-    }
-
-    .tipo-option input[type="radio"]:checked + label {
-      border-color: #061058;
-      background-color: #061058;
-      color: white;
-    }
-
-    .tipo-option:hover label {
-      border-color: #061058;
-    }
-
-    /* Grid responsivo */
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .form-group {
-      margin-bottom: 1rem;
-    }
-
-    /* Simulação */
-    .simulacao-container {
-      background-color: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 0.5rem;
-      padding: 1.5rem;
-      margin-top: 1.5rem;
-      display: none;
-    }
-
-    .simulacao-container.show {
-      display: block;
-    }
-
-    .simulacao-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 1rem;
-    }
-
-    .simulacao-item {
-      text-align: center;
-      padding: 1rem;
-      background: white;
-      border-radius: 0.375rem;
-      border: 1px solid #e5e7eb;
-    }
-
-    .simulacao-label {
-      font-size: 0.75rem;
-      color: #6b7280;
-      text-transform: uppercase;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-
-    .simulacao-value {
-      font-size: 1.125rem;
-      font-weight: 700;
-      color: #061058;
-    }
-
-    /* Botões de ação */
-    .form-actions {
-      display: flex;
-      gap: 1rem;
-      justify-content: flex-end;
-      margin-top: 2rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid #e5e7eb;
-    }
-
-    .btn-secondary {
-      background-color: #6b7280;
-      color: white;
-      border: none;
-      border-radius: 0.375rem;
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .btn-secondary:hover {
-      background-color: #4b5563;
-    }
-
-    .btn-success {
-      background-color: #10b981;
-      color: white;
-      border: none;
-      border-radius: 0.375rem;
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .btn-success:hover {
-      background-color: #059669;
-    }
-
-    /* Cliente info */
-    .cliente-info {
-      background-color: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 0.5rem;
-      padding: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .cliente-info h4 {
-      margin: 0 0 0.5rem 0;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #374151;
-    }
-
-    .cliente-info p {
-      margin: 0.25rem 0;
-      font-size: 0.875rem;
-      color: #6b7280;
-    }
-
-    /* Responsividade */
-    @media (max-width: 768px) {
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .tipo-emprestimo-container {
-        grid-template-columns: 1fr;
-      }
-      
-      .form-actions {
-        flex-direction: column;
-      }
-      
-      .simulacao-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    /* Loading states */
-    .loading {
-      opacity: 0.6;
-      pointer-events: none;
-    }
-
-    .spinner {
-      display: inline-block;
-      width: 1rem;
-      height: 1rem;
-      border: 2px solid #f3f3f3;
-      border-top: 2px solid #061058;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
 </head>
 <body class="app-layout">
   <header>
@@ -309,215 +31,17 @@
       </div>
     </div>
   </header>
-  
   <main>
     <div class="container">
       <div class="dashboard-header">
         <div class="welcome-message" id="welcomeMessage">Bem-vindo(a)!</div>
-        <div class="dashboard-title">Sistema de Empréstimos</div>
+        <div class="dashboard-title">Histórico de Empréstimos</div>
         <div class="dashboard-subtitle">
-          Gerencie empréstimos com diferentes tipos de cálculo e simulações avançadas.
+          Visualize todo o histórico de empréstimos do sistema.
         </div>
       </div>
-
-      <!-- Formulário de Novo Empréstimo -->
-      <div class="section-primary" id="emprestimoForm" style="display: none;">
-        <div class="form-header">Novo Empréstimo</div>
-        
-        <form id="novoEmprestimoForm">
-          <!-- Seção: Informações do Cliente -->
-          <div class="form-group">
-            <label class="label-primary">Tipo de Cliente</label>
-            <div class="tipo-emprestimo-container" style="grid-template-columns: repeat(2, 1fr);">
-              <div class="tipo-option">
-                <input type="radio" id="tipo-cliente-existente" name="tipoCliente" value="existente" checked>
-                <label for="tipo-cliente-existente">Cliente Existente</label>
-              </div>
-              <div class="tipo-option">
-                <input type="radio" id="tipo-cliente-novo" name="tipoCliente" value="novo">
-                <label for="tipo-cliente-novo">Novo Cliente</label>
-              </div>
-            </div>
-          </div>
-
-          <!-- Cliente Existente -->
-          <div id="clienteExistente" class="form-group">
-            <label class="label-primary">Selecionar Cliente</label>
-            <select name="clienteId" id="clienteSelect" class="input-primary">
-              <option value="">Selecione um cliente</option>
-            </select>
-            
-            <div class="cliente-info" id="clienteInfo" style="display: none;">
-              <h4>Informações do Cliente Selecionado</h4>
-              <p><strong>Nome:</strong> <span id="infoNome"></span></p>
-              <p><strong>CPF/CNPJ:</strong> <span id="infoCpf"></span></p>
-              <p><strong>Telefone:</strong> <span id="infoTelefone"></span></p>
-            </div>
-          </div>
-
-          <!-- Novo Cliente -->
-          <div id="novoCliente" class="form-group" style="display: none;">
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="label-primary">Nome Completo *</label>
-                <input type="text" name="nomeCliente" id="nomeCliente" class="input-primary" placeholder="Nome completo do cliente">
-              </div>
-              <div class="form-group">
-                <label class="label-primary">CPF/CNPJ *</label>
-                <input type="text" name="cpfCliente" id="cpfCliente" class="input-primary" placeholder="000.000.000-00 ou 00.000.000/0000-00">
-              </div>
-              <div class="form-group">
-                <label class="label-primary">Telefone</label>
-                <input type="text" name="telefoneCliente" id="telefoneCliente" class="input-primary" placeholder="(00) 00000-0000">
-              </div>
-              <div class="form-group">
-                <label class="label-primary">Email</label>
-                <input type="email" name="emailCliente" id="emailCliente" class="input-primary" placeholder="email@exemplo.com">
-              </div>
-              <div class="form-group">
-                <label class="label-primary">Endereço</label>
-                <input type="text" name="enderecoCliente" id="enderecoCliente" class="input-primary" placeholder="Rua, número, bairro">
-              </div>
-              <div class="form-group">
-                <label class="label-primary">Cidade</label>
-                <input type="text" name="cidadeCliente" id="cidadeCliente" class="input-primary" placeholder="Nome da cidade">
-              </div>
-              <div class="form-group">
-                <label class="label-primary">Estado</label>
-                <select name="estadoCliente" id="estadoCliente" class="input-primary">
-                  <option value="">Selecione o estado</option>
-                  <option value="AC">Acre</option>
-                  <option value="AL">Alagoas</option>
-                  <option value="AP">Amapá</option>
-                  <option value="AM">Amazonas</option>
-                  <option value="BA">Bahia</option>
-                  <option value="CE">Ceará</option>
-                  <option value="DF">Distrito Federal</option>
-                  <option value="ES">Espírito Santo</option>
-                  <option value="GO">Goiás</option>
-                  <option value="MA">Maranhão</option>
-                  <option value="MT">Mato Grosso</option>
-                  <option value="MS">Mato Grosso do Sul</option>
-                  <option value="MG">Minas Gerais</option>
-                  <option value="PA">Pará</option>
-                  <option value="PB">Paraíba</option>
-                  <option value="PR">Paraná</option>
-                  <option value="PE">Pernambuco</option>
-                  <option value="PI">Piauí</option>
-                  <option value="RJ">Rio de Janeiro</option>
-                  <option value="RN">Rio Grande do Norte</option>
-                  <option value="RS">Rio Grande do Sul</option>
-                  <option value="RO">Rondônia</option>
-                  <option value="RR">Roraima</option>
-                  <option value="SC">Santa Catarina</option>
-                  <option value="SP">São Paulo</option>
-                  <option value="SE">Sergipe</option>
-                  <option value="TO">Tocantins</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="label-primary">CEP</label>
-                <input type="text" name="cepCliente" id="cepCliente" class="input-primary" placeholder="00000-000">
-              </div>
-            </div>
-          </div>
-
-          <!-- Seção: Tipo de Empréstimo -->
-          <div class="form-group">
-            <label class="label-primary">Tipo de Empréstimo</label>
-            <select name="tipoEmprestimo" id="tipoEmprestimo" class="input-primary" required>
-              <option value="" disabled selected>Nenhum tipo selecionado</option>
-              <option value="fixed">Fixo</option>
-              <option value="in_installments">Parcelado</option>
-            </select>
-          </div>
-
-          <!-- Seção: Valor -->
-          <div class="form-group">
-            <label class="label-primary">Valor (R$)</label>
-            <input type="text" name="valor" id="valor" class="input-primary" placeholder="ex.: 1000" required>
-          </div>
-
-          <!-- Seção: Tipo de Cálculo -->
-          <div class="form-group">
-            <label class="label-primary">Tipo de Cálculo</label>
-            <div class="tipo-emprestimo-container" id="tipoCalculoBtns" style="grid-template-columns: repeat(3, 1fr);">
-              <button type="button" class="tipo-option" id="btnCalcValorFixo" data-calc="fixed">Valor Fixo (R$)</button>
-              <button type="button" class="tipo-option" id="btnCalcParcelaFixa" data-calc="fixed-installment">Parcela Fixa (R$)</button>
-              <button type="button" class="tipo-option" id="btnCalcPorcentagem" data-calc="percentage">Porcentagem (%)</button>
-            </div>
-          </div>
-
-          <!-- Campos dinâmicos -->
-          <div id="camposCalculo">
-            <!-- Os campos específicos aparecerão aqui -->
-          </div>
-
-          <!-- Seção: Parcelas e Frequência -->
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="label-primary">Qtd. de Parcelas</label>
-              <input type="number" name="numeroParcelas" id="numeroParcelas" class="input-primary" min="1" value="1" placeholder="ex.: 12">
-            </div>
-            <div class="form-group">
-              <label class="label-primary">Frequência</label>
-              <select name="frequencia" id="frequencia" class="input-primary">
-                <option value="" disabled>Nenhuma frequência selecionada</option>
-                <option value="daily">Diário</option>
-                <option value="weekly">Semanal</option>
-                <option value="biweekly">Quinzenal</option>
-                <option value="monthly" selected>Mensal</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Seção: Data da Primeira Parcela -->
-          <div class="form-group">
-            <label class="label-primary">Data da Primeira Parcela</label>
-            <input type="date" name="dataPrimeiraParcela" id="dataPrimeiraParcela" class="input-primary" required>
-          </div>
-
-          <!-- Seção: Afiliado (opcional) -->
-          <div class="form-grid">
-            <div class="form-group" style="grid-column: span 3;">
-              <label class="label-primary">Afiliado</label>
-              <select name="afiliado" id="afiliado" class="input-primary">
-                <option value="">Nenhum afiliado selecionado</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="label-primary">%</label>
-              <input type="number" name="percentualAfiliado" id="percentualAfiliado" class="input-primary" step="0.01" placeholder="0.00">
-            </div>
-          </div>
-
-          <small class="font-semibold text-terciary text-xs">* Caso seja número decimal utilize ponto, exemplo <strong>(20,5)</strong> deve ser informado <strong>(20.5)</strong>.</small>
-
-          <!-- Seção: Observações -->
-          <div class="form-group">
-            <label class="label-primary">Observações</label>
-            <textarea name="observacoes" id="observacoes" class="input-primary" rows="3" placeholder="Observações adicionais sobre o empréstimo..."></textarea>
-          </div>
-
-          <!-- Botões de ação -->
-          <div class="form-actions">
-            <button type="button" id="btnSimular" class="btn-secondary">Simular Empréstimo</button>
-            <button type="button" id="btnCancelar" class="btn-secondary">Cancelar</button>
-            <button type="submit" id="btnSalvar" class="button-primary">Salvar Empréstimo</button>
-          </div>
-        </form>
-
-        <!-- Preview da Simulação -->
-        <div class="simulacao-container" id="simulacaoPreview">
-          <div class="form-header-modal">Resumo da Simulação</div>
-          <div class="simulacao-grid" id="simulacaoGrid">
-            <!-- Dados da simulação serão inseridos aqui -->
-          </div>
-        </div>
-      </div>
-
       <!-- Tabela de Histórico de Empréstimos -->
-      <div class="section-primary">
+      <div class="section">
         <div class="section-header">
           <h3 class="section-title">Empréstimos</h3>
           <button id="toggleForm" class="btn btn-primary">Novo Empréstimo</button>
@@ -558,7 +82,6 @@
               <tr>
                 <th>Cliente</th>
                 <th>Valor</th>
-                <th>Tipo</th>
                 <th>Data Empréstimo</th>
                 <th>Vencimento</th>
                 <th>Status</th>
@@ -567,7 +90,7 @@
             </thead>
             <tbody id="historico-emprestimos">
               <tr>
-                <td colspan="7" class="text-center text-gray-500">Carregando...</td>
+                <td colspan="6" class="text-center text-gray-500">Carregando...</td>
               </tr>
             </tbody>
           </table>
@@ -575,11 +98,129 @@
       </div>
     </div>
   </main>
-  
+
+  <!-- Modal de Novo Empréstimo (100% igual ao emprestimosbase.html) -->
+  <div id="transaction-create-modal" class="modal" style="display: none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="form-header-modal">Adicionar Emprestimo</h3>
+        <button type="button" class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <hr>
+      <div class="modal-body">
+        <div class="mt-3">
+          <label class="label-primary" for="type">Tipo de Emprestimo</label>
+          <select class="input-primary" id="type" name="type">
+            <option value="" disabled>Nenhum tipo selecionado</option>
+            <option value="fixed">Fixo</option>
+            <option value="in_installments">Parcelado</option>
+          </select>
+        </div>
+
+        <hr class="mt-4 mb-3">
+        
+        <form id="transaction-form" method="post" autocomplete="off">
+          <div class="mt-3">
+            <label class="label-primary" for="value">Valor (R$)</label>
+            <input class="input-primary" id="value" type="text" name="valueFormatted" autocomplete="off" placeholder="ex.: 1000">
+          </div>
+
+          <div class="flex gap-2 mt-3">
+            <button class="bg-terciary hover:bg-terciary-100 text-white w-full p-2 rounded-lg cursor-pointer" type="button" onclick="setChargeCalcType('fixed')">
+              <span class="font-medium text-center">Valor Fixo (R$)</span>
+            </button>
+            <button class="bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer" type="button" onclick="setChargeCalcType('fixed-installment')">
+              <span class="font-medium text-center">Parcela Fixa (R$)</span>
+            </button>
+            <button class="bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer" type="button" onclick="setChargeCalcType('percentage')">
+              <span class="font-medium text-center">Porcentagem (%)</span>
+            </button>
+          </div>
+
+          <div id="final-value-section" class="mt-3 space-y-3">
+            <label class="label-primary" for="finalValue">Valor Final de Cobrança (R$)</label>
+            <input class="input-primary" id="finalValue" type="text" name="finalValueFormatted" autocomplete="off" placeholder="ex.: 1000">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 mt-3">
+            <div>
+              <label class="label-primary" for="payBy">Qtd. de Parcelas</label>
+              <input class="input-primary" id="payBy" type="number" name="payBy" autocomplete="off" placeholder="ex.: 12">
+            </div>
+            <div>
+              <label class="label-primary" for="frequency">Frequência</label>
+              <select class="input-primary" id="frequency" name="frequency" autocomplete="off">
+                <option value="" disabled>Nenhuma frequência selecionada</option>
+                <option value="daily">Diario</option>
+                <option value="weekly">Semanal</option>
+                <option value="biweekly">Quinzenal</option>
+                <option value="monthly">Mensal</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <label class="label-primary" for="startPaymentsAt">Data da Primeira Parcela</label>
+            <input class="input-primary" id="startPaymentsAt" type="date" name="startPaymentsAt" autocomplete="off">
+          </div>
+
+          <div class="grid grid-cols-4 gap-4 mt-3">
+            <div class="col-span-3">
+              <label class="label-primary" for="afiliado">Afiliado</label>
+              <select class="input-primary" id="afiliado" name="afiliado" autocomplete="off">
+                <option value="">Nenhum afiliado selecionado</option>
+              </select>
+            </div>
+            <div class="col-span-1">
+              <label class="label-primary" for="percentageAfiliado">%</label>
+              <input class="input-primary" id="percentageAfiliado" type="number" step=".01" name="percentageAfiliado" autocomplete="off">
+            </div>
+          </div>
+
+          <small class="font-semibold text-terciary text-xs">* Caso seja número decimal utilize ponto, exemplo <strong>(20,5)</strong> deve ser informado <strong>(20.5)</strong>.</small>
+
+          <hr class="my-3">
+
+          <div>
+            <div class="flex justify-between items-center">
+              <h3 class="form-header !mb-0">Simulador</h3>
+              <button type="button" class="button-primary text-primary disabled:hover:bg-gray-200 disabled:text-gray-400 disabled:bg-gray-200 !text-sm !px-2 !py-1 text-terciary" onclick="simulate()">
+                Simular
+              </button>
+            </div>
+
+            <div id="simulate-info" class="mt-3">
+              <p class="mt-3 text-terciary text-sm">
+                Para maior facilidade você pode simular as parcelas antes de adicionar o emprestimo.
+              </p>
+            </div>
+            <div id="simulate-loading" class="flex justify-center mt-3" style="display: none;">
+              <div role="status">
+                <svg aria-hidden="true" class="text-white animate-spin dark:text-gray-600 fill-terciary w-8 w-8" viewBox="0 0 100 101" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"></path>
+                  <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"></path>
+                </svg>
+                <span class="sr-only">Carregando...</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-3">
+
+          <div class="flex items-center gap-4 mt-5">
+            <button type="submit" class="button-primary text-primary disabled:hover:bg-gray-200 disabled:text-gray-400 disabled:bg-gray-200 text-sm w-full text-terciary">
+              Adicionar Emprestimo
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <footer class="text-center p-4 mt-8">
     © 2024 JP-Cobranças. Todos os direitos reservados.
   </footer>
-  
   <script src="./js/main.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -636,7 +277,7 @@
         if (!tbody) return;
         
         if (filteredEmprestimos.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
           return;
         }
         
@@ -646,7 +287,6 @@
           row.innerHTML = `
             <td>${emp.cliente_nome || 'N/A'}</td>
             <td>R$ ${utils.formatCurrency(emp.valor || 0)}</td>
-            <td>${emp.tipo_emprestimo || 'Fixo'}</td>
             <td>${emp.data_emprestimo ? utils.formatDate(emp.data_emprestimo) : '-'}</td>
             <td>${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</td>
             <td><span class="badge badge-${getStatusBadgeClass(emp.status)}">${emp.status || 'N/A'}</span></td>
@@ -710,407 +350,112 @@
           console.error('Erro ao carregar empréstimos:', err);
           const tbody = document.getElementById('historico-emprestimos');
           if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
           }
         }
       };
 
-      // Inicializar formulário de novo empréstimo
-      initNovoEmprestimoForm();
-    });
-
-    // Função para inicializar o formulário de novo empréstimo
-    function initNovoEmprestimoForm() {
+      // Modal de Novo Empréstimo (100% igual ao emprestimosbase.html)
       const toggleFormBtn = document.getElementById('toggleForm');
-      const emprestimoForm = document.getElementById('emprestimoForm');
-      const novoEmprestimoForm = document.getElementById('novoEmprestimoForm');
-      const btnSimular = document.getElementById('btnSimular');
-      const btnCancelar = document.getElementById('btnCancelar');
-      const clienteSelect = document.getElementById('clienteSelect');
-      const tipoClienteInputs = document.querySelectorAll('input[name="tipoCliente"]');
-      const clienteExistente = document.getElementById('clienteExistente');
-      const novoCliente = document.getElementById('novoCliente');
-      const tipoEmprestimoSelect = document.getElementById('tipoEmprestimo');
-      const tipoCalculoBtns = document.getElementById('tipoCalculoBtns');
-      const camposCalculo = document.getElementById('camposCalculo');
-      let tipoCalculoSelecionado = 'fixed';
-
-      // Toggle do formulário
-      toggleFormBtn.addEventListener('click', async () => {
-        if (emprestimoForm.style.display === 'none') {
-          emprestimoForm.style.display = 'block';
-          toggleFormBtn.textContent = 'Fechar Formulário';
-          await carregarClientes();
-          setDataPrimeiraParcelaPadrao();
-        } else {
-          emprestimoForm.style.display = 'none';
-          toggleFormBtn.textContent = 'Novo Empréstimo';
-          resetForm();
-        }
-      });
-
-      // Controle de tipo de cliente (existente/novo)
-      tipoClienteInputs.forEach(input => {
-        input.addEventListener('change', () => {
-          const tipoCliente = document.querySelector('input[name="tipoCliente"]:checked').value;
-          if (tipoCliente === 'existente') {
-            clienteExistente.style.display = 'block';
-            novoCliente.style.display = 'none';
-          } else {
-            clienteExistente.style.display = 'none';
-            novoCliente.style.display = 'block';
-          }
-        });
-      });
-
-      // Controle de tipo de empréstimo
-      tipoEmprestimoSelect.addEventListener('change', () => {
-        const tipoEmprestimo = tipoEmprestimoSelect.value;
-        if (tipoEmprestimo === 'in_installments') {
-          camposCalculo.style.display = 'block';
-        } else {
-          camposCalculo.style.display = 'none';
-        }
-      });
-
-      // Substituir o controle de tipo de cálculo por botões e campos dinâmicos
-      function renderCamposCalculo() {
-        let html = '';
-        if (tipoCalculoSelecionado === 'fixed') {
-          html = `
-            <div class="form-group">
-              <label class="label-primary">Valor Final de Cobrança (R$)</label>
-              <input type="text" name="valorFinal" id="valorFinal" class="input-primary" placeholder="ex.: 1000">
-            </div>
-          `;
-        } else if (tipoCalculoSelecionado === 'fixed-installment') {
-          html = `
-            <div class="form-group">
-              <label class="label-primary">Valor da Parcela (R$)</label>
-              <input type="text" name="valorParcela" id="valorParcela" class="input-primary" placeholder="ex.: 100">
-            </div>
-          `;
-        } else if (tipoCalculoSelecionado === 'percentage') {
-          html = `
-            <div class="form-group">
-              <label class="label-primary">Porcentagem (%)</label>
-              <input type="number" name="porcentagem" id="porcentagem" class="input-primary" placeholder="ex.: 20">
-            </div>
-          `;
-        }
-        camposCalculo.innerHTML = html;
-      }
-
-      tipoCalculoBtns.addEventListener('click', (e) => {
-        if (e.target && e.target.dataset.calc) {
-          tipoCalculoSelecionado = e.target.dataset.calc;
-          // Atualiza visual dos botões
-          Array.from(tipoCalculoBtns.children).forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.calc === tipoCalculoSelecionado);
-          });
-          renderCamposCalculo();
-        }
-      });
-
-      // Inicializa campos dinâmicos
-      renderCamposCalculo();
-
-      // Carregar clientes
-      async function carregarClientes() {
-        try {
-          const clientes = await apiService.getClientes();
-          clienteSelect.innerHTML = '<option value="">Selecione um cliente</option>';
-          clientes.forEach(cliente => {
-            const option = document.createElement('option');
-            option.value = cliente.id;
-            option.textContent = cliente.nome || cliente.razao || cliente.name;
-            clienteSelect.appendChild(option);
-          });
-        } catch (error) {
-          console.error('Erro ao carregar clientes:', error);
-        }
-      }
-
-      // Preencher informações do cliente selecionado
-      clienteSelect.addEventListener('change', async () => {
-        const clienteId = clienteSelect.value;
-        const clienteInfo = document.getElementById('clienteInfo');
-        
-        if (!clienteId) {
-          clienteInfo.style.display = 'none';
-          return;
-        }
-
-        try {
-          const clientes = await apiService.getClientes();
-          const cliente = clientes.find(c => c.id == clienteId);
-          
-          if (cliente) {
-            document.getElementById('infoNome').textContent = cliente.nome || cliente.razao || cliente.name || '';
-            document.getElementById('infoCpf').textContent = cliente.cpf || cliente.cpf_cnpj || '';
-            document.getElementById('infoTelefone').textContent = cliente.telefone || cliente.phone || '';
-            
-            clienteInfo.style.display = 'block';
-          }
-        } catch (error) {
-          console.error('Erro ao buscar cliente:', error);
-        }
-      });
-
-      // Simular empréstimo
-      btnSimular.addEventListener('click', () => {
-        simularEmprestimo();
-      });
-
-      function simularEmprestimo() {
-        const valor = parseFloat(document.getElementById('valor').value.replace(',', '.')) || 0;
-        const valorFinal = parseFloat(document.getElementById('valorFinal').value.replace(',', '.')) || 0;
-        const numeroParcelas = parseInt(document.getElementById('numeroParcelas').value) || 1;
-        const tipoEmprestimo = document.getElementById('tipoEmprestimo').value;
-        const tipoCalculo = tipoCalculoSelecionado;
-
-        let simulacao = {
-          valor: valor,
-          numeroParcelas: numeroParcelas,
-          tipoEmprestimo: tipoEmprestimo,
-          tipoCalculo: tipoCalculo
-        };
-
-        switch (tipoCalculo) {
-          case 'fixed':
-            simulacao.valorFinal = valorFinal || valor;
-            simulacao.valorParcela = simulacao.valorFinal;
-            simulacao.jurosTotal = simulacao.valorFinal - valor;
-            break;
-          case 'fixed-installment':
-            simulacao.valorParcela = valorFinal / numeroParcelas;
-            simulacao.valorFinal = valorFinal;
-            simulacao.jurosTotal = valorFinal - valor;
-            break;
-          case 'percentage':
-            const porcentagem = valorFinal || 0;
-            simulacao.jurosTotal = valor * (porcentagem / 100);
-            simulacao.valorFinal = valor + simulacao.jurosTotal;
-            simulacao.valorParcela = simulacao.valorFinal / numeroParcelas;
-            break;
-        }
-
-        exibirSimulacao(simulacao);
-      }
-
-      function exibirSimulacao(simulacao) {
-        const simulacaoGrid = document.getElementById('simulacaoGrid');
-        simulacaoGrid.innerHTML = `
-          <div class="simulacao-item">
-            <div class="simulacao-label">Valor Principal</div>
-            <div class="simulacao-value">R$ ${simulacao.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-          </div>
-          <div class="simulacao-item">
-            <div class="simulacao-label">Juros Total</div>
-            <div class="simulacao-value">R$ ${(simulacao.jurosTotal || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-          </div>
-          <div class="simulacao-item">
-            <div class="simulacao-label">Valor Total</div>
-            <div class="simulacao-value">R$ ${simulacao.valorFinal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-          </div>
-          <div class="simulacao-item">
-            <div class="simulacao-label">Valor da Parcela</div>
-            <div class="simulacao-value">R$ ${simulacao.valorParcela.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-          </div>
-          <div class="simulacao-item">
-            <div class="simulacao-label">Nº de Parcelas</div>
-            <div class="simulacao-value">${simulacao.numeroParcelas}</div>
-          </div>
-          <div class="simulacao-item">
-            <div class="simulacao-label">Tipo</div>
-            <div class="simulacao-value">${getTipoDisplayName(simulacao.tipoCalculo)}</div>
-          </div>
-        `;
-
-        simulacaoPreview.classList.add('show');
-      }
-
-      function getTipoDisplayName(tipo) {
-        const tipos = {
-          'fixed': 'Valor Fixo',
-          'fixed-installment': 'Parcela Fixa',
-          'percentage': 'Porcentagem'
-        };
-        return tipos[tipo] || tipo;
-      }
-
-      // Cancelar formulário
-      btnCancelar.addEventListener('click', () => {
-        resetForm();
-        document.getElementById('emprestimoForm').style.display = 'none';
-        document.getElementById('toggleForm').textContent = 'Novo Empréstimo';
-      });
-
-      // Reset do formulário
-      function resetForm() {
-        novoEmprestimoForm.reset();
-        document.getElementById('clienteInfo').style.display = 'none';
-        simulacaoPreview.classList.remove('show');
-        camposCalculo.style.display = 'none';
-        clienteExistente.style.display = 'block';
-        novoCliente.style.display = 'none';
-      }
-
-      // Definir data da primeira parcela padrão (30 dias)
-      function setDataPrimeiraParcelaPadrao() {
-        const hoje = new Date();
-        const primeiraParcela = new Date(hoje);
-        primeiraParcela.setDate(hoje.getDate() + 30);
-        
-        const dataPrimeiraParcela = document.getElementById('dataPrimeiraParcela');
-        dataPrimeiraParcela.value = primeiraParcela.toISOString().split('T')[0];
-      }
-
-      // Máscara de moeda para campos de valor
-      function aplicarMascaraMoeda(elemento) {
-        elemento.addEventListener('input', (e) => {
-          let valor = e.target.value.replace(/\D/g, '');
-          valor = (parseInt(valor, 10) / 100).toFixed(2);
-          e.target.value = valor.replace('.', ',');
+      if (toggleFormBtn) {
+        toggleFormBtn.addEventListener('click', function() {
+          document.getElementById('transaction-create-modal').style.display = 'flex';
+          setupModalForm();
         });
       }
 
-      // Aplicar máscaras
-      aplicarMascaraMoeda(document.getElementById('valor'));
-      aplicarMascaraMoeda(document.getElementById('valorFinal'));
-      
-      // Máscara para CPF/CNPJ
-      function aplicarMascaraCPF(elemento) {
-        elemento.addEventListener('input', (e) => {
-          let valor = e.target.value.replace(/\D/g, '');
-          if (valor.length <= 11) {
-            valor = valor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-          } else {
-            valor = valor.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-          }
-          e.target.value = valor;
-        });
-      }
+      // Configurar formulário do modal
+      function setupModalForm() {
+        const form = document.getElementById('transaction-form');
+        const valueInput = document.getElementById('value');
+        const finalValueInput = document.getElementById('finalValue');
+        const typeSelect = document.getElementById('type');
 
-      // Máscara para telefone
-      function aplicarMascaraTelefone(elemento) {
-        elemento.addEventListener('input', (e) => {
-          let valor = e.target.value.replace(/\D/g, '');
-          if (valor.length <= 10) {
-            valor = valor.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-          } else {
-            valor = valor.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-          }
-          e.target.value = valor;
-        });
-      }
-
-      // Máscara para CEP
-      function aplicarMascaraCEP(elemento) {
-        elemento.addEventListener('input', (e) => {
-          let valor = e.target.value.replace(/\D/g, '');
-          valor = valor.replace(/(\d{5})(\d{3})/, '$1-$2');
-          e.target.value = valor;
-        });
-      }
-
-      // Aplicar máscaras para novo cliente
-      aplicarMascaraCPF(document.getElementById('cpfCliente'));
-      aplicarMascaraTelefone(document.getElementById('telefoneCliente'));
-      aplicarMascaraCEP(document.getElementById('cepCliente'));
-
-      // Submit do formulário
-      novoEmprestimoForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const formData = new FormData(novoEmprestimoForm);
-        const dados = Object.fromEntries(formData.entries());
-        
-        // Validações básicas
-        const tipoCliente = document.querySelector('input[name="tipoCliente"]:checked').value;
-        
-        if (tipoCliente === 'existente' && !dados.clienteId) {
-          alert('Selecione um cliente existente');
-          return;
-        }
-
-        if (tipoCliente === 'novo') {
-          if (!dados.nomeCliente || !dados.cpfCliente) {
-            alert('Para novo cliente, preencha pelo menos nome e CPF/CNPJ');
+        // Máscara de moeda para valor
+        valueInput.addEventListener('input', function(event) {
+          event.preventDefault();
+          if (event.target.value === '') {
             return;
           }
-        }
+          var currentValueClean = event.target.value
+            .replace(/\D+/g,'')
+            .replace(/\./g,'')
+            .replace(/,/g,'')
+            .replace(/^0+/, '') || 0;
+          const options = { minimumFractionDigits: 2 }
+          const result = new Intl.NumberFormat('pt-BR', options).format(parseFloat(currentValueClean) / 100)
+          event.target.value = result;
+        });
 
-        if (!dados.valor || parseFloat(dados.valor.replace(',', '.')) <= 0) {
-          alert('Informe um valor válido');
-          return;
-        }
-
-        if (!dados.tipoEmprestimo) {
-          alert('Selecione o tipo de empréstimo');
-          return;
-        }
-
-        try {
-          // Criar cliente se necessário
-          let clienteId = dados.clienteId;
-          if (tipoCliente === 'novo') {
-            const clienteData = {
-              nome: dados.nomeCliente,
-              cpf_cnpj: dados.cpfCliente.replace(/\D/g, ''),
-              telefone: dados.telefoneCliente.replace(/\D/g, ''),
-              email: dados.emailCliente || '',
-              endereco: dados.enderecoCliente || '',
-              cidade: dados.cidadeCliente || '',
-              estado: dados.estadoCliente || '',
-              cep: dados.cepCliente.replace(/\D/g, '') || ''
-            };
-            
-            const clienteResponse = await apiService.createCliente(clienteData);
-            clienteId = clienteResponse.id;
+        // Máscara de moeda para valor final
+        finalValueInput.addEventListener('input', function(event) {
+          event.preventDefault();
+          if (event.target.value === '') {
+            return;
           }
+          var currentValueClean = event.target.value
+            .replace(/\D+/g,'')
+            .replace(/\./g,'')
+            .replace(/,/g,'')
+            .replace(/^0+/, '') || 0;
+          const options = { minimumFractionDigits: 2 }
+          const result = new Intl.NumberFormat('pt-BR', options).format(parseFloat(currentValueClean) / 100)
+          event.target.value = result;
+        });
 
-          // Converter datas para o formato YYYY-MM-DD
-          function toISODate(dateStr) {
-            if (!dateStr) return '';
-            const [d, m, y] = dateStr.split('/');
-            if (y && m && d) return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-            return dateStr; // já está no formato
+        // Submissão do formulário
+        form.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          const formData = new FormData(form);
+          const data = Object.fromEntries(formData.entries());
+          
+          // Converter valores de moeda
+          data.value = parseFloat(data.valueFormatted.replace(/\D/g, '')) / 100;
+          data.finalValue = parseFloat(data.finalValueFormatted.replace(/\D/g, '')) / 100;
+          
+          try {
+            await apiService.createEmprestimo(data);
+            ui.showNotification('Empréstimo adicionado com sucesso!', 'success');
+            closeModal();
+            renderHistoricoEmprestimos();
+          } catch (error) {
+            ui.showNotification('Erro ao adicionar empréstimo', 'error');
           }
+        });
+      }
 
-          // Montar payload conforme a API
-          const payload = {
-            cliente_id: parseInt(clienteId),
-            valor: parseFloat(dados.valor.replace(',', '.')),
-            data_emprestimo: toISODate(dados.dataPrimeiraParcela),
-            data_vencimento: toISODate(dados.dataPrimeiraParcela),
-            juros_mensal: parseFloat(dados.porcentagem || '0') || 0,
-            multa_atraso: 0,
-            observacoes: dados.observacoes || '',
-            tipo_emprestimo: dados.tipoEmprestimo || 'fixed',
-            numero_parcelas: parseInt(dados.numeroParcelas) || 1,
-            frequencia: dados.frequencia || 'monthly',
-            valor_parcela: parseFloat(dados.valorParcela?.replace(',', '.') || '0') || 0,
-            data_primeira_parcela: toISODate(dados.dataPrimeiraParcela)
-          };
+      // Funções do modal
+      window.closeModal = function() {
+        document.getElementById('transaction-create-modal').style.display = 'none';
+      }
 
-          console.log('Payload enviado para API:', payload);
-          await apiService.createEmprestimo(payload);
-          
-          alert('Empréstimo criado com sucesso!');
-          resetForm();
-          document.getElementById('emprestimoForm').style.display = 'none';
-          document.getElementById('toggleForm').textContent = 'Novo Empréstimo';
-          
-          // Recarregar lista de empréstimos
-          renderHistoricoEmprestimos();
-          
-        } catch (error) {
-          console.error('Erro ao criar empréstimo:', error);
-          alert('Erro ao criar empréstimo. Tente novamente.');
-        }
-      });
-    }
+      window.setChargeCalcType = function(type) {
+        const buttons = document.querySelectorAll('.flex.gap-2 button');
+        buttons.forEach(btn => {
+          btn.className = 'bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer';
+        });
+        
+        const clickedButton = event.target.closest('button');
+        clickedButton.className = 'bg-terciary hover:bg-terciary-100 text-white w-full p-2 rounded-lg cursor-pointer';
+      }
+
+      window.simulate = function() {
+        const simulateInfo = document.getElementById('simulate-info');
+        const simulateLoading = document.getElementById('simulate-loading');
+        
+        simulateInfo.style.display = 'none';
+        simulateLoading.style.display = 'flex';
+        
+        setTimeout(() => {
+          simulateLoading.style.display = 'none';
+          simulateInfo.style.display = 'block';
+          ui.showNotification('Simulação concluída!', 'success');
+        }, 2000);
+      }
+
+      // Fechar modal ao clicar no overlay
+      document.querySelector('.modal-overlay').addEventListener('click', closeModal);
+    });
   </script>
 </body>
 </html> 
