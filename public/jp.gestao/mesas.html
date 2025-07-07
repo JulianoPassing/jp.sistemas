@@ -193,12 +193,30 @@
             document.getElementById('welcomeMessage').textContent = `Bem-vindo(a), ${capitalizedUsername}!`;
         }
         
-        // Carregar mesas
+        // Carregar mesas (usando pedidos em aberto)
         async function loadMesas() {
             try {
-                const response = await fetch('/api/mesas', { credentials: 'include' });
+                const response = await fetch('/api/pedidos', { credentials: 'include' });
                 if (response.ok) {
-                    mesasData = await response.json();
+                    const allPedidos = await response.json();
+                    // Filtrar apenas pedidos em aberto/processamento para representar mesas
+                    mesasData = allPedidos.filter(pedido => 
+                        pedido.status === 'Em Processamento' || 
+                        pedido.status === 'em processamento' || 
+                        pedido.status === 'pendente' ||
+                        pedido.status === 'Pendente'
+                    ).map(pedido => ({
+                        id: pedido.id,
+                        numero: pedido.mesa || `Pedido ${pedido.id}`,
+                        status: pedido.status === 'Em Processamento' || pedido.status === 'em processamento' ? 'ocupada' : 'livre',
+                        capacidade: 4,
+                        localizacao: 'Sala principal',
+                        cliente: pedido.nome_cliente || 'Cliente não identificado',
+                        horario: pedido.data_pedido,
+                        observacoes: pedido.observacoes || '',
+                        valor_total: pedido.valor_total || 0,
+                        itens: pedido.itens || []
+                    }));
                     updateStats();
                     renderMesas();
                 } else {
@@ -238,6 +256,8 @@
                     <div class="mesa-status">${getStatusText(mesa.status)}</div>
                     ${mesa.cliente ? `<div class="mesa-info">${mesa.cliente}</div>` : ''}
                     ${mesa.horario ? `<div class="mesa-info">${formatTime(mesa.horario)}</div>` : ''}
+                    ${mesa.valor_total > 0 ? `<div class="mesa-info">Total: ${formatCurrency(mesa.valor_total)}</div>` : ''}
+                    ${mesa.itens && mesa.itens.length > 0 ? `<div class="mesa-info">${mesa.itens.length} item(s)</div>` : ''}
                     <div class="mesa-acoes">
                         <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewMesa(${mesa.id})">
                             <i class="fas fa-eye"></i>
@@ -269,15 +289,15 @@
             return new Date(time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         }
         
-        // Alternar status da mesa
+        // Alternar status da mesa (usando API de pedidos)
         async function toggleMesaStatus(id) {
             const mesa = mesasData.find(m => m.id === id);
             if (!mesa) return;
             
-            const newStatus = mesa.status === 'livre' ? 'ocupada' : 'livre';
+            const newStatus = mesa.status === 'livre' ? 'Em Processamento' : 'Concluído';
             
             try {
-                const response = await fetch(`/api/mesas/${id}/status`, {
+                const response = await fetch(`/api/pedidos/${id}/status`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -287,7 +307,7 @@
                 });
                 
                 if (response.ok) {
-                    showNotification(`Mesa ${mesa.numero} ${newStatus === 'livre' ? 'liberada' : 'ocupada'}!`, 'success');
+                    showNotification(`Pedido ${mesa.numero} ${newStatus === 'Concluído' ? 'finalizado' : 'reativado'}!`, 'success');
                     loadMesas();
                 } else {
                     const error = await response.json();
@@ -304,8 +324,8 @@
             const content = `
                 <form id="addMesaForm">
                     <div class="form-group">
-                        <label for="numero" class="form-label">Número da Mesa *</label>
-                        <input type="number" id="numero" name="numero" class="form-input" min="1" required>
+                        <label for="numero" class="form-label">Nome/Número da Mesa *</label>
+                        <input type="text" id="numero" name="numero" class="form-input" placeholder="Ex: Mesa 1, João, Família Silva..." required>
                     </div>
                     <div class="form-group">
                         <label for="capacidade" class="form-label">Capacidade</label>
@@ -313,7 +333,7 @@
                     </div>
                     <div class="form-group">
                         <label for="localizacao" class="form-label">Localização</label>
-                        <input type="text" id="localizacao" name="localizacao" class="form-input" placeholder="Ex: Área externa, Varanda, etc.">
+                        <input type="text" id="localizacao" name="localizacao" class="form-input" placeholder="Ex: Área externa, Varanda, etc." value="Sala principal">
                     </div>
                     <div class="form-group">
                         <label for="observacoes" class="form-label">Observações</label>
@@ -331,21 +351,30 @@
             document.getElementById('addMesaForm').addEventListener('submit', handleAddMesa);
         }
         
-        // Manipular adição de mesa
+        // Manipular adição de mesa (criando novo pedido)
         async function handleAddMesa(e) {
             e.preventDefault();
             
             const formData = new FormData(e.target);
             const mesaData = Object.fromEntries(formData.entries());
             
+            // Criar um novo pedido para representar a mesa
+            const pedidoData = {
+                nome_cliente: mesaData.numero,
+                status: 'Em Processamento',
+                mesa: mesaData.numero,
+                observacoes: mesaData.observacoes || '',
+                itens: []
+            };
+            
             try {
-                const response = await fetch('/api/mesas', {
+                const response = await fetch('/api/pedidos', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     credentials: 'include',
-                    body: JSON.stringify(mesaData)
+                    body: JSON.stringify(pedidoData)
                 });
                 
                 if (response.ok) {
@@ -378,22 +407,36 @@
                             <span class="badge badge-${mesa.status === 'livre' ? 'success' : mesa.status === 'ocupada' ? 'danger' : 'warning'}">${getStatusText(mesa.status)}</span>
                         </div>
                         <div>
-                            <strong>Capacidade:</strong> ${mesa.capacidade || 'Não definida'} pessoas
+                            <strong>Cliente:</strong> ${mesa.cliente || 'Não informado'}
                         </div>
                         <div>
-                            <strong>Localização:</strong> ${mesa.localizacao || 'Não definida'}
+                            <strong>Capacidade:</strong> ${mesa.capacidade || 4} pessoas
                         </div>
                     </div>
-                    
-                    ${mesa.cliente ? `
-                        <div class="mb-4">
-                            <strong>Cliente:</strong> ${mesa.cliente}
-                        </div>
-                    ` : ''}
                     
                     ${mesa.horario ? `
                         <div class="mb-4">
                             <strong>Horário de Ocupação:</strong> ${formatTime(mesa.horario)}
+                        </div>
+                    ` : ''}
+                    
+                    ${mesa.valor_total > 0 ? `
+                        <div class="mb-4">
+                            <strong>Valor Total:</strong> ${formatCurrency(mesa.valor_total)}
+                        </div>
+                    ` : ''}
+                    
+                    ${mesa.itens && mesa.itens.length > 0 ? `
+                        <div class="mb-4">
+                            <strong>Itens do Pedido:</strong>
+                            <div style="margin-top: 0.5rem;">
+                                ${mesa.itens.map(item => `
+                                    <div style="display: flex; justify-content: space-between; padding: 0.5rem; border-bottom: 1px solid var(--gray-200);">
+                                        <span>${item.produto} x${item.quantidade}</span>
+                                        <span>${formatCurrency(item.precoUnitario * item.quantidade)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
                     ` : ''}
                     
@@ -419,16 +462,16 @@
                 <form id="editMesaForm">
                     <input type="hidden" name="id" value="${mesa.id}">
                     <div class="form-group">
-                        <label for="edit_numero" class="form-label">Número da Mesa *</label>
-                        <input type="number" id="edit_numero" name="numero" class="form-input" value="${mesa.numero}" min="1" required>
+                        <label for="edit_numero" class="form-label">Nome/Número da Mesa *</label>
+                        <input type="text" id="edit_numero" name="numero" class="form-input" value="${mesa.numero}" required>
                     </div>
                     <div class="form-group">
                         <label for="edit_capacidade" class="form-label">Capacidade</label>
-                        <input type="number" id="edit_capacidade" name="capacidade" class="form-input" value="${mesa.capacidade || ''}" min="1">
+                        <input type="number" id="edit_capacidade" name="capacidade" class="form-input" value="${mesa.capacidade || 4}" min="1">
                     </div>
                     <div class="form-group">
                         <label for="edit_localizacao" class="form-label">Localização</label>
-                        <input type="text" id="edit_localizacao" name="localizacao" class="form-input" value="${mesa.localizacao || ''}" placeholder="Ex: Área externa, Varanda, etc.">
+                        <input type="text" id="edit_localizacao" name="localizacao" class="form-input" value="${mesa.localizacao || 'Sala principal'}" placeholder="Ex: Área externa, Varanda, etc.">
                     </div>
                     <div class="form-group">
                         <label for="edit_observacoes" class="form-label">Observações</label>
@@ -446,7 +489,7 @@
             document.getElementById('editMesaForm').addEventListener('submit', handleEditMesa);
         }
         
-        // Manipular edição de mesa
+        // Manipular edição de mesa (usando API de pedidos)
         async function handleEditMesa(e) {
             e.preventDefault();
             
@@ -455,14 +498,21 @@
             const id = mesaData.id;
             delete mesaData.id;
             
+            // Atualizar o pedido correspondente
+            const pedidoData = {
+                nome_cliente: mesaData.numero,
+                mesa: mesaData.numero,
+                observacoes: mesaData.observacoes || ''
+            };
+            
             try {
-                const response = await fetch(`/api/mesas/${id}`, {
+                const response = await fetch(`/api/pedidos/${id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     credentials: 'include',
-                    body: JSON.stringify(mesaData)
+                    body: JSON.stringify(pedidoData)
                 });
                 
                 if (response.ok) {
@@ -486,7 +536,7 @@
             
             confirmAction(`Tem certeza que deseja excluir a mesa ${mesa.numero}?`, async () => {
                 try {
-                    const response = await fetch(`/api/mesas/${id}`, {
+                    const response = await fetch(`/api/pedidos/${id}`, {
                         method: 'DELETE',
                         credentials: 'include'
                     });
