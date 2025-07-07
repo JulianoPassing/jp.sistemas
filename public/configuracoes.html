@@ -115,13 +115,28 @@
       filter: brightness(0) invert(1);
       opacity: 0.9;
     }
-    .card { 
-      background-color: var(--card-bg); 
-      border-radius: var(--border-radius); 
-      box-shadow: var(--shadow); 
-      padding: 25px; 
-      margin-bottom: 25px; 
-      border: 1px solid var(--border-color); 
+    .card, .menu-card, .stat-card, .dashboard-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0, 90, 159, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 32px;
+      transition: all 0.3s ease;
+    }
+    .card:hover, .menu-card:hover, .stat-card:hover, .dashboard-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 90, 159, 0.2);
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,90,159,0.18);
+      padding: 48px 36px;
+      position: relative;
+    }
+    .modal {
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(2px);
     }
     .card-header {
       display: flex;

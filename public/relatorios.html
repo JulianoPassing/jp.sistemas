@@ -232,11 +232,11 @@
 
     .stat-card {
       background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px);
-      border-radius: var(--border-radius);
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0, 90, 159, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       padding: 32px;
-      border: 1px solid var(--border-color);
-      transition: all 0.4s ease;
+      transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
       animation: fadeInUp 0.8s ease-out;
@@ -259,7 +259,7 @@
 
     .stat-card:hover {
       transform: translateY(-8px);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 20px 40px rgba(0, 90, 159, 0.2);
     }
 
     .stat-card.clients {
@@ -481,10 +481,10 @@
 
     .chart-card {
       background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px);
-      border-radius: var(--border-radius);
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0, 90, 159, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       padding: 32px;
-      border: 1px solid var(--border-color);
       animation: fadeInUp 1.2s ease-out;
     }
 
@@ -767,6 +767,30 @@
     .emaberto-btn:hover {
       background: linear-gradient(135deg, #60a5fa, #2563eb);
       transform: scale(1.05);
+    }
+
+    .card, .menu-card, .stat-card, .dashboard-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0, 90, 159, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 32px;
+      transition: all 0.3s ease;
+    }
+    .card:hover, .menu-card:hover, .stat-card:hover, .dashboard-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 90, 159, 0.2);
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,90,159,0.18);
+      padding: 48px 36px;
+      position: relative;
+    }
+    .modal {
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(2px);
     }
   </style>
 </head>
