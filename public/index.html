@@ -593,9 +593,7 @@
     <p>
       O <strong>JP. Sistemas</strong> oferece soluções inovadoras para gestão empresarial, com banco de dados integrados, segurança, mobilidade e performance. Tudo isso em uma plataforma moderna, intuitiva e acessível de qualquer lugar.
     </p>
-    <a href="#" id="conheca-btn-link">
-      <button class="cta-btn"><span>Conheça o Sistema</span></button>
-    </a>
+    <button class="cta-btn" id="conheca-btn-link"><span>Conheça o Sistema</span></button>
     <div class="typewriter-msg">
       <span id="typewriter"></span>
     </div>
@@ -834,32 +832,18 @@
     const conhecaBtn = document.getElementById('conheca-btn-link');
     const modalBg = document.getElementById('modal-bg');
     const modalClose = document.getElementById('modal-close');
-    const redirectMsg = document.getElementById('redirect-msg');
-    let redirectTimeout;
-    if (conhecaBtn && modalBg && modalClose && redirectMsg) {
+    if (conhecaBtn && modalBg && modalClose) {
       conhecaBtn.addEventListener('click', function(e) {
         e.preventDefault();
         modalBg.classList.add('active');
-        let seconds = 10;
-        redirectMsg.textContent = `Você será redirecionado em ${seconds} segundos...`;
-        redirectTimeout = setInterval(() => {
-          seconds--;
-          redirectMsg.textContent = `Você será redirecionado em ${seconds} segundos...`;
-          if (seconds <= 0) {
-            clearInterval(redirectTimeout);
-            window.location.href = 'https://jp-sistemas.com/';
-          }
-        }, 1000);
       });
       modalClose.addEventListener('click', function() {
         modalBg.classList.remove('active');
-        clearInterval(redirectTimeout);
       });
       // Fecha modal ao clicar fora
       modalBg.addEventListener('click', function(e) {
         if (e.target === modalBg) {
           modalBg.classList.remove('active');
-          clearInterval(redirectTimeout);
         }
       });
     }
