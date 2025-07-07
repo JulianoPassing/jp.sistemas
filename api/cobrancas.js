@@ -516,17 +516,41 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
       valor_final: valorFinalCalculado
     });
     
-    const [emprestimoResult] = await connection.execute(`
-      INSERT INTO emprestimos (
-        cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes,
-        tipo_emprestimo, numero_parcelas, frequencia, valor_parcela, tipo_calculo
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      cliente_id, valorInicial, data_emprestimo, dataVencimentoFinal, 
-      jurosMensalFinal, multa_atraso || 0, observacoes || '',
-      tipo_emprestimo, numero_parcelas, frequencia, valorParcelaCalculado, tipo_calculo || 'valor_inicial'
-    ]);
+    // Verificar se a coluna tipo_calculo existe
+    const [columns] = await connection.execute(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_NAME = 'emprestimos' AND COLUMN_NAME = 'tipo_calculo'
+    `);
+    
+    let emprestimoResult;
+    if (columns.length > 0) {
+      // Coluna existe, incluir tipo_calculo
+      [emprestimoResult] = await connection.execute(`
+        INSERT INTO emprestimos (
+          cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes,
+          tipo_emprestimo, numero_parcelas, frequencia, valor_parcela, tipo_calculo
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        cliente_id, valorInicial, data_emprestimo, dataVencimentoFinal, 
+        jurosMensalFinal, multa_atraso || 0, observacoes || '',
+        tipo_emprestimo, numero_parcelas, frequencia, valorParcelaCalculado, tipo_calculo || 'valor_inicial'
+      ]);
+    } else {
+      // Coluna não existe, inserir sem tipo_calculo
+      [emprestimoResult] = await connection.execute(`
+        INSERT INTO emprestimos (
+          cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes,
+          tipo_emprestimo, numero_parcelas, frequencia, valor_parcela
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        cliente_id, valorInicial, data_emprestimo, dataVencimentoFinal, 
+        jurosMensalFinal, multa_atraso || 0, observacoes || '',
+        tipo_emprestimo, numero_parcelas, frequencia, valorParcelaCalculado
+      ]);
+    }
     
     console.log('Empréstimo inserido com ID:', emprestimoResult.insertId);
     
@@ -579,7 +603,7 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
       await connection.execute(`
         INSERT INTO parcelas (emprestimo_id, numero_parcela, valor_parcela, data_vencimento)
         VALUES (?, ?, ?, ?)
-      `, [emprestimoResult.insertId, 1, parseFloat(valor), dataVencimentoFinal]);
+      `, [emprestimoResult.insertId, 1, valorFinalCalculado, dataVencimentoFinal]);
       
       console.log('Parcela única criada para empréstimo fixo');
     }
