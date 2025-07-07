@@ -1,23 +1,34 @@
 const mysql = require('mysql2/promise');
-const { getCobrancasDatabaseConfig } = require('../database-config');
+const { getDatabaseConfig } = require('../database-config');
 
 async function updateEmprestimosStructure() {
   try {
     console.log('=== ATUALIZANDO ESTRUTURA DE EMPRÉSTIMOS PARA PARCELAMENTO ===');
     
-    // Conectar ao banco principal
+    // Obter configuração do banco de dados
+    const dbConfig = getDatabaseConfig();
+    console.log('Configuração do banco:', {
+      host: dbConfig.host,
+      user: dbConfig.user,
+      port: dbConfig.port,
+      provider: dbConfig.provider
+    });
+    
+    // Conectar ao banco principal (sem especificar database)
     const connection = await mysql.createConnection({
-      host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'jpsistemas',
-      password: process.env.DB_PASSWORD || 'SuaSenhaForte123!',
-      charset: 'utf8mb4'
+      host: dbConfig.host,
+      user: dbConfig.user,
+      password: dbConfig.password,
+      port: dbConfig.port || 3306,
+      ssl: dbConfig.ssl,
+      charset: dbConfig.charset
     });
 
     // Listar todos os bancos de cobranças
     const [databases] = await connection.execute(`
       SELECT SCHEMA_NAME 
       FROM INFORMATION_SCHEMA.SCHEMATA 
-      WHERE SCHEMA_NAME LIKE 'jpsistemas_%'
+      WHERE SCHEMA_NAME LIKE 'jpcobrancas_%'
     `);
 
     console.log(`Encontrados ${databases.length} bancos de cobranças`);
@@ -29,11 +40,13 @@ async function updateEmprestimosStructure() {
       try {
         // Conectar ao banco específico
         const dbConnection = await mysql.createConnection({
-          host: process.env.DB_HOST || 'localhost',
-          user: process.env.DB_USER || 'jpsistemas',
-          password: process.env.DB_PASSWORD || 'SuaSenhaForte123!',
+          host: dbConfig.host,
+          user: dbConfig.user,
+          password: dbConfig.password,
+          port: dbConfig.port || 3306,
           database: dbName,
-          charset: 'utf8mb4'
+          ssl: dbConfig.ssl,
+          charset: dbConfig.charset
         });
 
         // Verificar se a tabela emprestimos existe
