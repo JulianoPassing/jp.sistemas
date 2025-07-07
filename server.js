@@ -301,10 +301,9 @@ app.post('/api/auth/login', async (req, res) => {
       }
       res.cookie('token', token, {
         httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-        domain: '.jp-sistemas.com',
-        maxAge: 24 * 60 * 60 * 1000
+        secure: true, // true para HTTPS em VPS
+        sameSite: 'none', // 'none' para HTTPS cross-domain
+        maxAge: 24 * 60 * 60 * 1000 // 24 horas
       });
       res.json({ success: true, user: userPayload });
     });
@@ -318,11 +317,30 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/auth/logout', (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
-    secure: false,
-    sameSite: 'lax',
-    path: '/'
+    secure: true, // true para HTTPS em VPS
+    sameSite: 'none', // 'none' para HTTPS cross-domain
+    path: '/',
+    maxAge: 0
   });
   res.json({ success: true });
+});
+
+// Rota para verificar autenticação e retornar dados do usuário
+app.get('/api/auth/user', requireAuthJWT, (req, res) => {
+  try {
+    // req.user já contém os dados do usuário decodificados do JWT
+    const userData = {
+      id: req.user.id,
+      nome: req.user.username, // Usando username como nome
+      email: req.user.email,
+      isAdmin: req.user.isAdmin,
+      dbName: req.user.dbName
+    };
+    res.json(userData);
+  } catch (error) {
+    console.error('Erro ao retornar dados do usuário:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 });
 
 // Rotas protegidas usando JWT
