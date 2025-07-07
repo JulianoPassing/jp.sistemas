@@ -570,28 +570,33 @@
           if (btnParceladoPorcentagem.classList.contains('bg-terciary')) modo = 'porcentagem';
           let type = 'fixed';
           if (modo !== 'fixo') type = 'in_installments';
-          // Função para formatar valores para número
           function formatValorNum(v) {
             if (!v) return undefined;
             let n = parseFloat(v.toString().replace('.', '').replace(',', '.'));
             if (isNaN(n)) return undefined;
             return n;
           }
-          // Montar payload
+          // Montar payload com nomes alternativos
+          const value = formatValorNum(formData.get('valueFormatted'));
+          const finalValue = modo !== 'porcentagem' ? formatValorNum(formData.get('finalValueFormatted')) : undefined;
+          const installments = formData.get('payBy') ? parseInt(formData.get('payBy')) : undefined;
+          const clienteId = formData.get('clienteId') ? parseInt(formData.get('clienteId')) : undefined;
           const payload = {
             type,
-            valueFormatted: formatValorNum(formData.get('valueFormatted')),
-            finalValueFormatted: modo !== 'porcentagem' ? formatValorNum(formData.get('finalValueFormatted')) : undefined,
-            porcentagem: modo === 'porcentagem' ? formData.get('porcentagem') : undefined,
-            payBy: formData.get('payBy') || undefined,
+            valueFormatted: value,
+            value,
+            finalValueFormatted: finalValue,
+            finalValue,
+            payBy: installments,
+            installments,
             frequency: formData.get('frequency') || undefined,
             startPaymentsAt: formData.get('startPaymentsAt') || undefined,
             afiliado: formData.get('afiliado') || undefined,
-            percentageAfiliado: formData.get('percentageAfiliado') || undefined
+            percentageAfiliado: formData.get('percentageAfiliado') || undefined,
+            porcentagem: modo === 'porcentagem' ? formData.get('porcentagem') : undefined,
+            clienteId,
+            cliente_id: clienteId
           };
-          // Adicionar clienteId se selecionado
-          const clienteId = formData.get('clienteId');
-          if (clienteId) payload.clienteId = clienteId;
           // Remover campos undefined ou vazios
           Object.keys(payload).forEach(key => {
             if (payload[key] === undefined || payload[key] === '') delete payload[key];
