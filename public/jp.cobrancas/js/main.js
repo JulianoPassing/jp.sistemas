@@ -235,6 +235,10 @@ const apiService = {
     });
   },
 
+  async getParcelasEmprestimo(emprestimoId) {
+    return this.request(`/cobrancas/emprestimos/${emprestimoId}/parcelas`);
+  },
+
   // Cobranças
   async getCobrancas() {
     return this.request('/cobrancas');
@@ -880,6 +884,65 @@ const app = {
 
 // Controllers para ações específicas
 const emprestimoController = {
+  renderParcelasDetalhadas(parcelas) {
+    const hoje = new Date();
+    hoje.setHours(0,0,0,0);
+    
+    return `
+      <div style="margin-bottom: 1.2rem;">
+        <div style="font-size: 1.1rem; font-weight: 700; color: #222; margin-bottom: 1em; text-align: center;">
+          EMPRÉSTIMO PARCELADO - ${parcelas.length} PARCELAS
+        </div>
+        <div style="max-height: 300px; overflow-y: auto;">
+          ${parcelas.map(parcela => {
+            const dataVencimento = new Date(parcela.data_vencimento);
+            const isAtrasado = dataVencimento < hoje;
+            const status = parcela.cobranca_status || 'Pendente';
+            const valorParcela = Number(parcela.valor_parcela || 0);
+            
+            let statusColor = '#6b7280'; // cinza para pendente
+            let statusText = 'Pendente';
+            
+            if (status === 'Paga') {
+              statusColor = '#10b981'; // verde
+              statusText = 'Paga';
+            } else if (isAtrasado) {
+              statusColor = '#ef4444'; // vermelho
+              statusText = 'Atrasada';
+            }
+            
+            return `
+              <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem; background: ${status === 'Paga' ? '#f0fdf4' : isAtrasado ? '#fef2f2' : '#fff'};">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                  <span style="font-weight: 600; color: #374151;">Parcela ${parcela.numero_parcela}</span>
+                  <span style="background: ${statusColor}; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.875rem; font-weight: 500;">
+                    ${statusText}
+                  </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                  <span style="color: #6b7280;">Valor:</span>
+                  <span style="font-weight: 600;">R$ ${utils.formatCurrency(valorParcela)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: #6b7280;">Vencimento:</span>
+                  <span style="font-weight: 500; color: ${isAtrasado ? '#ef4444' : '#374151'};">
+                    ${utils.formatDate(parcela.data_vencimento)}
+                    ${isAtrasado && status !== 'Paga' ? ` (${Math.floor((hoje - dataVencimento) / (1000 * 60 * 60 * 24))} dias)` : ''}
+                  </span>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+          <div style="font-size: 1.2rem; font-weight: bold; color: #002f4b;">
+            Total do Empréstimo: <span style="color: #10b981;">R$ ${utils.formatCurrency(parcelas.reduce((total, p) => total + Number(p.valor_parcela || 0), 0))}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
   async viewEmprestimo(id) {
     try {
       const emprestimos = await apiService.getEmprestimos();
@@ -888,6 +951,17 @@ const emprestimoController = {
       if (!emp) {
         ui.showNotification('Empréstimo não encontrado', 'error');
         return;
+      }
+
+      // Buscar parcelas se for empréstimo parcelado
+      let parcelas = [];
+      if (emp.tipo_emprestimo === 'in_installments' && emp.numero_parcelas > 1) {
+        try {
+          parcelas = await apiService.getParcelasEmprestimo(id);
+          console.log('PARCELAS ENCONTRADAS:', parcelas);
+        } catch (error) {
+          console.error('Erro ao buscar parcelas:', error);
+        }
       }
       try {
         // Validação e fallback seguro para campos numéricos
@@ -949,10 +1023,12 @@ const emprestimoController = {
               ${infoJuros}
             </div>
             <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid #eee;">
-            <div style="margin-bottom: 1.2rem; text-align: center;">
-              <div style="font-size: 1.1rem; font-weight: 700; color: #222; margin-bottom: 0.2em;">PARCELA 1 DE ${emp.parcelas || 1}</div>
-              <div style="font-size: 1.3rem; font-weight: bold; color: #002f4b;">Total a Receber: <span style="color: #10b981;">R$ ${utils.formatCurrency(valorAtualizado)}</span></div>
-            </div>
+            ${parcelas.length > 1 ? this.renderParcelasDetalhadas(parcelas) : `
+              <div style="margin-bottom: 1.2rem; text-align: center;">
+                <div style="font-size: 1.1rem; font-weight: 700; color: #222; margin-bottom: 0.2em;">PARCELA ÚNICA</div>
+                <div style="font-size: 1.3rem; font-weight: bold; color: #002f4b;">Total a Receber: <span style="color: #10b981;">R$ ${utils.formatCurrency(valorAtualizado)}</span></div>
+              </div>
+            `}
             <div style="display: flex; flex-direction: column; gap: 0.7rem; margin-top: 1.5rem;">
               <a class="btn" style="background: #25d366; color: #fff; font-weight: 600; font-size: 1.1rem; border-radius: 8px;" id="modal-notificar" href="${linkWhatsapp}" target="_blank" rel="noopener noreferrer">Notificar <b>WhatsApp</b></a>
               <div style="display: flex; gap: 0.7rem; flex-wrap: wrap;">
