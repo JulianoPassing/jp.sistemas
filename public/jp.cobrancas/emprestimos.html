@@ -1070,22 +1070,27 @@
             clienteId = clienteResponse.id;
           }
 
-          // Preparar dados do empréstimo
-          const emprestimoData = {
+          // Converter datas para o formato YYYY-MM-DD
+          function toISODate(dateStr) {
+            if (!dateStr) return '';
+            const [d, m, y] = dateStr.split('/');
+            if (y && m && d) return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+            return dateStr; // já está no formato
+          }
+
+          // Montar payload conforme a API
+          const payload = {
             cliente_id: parseInt(clienteId),
             valor: parseFloat(dados.valor.replace(',', '.')),
-            tipo_emprestimo: dados.tipoEmprestimo,
-            tipo_calculo: tipoCalculoSelecionado,
-            valor_final: parseFloat(dados.valorFinal?.replace(',', '.')) || 0,
-            numero_parcelas: parseInt(dados.numeroParcelas) || 1,
-            frequencia: dados.frequencia || 'monthly',
-            data_primeira_parcela: dados.dataPrimeiraParcela,
-            afiliado_id: dados.afiliado || null,
-            percentual_afiliado: parseFloat(dados.percentualAfiliado) || 0,
+            data_emprestimo: toISODate(dados.dataPrimeiraParcela),
+            data_vencimento: toISODate(dados.dataPrimeiraParcela),
+            juros_mensal: parseFloat(dados.porcentagem || '0') || 0,
+            multa_atraso: 0,
             observacoes: dados.observacoes || ''
           };
 
-          await apiService.createEmprestimo(emprestimoData);
+          console.log('Payload enviado para API:', payload);
+          await apiService.createEmprestimo(payload);
           
           alert('Empréstimo criado com sucesso!');
           resetForm();
