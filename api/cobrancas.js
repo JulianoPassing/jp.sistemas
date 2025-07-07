@@ -330,7 +330,7 @@ router.get('/emprestimos', ensureDatabase, async (req, res) => {
   }
 });
 
-// Buscar empréstimo específico
+// Buscar empréstimo por ID
 router.get('/emprestimos/:id', ensureDatabase, async (req, res) => {
   try {
     const { id } = req.params;
@@ -338,7 +338,7 @@ router.get('/emprestimos/:id', ensureDatabase, async (req, res) => {
     const connection = await createCobrancasConnection(username);
     
     const [emprestimos] = await connection.execute(`
-      SELECT e.*, c.nome as cliente_nome, c.telefone, c.email
+      SELECT e.*, c.nome as cliente_nome, c.telefone as telefone
       FROM emprestimos e
       LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
       WHERE e.id = ?
@@ -359,64 +359,75 @@ router.get('/emprestimos/:id', ensureDatabase, async (req, res) => {
 
 router.post('/emprestimos', ensureDatabase, async (req, res) => {
   try {
-    console.log('*** INÍCIO DA CRIAÇÃO DE EMPRÉSTIMO (BACKEND ATUALIZADO) ***');
-    console.log('REQ.BODY:', req.body);
+    console.log('=== INÍCIO DA CRIAÇÃO DE EMPRÉSTIMO ===');
+    console.log('Dados recebidos para criar empréstimo:', req.body);
+    console.log('Sessão do usuário:', req.session);
+    
     const { cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes } = req.body;
+    
     // Validação dos dados obrigatórios
     if (!cliente_id || !valor || !data_emprestimo || !data_vencimento) {
       console.error('Dados obrigatórios faltando:', { cliente_id, valor, data_emprestimo, data_vencimento });
       return res.status(400).json({ error: 'Dados obrigatórios faltando' });
     }
+    
     const username = req.session.cobrancasUser;
+    console.log('Usuário autenticado:', username);
+    
     const connection = await createCobrancasConnection(username);
+    console.log('Conexão com banco estabelecida');
+    
     // Verificar se o cliente existe
-    const [clienteRows] = await connection.execute(`SELECT id, nome FROM clientes_cobrancas WHERE id = ?`, [cliente_id]);
+    const [clienteRows] = await connection.execute(`
+      SELECT id, nome FROM clientes_cobrancas WHERE id = ?
+    `, [cliente_id]);
+    
     if (clienteRows.length === 0) {
       await connection.end();
       console.error('Cliente não encontrado:', cliente_id);
       return res.status(404).json({ error: 'Cliente não encontrado' });
     }
+    
+    console.log('Cliente encontrado:', clienteRows[0]);
+    
+    console.log('Cliente encontrado, inserindo empréstimo...');
+    
     // Inserir empréstimo
+    console.log('Tentando inserir empréstimo com dados:', {
+      cliente_id, valor, data_emprestimo, data_vencimento, 
+      juros_mensal: juros_mensal || 0, 
+      multa_atraso: multa_atraso || 0, 
+      observacoes: observacoes || ''
+    });
+    
     const [emprestimoResult] = await connection.execute(`
       INSERT INTO emprestimos (cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal || 0, multa_atraso || 0, observacoes || '']);
+    
     console.log('Empréstimo inserido com ID:', emprestimoResult.insertId);
-    // Lógica robusta de parcelamento
-    const { numero_parcelas, frequencia, valor_final } = req.body;
-    const nParcelas = parseInt(numero_parcelas, 10);
-    const freq = frequencia || 'monthly';
-    const valorTotal = valor_final ? parseFloat(valor_final) : parseFloat(valor);
-    if (nParcelas && nParcelas > 1) {
-      const valorParcela = Math.round((valorTotal / nParcelas) * 100) / 100;
-      let dataVenc = new Date(data_vencimento);
-      for (let i = 0; i < nParcelas; i++) {
-        let vencimento = new Date(dataVenc);
-        if (i > 0) {
-          if (freq === 'monthly') vencimento.setMonth(vencimento.getMonth() + i);
-          else if (freq === 'biweekly') vencimento.setDate(vencimento.getDate() + 14 * i);
-          else if (freq === 'weekly') vencimento.setDate(vencimento.getDate() + 7 * i);
-          else if (freq === 'daily') vencimento.setDate(vencimento.getDate() + 1 * i);
-        }
-        const vencStr = vencimento.toISOString().split('T')[0];
-        await connection.execute(`
-          INSERT INTO cobrancas (emprestimo_id, cliente_id, valor_original, valor_atualizado, data_vencimento, status)
-          VALUES (?, ?, ?, ?, ?, 'Pendente')
-        `, [emprestimoResult.insertId, cliente_id, valorParcela, valorParcela, vencStr]);
-        console.log(`[PARCELA ${i+1}/${nParcelas}] Criada: valor=${valorParcela}, vencimento=${vencStr}`);
-      }
-      console.log('Cobranças parceladas criadas com sucesso!');
-    } else {
-      await connection.execute(`
-        INSERT INTO cobrancas (emprestimo_id, cliente_id, valor_original, valor_atualizado, data_vencimento, status)
-        VALUES (?, ?, ?, ?, ?, 'Pendente')
-      `, [emprestimoResult.insertId, cliente_id, valor, valor, data_vencimento]);
-      console.log('Cobrança única criada (empréstimo fixo)');
-    }
+    
+    // Criar cobrança automaticamente
+    console.log('Tentando criar cobrança com dados:', {
+      emprestimo_id: emprestimoResult.insertId,
+      cliente_id,
+      valor_original: valor,
+      valor_atualizado: valor,
+      data_vencimento
+    });
+    
+    await connection.execute(`
+      INSERT INTO cobrancas (emprestimo_id, cliente_id, valor_original, valor_atualizado, data_vencimento, status)
+      VALUES (?, ?, ?, ?, ?, 'Pendente')
+    `, [emprestimoResult.insertId, cliente_id, valor, valor, data_vencimento]);
+    
+    console.log('Cobrança criada automaticamente');
+    
     await connection.end();
     res.json({ id: emprestimoResult.insertId, message: 'Empréstimo criado com sucesso' });
   } catch (error) {
     console.error('Erro ao criar empréstimo:', error);
+    console.error('Stack trace:', error.stack);
     res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
   }
 });
@@ -426,7 +437,6 @@ router.get('/cobrancas', ensureDatabase, async (req, res) => {
   try {
     const username = req.session.cobrancasUser;
     const connection = await createCobrancasConnection(username);
-    
     // Atualizar dias de atraso e valores
     await connection.execute(`
       UPDATE cobrancas 
@@ -440,33 +450,15 @@ router.get('/cobrancas', ensureDatabase, async (req, res) => {
           (valor_original * (multa_calculada / 100))
       WHERE status = 'Pendente'
     `);
-    
-    // Verificar se há filtro por empréstimo
-    const { emprestimo_id } = req.query;
-    
-    let query = `
+    // Buscar apenas cobranças de empréstimos ativos/pendentes e existentes
+    const [cobrancas] = await connection.execute(`
       SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
       FROM cobrancas cb
       INNER JOIN emprestimos e ON cb.emprestimo_id = e.id
       LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
-      WHERE cb.cliente_id IS NOT NULL AND e.status IN ('Ativo', 'Pendente')
-    `;
-    
-    let params = [];
-    
-    if (emprestimo_id) {
-      query += ` AND cb.emprestimo_id = ?`;
-      params.push(emprestimo_id);
-      console.log('*** BUSCANDO COBRANÇAS PARA EMPRÉSTIMO ***', emprestimo_id);
-    } else {
-      query += ` AND cb.status = 'Pendente'`;
-    }
-    
-    query += ` ORDER BY cb.data_vencimento ASC`;
-    
-    const [cobrancas] = await connection.execute(query, params);
-    console.log('Cobranças encontradas:', cobrancas.length);
-    
+      WHERE cb.status = 'Pendente' AND cb.cliente_id IS NOT NULL AND e.status IN ('Ativo', 'Pendente')
+      ORDER BY cb.data_vencimento ASC
+    `);
     await connection.end();
     res.json(cobrancas);
   } catch (error) {
