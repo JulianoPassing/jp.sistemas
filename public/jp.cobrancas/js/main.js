@@ -1816,11 +1816,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       
       // Máscara de moeda para todos os campos de valor
-      const valorInput = modal.querySelector('#modal-valor');
-      const valorFinalInput = modal.querySelector('#modal-valor-final');
-      const valorParcelaInput = modal.querySelector('#modal-valor-parcela');
-      const valorInicialFinalInput = modal.querySelector('#modal-valor-inicial-final');
-      const valorInicialParcelaInput = modal.querySelector('#modal-valor-inicial-parcela');
       
       function aplicarMascaraMoeda(input) {
         input.addEventListener('input', (e) => {
@@ -2261,8 +2256,11 @@ function cobrar(id) {
   }
 }
 
-if (typeof renderHistoricoEmprestimos === 'function') {
-  window.renderHistoricoEmprestimos = renderHistoricoEmprestimos;
-}
+// Disponibilizar funções globalmente
+window.renderHistoricoEmprestimos = renderHistoricoEmprestimos;
+window.viewEmprestimo = viewEmprestimo;
+window.viewCliente = viewCliente;
+window.deleteCliente = deleteCliente;
+window.cobrar = cobrar;
 
  
