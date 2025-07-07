@@ -319,22 +319,40 @@ router.get('/clientes', ensureDatabase, async (req, res) => {
 router.post('/clientes', ensureDatabase, async (req, res) => {
   try {
     const { nome, cpf_cnpj, email, telefone, endereco, cidade, estado, cep } = req.body;
+    
     // Validação do nome do cliente
     if (!nome || typeof nome !== 'string' || ['undefined', 'n/a', 'na'].includes(nome.trim().toLowerCase()) || nome.trim() === '') {
       return res.status(400).json({ error: 'Nome do cliente inválido. Não é permitido cadastrar clientes sem nome ou com nome "undefined" ou "N/A".' });
     }
+    
+    // Tratar valores undefined para null
+    const params = [
+      nome,
+      cpf_cnpj || null,
+      email || null,
+      telefone || null,
+      endereco || null,
+      cidade || null,
+      estado || null,
+      cep || null
+    ];
+    
+    console.log('Dados do cliente para inserção:', { nome, cpf_cnpj, email, telefone, endereco, cidade, estado, cep });
+    console.log('Parâmetros tratados:', params);
+    
     const username = req.session.cobrancasUser;
     const connection = await createCobrancasConnection(username);
+    
     const [result] = await connection.execute(`
       INSERT INTO clientes_cobrancas (nome, cpf_cnpj, email, telefone, endereco, cidade, estado, cep)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `, [nome, cpf_cnpj, email, telefone, endereco, cidade, estado, cep]);
+    `, params);
     
     await connection.end();
     res.json({ id: result.insertId, message: 'Cliente criado com sucesso' });
   } catch (error) {
     console.error('Erro ao criar cliente:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
   }
 });
 
