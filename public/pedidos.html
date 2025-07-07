@@ -1218,9 +1218,14 @@
 
       if (produtoId) {
         const produto = produtos.find(p => p.id == produtoId);
-        if (produto) {
+        if (produto && produto.preco !== undefined && produto.preco !== null) {
           if (precoInput) precoInput.value = produto.preco.toFixed(2);
-          if (nomeInput) nomeInput.value = produto.nome;
+          if (nomeInput) nomeInput.value = produto.nome || '';
+          calcularSubtotalItem(itemId);
+        } else {
+          // Produto encontrado mas sem preço válido
+          if (precoInput) precoInput.value = '0.00';
+          if (nomeInput) nomeInput.value = produto ? produto.nome || '' : '';
           calcularSubtotalItem(itemId);
         }
       } else {
