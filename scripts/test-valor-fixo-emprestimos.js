@@ -57,7 +57,7 @@ async function testValorFixoEmprestimos() {
 
     // 2. Testar empréstimo com valor final fixo
     console.log('\n2. Testando empréstimo com valor final fixo...');
-    console.log('Dados: Valor Final = R$ 1500, Parcelas = 3');
+    console.log('Dados: Valor Inicial = R$ 1000, Valor Final = R$ 1500, Parcelas = 3');
     
     const [emprestimoResult1] = await dbConnection.execute(`
       INSERT INTO emprestimos (
@@ -67,10 +67,10 @@ async function testValorFixoEmprestimos() {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       clienteId,
-      1500.00, // valor inicial (igual ao final para valor_final)
+      1000.00, // valor inicial
       '2024-01-15',
       '2024-02-15',
-      0.00, // sem juros percentual
+      50.00, // juros implícitos: (1500-1000)/1000 * 100
       2.00,
       'Teste valor final fixo',
       'in_installments',
@@ -85,7 +85,7 @@ async function testValorFixoEmprestimos() {
 
     // 3. Testar empréstimo com parcela fixa
     console.log('\n3. Testando empréstimo com parcela fixa...');
-    console.log('Dados: Valor Parcela = R$ 1000, Parcelas = 10');
+    console.log('Dados: Valor Inicial = R$ 8000, Valor Parcela = R$ 1000, Parcelas = 10');
     
     const [emprestimoResult2] = await dbConnection.execute(`
       INSERT INTO emprestimos (
@@ -95,10 +95,10 @@ async function testValorFixoEmprestimos() {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       clienteId,
-      10000.00, // valor inicial (1000 * 10)
+      8000.00, // valor inicial
       '2024-01-15',
       '2024-02-15',
-      0.00, // sem juros percentual
+      25.00, // juros implícitos: (10000-8000)/8000 * 100
       2.00,
       'Teste parcela fixa',
       'in_installments',
