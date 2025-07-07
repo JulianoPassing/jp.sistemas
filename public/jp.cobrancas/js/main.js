@@ -182,11 +182,32 @@ const apiService = {
       ...options
     };
 
+    console.log('=== FAZENDO REQUISIÇÃO ===');
+    console.log('URL:', url);
+    console.log('Config:', config);
+    console.log('========================');
+
     try {
       const response = await fetch(url, config);
       
+      console.log('=== RESPOSTA RECEBIDA ===');
+      console.log('Status:', response.status);
+      console.log('Status Text:', response.statusText);
+      console.log('Headers:', response.headers);
+      console.log('========================');
+      
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          console.error('Error data:', errorData);
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (parseError) {
+          console.error('Erro ao fazer parse da resposta de erro:', parseError);
+          const errorText = await response.text();
+          console.error('Texto da resposta de erro:', errorText);
+        }
+        throw new Error(errorMessage);
       }
       
       return await response.json();
@@ -2044,6 +2065,14 @@ document.addEventListener('DOMContentLoaded', () => {
           frequencia: formData.frequencia,
           tipo_calculo: tipoCalculoCalculo
         };
+        
+        console.log('=== DADOS ENVIADOS PARA API ===');
+        console.log('Payload completo:', JSON.stringify(payload, null, 2));
+        console.log('Tipo de cada campo:');
+        Object.keys(payload).forEach(key => {
+          console.log(`${key}: ${payload[key]} (tipo: ${typeof payload[key]})`);
+        });
+        console.log('================================');
         try {
           await apiService.createEmprestimo(payload);
           ui.showNotification('Empréstimo adicionado com sucesso!', 'success');
@@ -2058,7 +2087,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }, 300);
         } catch (err) {
-          ui.showNotification('Erro ao adicionar empréstimo', 'error');
+          console.error('=== ERRO AO CRIAR EMPRÉSTIMO ===');
+          console.error('Erro completo:', err);
+          console.error('Mensagem:', err.message);
+          console.error('Stack:', err.stack);
+          
+          if (err.response) {
+            console.error('Response status:', err.response.status);
+            console.error('Response data:', err.response.data);
+            ui.showNotification(`Erro ao adicionar empréstimo: ${err.response.data?.error || err.message}`, 'error');
+          } else {
+            ui.showNotification(`Erro ao adicionar empréstimo: ${err.message}`, 'error');
+          }
         }
       });
     });

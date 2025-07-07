@@ -428,8 +428,9 @@ router.get('/emprestimos/:id/parcelas', ensureDatabase, async (req, res) => {
 router.post('/emprestimos', ensureDatabase, async (req, res) => {
   try {
     console.log('=== INÍCIO DA CRIAÇÃO DE EMPRÉSTIMO ===');
-    console.log('Dados recebidos para criar empréstimo:', req.body);
+    console.log('Dados recebidos para criar empréstimo:', JSON.stringify(req.body, null, 2));
     console.log('Sessão do usuário:', req.session);
+    console.log('Headers da requisição:', req.headers);
     
     const { 
       cliente_id, 
@@ -451,9 +452,25 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
     } = req.body;
     
     // Validação dos dados obrigatórios
+    console.log('Validando dados obrigatórios...');
+    console.log('cliente_id:', cliente_id, 'tipo:', typeof cliente_id);
+    console.log('valor:', valor, 'tipo:', typeof valor);
+    console.log('data_emprestimo:', data_emprestimo, 'tipo:', typeof data_emprestimo);
+    
     if (!cliente_id || !valor || !data_emprestimo) {
       console.error('Dados obrigatórios faltando:', { cliente_id, valor, data_emprestimo });
       return res.status(400).json({ error: 'Dados obrigatórios faltando' });
+    }
+    
+    // Validação adicional de tipos
+    if (isNaN(Number(cliente_id))) {
+      console.error('cliente_id deve ser um número:', cliente_id);
+      return res.status(400).json({ error: 'ID do cliente inválido' });
+    }
+    
+    if (isNaN(Number(valor))) {
+      console.error('valor deve ser um número:', valor);
+      return res.status(400).json({ error: 'Valor do empréstimo inválido' });
     }
     
     const username = req.session.cobrancasUser;
