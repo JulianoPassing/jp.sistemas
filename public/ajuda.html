@@ -194,31 +194,25 @@
   </div>
 
   <script>
-    // Carregar informações do usuário
-    document.addEventListener('DOMContentLoaded', function() {
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (user && user.nome) {
-        // Capitalizar primeira letra do nome
-        const nomeCapitalizado = user.nome.charAt(0).toUpperCase() + user.nome.slice(1);
-        document.getElementById('userDisplay').textContent = nomeCapitalizado;
-      } else {
-        document.getElementById('userDisplay').textContent = 'Usuário';
-      }
-    });
-
-    // Verificar autenticação
-    function checkAuth() {
-      const user = localStorage.getItem('user');
-      if (!user) {
+    // Checagem de autenticação via cookie/JWT
+    async function checkAuthAndUser() {
+      try {
+        const res = await fetch('/api/auth/user', { credentials: 'include' });
+        if (!res.ok) throw new Error('Não autenticado');
+        const data = await res.json();
+        if (data && data.nome) {
+          // Capitalizar primeira letra do nome
+          const nomeCapitalizado = data.nome.charAt(0).toUpperCase() + data.nome.slice(1);
+          document.getElementById('userDisplay').textContent = nomeCapitalizado;
+        } else {
+          document.getElementById('userDisplay').textContent = 'Usuário';
+        }
+      } catch (e) {
         window.location.href = 'sistema.html';
       }
     }
-
-    // Verificar autenticação ao carregar a página
-    checkAuth();
-
-    // Verificar autenticação periodicamente
-    setInterval(checkAuth, 30000); // Verificar a cada 30 segundos
+    document.addEventListener('DOMContentLoaded', checkAuthAndUser);
+    setInterval(checkAuthAndUser, 30000); // Verificar a cada 30 segundos
   </script>
 </body>
 </html> 

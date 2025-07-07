@@ -666,6 +666,26 @@
         }
       });
     };
+
+    // Checagem de autenticação via cookie/JWT
+    async function checkAuthAndUser() {
+      try {
+        const res = await fetch('/api/auth/user', { credentials: 'include' });
+        if (!res.ok) throw new Error('Não autenticado');
+        const data = await res.json();
+        if (data && data.nome) {
+          // Capitalizar primeira letra do nome
+          const nomeCapitalizado = data.nome.charAt(0).toUpperCase() + data.nome.slice(1);
+          document.getElementById('userDisplay').textContent = nomeCapitalizado;
+        } else {
+          document.getElementById('userDisplay').textContent = 'Usuário';
+        }
+      } catch (e) {
+        window.location.href = 'sistema.html';
+      }
+    }
+    document.addEventListener('DOMContentLoaded', checkAuthAndUser);
+    setInterval(checkAuthAndUser, 30000); // Verificar a cada 30 segundos
   </script>
 </body>
 </html> 
