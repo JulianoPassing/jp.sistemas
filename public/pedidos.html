@@ -97,7 +97,7 @@
     .table tbody tr:nth-child(even) {
       background-color: var(--gray-50);
     }
-    
+
     /* Modal Styles */
     .modal {
       display: none;
@@ -1058,9 +1058,9 @@
     function atualizarTabelaPedidos() {
       if (!pedidosTableBody) {
         console.warn('Elemento pedidosTableBody não encontrado');
-        return;
-      }
-      
+          return;
+        }
+
       pedidosTableBody.innerHTML = '';
       
       pedidos.forEach(pedido => {
@@ -1117,9 +1117,9 @@
     function atualizarTabelaPedidosComFiltro(pedidosFiltrados) {
       if (!pedidosTableBody) {
         console.warn('Elemento pedidosTableBody não encontrado');
-        return;
-      }
-      
+          return;
+        }
+
       pedidosTableBody.innerHTML = '';
       
       pedidosFiltrados.forEach(pedido => {
@@ -1218,14 +1218,14 @@
 
       if (produtoId) {
         const produto = produtos.find(p => p.id == produtoId);
-        if (produto && produto.preco !== undefined && produto.preco !== null) {
-          if (precoInput) precoInput.value = produto.preco.toFixed(2);
+        const preco = Number(produto?.preco_venda ?? produto?.preco ?? produto?.preco_custo ?? 0);
+        if (produto) {
+          if (precoInput) precoInput.value = preco.toFixed(2);
           if (nomeInput) nomeInput.value = produto.nome || '';
           calcularSubtotalItem(itemId);
         } else {
-          // Produto encontrado mas sem preço válido
           if (precoInput) precoInput.value = '0.00';
-          if (nomeInput) nomeInput.value = produto ? produto.nome || '' : '';
+          if (nomeInput) nomeInput.value = '';
           calcularSubtotalItem(itemId);
         }
       } else {
@@ -1327,7 +1327,7 @@
       const itemId = Date.now();
       const produtosOptions = produtos && produtos.length > 0 
         ? produtos.map(produto => {
-            const preco = Number(produto.preco);
+            const preco = Number(produto.preco_venda ?? produto.preco ?? produto.preco_custo ?? 0);
             return `<option value="${produto.id || ''}">${produto.nome || 'Produto sem nome'} - R$ ${!isNaN(preco) ? preco.toFixed(2) : '0.00'}</option>`;
           }).join('')
         : '<option value="">Nenhum produto disponível</option>';
@@ -1581,8 +1581,8 @@
         form.querySelector('#endereco').value = pedido.cliente.endereco || '';
         handleTipoClienteChange();
       }
-      
-      // Itens do pedido
+
+            // Itens do pedido
       const itensContainer = form.querySelector('#itensContainer');
       if (itensContainer) {
         itensContainer.innerHTML = '';
@@ -1608,7 +1608,7 @@
         });
       }
       
-      // Observações
+            // Observações
       form.querySelector('[name="observacoes"]').value = pedido.observacoes || '';
       
       calcularTotalPedido();
@@ -1649,10 +1649,10 @@
           novoPedidoModal.style.display = 'none';
           limparFormulario();
           mostrarNotificacao('Pedido atualizado com sucesso!', 'success');
-        } else {
+            } else {
           throw new Error('Erro ao atualizar pedido');
-        }
-      } catch (error) {
+            }
+        } catch (error) {
         console.error('Erro:', error);
         mostrarNotificacao('Erro ao atualizar pedido', 'error');
       }
@@ -1673,10 +1673,10 @@
           pedidos = pedidos.filter(p => p.id != pedidoId);
           atualizarTabelaPedidos();
           mostrarNotificacao('Pedido excluído com sucesso!', 'success');
-        } else {
+            } else {
           throw new Error('Erro ao excluir pedido');
         }
-      } catch (error) {
+        } catch (error) {
         console.error('Erro:', error);
         mostrarNotificacao('Erro ao excluir pedido', 'error');
       }
@@ -1741,13 +1741,13 @@
     function downloadCSV(content, filename) {
       const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
       link.setAttribute('download', filename);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     // Formatar data
