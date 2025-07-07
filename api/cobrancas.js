@@ -356,6 +356,29 @@ router.post('/clientes', ensureDatabase, async (req, res) => {
   }
 });
 
+// Buscar parcelas de um empréstimo
+router.get('/emprestimos/:id/parcelas', ensureDatabase, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
+    
+    const [parcelas] = await connection.execute(`
+      SELECT p.*, c.status as cobranca_status, c.id as cobranca_id, c.valor_original, c.valor_atualizado
+      FROM parcelas p
+      LEFT JOIN cobrancas c ON c.emprestimo_id = p.emprestimo_id AND c.data_vencimento = p.data_vencimento
+      WHERE p.emprestimo_id = ?
+      ORDER BY p.numero_parcela ASC
+    `, [id]);
+    
+    await connection.end();
+    res.json(parcelas);
+  } catch (error) {
+    console.error('Erro ao buscar parcelas:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Empréstimos
 router.get('/emprestimos', ensureDatabase, async (req, res) => {
   try {
@@ -498,19 +521,32 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
     let valorParcelaCalculado = parseFloat(valor_parcela) || 0;
     let jurosMensalFinal = parseFloat(juros_mensal) || 0;
     
+    console.log('Valores recebidos do frontend:', {
+      valor, valor_final, valor_parcela, valor_inicial_final, valor_inicial_parcela, tipo_calculo
+    });
+
     // Ajustar valores baseado no tipo de cálculo
     if (tipo_calculo === 'valor_final' && valor_final) {
-      valorInicial = parseFloat(valor_inicial_final) || valorFinalCalculado;
+      // Para valor final fixo: o frontend envia valor_inicial_final e valor_final
+      // valor_inicial_final é o valor que o cliente pegou emprestado
+      // valor_final é o total que ele deve pagar
+      valorInicial = valorInicial; // manter o valor enviado no campo 'valor'
+      valorFinalCalculado = parseFloat(valor_final);
       valorParcelaCalculado = valorFinalCalculado / parseInt(numero_parcelas);
       jurosMensalFinal = valorInicial > 0 ? ((valorFinalCalculado - valorInicial) / valorInicial) * 100 : 0;
     } else if (tipo_calculo === 'parcela_fixa' && valor_parcela) {
-      valorInicial = parseFloat(valor_inicial_parcela) || (valorParcelaCalculado * parseInt(numero_parcelas));
+      valorInicial = valorInicial; // manter o valor enviado no campo 'valor'
+      valorParcelaCalculado = parseFloat(valor_parcela);
       valorFinalCalculado = valorParcelaCalculado * parseInt(numero_parcelas);
       jurosMensalFinal = valorInicial > 0 ? ((valorFinalCalculado - valorInicial) / valorInicial) * 100 : 0;
     } else if (tipo_calculo === 'valor_inicial') {
       valorFinalCalculado = valorInicial * (1 + jurosMensalFinal / 100);
       valorParcelaCalculado = valorFinalCalculado / parseInt(numero_parcelas);
     }
+
+    console.log('Valores calculados finais:', {
+      valorInicial, valorFinalCalculado, valorParcelaCalculado, jurosMensalFinal
+    });
     
     // Calcular data de vencimento baseada no tipo de empréstimo
     let dataVencimentoFinal = data_vencimento;
