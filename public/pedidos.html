@@ -1238,18 +1238,25 @@
     // Função para calcular subtotal de um item específico
     function calcularSubtotalItem(itemId) {
       const itemRow = document.querySelector(`[data-item-id="${itemId}"]`);
+      console.log('calcularSubtotalItem chamado para', itemId, itemRow);
+
       if (!itemRow) return;
 
       const quantidadeInput = itemRow.querySelector('.produto-quantidade');
       const precoInput = itemRow.querySelector('.produto-preco');
       const subtotalInput = itemRow.querySelector('.produto-subtotal');
 
+      console.log('Campos:', { quantidadeInput, precoInput, subtotalInput });
+
       if (quantidadeInput && precoInput && subtotalInput) {
         const quantidade = parseFloat((quantidadeInput.value || '0').replace(',', '.')) || 0;
         const preco = parseFloat((precoInput.value || '0').replace(',', '.')) || 0;
         const subtotal = quantidade * preco;
         subtotalInput.value = subtotal.toFixed(2);
+        console.log('Subtotal calculado:', subtotal);
         calcularTotalPedido();
+      } else {
+        console.log('Algum campo não encontrado!');
       }
     }
 
