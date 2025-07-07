@@ -137,21 +137,22 @@
       }
 
       .menu-card {
-        background: rgba(255, 255, 255, 0.95) !important;
-        border-radius: 16px !important;
-        box-shadow: 0 8px 25px rgba(0, 90, 159, 0.1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        padding: 32px !important;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 16px;
+        padding: 32px;
         text-align: center;
-        transition: all 0.3s ease !important;
+        box-shadow: 0 8px 25px rgba(0, 90, 159, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
         cursor: pointer;
         text-decoration: none;
         color: inherit;
       }
 
       .menu-card:hover {
-        transform: translateY(-8px) !important;
-        box-shadow: 0 20px 40px rgba(0, 90, 159, 0.2) !important;
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 90, 159, 0.2);
       }
 
       .menu-card i {
@@ -437,30 +438,6 @@
         color: var(--text-secondary);
         font-weight: 600;
         letter-spacing: 0.01em;
-      }
-
-      .card, .menu-card, .stat-card, .dashboard-card {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 16px;
-        box-shadow: 0 8px 25px rgba(0, 90, 159, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        padding: 32px;
-        transition: all 0.3s ease;
-      }
-      .card:hover, .menu-card:hover, .stat-card:hover, .dashboard-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 20px 40px rgba(0, 90, 159, 0.2);
-      }
-      .modal-content {
-        background: #fff;
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0,90,159,0.18);
-        padding: 48px 36px;
-        position: relative;
-      }
-      .modal {
-        background: rgba(0,0,0,0.35);
-        backdrop-filter: blur(2px);
       }
     </style>
   </head>
