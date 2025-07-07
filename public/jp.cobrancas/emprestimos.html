@@ -98,6 +98,126 @@
       </div>
     </div>
   </main>
+
+  <!-- Modal de Novo Empréstimo (100% igual ao emprestimosbase.html) -->
+  <div id="transaction-create-modal" class="modal" style="display: none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="form-header-modal">Adicionar Emprestimo</h3>
+        <button type="button" class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <hr>
+      <div class="modal-body">
+        <div class="mt-3">
+          <label class="label-primary" for="type">Tipo de Emprestimo</label>
+          <select class="input-primary" id="type" name="type">
+            <option value="" disabled>Nenhum tipo selecionado</option>
+            <option value="fixed">Fixo</option>
+            <option value="in_installments">Parcelado</option>
+          </select>
+        </div>
+
+        <hr class="mt-4 mb-3">
+        
+        <form id="transaction-form" method="post" autocomplete="off">
+          <div class="mt-3">
+            <label class="label-primary" for="value">Valor (R$)</label>
+            <input class="input-primary" id="value" type="text" name="valueFormatted" autocomplete="off" placeholder="ex.: 1000">
+          </div>
+
+          <div class="flex gap-2 mt-3">
+            <button class="bg-terciary hover:bg-terciary-100 text-white w-full p-2 rounded-lg cursor-pointer" type="button" onclick="setChargeCalcType('fixed')">
+              <span class="font-medium text-center">Valor Fixo (R$)</span>
+            </button>
+            <button class="bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer" type="button" onclick="setChargeCalcType('fixed-installment')">
+              <span class="font-medium text-center">Parcela Fixa (R$)</span>
+            </button>
+            <button class="bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer" type="button" onclick="setChargeCalcType('percentage')">
+              <span class="font-medium text-center">Porcentagem (%)</span>
+            </button>
+          </div>
+
+          <div id="final-value-section" class="mt-3 space-y-3">
+            <label class="label-primary" for="finalValue">Valor Final de Cobrança (R$)</label>
+            <input class="input-primary" id="finalValue" type="text" name="finalValueFormatted" autocomplete="off" placeholder="ex.: 1000">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 mt-3">
+            <div>
+              <label class="label-primary" for="payBy">Qtd. de Parcelas</label>
+              <input class="input-primary" id="payBy" type="number" name="payBy" autocomplete="off" placeholder="ex.: 12">
+            </div>
+            <div>
+              <label class="label-primary" for="frequency">Frequência</label>
+              <select class="input-primary" id="frequency" name="frequency" autocomplete="off">
+                <option value="" disabled>Nenhuma frequência selecionada</option>
+                <option value="daily">Diario</option>
+                <option value="weekly">Semanal</option>
+                <option value="biweekly">Quinzenal</option>
+                <option value="monthly">Mensal</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <label class="label-primary" for="startPaymentsAt">Data da Primeira Parcela</label>
+            <input class="input-primary" id="startPaymentsAt" type="date" name="startPaymentsAt" autocomplete="off">
+          </div>
+
+          <div class="grid grid-cols-4 gap-4 mt-3">
+            <div class="col-span-3">
+              <label class="label-primary" for="afiliado">Afiliado</label>
+              <select class="input-primary" id="afiliado" name="afiliado" autocomplete="off">
+                <option value="">Nenhum afiliado selecionado</option>
+              </select>
+            </div>
+            <div class="col-span-1">
+              <label class="label-primary" for="percentageAfiliado">%</label>
+              <input class="input-primary" id="percentageAfiliado" type="number" step=".01" name="percentageAfiliado" autocomplete="off">
+            </div>
+          </div>
+
+          <small class="font-semibold text-terciary text-xs">* Caso seja número decimal utilize ponto, exemplo <strong>(20,5)</strong> deve ser informado <strong>(20.5)</strong>.</small>
+
+          <hr class="my-3">
+
+          <div>
+            <div class="flex justify-between items-center">
+              <h3 class="form-header !mb-0">Simulador</h3>
+              <button type="button" class="button-primary text-primary disabled:hover:bg-gray-200 disabled:text-gray-400 disabled:bg-gray-200 !text-sm !px-2 !py-1 text-terciary" onclick="simulate()">
+                Simular
+              </button>
+            </div>
+
+            <div id="simulate-info" class="mt-3">
+              <p class="mt-3 text-terciary text-sm">
+                Para maior facilidade você pode simular as parcelas antes de adicionar o emprestimo.
+              </p>
+            </div>
+            <div id="simulate-loading" class="flex justify-center mt-3" style="display: none;">
+              <div role="status">
+                <svg aria-hidden="true" class="text-white animate-spin dark:text-gray-600 fill-terciary w-8 w-8" viewBox="0 0 100 101" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"></path>
+                  <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"></path>
+                </svg>
+                <span class="sr-only">Carregando...</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-3">
+
+          <div class="flex items-center gap-4 mt-5">
+            <button type="submit" class="button-primary text-primary disabled:hover:bg-gray-200 disabled:text-gray-400 disabled:bg-gray-200 text-sm w-full text-terciary">
+              Adicionar Emprestimo
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <footer class="text-center p-4 mt-8">
     © 2024 JP-Cobranças. Todos os direitos reservados.
   </footer>
@@ -234,6 +354,107 @@
           }
         }
       };
+
+      // Modal de Novo Empréstimo (100% igual ao emprestimosbase.html)
+      const toggleFormBtn = document.getElementById('toggleForm');
+      if (toggleFormBtn) {
+        toggleFormBtn.addEventListener('click', function() {
+          document.getElementById('transaction-create-modal').style.display = 'flex';
+          setupModalForm();
+        });
+      }
+
+      // Configurar formulário do modal
+      function setupModalForm() {
+        const form = document.getElementById('transaction-form');
+        const valueInput = document.getElementById('value');
+        const finalValueInput = document.getElementById('finalValue');
+        const typeSelect = document.getElementById('type');
+
+        // Máscara de moeda para valor
+        valueInput.addEventListener('input', function(event) {
+          event.preventDefault();
+          if (event.target.value === '') {
+            return;
+          }
+          var currentValueClean = event.target.value
+            .replace(/\D+/g,'')
+            .replace(/\./g,'')
+            .replace(/,/g,'')
+            .replace(/^0+/, '') || 0;
+          const options = { minimumFractionDigits: 2 }
+          const result = new Intl.NumberFormat('pt-BR', options).format(parseFloat(currentValueClean) / 100)
+          event.target.value = result;
+        });
+
+        // Máscara de moeda para valor final
+        finalValueInput.addEventListener('input', function(event) {
+          event.preventDefault();
+          if (event.target.value === '') {
+            return;
+          }
+          var currentValueClean = event.target.value
+            .replace(/\D+/g,'')
+            .replace(/\./g,'')
+            .replace(/,/g,'')
+            .replace(/^0+/, '') || 0;
+          const options = { minimumFractionDigits: 2 }
+          const result = new Intl.NumberFormat('pt-BR', options).format(parseFloat(currentValueClean) / 100)
+          event.target.value = result;
+        });
+
+        // Submissão do formulário
+        form.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          const formData = new FormData(form);
+          const data = Object.fromEntries(formData.entries());
+          
+          // Converter valores de moeda
+          data.value = parseFloat(data.valueFormatted.replace(/\D/g, '')) / 100;
+          data.finalValue = parseFloat(data.finalValueFormatted.replace(/\D/g, '')) / 100;
+          
+          try {
+            await apiService.createEmprestimo(data);
+            ui.showNotification('Empréstimo adicionado com sucesso!', 'success');
+            closeModal();
+            renderHistoricoEmprestimos();
+          } catch (error) {
+            ui.showNotification('Erro ao adicionar empréstimo', 'error');
+          }
+        });
+      }
+
+      // Funções do modal
+      window.closeModal = function() {
+        document.getElementById('transaction-create-modal').style.display = 'none';
+      }
+
+      window.setChargeCalcType = function(type) {
+        const buttons = document.querySelectorAll('.flex.gap-2 button');
+        buttons.forEach(btn => {
+          btn.className = 'bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer';
+        });
+        
+        const clickedButton = event.target.closest('button');
+        clickedButton.className = 'bg-terciary hover:bg-terciary-100 text-white w-full p-2 rounded-lg cursor-pointer';
+      }
+
+      window.simulate = function() {
+        const simulateInfo = document.getElementById('simulate-info');
+        const simulateLoading = document.getElementById('simulate-loading');
+        
+        simulateInfo.style.display = 'none';
+        simulateLoading.style.display = 'flex';
+        
+        setTimeout(() => {
+          simulateLoading.style.display = 'none';
+          simulateInfo.style.display = 'block';
+          ui.showNotification('Simulação concluída!', 'success');
+        }, 2000);
+      }
+
+      // Fechar modal ao clicar no overlay
+      document.querySelector('.modal-overlay').addEventListener('click', closeModal);
     });
   </script>
 </body>
