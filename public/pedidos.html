@@ -1245,8 +1245,9 @@
       const subtotalInput = itemRow.querySelector('.produto-subtotal');
 
       if (quantidadeInput && precoInput && subtotalInput) {
-        const quantidade = parseFloat(quantidadeInput.value) || 0;
-        const preco = parseFloat(precoInput.value) || 0;
+        // Corrige vírgula para ponto
+        const quantidade = parseFloat((quantidadeInput.value || '0').replace(',', '.')) || 0;
+        const preco = parseFloat((precoInput.value || '0').replace(',', '.')) || 0;
         const subtotal = quantidade * preco;
         subtotalInput.value = subtotal.toFixed(2);
         calcularTotalPedido();
