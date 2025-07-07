@@ -411,14 +411,13 @@
             e.preventDefault();
             const formData = new FormData(e.target);
             const mesaData = Object.fromEntries(formData.entries());
-            // Criar um novo pedido para representar a mesa
             const now = new Date().toISOString();
             const pedidoData = {
                 nome_cliente: mesaData.numero || '',
                 status: 'Em Processamento',
                 mesa: mesaData.numero || '',
                 observacoes: mesaData.observacoes || '',
-                itens: [],
+                itens: [{ produto: 'Aguardando pedido', quantidade: 1, preco_unitario: 0, subtotal: 0 }],
                 telefone: '',
                 valor_total: 0,
                 created_at: now,
