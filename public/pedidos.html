@@ -724,6 +724,10 @@
       transform: translateY(-2px);
       box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
     }
+
+    table tr td, table tr th {
+      color: var(--primary-blue) !important;
+    }
   </style>
 </head>
 <body>
@@ -888,8 +892,8 @@
 
   <header class="header">
     <div class="header-content">
-      <div class="logo">
-        <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 150px; height: 67px; display: block; object-fit: contain; background: none; box-shadow: none; border-radius: 0; margin: 0;" />
+      <div class="logo" style="cursor:pointer;" onclick="window.location.href='painel.html'">
+        <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" />
       </div>
       <div class="user-info">
         <span>Bem-vindo, <span id="userDisplay"></span></span>
