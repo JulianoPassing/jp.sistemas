@@ -2261,4 +2261,8 @@ function cobrar(id) {
   }
 }
 
+if (typeof renderHistoricoEmprestimos === 'function') {
+  window.renderHistoricoEmprestimos = renderHistoricoEmprestimos;
+}
+
  
