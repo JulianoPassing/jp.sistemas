@@ -124,20 +124,20 @@
         async function loadData() {
             try {
                 // Carregar pedidos
-                const pedidosResponse = await fetch('/api/pedidos');
+                const pedidosResponse = await fetch('/api/pedidos', { credentials: 'include' });
                 if (pedidosResponse.ok) {
                     pedidosData = await pedidosResponse.json();
                     filteredData = [...pedidosData];
                 }
                 
                 // Carregar produtos
-                const produtosResponse = await fetch('/api/produtos');
+                const produtosResponse = await fetch('/api/produtos', { credentials: 'include' });
                 if (produtosResponse.ok) {
                     produtosData = await produtosResponse.json();
                 }
                 
                 // Carregar clientes
-                const clientesResponse = await fetch('/api/clientes');
+                const clientesResponse = await fetch('/api/clientes', { credentials: 'include' });
                 if (clientesResponse.ok) {
                     clientesData = await clientesResponse.json();
                 }
@@ -418,6 +418,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify(orderData)
                 });
                 
@@ -547,6 +548,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify(data)
                 });
                 
@@ -572,7 +574,8 @@
             confirmAction(`Tem certeza que deseja excluir o pedido #${pedido.id}?`, async () => {
                 try {
                     const response = await fetch(`/api/pedidos/${id}`, {
-                        method: 'DELETE'
+                        method: 'DELETE',
+                        credentials: 'include'
                     });
                     
                     if (response.ok) {

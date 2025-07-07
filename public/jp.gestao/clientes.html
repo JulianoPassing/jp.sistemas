@@ -117,7 +117,7 @@
         // Carregar clientes
         async function loadClientes() {
             try {
-                const response = await fetch('/api/clientes');
+                const response = await fetch('/api/clientes', { credentials: 'include' });
                 if (response.ok) {
                     clientesData = await response.json();
                     filteredData = [...clientesData];
@@ -269,6 +269,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify(clientData)
                 });
                 
@@ -422,6 +423,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify(clientData)
                 });
                 
@@ -447,7 +449,8 @@
             confirmAction(`Tem certeza que deseja excluir o cliente "${cliente.nome}"?`, async () => {
                 try {
                     const response = await fetch(`/api/clientes/${id}`, {
-                        method: 'DELETE'
+                        method: 'DELETE',
+                        credentials: 'include'
                     });
                     
                     if (response.ok) {
