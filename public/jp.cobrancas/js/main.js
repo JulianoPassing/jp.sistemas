@@ -219,6 +219,7 @@ const apiService = {
   },
 
   async createEmprestimo(emprestimoData) {
+    console.log('Dados sendo enviados para criar empréstimo:', emprestimoData);
     return this.request('/cobrancas/emprestimos', {
       method: 'POST',
       body: JSON.stringify(emprestimoData)
@@ -1829,19 +1830,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // Garantir que cliente_id seja inteiro
         cliente_id = parseInt(cliente_id, 10);
-        // Montar payload do empréstimo
+        // Montar payload do empréstimo (apenas campos válidos para a tabela)
         const payload = {
           cliente_id,
           valor: parseFloat(formData.valor.replace(',', '.')),
           data_emprestimo: formData.dataVencimento,
           data_vencimento: formData.dataVencimento,
-          juros_mensal: formData.porcentagem,
-          multa_atraso: formData.multa,
-          observacoes: formData.observacoes || '',
-          tipo: formData.tipo,
-          parcelas: parseInt(formData.parcelas) || 1,
-          frequencia: formData.frequencia
+          juros_mensal: parseFloat(formData.porcentagem) || 0,
+          multa_atraso: parseFloat(formData.multa) || 0,
+          observacoes: formData.observacoes || ''
         };
+        
+        console.log('Payload final:', payload);
+        
+        // Validação dos dados antes de enviar
+        if (!payload.cliente_id || !payload.valor || !payload.data_emprestimo || !payload.data_vencimento) {
+          ui.showNotification('Dados obrigatórios faltando', 'error');
+          return;
+        }
+        
+        if (payload.valor <= 0) {
+          ui.showNotification('Valor deve ser maior que zero', 'error');
+          return;
+        }
+        
         try {
           await apiService.createEmprestimo(payload);
           ui.showNotification('Empréstimo adicionado com sucesso!', 'success');
