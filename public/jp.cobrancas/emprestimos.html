@@ -374,31 +374,7 @@
       </div>
     </div>
   </main>
-  
-  <!-- Modal de Novo Empréstimo (único) -->
-  <div id="modal-emprestimo" class="modal" style="display: none;">
-    <div class="modal-overlay"></div>
-    <div class="modal-content modal-emprestimo">
-      <div class="modal-header">
-        <h3>Adicionar Empréstimo</h3>
-        <button class="modal-close" onclick="closeModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <form id="form-emprestimo">
-          <!-- Seção: Tipo de Empréstimo -->
-          <div class="form-section">
-            <h4>Tipo de Empréstimo</h4>
-            <div class="form-group">
-              <label class="form-label">Selecione o tipo de empréstimo *</label>
-              <select id="tipo-emprestimo" class="form-select" required>
-                <option value="">Selecione um tipo</option>
-                <option value="fixo">Fixo</option>
-                <option value="parcelado-valor-fixo">Parcelado - Valor Fixo</option>
-                <option value="parcelado-parcela-fixa">Parcelado - Parcela Fixa</option>
-                <option value="parcelado-porcentagem">Parcelado - Porcentagem</option>
-              </select>
-            </div>
-            
+              
             <!-- Informações sobre o tipo selecionado -->
             <div id="tipo-info" class="tipo-emprestimo-info" style="display: none;">
               <h5 id="tipo-titulo"></h5>
