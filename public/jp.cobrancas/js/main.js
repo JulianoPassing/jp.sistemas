@@ -1771,30 +1771,46 @@ document.addEventListener('DOMContentLoaded', () => {
       const grupoValorParcela = modal.querySelector('#grupo-valor-parcela');
       const grupoPorcentagem = modal.querySelector('#grupo-porcentagem');
       const porcentagemInput = modal.querySelector('#modal-porcentagem');
-      
+      const valorInput = modal.querySelector('#modal-valor');
+      const valorFinalInput = modal.querySelector('#modal-valor-final');
+      const valorParcelaInput = modal.querySelector('#modal-valor-parcela');
+      const valorInicialFinalInput = modal.querySelector('#modal-valor-inicial-final');
+      const valorInicialParcelaInput = modal.querySelector('#modal-valor-inicial-parcela');
+
       tipoCalculoSelect.addEventListener('change', () => {
         const tipo = tipoCalculoSelect.value;
-        
+
         // Esconder todos os grupos
         grupoValorInicial.style.display = 'none';
         grupoValorFinal.style.display = 'none';
         grupoValorParcela.style.display = 'none';
         grupoPorcentagem.style.display = 'none';
-        
-        // Mostrar grupos baseado no tipo
+
+        // Remover required de todos os campos
+        valorInput.required = false;
+        valorFinalInput.required = false;
+        valorParcelaInput.required = false;
+        valorInicialFinalInput.required = false;
+        valorInicialParcelaInput.required = false;
+        porcentagemInput.required = false;
+
+        // Mostrar grupos baseado no tipo e definir required apenas nos visíveis
         switch(tipo) {
           case 'valor_inicial':
             grupoValorInicial.style.display = 'block';
             grupoPorcentagem.style.display = 'block';
+            valorInput.required = true;
             porcentagemInput.required = true;
             break;
           case 'valor_final':
             grupoValorFinal.style.display = 'block';
-            porcentagemInput.required = false;
+            valorInicialFinalInput.required = true;
+            valorFinalInput.required = true;
             break;
           case 'parcela_fixa':
             grupoValorParcela.style.display = 'block';
-            porcentagemInput.required = false;
+            valorInicialParcelaInput.required = true;
+            valorParcelaInput.required = true;
             break;
         }
       });
