@@ -379,6 +379,85 @@ router.get('/emprestimos/:id/parcelas', ensureDatabase, async (req, res) => {
   }
 });
 
+// Atualizar status de uma parcela específica
+router.put('/emprestimos/:emprestimo_id/parcelas/:numero_parcela/status', ensureDatabase, async (req, res) => {
+  try {
+    const { emprestimo_id, numero_parcela } = req.params;
+    const { status, data_pagamento, valor_pago, observacoes } = req.body;
+    
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
+    
+    // Buscar a parcela
+    const [parcelas] = await connection.execute(`
+      SELECT p.*, c.id as cobranca_id
+      FROM parcelas p
+      LEFT JOIN cobrancas c ON c.emprestimo_id = p.emprestimo_id AND c.data_vencimento = p.data_vencimento
+      WHERE p.emprestimo_id = ? AND p.numero_parcela = ?
+    `, [emprestimo_id, numero_parcela]);
+    
+    if (parcelas.length === 0) {
+      await connection.end();
+      return res.status(404).json({ error: 'Parcela não encontrada' });
+    }
+    
+    const parcela = parcelas[0];
+    
+    // Atualizar status da parcela
+    await connection.execute(`
+      UPDATE parcelas 
+      SET status = ?, data_pagamento = ?, valor_pago = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE emprestimo_id = ? AND numero_parcela = ?
+    `, [status, data_pagamento || null, valor_pago || parcela.valor_parcela, emprestimo_id, numero_parcela]);
+    
+    // Atualizar cobrança relacionada se existir
+    if (parcela.cobranca_id) {
+      await connection.execute(`
+        UPDATE cobrancas 
+        SET status = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `, [status === 'Paga' ? 'Paga' : 'Pendente', parcela.cobranca_id]);
+      
+      // Se foi marcada como paga, registrar o pagamento
+      if (status === 'Paga' && data_pagamento) {
+        await connection.execute(`
+          INSERT INTO pagamentos (cobranca_id, valor_pago, data_pagamento, forma_pagamento, observacoes)
+          VALUES (?, ?, ?, ?, ?)
+        `, [parcela.cobranca_id, valor_pago || parcela.valor_parcela, data_pagamento, 'Manual', observacoes || `Pagamento da parcela ${numero_parcela}`]);
+      }
+    }
+    
+    // Verificar se todas as parcelas estão pagas para atualizar o empréstimo
+    const [todasParcelas] = await connection.execute(`
+      SELECT COUNT(*) as total, SUM(CASE WHEN status = 'Paga' THEN 1 ELSE 0 END) as pagas
+      FROM parcelas
+      WHERE emprestimo_id = ?
+    `, [emprestimo_id]);
+    
+    if (todasParcelas[0].total === todasParcelas[0].pagas) {
+      // Todas as parcelas estão pagas, marcar empréstimo como quitado
+      await connection.execute(`
+        UPDATE emprestimos 
+        SET status = 'Quitado', updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `, [emprestimo_id]);
+    } else {
+      // Garantir que o empréstimo não esteja marcado como quitado se nem todas as parcelas estão pagas
+      await connection.execute(`
+        UPDATE emprestimos 
+        SET status = 'Ativo', updated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND status = 'Quitado'
+      `, [emprestimo_id]);
+    }
+    
+    await connection.end();
+    res.json({ message: 'Status da parcela atualizado com sucesso' });
+  } catch (error) {
+    console.error('Erro ao atualizar status da parcela:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Empréstimos
 router.get('/emprestimos', ensureDatabase, async (req, res) => {
   try {

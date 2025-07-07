@@ -1041,4 +1041,106 @@ footer {
   .search-container .btn {
     width: 100%;
   }
+}
+
+/* Estilos para parcelas */
+.parcelas-detalhadas {
+  margin-bottom: 1.2rem;
+}
+
+.parcela-item {
+  transition: all 0.3s ease;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  background: #fff;
+}
+
+.parcela-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.parcela-item.paga {
+  background: #f0fdf4;
+  border-color: #10b981;
+}
+
+.parcela-item.atrasada {
+  background: #fef2f2;
+  border-color: #ef4444;
+}
+
+.parcela-item.pendente {
+  background: #fff;
+  border-color: #6b7280;
+}
+
+/* Botões das parcelas */
+.parcela-item .btn {
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.875rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  flex: 1;
+  min-width: 80px;
+}
+
+.parcela-item .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.parcela-item .btn:active {
+  transform: translateY(0);
+}
+
+/* Cores específicas para botões de parcela */
+.parcela-item .btn[style*="background: #10b981"] {
+  background-color: #10b981 !important;
+}
+
+.parcela-item .btn[style*="background: #10b981"]:hover {
+  background-color: #059669 !important;
+}
+
+.parcela-item .btn[style*="background: #ef4444"] {
+  background-color: #ef4444 !important;
+}
+
+.parcela-item .btn[style*="background: #ef4444"]:hover {
+  background-color: #dc2626 !important;
+}
+
+.parcela-item .btn[style*="background: #6b7280"] {
+  background-color: #6b7280 !important;
+}
+
+.parcela-item .btn[style*="background: #6b7280"]:hover {
+  background-color: #4b5563 !important;
+}
+
+/* Layout dos botões das parcelas */
+.parcela-item [style*="display: flex; gap: 0.5rem"] {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .parcela-item [style*="display: flex; gap: 0.5rem"] {
+    flex-direction: column;
+  }
+  
+  .parcela-item .btn {
+    min-width: auto;
+    width: 100%;
+  }
 } 
