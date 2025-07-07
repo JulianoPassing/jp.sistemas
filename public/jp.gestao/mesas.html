@@ -600,20 +600,24 @@
         function deleteMesa(id) {
             const mesa = mesasData.find(m => m.id === id);
             if (!mesa) return;
-            
             confirmAction(`Tem certeza que deseja excluir a mesa ${mesa.numero}?`, async () => {
                 try {
                     const response = await fetch(`/api/pedidos/${id}`, {
                         method: 'DELETE',
                         credentials: 'include'
                     });
-                    
                     if (response.ok) {
                         showNotification('Mesa excluída com sucesso!', 'success');
                         loadMesas();
                     } else {
-                        const error = await response.json();
-                        showNotification(error.message || 'Erro ao excluir mesa', 'error');
+                        let errorMsg = 'Erro ao excluir mesa';
+                        try {
+                            const error = await response.json();
+                            errorMsg = error.message || error.error || errorMsg;
+                        } catch (e) {
+                            // resposta não é JSON
+                        }
+                        showNotification(errorMsg, 'error');
                     }
                 } catch (error) {
                     console.error('Erro ao excluir mesa:', error);
