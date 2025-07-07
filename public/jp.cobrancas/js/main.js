@@ -893,11 +893,11 @@ const emprestimoController = {
         <div style="font-size: 1.1rem; font-weight: 700; color: #222; margin-bottom: 1em; text-align: center;">
           EMPRÉSTIMO PARCELADO - ${parcelas.length} PARCELAS
         </div>
-        <div style="max-height: 300px; overflow-y: auto;">
+        <div style="max-height: 400px; overflow-y: auto;">
           ${parcelas.map(parcela => {
             const dataVencimento = new Date(parcela.data_vencimento);
             const isAtrasado = dataVencimento < hoje;
-            const status = parcela.cobranca_status || 'Pendente';
+            const status = parcela.status || parcela.cobranca_status || 'Pendente';
             const valorParcela = Number(parcela.valor_parcela || 0);
             
             let statusColor = '#6b7280'; // cinza para pendente
@@ -906,13 +906,13 @@ const emprestimoController = {
             if (status === 'Paga') {
               statusColor = '#10b981'; // verde
               statusText = 'Paga';
-            } else if (isAtrasado) {
+            } else if (status === 'Atrasada' || isAtrasado) {
               statusColor = '#ef4444'; // vermelho
               statusText = 'Atrasada';
             }
             
             return `
-              <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem; background: ${status === 'Paga' ? '#f0fdf4' : isAtrasado ? '#fef2f2' : '#fff'};">
+              <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem; background: ${status === 'Paga' ? '#f0fdf4' : isAtrasado ? '#fef2f2' : '#fff'};" data-emprestimo-id="${parcela.emprestimo_id}" data-numero-parcela="${parcela.numero_parcela}">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                   <span style="font-weight: 600; color: #374151;">Parcela ${parcela.numero_parcela}</span>
                   <span style="background: ${statusColor}; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.875rem; font-weight: 500;">
@@ -923,12 +923,34 @@ const emprestimoController = {
                   <span style="color: #6b7280;">Valor:</span>
                   <span style="font-weight: 600;">R$ ${utils.formatCurrency(valorParcela)}</span>
                 </div>
-                <div style="display: flex; justify-content: space-between;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                   <span style="color: #6b7280;">Vencimento:</span>
                   <span style="font-weight: 500; color: ${isAtrasado ? '#ef4444' : '#374151'};">
                     ${utils.formatDate(parcela.data_vencimento)}
                     ${isAtrasado && status !== 'Paga' ? ` (${Math.floor((hoje - dataVencimento) / (1000 * 60 * 60 * 24))} dias)` : ''}
                   </span>
+                </div>
+                ${parcela.data_pagamento ? `
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="color: #6b7280;">Pago em:</span>
+                    <span style="font-weight: 500; color: #10b981;">
+                      ${utils.formatDate(parcela.data_pagamento)}
+                    </span>
+                  </div>
+                ` : ''}
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
+                  ${status !== 'Paga' ? `
+                    <button class="btn" style="background: #10b981; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1; min-width: 80px;" onclick="marcarParcelaPaga(${parcela.emprestimo_id}, ${parcela.numero_parcela})">
+                      Pagar
+                    </button>
+                    <button class="btn" style="background: #ef4444; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1; min-width: 80px;" onclick="marcarParcelaAtrasada(${parcela.emprestimo_id}, ${parcela.numero_parcela})">
+                      Atraso
+                    </button>
+                  ` : `
+                    <button class="btn" style="background: #6b7280; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1;" onclick="marcarParcelaPendente(${parcela.emprestimo_id}, ${parcela.numero_parcela})">
+                      Desfazer
+                    </button>
+                  `}
                 </div>
               </div>
             `;
@@ -2362,5 +2384,99 @@ window.viewEmprestimo = viewEmprestimo;
 window.viewCliente = viewCliente;
 window.deleteCliente = deleteCliente;
 window.cobrar = cobrar;
+
+// Funções para controle de status das parcelas
+async function marcarParcelaPaga(emprestimoId, numeroParcela) {
+  try {
+    const hoje = new Date().toISOString().split('T')[0];
+    
+    const response = await fetch(`/api/cobrancas/emprestimos/${emprestimoId}/parcelas/${numeroParcela}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        status: 'Paga',
+        data_pagamento: hoje
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Erro ao atualizar parcela');
+    }
+    
+    ui.showNotification('Parcela marcada como paga!', 'success');
+    
+    // Recarregar os detalhes do empréstimo
+    await emprestimoController.viewEmprestimo(emprestimoId);
+    
+  } catch (error) {
+    console.error('Erro ao marcar parcela como paga:', error);
+    ui.showNotification('Erro ao marcar parcela como paga', 'error');
+  }
+}
+
+async function marcarParcelaAtrasada(emprestimoId, numeroParcela) {
+  try {
+    const response = await fetch(`/api/cobrancas/emprestimos/${emprestimoId}/parcelas/${numeroParcela}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        status: 'Atrasada'
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Erro ao atualizar parcela');
+    }
+    
+    ui.showNotification('Parcela marcada como atrasada!', 'success');
+    
+    // Recarregar os detalhes do empréstimo
+    await emprestimoController.viewEmprestimo(emprestimoId);
+    
+  } catch (error) {
+    console.error('Erro ao marcar parcela como atrasada:', error);
+    ui.showNotification('Erro ao marcar parcela como atrasada', 'error');
+  }
+}
+
+async function marcarParcelaPendente(emprestimoId, numeroParcela) {
+  try {
+    const response = await fetch(`/api/cobrancas/emprestimos/${emprestimoId}/parcelas/${numeroParcela}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        status: 'Pendente',
+        data_pagamento: null
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Erro ao atualizar parcela');
+    }
+    
+    ui.showNotification('Parcela marcada como pendente!', 'success');
+    
+    // Recarregar os detalhes do empréstimo
+    await emprestimoController.viewEmprestimo(emprestimoId);
+    
+  } catch (error) {
+    console.error('Erro ao marcar parcela como pendente:', error);
+    ui.showNotification('Erro ao marcar parcela como pendente', 'error');
+  }
+}
+
+// Disponibilizar funções de parcelas globalmente
+window.marcarParcelaPaga = marcarParcelaPaga;
+window.marcarParcelaAtrasada = marcarParcelaAtrasada;
+window.marcarParcelaPendente = marcarParcelaPendente;
 
  
