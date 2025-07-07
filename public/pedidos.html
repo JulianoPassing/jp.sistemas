@@ -838,14 +838,14 @@
 
     // Elementos DOM
     const pedidosTable = document.getElementById('pedidosTable');
-    const pedidosTableBody = document.getElementById('pedidosTableBody');
+    const pedidosTableBody = document.getElementById('pedidos-tbody');
     const novoPedidoModal = document.getElementById('novoPedidoModal');
     const visualizarPedidoModal = document.getElementById('visualizarPedidoModal');
     const novoPedidoForm = document.getElementById('novoPedidoForm');
     const visualizarPedidoForm = document.getElementById('visualizarPedidoForm');
     const closeNovoPedido = document.getElementById('closeNovoPedido');
     const closeVisualizarPedido = document.getElementById('closeVisualizarPedido');
-    const searchInput = document.getElementById('searchInput');
+    const searchInput = document.getElementById('busca-pedido');
     const statusFilter = document.getElementById('statusFilter');
     const dataInicioFilter = document.getElementById('dataInicioFilter');
     const dataFimFilter = document.getElementById('dataFimFilter');
@@ -888,15 +888,19 @@
 
     // Configurar event listeners
     function setupEventListeners() {
-      // Fechar modais
-      closeNovoPedido.addEventListener('click', () => {
-        novoPedidoModal.style.display = 'none';
-        limparFormulario();
-      });
+      // Verificar se os elementos existem antes de adicionar listeners
+      if (closeNovoPedido) {
+        closeNovoPedido.addEventListener('click', () => {
+          novoPedidoModal.style.display = 'none';
+          limparFormulario();
+        });
+      }
 
-      closeVisualizarPedido.addEventListener('click', () => {
-        visualizarPedidoModal.style.display = 'none';
-      });
+      if (closeVisualizarPedido) {
+        closeVisualizarPedido.addEventListener('click', () => {
+          visualizarPedidoModal.style.display = 'none';
+        });
+      }
 
       // Fechar modal ao clicar fora
       window.addEventListener('click', (event) => {
@@ -910,30 +914,68 @@
       });
 
       // Busca e filtros
-      searchInput.addEventListener('input', filtrarPedidos);
-      statusFilter.addEventListener('change', filtrarPedidos);
-      dataInicioFilter.addEventListener('change', filtrarPedidos);
-      dataFimFilter.addEventListener('change', filtrarPedidos);
+      if (searchInput) {
+        searchInput.addEventListener('input', filtrarPedidos);
+      }
+      if (statusFilter) {
+        statusFilter.addEventListener('change', filtrarPedidos);
+      }
+      if (dataInicioFilter) {
+        dataInicioFilter.addEventListener('change', filtrarPedidos);
+      }
+      if (dataFimFilter) {
+        dataFimFilter.addEventListener('change', filtrarPedidos);
+      }
 
       // Formulário novo pedido
-      novoPedidoForm.addEventListener('submit', handleNovoPedido);
-      visualizarPedidoForm.addEventListener('submit', handleEditarPedido);
+      if (novoPedidoForm) {
+        novoPedidoForm.addEventListener('submit', handleNovoPedido);
+      }
+      if (visualizarPedidoForm) {
+        visualizarPedidoForm.addEventListener('submit', handleEditarPedido);
+      }
 
       // Adicionar item ao pedido
-      document.getElementById('adicionarItemBtn').addEventListener('click', adicionarItemAoPedido);
+      const adicionarItemBtn = document.getElementById('addItemBtn');
+      if (adicionarItemBtn) {
+        adicionarItemBtn.addEventListener('click', adicionarItemAoPedido);
+      }
 
       // Seleção de cliente
-      document.getElementById('tipoCliente').addEventListener('change', handleTipoClienteChange);
-      document.getElementById('clienteSelect').addEventListener('change', handleClienteSelect);
-      document.getElementById('novoClienteNome').addEventListener('input', handleNovoClienteInput);
+      const tipoCliente = document.getElementById('tipoCliente');
+      if (tipoCliente) {
+        tipoCliente.addEventListener('change', handleTipoClienteChange);
+      }
+      
+      const clienteSelect = document.getElementById('clienteSelect');
+      if (clienteSelect) {
+        clienteSelect.addEventListener('change', handleClienteSelect);
+      }
+      
+      const novoClienteNome = document.getElementById('novoClienteNome');
+      if (novoClienteNome) {
+        novoClienteNome.addEventListener('input', handleNovoClienteInput);
+      }
 
       // Seleção de produto
-      document.getElementById('produtoSelect').addEventListener('change', handleProdutoSelect);
-      document.getElementById('novoProdutoNome').addEventListener('input', handleNovoProdutoInput);
+      const produtoSelect = document.getElementById('produtoSelect');
+      if (produtoSelect) {
+        produtoSelect.addEventListener('change', handleProdutoSelect);
+      }
+      
+      const novoProdutoNome = document.getElementById('novoProdutoNome');
+      if (novoProdutoNome) {
+        novoProdutoNome.addEventListener('input', handleNovoProdutoInput);
+      }
     }
 
     // Configurar validação de formulário
     function setupFormValidation() {
+      if (!novoPedidoForm) {
+        console.warn('Elemento novoPedidoForm não encontrado');
+        return;
+      }
+      
       const requiredFields = novoPedidoForm.querySelectorAll('[required]');
       requiredFields.forEach(field => {
         field.addEventListener('blur', validateField);
@@ -999,6 +1041,11 @@
     // Preencher select de clientes
     function preencherSelectClientes() {
       const clienteSelect = document.getElementById('clienteSelect');
+      if (!clienteSelect) {
+        console.warn('Elemento clienteSelect não encontrado');
+        return;
+      }
+      
       clienteSelect.innerHTML = '<option value="">Selecione um cliente</option>';
       
       clientes.forEach(cliente => {
@@ -1012,6 +1059,11 @@
     // Preencher select de produtos
     function preencherSelectProdutos() {
       const produtoSelect = document.getElementById('produtoSelect');
+      if (!produtoSelect) {
+        console.warn('Elemento produtoSelect não encontrado');
+        return;
+      }
+      
       produtoSelect.innerHTML = '<option value="">Selecione um produto</option>';
       
       produtos.forEach(produto => {
@@ -1024,6 +1076,11 @@
 
     // Atualizar tabela de pedidos
     function atualizarTabelaPedidos() {
+      if (!pedidosTableBody) {
+        console.warn('Elemento pedidosTableBody não encontrado');
+        return;
+      }
+      
       pedidosTableBody.innerHTML = '';
       
       pedidos.forEach(pedido => {
@@ -1054,10 +1111,10 @@
 
     // Filtrar pedidos
     function filtrarPedidos() {
-      const searchTerm = searchInput.value.toLowerCase();
-      const statusFilterValue = statusFilter.value;
-      const dataInicio = dataInicioFilter.value;
-      const dataFim = dataFimFilter.value;
+      const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+      const statusFilterValue = statusFilter ? statusFilter.value : '';
+      const dataInicio = dataInicioFilter ? dataInicioFilter.value : '';
+      const dataFim = dataFimFilter ? dataFimFilter.value : '';
 
       const pedidosFiltrados = pedidos.filter(pedido => {
         const matchSearch = !searchTerm || 
@@ -1078,6 +1135,11 @@
 
     // Atualizar tabela com filtro
     function atualizarTabelaPedidosComFiltro(pedidosFiltrados) {
+      if (!pedidosTableBody) {
+        console.warn('Elemento pedidosTableBody não encontrado');
+        return;
+      }
+      
       pedidosTableBody.innerHTML = '';
       
       pedidosFiltrados.forEach(pedido => {
@@ -1114,15 +1176,32 @@
       pedidoAtual = null;
     }
 
+    // Função para abrir modal novo pedido (alias)
+    function abrirModalNovoPedido() {
+      abrirNovoPedido();
+    }
+
     // Limpar formulário
     function limparFormulario() {
-      novoPedidoForm.reset();
-      document.getElementById('itensPedido').innerHTML = '';
-      document.getElementById('valorTotal').textContent = 'R$ 0,00';
+      if (novoPedidoForm) {
+        novoPedidoForm.reset();
+      }
+      
+      const itensContainer = document.getElementById('itensContainer');
+      if (itensContainer) {
+        itensContainer.innerHTML = '';
+      }
+      
+      const totalElement = document.getElementById('totalPedido');
+      if (totalElement) {
+        totalElement.textContent = '0,00';
+      }
       
       // Limpar erros
-      const errorFields = novoPedidoForm.querySelectorAll('.error');
-      errorFields.forEach(field => clearFieldError(field));
+      if (novoPedidoForm) {
+        const errorFields = novoPedidoForm.querySelectorAll('.error');
+        errorFields.forEach(field => clearFieldError(field));
+      }
     }
 
     // Handle tipo de cliente
@@ -1141,6 +1220,11 @@
         clienteSelectDiv.style.display = 'none';
         novoClienteDiv.style.display = 'none';
       }
+    }
+
+    // Função para toggle tipo de cliente (alias)
+    function toggleTipoCliente() {
+      handleTipoClienteChange();
     }
 
     // Handle seleção de cliente
@@ -1187,19 +1271,35 @@
 
     // Calcular subtotal do item
     function calcularSubtotalItem() {
-      const preco = parseFloat(document.getElementById('produtoPreco').value) || 0;
-      const quantidade = parseInt(document.getElementById('produtoQuantidade').value) || 0;
+      const precoElement = document.getElementById('produtoPreco');
+      const quantidadeElement = document.getElementById('produtoQuantidade');
+      const subtotalElement = document.getElementById('produtoSubtotal');
+      
+      if (!precoElement || !quantidadeElement || !subtotalElement) {
+        return;
+      }
+      
+      const preco = parseFloat(precoElement.value) || 0;
+      const quantidade = parseInt(quantidadeElement.value) || 0;
       const subtotal = preco * quantidade;
-      document.getElementById('produtoSubtotal').value = subtotal.toFixed(2);
+      subtotalElement.value = subtotal.toFixed(2);
     }
 
     // Adicionar item ao pedido
     function adicionarItemAoPedido() {
-      const tipoProduto = document.getElementById('tipoProduto').value;
-      const nome = document.getElementById('produtoSelect').value || document.getElementById('novoProdutoNome').value;
-      const preco = parseFloat(document.getElementById('produtoPreco').value) || 0;
-      const quantidade = parseInt(document.getElementById('produtoQuantidade').value) || 0;
-      const observacoes = document.getElementById('produtoObservacoes').value;
+      const tipoProdutoElement = document.getElementById('tipoProduto');
+      const produtoSelectElement = document.getElementById('produtoSelect');
+      const novoProdutoNomeElement = document.getElementById('novoProdutoNome');
+      const precoElement = document.getElementById('produtoPreco');
+      const quantidadeElement = document.getElementById('produtoQuantidade');
+      const observacoesElement = document.getElementById('produtoObservacoes');
+
+      const tipoProduto = tipoProdutoElement ? tipoProdutoElement.value : '';
+      const nome = (produtoSelectElement && produtoSelectElement.value) || 
+                   (novoProdutoNomeElement && novoProdutoNomeElement.value) || '';
+      const preco = precoElement ? parseFloat(precoElement.value) || 0 : 0;
+      const quantidade = quantidadeElement ? parseInt(quantidadeElement.value) || 0 : 0;
+      const observacoes = observacoesElement ? observacoesElement.value : '';
 
       if (!nome || preco <= 0 || quantidade <= 0) {
         mostrarNotificacao('Preencha todos os campos do produto', 'error');
@@ -1221,28 +1321,33 @@
       calcularTotalPedido();
     }
 
-    // Adicionar item na lista
-    function adicionarItemNaLista(item) {
-      const itensContainer = document.getElementById('itensPedido');
-      const itemDiv = document.createElement('div');
-      itemDiv.className = 'item-pedido';
-      itemDiv.dataset.itemId = item.id;
-      
-      itemDiv.innerHTML = `
-        <div class="item-info">
-          <strong>${item.nome}</strong>
-          <span class="item-details">
-            ${item.quantidade}x R$ ${item.preco.toFixed(2)} = R$ ${item.subtotal.toFixed(2)}
-          </span>
-          ${item.observacoes ? `<small class="item-observacoes">${item.observacoes}</small>` : ''}
-        </div>
-        <button type="button" class="btn btn-sm btn-danger" onclick="removerItem(${item.id})">
-          <i class="fas fa-trash"></i>
-        </button>
-      `;
-      
-      itensContainer.appendChild(itemDiv);
-    }
+          // Adicionar item na lista
+      function adicionarItemNaLista(item) {
+        const itensContainer = document.getElementById('itensContainer');
+        if (!itensContainer) {
+          console.warn('Elemento itensContainer não encontrado');
+          return;
+        }
+        
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'item-pedido';
+        itemDiv.dataset.itemId = item.id;
+        
+        itemDiv.innerHTML = `
+          <div class="item-info">
+            <strong>${item.nome}</strong>
+            <span class="item-details">
+              ${item.quantidade}x R$ ${item.preco.toFixed(2)} = R$ ${item.subtotal.toFixed(2)}
+            </span>
+            ${item.observacoes ? `<small class="item-observacoes">${item.observacoes}</small>` : ''}
+          </div>
+          <button type="button" class="btn btn-sm btn-danger" onclick="removerItem(${item.id})">
+            <i class="fas fa-trash"></i>
+          </button>
+        `;
+        
+        itensContainer.appendChild(itemDiv);
+      }
 
     // Remover item
     function removerItem(itemId) {
@@ -1255,12 +1360,21 @@
 
     // Limpar campos do produto
     function limparCamposProduto() {
-      document.getElementById('produtoSelect').value = '';
-      document.getElementById('novoProdutoNome').value = '';
-      document.getElementById('produtoPreco').value = '';
-      document.getElementById('produtoQuantidade').value = '';
-      document.getElementById('produtoSubtotal').value = '';
-      document.getElementById('produtoObservacoes').value = '';
+      const campos = [
+        'produtoSelect',
+        'novoProdutoNome',
+        'produtoPreco',
+        'produtoQuantidade',
+        'produtoSubtotal',
+        'produtoObservacoes'
+      ];
+      
+      campos.forEach(campoId => {
+        const elemento = document.getElementById(campoId);
+        if (elemento) {
+          elemento.value = '';
+        }
+      });
     }
 
     // Calcular total do pedido
@@ -1274,7 +1388,10 @@
         total += subtotal;
       });
       
-      document.getElementById('valorTotal').textContent = `R$ ${total.toFixed(2)}`;
+      const totalElement = document.getElementById('totalPedido');
+      if (totalElement) {
+        totalElement.textContent = total.toFixed(2);
+      }
     }
 
     // Handle novo pedido
@@ -1358,23 +1475,30 @@
     // Obter itens do pedido
     function obterItensPedido() {
       const itens = [];
-      document.querySelectorAll('.item-pedido').forEach(itemElement => {
+      const itensContainer = document.getElementById('itensContainer');
+      if (!itensContainer) {
+        return itens;
+      }
+      
+      itensContainer.querySelectorAll('.item-pedido').forEach(itemElement => {
         const nome = itemElement.querySelector('strong').textContent;
         const detalhes = itemElement.querySelector('.item-details').textContent;
         const observacoes = itemElement.querySelector('.item-observacoes')?.textContent || '';
         
         const match = detalhes.match(/(\d+)x R\$ ([\d,]+\.?\d*) = R\$ ([\d,]+\.?\d*)/);
-        const quantidade = parseInt(match[1]);
-        const preco = parseFloat(match[2].replace(',', '.'));
-        const subtotal = parseFloat(match[3].replace(',', '.'));
-        
-        itens.push({
-          nome,
-          preco,
-          quantidade,
-          subtotal,
-          observacoes
-        });
+        if (match) {
+          const quantidade = parseInt(match[1]);
+          const preco = parseFloat(match[2].replace(',', '.'));
+          const subtotal = parseFloat(match[3].replace(',', '.'));
+          
+          itens.push({
+            nome,
+            preco,
+            quantidade,
+            subtotal,
+            observacoes
+          });
+        }
       });
       
       return itens;
@@ -1458,28 +1582,30 @@
       }
       
       // Itens do pedido
-      const itensContainer = form.querySelector('#itensPedido');
-      itensContainer.innerHTML = '';
-      
-      pedido.itens.forEach(item => {
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'item-pedido';
-        itemDiv.dataset.itemId = item.id || Date.now();
+      const itensContainer = form.querySelector('#itensContainer');
+      if (itensContainer) {
+        itensContainer.innerHTML = '';
         
-        itemDiv.innerHTML = `
-          <div class="item-info">
-            <strong>${item.nome}</strong>
-            <span class="item-details">
-              ${item.quantidade}x R$ ${item.preco.toFixed(2)} = R$ ${item.subtotal.toFixed(2)}
-            </span>
-            ${item.observacoes ? `<small class="item-observacoes">${item.observacoes}</small>` : ''}
-          </div>
-          <button type="button" class="btn btn-sm btn-danger" onclick="removerItem(${item.id || Date.now()})">
-            <i class="fas fa-trash"></i>
-          </button>
-        `;
-        itensContainer.appendChild(itemDiv);
-      });
+        pedido.itens.forEach(item => {
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'item-pedido';
+          itemDiv.dataset.itemId = item.id || Date.now();
+          
+          itemDiv.innerHTML = `
+            <div class="item-info">
+              <strong>${item.nome}</strong>
+              <span class="item-details">
+                ${item.quantidade}x R$ ${item.preco.toFixed(2)} = R$ ${item.subtotal.toFixed(2)}
+              </span>
+              ${item.observacoes ? `<small class="item-observacoes">${item.observacoes}</small>` : ''}
+            </div>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removerItem(${item.id || Date.now()})">
+              <i class="fas fa-trash"></i>
+            </button>
+          `;
+          itensContainer.appendChild(itemDiv);
+        });
+      }
       
       // Observações
       form.querySelector('[name="observacoes"]').value = pedido.observacoes || '';
@@ -1570,10 +1696,10 @@
 
     // Obter pedidos filtrados
     function obterPedidosFiltrados() {
-      const searchTerm = searchInput.value.toLowerCase();
-      const statusFilterValue = statusFilter.value;
-      const dataInicio = dataInicioFilter.value;
-      const dataFim = dataFimFilter.value;
+      const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+      const statusFilterValue = statusFilter ? statusFilter.value : '';
+      const dataInicio = dataInicioFilter ? dataInicioFilter.value : '';
+      const dataFim = dataFimFilter ? dataFimFilter.value : '';
 
       return pedidos.filter(pedido => {
         const matchSearch = !searchTerm || 
@@ -1646,6 +1772,34 @@
           document.body.removeChild(notification);
         }, 300);
       }, 3000);
+    }
+
+    // Função de logout
+    async function logout() {
+      try {
+        const response = await fetch('/api/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          window.location.href = '/login.html';
+        } else {
+          window.location.href = '/login.html';
+        }
+      } catch (error) {
+        console.error('Erro no logout:', error);
+        window.location.href = '/login.html';
+      }
+    }
+
+    // Funções de exportação
+    function gerarPDFTodosPedidos() {
+      mostrarNotificacao('Funcionalidade de PDF em desenvolvimento', 'info');
+    }
+
+    function gerarExcelTodosPedidos() {
+      exportarDados(); // Usa a função de exportação CSV existente
     }
 
     // Event listeners para campos de produto
