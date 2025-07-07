@@ -359,28 +359,76 @@ router.get('/emprestimos/:id', ensureDatabase, async (req, res) => {
 
 router.post('/emprestimos', ensureDatabase, async (req, res) => {
   try {
+    console.log('=== INÍCIO DA CRIAÇÃO DE EMPRÉSTIMO ===');
+    console.log('Dados recebidos para criar empréstimo:', req.body);
+    console.log('Sessão do usuário:', req.session);
+    
     const { cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes } = req.body;
     
+    // Validação dos dados obrigatórios
+    if (!cliente_id || !valor || !data_emprestimo || !data_vencimento) {
+      console.error('Dados obrigatórios faltando:', { cliente_id, valor, data_emprestimo, data_vencimento });
+      return res.status(400).json({ error: 'Dados obrigatórios faltando' });
+    }
+    
     const username = req.session.cobrancasUser;
+    console.log('Usuário autenticado:', username);
+    
     const connection = await createCobrancasConnection(username);
+    console.log('Conexão com banco estabelecida');
+    
+    // Verificar se o cliente existe
+    const [clienteRows] = await connection.execute(`
+      SELECT id, nome FROM clientes_cobrancas WHERE id = ?
+    `, [cliente_id]);
+    
+    if (clienteRows.length === 0) {
+      await connection.end();
+      console.error('Cliente não encontrado:', cliente_id);
+      return res.status(404).json({ error: 'Cliente não encontrado' });
+    }
+    
+    console.log('Cliente encontrado:', clienteRows[0]);
+    
+    console.log('Cliente encontrado, inserindo empréstimo...');
     
     // Inserir empréstimo
+    console.log('Tentando inserir empréstimo com dados:', {
+      cliente_id, valor, data_emprestimo, data_vencimento, 
+      juros_mensal: juros_mensal || 0, 
+      multa_atraso: multa_atraso || 0, 
+      observacoes: observacoes || ''
+    });
+    
     const [emprestimoResult] = await connection.execute(`
       INSERT INTO emprestimos (cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes]);
+    `, [cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal || 0, multa_atraso || 0, observacoes || '']);
+    
+    console.log('Empréstimo inserido com ID:', emprestimoResult.insertId);
     
     // Criar cobrança automaticamente
+    console.log('Tentando criar cobrança com dados:', {
+      emprestimo_id: emprestimoResult.insertId,
+      cliente_id,
+      valor_original: valor,
+      valor_atualizado: valor,
+      data_vencimento
+    });
+    
     await connection.execute(`
       INSERT INTO cobrancas (emprestimo_id, cliente_id, valor_original, valor_atualizado, data_vencimento, status)
       VALUES (?, ?, ?, ?, ?, 'Pendente')
     `, [emprestimoResult.insertId, cliente_id, valor, valor, data_vencimento]);
     
+    console.log('Cobrança criada automaticamente');
+    
     await connection.end();
     res.json({ id: emprestimoResult.insertId, message: 'Empréstimo criado com sucesso' });
   } catch (error) {
     console.error('Erro ao criar empréstimo:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
   }
 });
 
