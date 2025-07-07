@@ -407,9 +407,9 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
 
     // NOVA LÓGICA: Parcelamento
     const { numero_parcelas, frequencia, valor_final } = req.body;
-    if (numero_parcelas && parseInt(numero_parcelas) > 1) {
+    const nParcelas = parseInt(numero_parcelas, 10);
+    if (nParcelas && nParcelas > 1) {
       // Parcelado
-      const nParcelas = parseInt(numero_parcelas);
       const freq = frequencia || 'monthly';
       const valorTotal = valor_final ? parseFloat(valor_final) : parseFloat(valor);
       const valorParcela = Math.round((valorTotal / nParcelas) * 100) / 100;
