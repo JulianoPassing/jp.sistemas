@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Empréstimo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teste de Criação de Empréstimo</h1>
+    
+    <form id="emprestimoForm">
+        <div class="form-group">
+            <label for="cliente_id">ID do Cliente:</label>
+            <input type="number" id="cliente_id" name="cliente_id" value="1" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="valor">Valor Inicial:</label>
+            <input type="number" id="valor" name="valor" value="1000" step="0.01" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="valor_final">Valor Final:</label>
+            <input type="number" id="valor_final" name="valor_final" value="1500" step="0.01">
+        </div>
+        
+        <div class="form-group">
+            <label for="valor_parcela">Valor da Parcela:</label>
+            <input type="number" id="valor_parcela" name="valor_parcela" value="500" step="0.01">
+        </div>
+        
+        <div class="form-group">
+            <label for="data_emprestimo">Data do Empréstimo:</label>
+            <input type="date" id="data_emprestimo" name="data_emprestimo" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="data_vencimento">Data de Vencimento:</label>
+            <input type="date" id="data_vencimento" name="data_vencimento" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="juros_mensal">Juros Mensal (%):</label>
+            <input type="number" id="juros_mensal" name="juros_mensal" value="50" step="0.01">
+        </div>
+        
+        <div class="form-group">
+            <label for="multa_atraso">Multa por Atraso (%):</label>
+            <input type="number" id="multa_atraso" name="multa_atraso" value="0" step="0.01">
+        </div>
+        
+        <div class="form-group">
+            <label for="tipo_emprestimo">Tipo de Empréstimo:</label>
+            <select id="tipo_emprestimo" name="tipo_emprestimo">
+                <option value="fixed">Fixo</option>
+                <option value="in_installments">Parcelado</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="numero_parcelas">Número de Parcelas:</label>
+            <input type="number" id="numero_parcelas" name="numero_parcelas" value="3" min="1">
+        </div>
+        
+        <div class="form-group">
+            <label for="frequencia">Frequência:</label>
+            <select id="frequencia" name="frequencia">
+                <option value="monthly">Mensal</option>
+                <option value="weekly">Semanal</option>
+                <option value="daily">Diário</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="tipo_calculo">Tipo de Cálculo:</label>
+            <select id="tipo_calculo" name="tipo_calculo">
+                <option value="valor_inicial">Valor Inicial + Juros</option>
+                <option value="valor_final" selected>Valor Final Fixo</option>
+                <option value="parcela_fixa">Parcela Fixa</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="observacoes">Observações:</label>
+            <textarea id="observacoes" name="observacoes" rows="3">Teste de empréstimo com valor fixo</textarea>
+        </div>
+        
+        <button type="submit">Criar Empréstimo</button>
+        <button type="button" onclick="verificarEstrutura()">Verificar Estrutura do Banco</button>
+        <button type="button" onclick="testarConexao()">Testar Conexão</button>
+    </form>
+    
+    <div id="result"></div>
+    
+    <script>
+        // Definir datas padrão
+        const hoje = new Date();
+        const amanha = new Date(hoje);
+        amanha.setDate(hoje.getDate() + 1);
+        
+        document.getElementById('data_emprestimo').value = hoje.toISOString().split('T')[0];
+        document.getElementById('data_vencimento').value = amanha.toISOString().split('T')[0];
+        
+        // Função para mostrar resultado
+        function mostrarResultado(data, isError = false) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${isError ? 'error' : 'success'}`;
+            resultDiv.innerHTML = `
+                <h3>${isError ? 'Erro' : 'Sucesso'}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+        }
+        
+        // Enviar formulário
+        document.getElementById('emprestimoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Converter números
+            ['cliente_id', 'valor', 'valor_final', 'valor_parcela', 'juros_mensal', 'multa_atraso', 'numero_parcelas'].forEach(field => {
+                if (data[field]) {
+                    data[field] = parseFloat(data[field]) || 0;
+                }
+            });
+            
+            console.log('Dados enviados:', data);
+            
+            try {
+                const response = await fetch('http://localhost:3001/test-emprestimo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    mostrarResultado(result, false);
+                } else {
+                    mostrarResultado(result, true);
+                }
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                mostrarResultado({ error: error.message }, true);
+            }
+        });
+        
+        // Verificar estrutura do banco
+        async function verificarEstrutura() {
+            try {
+                const response = await fetch('http://localhost:3001/test-db-structure');
+                const result = await response.json();
+                
+                if (response.ok) {
+                    mostrarResultado(result, false);
+                } else {
+                    mostrarResultado(result, true);
+                }
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                mostrarResultado({ error: error.message }, true);
+            }
+        }
+        
+        // Testar conexão
+        async function testarConexao() {
+            try {
+                const response = await fetch('http://localhost:3001/test-db-structure');
+                
+                if (response.ok) {
+                    mostrarResultado({ message: 'Conexão com servidor de teste OK' }, false);
+                } else {
+                    mostrarResultado({ error: 'Erro na conexão' }, true);
+                }
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                mostrarResultado({ error: `Erro de conexão: ${error.message}` }, true);
+            }
+        }
+    </script>
+</body>
+</html> 
