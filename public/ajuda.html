@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     :root {
-              --primary-color: #005a9f;
+      --primary-color: #005a9f;
       --primary-dark: #003766;
       --primary-light: #0077cc;
       --secondary-color: #022656;
@@ -30,13 +30,15 @@
       --card-bg: #ffffff;
       --border-color: #e0e0e0;
       --border-radius: 12px;
+      --primary-blue: #002f4b;
+      --light-text: #ecf0f1;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', sans-serif;
       font-size: 14px;
-      background: linear-gradient(135deg, #005a9f 0%, #003766 100%);
-      color: var(--text-primary);
+      background: var(--primary-blue);
+      color: var(--light-text);
       padding: 0;
       min-height: 100vh;
     }
@@ -60,7 +62,7 @@
       align-items: center;
     }
     .logo h1 {
-      color: var(--primary-color);
+      color: var(--primary-blue);
       font-size: 24px;
       font-weight: 700;
       text-align: left;
@@ -80,8 +82,8 @@
       font-weight: 700;
     }
     .logout-btn {
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-      color: white;
+      background: var(--primary-blue);
+      color: var(--light-text);
       border: none;
       padding: 8px 16px;
       border-radius: 8px;

@@ -9,11 +9,6 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  ...
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pedidos e Vendas - J.P Sistemas Comercial</title>
   <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
@@ -25,7 +20,9 @@
   <link rel="stylesheet" href="mobile.css">
   <style>
     :root {
-              --primary-color: #005a9f;
+      --primary-blue: #002f4b;
+      --light-text: #ecf0f1;
+      --primary-color: #005a9f;
       --primary-dark: #003766;
       --primary-light: #0077cc;
       --secondary-color: #022656;
@@ -49,8 +46,8 @@
     body {
       font-family: 'Inter', sans-serif;
       font-size: 14px;
-      background: linear-gradient(135deg, #005a9f 0%, #003766 100%);
-      color: var(--text-primary);
+      background: var(--primary-blue);
+      color: var(--light-text);
       padding: 0;
       min-height: 100vh;
     }
@@ -97,8 +94,8 @@
       font-weight: 700;
     }
     .logout-btn {
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-      color: white;
+      background: var(--primary-blue) !important;
+      color: var(--light-text) !important;
       border: none;
       padding: 8px 16px;
       border-radius: 8px;
@@ -154,7 +151,7 @@
     }
     .card-header h2 { 
       font-size: 1.8em; 
-      color: var(--dark-color); 
+      color: var(--primary-blue) !important; 
       font-weight: 600; 
       text-align: center;
     }
@@ -172,6 +169,8 @@
       cursor: pointer; 
       transition: all 0.3s ease; 
       text-decoration: none; 
+      background: var(--primary-blue) !important;
+      color: var(--light-text) !important;
     }
     .btn-primary { 
       background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); 

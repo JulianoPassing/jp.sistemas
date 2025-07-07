@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="mobile.css">
   <style>
     :root {
-              --primary-color: #005a9f;
+      --primary-color: #005a9f;
       --primary-dark: #003766;
       --primary-light: #0077cc;
       --secondary-color: #022656;
@@ -31,13 +31,15 @@
       --bg-color: #f3f4f6;
       --card-bg: #ffffff;
       --border-radius: 16px;
+      --primary-blue: #002f4b;
+      --light-text: #ecf0f1;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #005a9f 0%, #003766 100%);
+      background: var(--primary-blue);
       min-height: 100vh;
-      color: var(--text-primary);
+      color: var(--light-text);
       padding: 0;
     }
     .header {
@@ -79,8 +81,8 @@
       font-weight: 700;
     }
     .logout-btn {
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-      color: white;
+      background: var(--primary-blue) !important;
+      color: var(--light-text) !important;
       border: none;
       padding: 8px 16px;
       border-radius: 8px;
@@ -218,8 +220,8 @@
       overflow: hidden;
     }
     .btn-primary {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: white;
+      background: var(--primary-blue) !important;
+      color: var(--light-text) !important;
     }
     .btn-primary:hover {
       transform: translateY(-2px);
@@ -287,6 +289,9 @@
     }
     .sugestoes-clientes li:hover {
       background: #f3f4f6;
+    }
+    .logo h1, h1, h2, h3, h4, h5, h6, .fa, .fas, .icon, .destaque {
+      color: var(--primary-blue) !important;
     }
   </style>
 </head>
