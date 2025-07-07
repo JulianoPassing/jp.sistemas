@@ -228,7 +228,7 @@ const apiService = {
 
   // Cobranças
   async getCobrancas() {
-    return this.request('/api/cobrancas/cobrancas');
+    return this.request('/cobrancas/cobrancas');
   }
 };
 
