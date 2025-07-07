@@ -186,22 +186,7 @@ const apiService = {
       const response = await fetch(url, config);
       
       if (!response.ok) {
-        // Capturar resposta detalhada para debug
-        let errorDetails = '';
-        try {
-          const errorResponse = await response.text();
-          errorDetails = errorResponse;
-        } catch (e) {
-          errorDetails = 'Não foi possível ler resposta da API';
-        }
-        
-        console.error('API Error Details:', {
-          status: response.status,
-          statusText: response.statusText,
-          response: errorDetails
-        });
-        
-        throw new Error(`HTTP error! status: ${response.status} - ${errorDetails}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       return await response.json();
