@@ -552,6 +552,27 @@
         align-items: center;
       }
     }
+    .demo-btn {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.6rem 1.3rem;
+      background: var(--accent-blue);
+      color: #012c4b;
+      font-weight: 700;
+      border: none;
+      border-radius: 7px;
+      font-size: 1rem;
+      text-decoration: none;
+      box-shadow: 0 2px 8px rgba(0,230,255,0.10);
+      transition: background 0.2s, color 0.2s, transform 0.2s;
+      cursor: pointer;
+    }
+    .demo-btn:hover {
+      background: #fff;
+      color: var(--primary-blue);
+      transform: translateY(-2px) scale(1.04);
+      box-shadow: 0 4px 16px rgba(0,230,255,0.18);
+    }
   </style>
 </head>
 <body>
@@ -649,14 +670,15 @@
           <div class="demo-title">Sistema de Gestão</div>
           <div><strong>Usuário:</strong> <span class="demo-user">teste</span></div>
           <div><strong>Senha:</strong> <span class="demo-pass">teste</span></div>
+          <a href="sistema.html" class="demo-btn">Acessar Sistema de Gestão</a>
         </div>
         <div class="demo-sistema">
           <div class="demo-title">Sistema de Cobrança</div>
           <div><strong>Usuário:</strong> <span class="demo-user">cobranca</span></div>
           <div><strong>Senha:</strong> <span class="demo-pass">cobranca</span></div>
+          <a href="jp.cobrancas/index.html" class="demo-btn">Acessar Sistema de Cobrança</a>
         </div>
       </div>
-      <div class="redirect-msg" id="redirect-msg">Você será redirecionado em 10 segundos...</div>
     </div>
   </div>
   <script>
