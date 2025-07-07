@@ -49,10 +49,19 @@ async function testParcelamento() {
       `);
       
       const hasParcelamento = emprestimosStructure.some(col => 
-        col.Field === 'parcelado' || col.Field === 'num_parcelas' || col.Field === 'frequencia_parcelas'
+        col.Field === 'tipo_emprestimo' || col.Field === 'numero_parcelas' || col.Field === 'frequencia'
       );
       
       console.log(`   Estrutura emprestimos: ${hasParcelamento ? '✅ Com parcelamento' : '❌ Sem parcelamento'}`);
+      
+      // Mostrar campos de parcelamento encontrados
+      const parcelamentoFields = emprestimosStructure.filter(col => 
+        ['tipo_emprestimo', 'numero_parcelas', 'frequencia', 'valor_parcela'].includes(col.Field)
+      );
+      
+      if (parcelamentoFields.length > 0) {
+        console.log(`   Campos de parcelamento: ${parcelamentoFields.map(f => f.Field).join(', ')}`);
+      }
 
       // Verificar se tabela parcelas existe
       const [parcelasExists] = await dbConnection.execute(`
