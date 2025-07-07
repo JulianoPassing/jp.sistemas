@@ -4,660 +4,404 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JP. Sistemas - Tecnologia em Gestão</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png">
-  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-  <link rel="stylesheet" href="mobile.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <header>
+      <div class="header-content">
+        <div class="logo">
+          <img src="https://i.imgur.com/TwZLW6a.png" alt="JP Sistemas" style="height: 55px;">
+          <span class="tech-font">JP. Sistemas</span>
+        </div>
+        <nav>
+          <a href="#sobre">Sobre</a>
+          <a href="#servicos">Serviços</a>
+          <a href="#contato">Contato</a>
+          <a href="sistema.html" class="btn btn-primary">Acessar Sistema</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container">
+          <h1 class="dashboard-title">Tecnologia em Gestão</h1>
+          <p class="dashboard-subtitle">
+            Soluções completas para gestão empresarial. Simplifique seus processos, 
+            aumente a produtividade e tome decisões mais inteligentes com nossas ferramentas.
+          </p>
+          <a href="sistema.html" class="btn btn-primary btn-lg">
+            <i class="fas fa-rocket"></i>
+            Começar Agora
+          </a>
+        </div>
+      </section>
+
+      <section class="features">
+        <div class="container">
+          <div class="dashboard-header text-center">
+            <h2 class="dashboard-title">Nossos Serviços</h2>
+            <p class="dashboard-subtitle">Ferramentas poderosas para impulsionar seu negócio</p>
+          </div>
+
+          <div class="cards">
+            <div class="card feature-card">
+              <div class="card-header">
+                <i class="fas fa-users card-icon"></i>
+                <h3 class="card-title">Gestão de Clientes</h3>
+              </div>
+              <p class="text-gray-600">
+                Cadastre, organize e gerencie seus clientes de forma eficiente. 
+                Mantenha histórico completo e informações atualizadas.
+              </p>
+            </div>
+
+            <div class="card feature-card">
+              <div class="card-header">
+                <i class="fas fa-box card-icon"></i>
+                <h3 class="card-title">Controle de Produtos</h3>
+              </div>
+              <p class="text-gray-600">
+                Gerencie seu estoque, preços e categorias de produtos. 
+                Controle total sobre seu inventário.
+              </p>
+            </div>
+
+            <div class="card feature-card">
+              <div class="card-header">
+                <i class="fas fa-shopping-cart card-icon"></i>
+                <h3 class="card-title">Vendas e Pedidos</h3>
+              </div>
+              <p class="text-gray-600">
+                Processe vendas rapidamente, acompanhe pedidos e 
+                gerencie diferentes formas de pagamento.
+              </p>
+            </div>
+
+            <div class="card feature-card">
+              <div class="card-header">
+                <i class="fas fa-chart-bar card-icon"></i>
+                <h3 class="card-title">Relatórios</h3>
+              </div>
+              <p class="text-gray-600">
+                Relatórios detalhados e dashboards interativos para 
+                análise de performance e tomada de decisões.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="about-section">
+        <div class="container">
+          <div class="section">
+            <div class="section-header text-center">
+              <h2 class="section-title">
+                <i class="fas fa-star"></i>
+                Por que escolher a JP. Sistemas?
+              </h2>
+            </div>
+
+            <div class="grid grid-cols-3">
+              <div class="about-item">
+                <div class="about-icon">
+                  <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Segurança</h3>
+                <p>Seus dados protegidos com as melhores práticas de segurança</p>
+              </div>
+
+              <div class="about-item">
+                <div class="about-icon">
+                  <i class="fas fa-clock"></i>
+                </div>
+                <h3>Disponibilidade</h3>
+                <p>Sistema disponível 24/7 para suas operações</p>
+              </div>
+
+              <div class="about-item">
+                <div class="about-icon">
+                  <i class="fas fa-headset"></i>
+                </div>
+                <h3>Suporte</h3>
+                <p>Equipe especializada para ajudar quando precisar</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="contact-section">
+        <div class="container">
+          <div class="section">
+            <div class="section-header text-center">
+              <h2 class="section-title">
+                <i class="fas fa-envelope"></i>
+                Entre em Contato
+              </h2>
+            </div>
+
+            <div class="cards">
+              <div class="card">
+                <div class="card-header">
+                  <i class="fas fa-phone card-icon"></i>
+                  <h3 class="card-title">Telefone</h3>
+                </div>
+                <div class="card-value">(11) 99999-9999</div>
+                <p class="text-gray-600">Segunda a Sexta, 8h às 18h</p>
+              </div>
+
+              <div class="card">
+                <div class="card-header">
+                  <i class="fas fa-envelope card-icon"></i>
+                  <h3 class="card-title">E-mail</h3>
+                </div>
+                <div class="card-value">contato@jpsistemas.com</div>
+                <p class="text-gray-600">Resposta em até 24h</p>
+              </div>
+
+              <div class="card">
+                <div class="card-header">
+                  <i class="fas fa-comments card-icon"></i>
+                  <h3 class="card-title">WhatsApp</h3>
+                </div>
+                <div class="card-value">(11) 99999-9999</div>
+                <p class="text-gray-600">Suporte em tempo real</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-section">
+            <h3>JP. Sistemas</h3>
+            <p>Tecnologia em Gestão</p>
+            <p>Soluções completas para seu negócio</p>
+          </div>
+          
+          <div class="footer-section">
+            <h3>Links Rápidos</h3>
+            <ul>
+              <li><a href="#sobre">Sobre</a></li>
+              <li><a href="#servicos">Serviços</a></li>
+              <li><a href="#contato">Contato</a></li>
+              <li><a href="sistema.html">Sistema</a></li>
+            </ul>
+          </div>
+          
+          <div class="footer-section">
+            <h3>Contato</h3>
+            <p><i class="fas fa-phone"></i> (11) 99999-9999</p>
+            <p><i class="fas fa-envelope"></i> contato@jpsistemas.com</p>
+            <p><i class="fas fa-map-marker-alt"></i> São Paulo, SP</p>
+          </div>
+        </div>
+        
+        <div class="footer-bottom">
+          <p class="text-center">&copy; 2024 JP. Sistemas. Todos os direitos reservados.</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Smooth scrolling para links internos
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Header scroll effect
+    window.addEventListener('scroll', function() {
+      const header = document.querySelector('header');
+      if (window.scrollY > 100) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+  </script>
+
   <style>
-    :root {
-        --primary-blue: #002f4b; 
-        --accent-blue: #00e6ff; 
-        --light-gray: #f0f2f5; 
-        --dark-text: #2c3e50; 
-        --light-text: #ecf0f1; 
+    .hero {
+      background: linear-gradient(135deg, var(--terciary) 0%, var(--terciary-100) 100%);
+      color: var(--white);
+      text-align: center;
+      padding: 4rem 0;
+      min-height: 60vh;
+      display: flex;
+      align-items: center;
     }
 
-    body {
-      margin: 0;
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(to bottom, #ffffff 0%, #ffffff 40%, #7c7c7c63 100%);
-      color: var(--dark-text); 
-      min-height: 100vh;
-      overflow-x: hidden;
-      position: relative;
+    .hero .dashboard-title {
+      color: var(--white);
+      font-size: 3rem;
+      margin-bottom: 1rem;
     }
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.8rem 4vw; 
-      background: var(--primary-blue); 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      animation: fadeDown 0.7s cubic-bezier(.4,0,.2,1);
-      transition: background 0.3s ease; 
+
+    .hero .dashboard-subtitle {
+      color: var(--gray-200);
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
     }
-    header.scrolled {
-        background: rgba(0, 47, 75, 0.98); 
+
+    .btn-lg {
+      padding: 1rem 2rem;
+      font-size: 1.1rem;
     }
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 1rem; 
-    }
-    .logo img {
-      height: 55px; 
-      transition: transform 0.3s ease;
-    }
-    .logo img:hover {
-        transform: scale(1.05);
-    }
-    .logo span {
-      font-size: 1.6rem; 
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      color: var(--light-text); 
-    }
-    .tech-font {
-      font-family: 'Inter', sans-serif;
-      font-size: 1.35rem;
-      font-weight: 700;
-      letter-spacing: 2px;
-      color: var(--light-text);
-      text-shadow: none;
-      text-transform: uppercase;
-    }
-    nav a {
-      color: var(--light-text);
-      text-decoration: none;
-      margin-left: 2rem;
-      font-weight: 500;
-      font-family: 'Inter', sans-serif;
-      transition: color 0.2s ease, transform 0.2s ease; 
-      position: relative; 
-    }
-    nav a::after { 
-        content: '';
-        position: absolute;
-        width: 0;
-        height: 2px;
-        bottom: -5px;
-        left: 0;
-        background-color: var(--accent-blue);
-        transition: width 0.3s ease-out;
-    }
-    nav a:hover::after {
-        width: 100%;
-    }
-    nav a:hover {
-      color: var(--accent-blue);
-      transform: translateY(-2px); 
-    }
-    .hero {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 65vh; 
-      text-align: center;
-      position: relative;
-      z-index: 1;
-      padding: 2rem 1rem;
-    }
-    .hero h1 {
-      font-size: 2.8rem; 
-      font-weight: 800; 
-      margin-bottom: 1.2rem;
-      color: var(--primary-blue); 
-      line-height: 1.2; 
-    }
-    .hero p {
-      font-size: 1.15rem; 
-      max-width: 700px; 
-      margin: 0 auto 2.5rem auto;
-      color: var(--dark-text);
-      line-height: 1.6; 
-    }
-    .cta-btn {
-      background: var(--primary-blue);
-      color: var(--light-text);
-      border: 2px solid var(--primary-blue);
-      padding: 1.1rem 2.8rem; 
-      border-radius: 12px;
-      font-size: 1.05rem; 
-      font-weight: 700;
-      font-family: 'Inter', sans-serif;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      position: relative;
-      overflow: hidden;
-      transition: all 0.3s cubic-bezier(.4,0,.2,1); 
-    }
-    .cta-btn::before {
-      content: '';
-      position: absolute;
-      top: 0; left: -75%;
-      width: 50%; height: 100%;
-      background: rgba(255,255,255,0.15); 
-      filter: blur(10px);
-      transform: skewX(-20deg);
-      transition: left 0.4s ease-out;
-      z-index: 0;
-    }
-    .cta-btn:hover::before {
-      left: 120%;
-    }
-    .cta-btn:hover {
-      color: var(--primary-blue);
-      background: var(--accent-blue); 
-      border-color: var(--accent-blue);
-      box-shadow: 0 6px 15px rgba(0,230,255,0.3); 
-      transform: translateY(-3px) scale(1.02); 
-    }
-    .cta-btn span {
-      position: relative;
-      z-index: 1;
-    }
+
     .features {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 2.5rem; 
-      margin: 5rem 0 3rem 0; 
-      padding: 0 2vw;
+      padding: 4rem 0;
+      background: var(--stone-100);
     }
+
     .feature-card {
-      background: var(--primary-blue); 
-      border: 1px solid rgba(0, 47, 75, 0.85);
-      border-radius: 18px;
-      padding: 2rem; 
-      width: 300px; 
-      box-shadow: 0 4px 20px rgba(0,0,0,0.12); 
       text-align: center;
-      transition: transform 0.3s ease, box-shadow 0.3s ease; 
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    .feature-card .icon { 
-        font-size: 3.5rem;
-        color: var(--accent-blue);
-        margin-bottom: 1rem;
-        transition: transform 0.3s ease;
-    }
-    .feature-card:hover .icon {
-        transform: scale(1.1);
-    }
+
     .feature-card:hover {
-      transform: translateY(-8px) scale(1.04); 
-      box-shadow: 0 10px 40px rgba(0,0,0,0.25); 
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-lg);
     }
-    .feature-card h3 {
-      color: var(--light-text);
-      margin-bottom: 0.8rem;
-      font-family: 'Inter', sans-serif;
-      font-weight: 700;
-      font-size: 1.3rem; 
+
+    .feature-card .card-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
     }
-    .feature-card p {
-      color: var(--light-text);
-      font-size: 0.95rem; 
-      font-family: 'Inter', sans-serif;
-      line-height: 1.5;
+
+    .about-section {
+      padding: 4rem 0;
+      background: var(--white);
     }
-    footer {
+
+    .about-item {
       text-align: center;
-      padding: 2.5rem 0 1.5rem 0; 
-      color: var(--light-text);
-      font-size: 0.9rem;
-      background: var(--primary-blue);
-      margin-top: 4rem;
-      font-family: 'Inter', sans-serif;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      padding: 2rem;
     }
-    footer a {
-      color: var(--accent-blue);
+
+    .about-icon {
+      font-size: 3rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    .about-item h3 {
+      color: var(--terciary);
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+    }
+
+    .about-item p {
+      color: var(--gray-600);
+      line-height: 1.6;
+    }
+
+    .contact-section {
+      padding: 4rem 0;
+      background: var(--stone-100);
+    }
+
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .footer-section h3 {
+      color: var(--terciary);
+      margin-bottom: 1rem;
+    }
+
+    .footer-section ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .footer-section ul li {
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-section ul li a {
+      color: var(--gray-600);
       text-decoration: none;
       transition: color 0.2s ease;
     }
-    footer a:hover {
-        color: #008cff; 
+
+    .footer-section ul li a:hover {
+      color: var(--primary);
     }
-    @media (max-width: 900px) {
-      .features {
-        flex-direction: column;
-        align-items: center;
-      }
-      .feature-card {
-        width: 90vw;
-      }
+
+    .footer-section p {
+      color: var(--gray-600);
+      margin-bottom: 0.5rem;
     }
-    @media (max-width: 600px) {
-      .hero h1 {
-        font-size: 1.8rem; 
-      }
-      .typewriter-msg {
-        font-size: 1.2rem;
-        min-height: 1.8rem;
-      }
-      .hero p {
-        font-size: 1rem;
-        margin-bottom: 1.5rem;
-      }
-      .cta-btn {
-        padding: 0.9rem 1.8rem;
-        font-size: 1rem;
-      }
-      .features {
-        gap: 1.5rem;
-        margin: 3rem 0 1.5rem 0;
-      }
-      .feature-card {
-        width: 95vw;
-        padding: 1.5rem;
-      }
-      .feature-card h3 {
-        font-size: 1.2rem;
-      }
-      .feature-card p {
-        font-size: 0.9rem;
-      }
-      footer {
-        font-size: 0.85rem;
-        padding: 1.5rem 0 0.8rem 0;
-      }
-      header {
-        padding: 0.6rem 3vw;
-      }
-      .logo img {
-        height: 45px;
-      }
-      .logo span.tech-font {
-        font-size: 1.2rem;
-      }
+
+    .footer-section i {
+      color: var(--primary);
+      margin-right: 0.5rem;
     }
-    #particles-js {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      z-index: 0;
-      pointer-events: none;
-      background: transparent;
-      opacity: 30%;
+
+    .footer-bottom {
+      border-top: 1px solid var(--gray-200);
+      padding-top: 1rem;
     }
-    body > *:not(#particles-js):not(.modal-bg) {
-      position: relative; 
-      z-index: 1; 
+
+    .text-center {
+      text-align: center;
     }
-    .typewriter-msg {
-      margin-top: 2.8rem; 
-      min-height: 3.5rem;
-      font-size: 2.2rem; 
+
+    header.scrolled {
+      background: rgba(0, 47, 75, 0.98);
+    }
+
+    .tech-font {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.35rem;
       font-weight: 700;
-      color: var(--primary-blue); 
-      letter-spacing: 1px;
-      text-align: center;
-      font-family: 'Inter', sans-serif;
-      text-shadow: none;
+      letter-spacing: 2px;
+      color: var(--white);
+      text-transform: uppercase;
     }
-    #typewriter {
-      color: var(--primary-blue);
-      text-shadow: none;
-      border-right: 3px solid var(--accent-blue); 
-      padding-right: 8px;
-      white-space: nowrap;
-      overflow: hidden;
-      display: inline-block;
-      animation: blink-caret 0.8s step-end infinite;
-    }
-    @keyframes blink-caret {
-      from, to { border-color: transparent; }
-      50% { border-color: var(--accent-blue); }
-    }
-    .sistema-funcional-msg {
-      margin-top: 1.5rem; 
-      text-align: center;
-      color: var(--dark-text);
-      font-size: 1.05rem; 
-      font-family: 'Inter', sans-serif;
-      letter-spacing: 0.5px;
-      text-shadow: none;
-      font-weight: 500;
-    }
-    .download-btn {
-      display: flex;
-      justify-content: center;
-      margin-top: 1.8rem; 
-      text-decoration: none;
-    }
-    
-    .modal-bg {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.75); 
-      z-index: 99999 !important;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      backdrop-filter: blur(5px); 
-    }
-    .modal-bg.active {
-      display: flex;
-    }
-    .modal-box {
-      background: linear-gradient(135deg, #0a2e4d 0%, #001f3f 100%); 
-      border: 1px solid var(--accent-blue); 
-      border-radius: 16px;
-      padding: 3rem 2.5rem 2.5rem 2.5rem; 
-      min-width: 350px;
-      max-width: 90vw;
-      color: var(--light-text);
-      font-family: 'Inter', sans-serif;
-      text-align: center;
-      position: relative;
-      animation: fadeInModal 0.4s cubic-bezier(.4,0,.2,1);
-    }
-    @keyframes fadeInModal {
-      from { opacity: 0; transform: scale(0.9); } 
-      to { opacity: 1; transform: scale(1); }
-    }
-    .modal-box h2 {
-      color: var(--accent-blue);
-      margin-bottom: 1.5rem;
-      font-size: 1.5rem; 
-      font-weight: 700;
-    }
-    .modal-box .login-info {
-      margin-bottom: 1.5rem;
-      font-size: 1.05rem;
-      color: var(--light-text);
-    }
-    .modal-box .login-info strong {
-        color: var(--accent-blue);
-    }
-    .modal-box .redirect-msg {
-      color: var(--accent-blue);
-      font-size: 1.02rem;
-      margin-top: 1.5rem;
-      font-weight: 500;
-    }
-    .modal-close {
-      position: absolute;
-      top: 0.9rem;
-      right: 1.4rem;
-      background: none;
-      border: none;
-      color: var(--accent-blue);
-      font-size: 1.8rem; 
-      cursor: pointer;
-      transition: color 0.2s, transform 0.2s;
-    }
-    .modal-close:hover {
-      color: #fff;
-      transform: rotate(90deg); 
+
+    @media (max-width: 768px) {
+      .hero .dashboard-title {
+        font-size: 2rem;
+      }
+
+      .hero .dashboard-subtitle {
+        font-size: 1rem;
+      }
+
+      .grid-cols-3 {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
     }
   </style>
-</head>
-<body>
-  <div id="particles-js"></div>
-  <header>
-    <div class="logo">
-      <img src="https://i.imgur.com/6N82fk2.png" alt="JP Sistemas Logo" />
-      <span class="tech-font">J.P SISTEMAS</span>
-    </div>
-    <nav>
-      <a href="sistema.html">Acessar Sistema</a>
-      <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" rel="noopener">Contato</a>
-      <a href="precos.html">Planos</a>
-    </nav>  
-  </header>
-  <section class="hero">
-    <h1>Transforme sua gestão com tecnologia 100% em nuvem</h1>
-    <p>
-      O <strong>JP. Sistemas</strong> oferece soluções inovadoras para gestão empresarial, com banco de dados integrados, segurança, mobilidade e performance. Tudo isso em uma plataforma moderna, intuitiva e acessível de qualquer lugar.
-    </p>
-    <a href="#" id="conheca-btn-link">
-      <button class="cta-btn"><span>Conheça o Sistema</span></button>
-    </a>
-    <div class="typewriter-msg">
-      <span id="typewriter"></span>
-    </div>
-    <div class="sistema-funcional-msg">
-      Funciona em <strong>Desktop</strong> (navegador ou executável) e <strong>Smartphones</strong> (via navegador).
-    </div>
-    <a href="https://drive.google.com/file/d/1u4Azxd2rECC79PAewxA_CgxNFzBKV58q/view?usp=sharing" target="_blank" rel="noopener" class="download-btn">
-      <button class="cta-btn"><span>Download Windows</span></button>
-    </a>
-  </section>
-  <section class="features" id="recursos">
-    <div class="feature-card">
-      <i class="fas fa-database icon"></i> <h3>Banco de Dados Integrados</h3>
-      <p>Centralize todas as informações do seu negócio em um só lugar, com integração total entre módulos e dados sempre atualizados em tempo real.</p>
-    </div>
-    <div class="feature-card">
-      <i class="fas fa-cloud icon"></i> <h3>100% em Nuvem</h3>
-      <p>Acesse o sistema de qualquer dispositivo, a qualquer hora, com total segurança e sem necessidade de instalações locais.</p>
-    </div>
-    <div class="feature-card">
-      <i class="fas fa-shield-alt icon"></i> <h3>Segurança e Backup</h3>
-      <p>Seus dados protegidos com criptografia avançada e backups automáticos, garantindo tranquilidade e conformidade.</p>
-    </div>
-    <div class="feature-card">
-      <i class="fas fa-desktop icon"></i> <h3>Interface Moderna</h3>
-      <p>Design intuitivo, responsivo e pensado para facilitar o dia a dia da sua equipe, com dashboards e relatórios inteligentes.</p>
-    </div>
-  </section>
-  <footer id="contato">
-    © 2025 JP. Sistemas. Todos os direitos reservados. | <a href="https://jp-sistemas.com/" style="color:var(--accent-blue);">jp-sistemas.com</a>
-  </footer>
-  <div class="modal-bg" id="modal-bg">
-    <div class="modal-box">
-      <button class="modal-close" id="modal-close" title="Fechar">&times;</button>
-      <h2>Login de Demonstração</h2>
-      <div class="login-info">
-        <div><strong>Usuário:</strong> teste</div>
-        <div><strong>Senha:</strong> teste</div>
-      </div>
-      <div class="redirect-msg" id="redirect-msg">Você será redirecionado em 10 segundos...</div>
-    </div>
-  </div>
-  <script>
-
-    particlesJS('particles-js', {
-      "particles": {
-        "number": {
-          "value": 80,
-          "density": {
-            "enable": true,
-            "value_area": 800
-          }
-        },
-        "color": {
-          "value": "#00e6ff" 
-        },
-        "shape": {
-          "type": "circle",
-          "stroke": {
-            "width": 0,
-            "color": "#000000"
-          },
-          "polygon": {
-            "nb_sides": 5
-          },
-          "image": {
-            "src": "img/github.svg",
-            "width": 100,
-            "height": 100
-          }
-        },
-        "opacity": {
-          "value": 0.5,
-          "random": false,
-          "anim": {
-            "enable": false,
-            "speed": 1,
-            "opacity_min": 0.1,
-            "sync": false
-          }
-        },
-        "size": {
-          "value": 3,
-          "random": true,
-          "anim": {
-            "enable": false,
-            "speed": 40,
-            "size_min": 0.1,
-            "sync": false
-          }
-        },
-        "line_linked": {
-          "enable": true,
-          "distance": 150,
-          "color": "#00e6ff", 
-          "opacity": 0.4,
-          "width": 1
-        },
-        "move": {
-          "enable": true,
-          "speed": 3,
-          "direction": "none",
-          "random": false,
-          "straight": false,
-          "out_mode": "out",
-          "bounce": false,
-          "attract": {
-            "enable": false,
-            "rotateX": 600,
-            "rotateY": 1200
-          }
-        }
-      },
-      "interactivity": {
-        "detect_on": "canvas",
-        "events": {
-          "onhover": {
-            "enable": true,
-            "mode": "grab"
-          },
-          "onclick": {
-            "enable": true,
-            "mode": "push"
-          },
-          "resize": true
-        },
-        "modes": {
-          "grab": {
-            "distance": 140,
-            "line_linked": {
-              "opacity": 1
-            }
-          },
-          "bubble": {
-            "distance": 400,
-            "size": 40,
-            "duration": 2,
-            "opacity": 8,
-            "speed": 3
-          },
-          "repulse": {
-            "distance": 200,
-            "duration": 0.4
-          },
-          "push": {
-            "particles_nb": 4
-          },
-          "remove": {
-            "particles_nb": 2
-          }
-        }
-      },
-      "retina_detect": true
-    });
-
-    
-    const typewriterTexts = [
-      "Banco de Dados Integrados",
-      "100% em Nuvem",
-      "Segurança e Backup",
-      "Interface Moderna",
-      "Acesse de Qualquer Lugar",
-      "Gestão Empresarial Simplificada",
-      "Entre em contato e saiba mais"
-    ];
-    let twIndex = 0, charIndex = 0, isDeleting = false;
-    const twElem = document.getElementById('typewriter');
-    function typeWriterLoop() {
-      if (!twElem) return;
-      const current = typewriterTexts[twIndex];
-      if (isDeleting) {
-        twElem.textContent = current.substring(0, charIndex--);
-        if (charIndex < 0) {
-          isDeleting = false;
-          twIndex = (twIndex + 1) % typewriterTexts.length;
-          setTimeout(typeWriterLoop, 600);
-        } else {
-          setTimeout(typeWriterLoop, 40);
-        }
-      } else {
-        twElem.textContent = current.substring(0, charIndex++);
-        if (charIndex > current.length) {
-          isDeleting = true;
-          setTimeout(typeWriterLoop, 1200);
-        } else {
-          setTimeout(typeWriterLoop, 90);
-        }
-      }
-    }
-    if (twElem) typeWriterLoop();
-
-    // Modal logic para "Conheça o Sistema"
-    const conhecaBtn = document.getElementById('conheca-btn-link');
-    const modalBg = document.getElementById('modal-bg');
-    const modalClose = document.getElementById('modal-close');
-    const redirectMsg = document.getElementById('redirect-msg');
-    let redirectTimeout;
-    if (conhecaBtn && modalBg && modalClose && redirectMsg) {
-      conhecaBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        modalBg.classList.add('active');
-        let seconds = 10;
-        redirectMsg.textContent = `Você será redirecionado em ${seconds} segundos...`;
-        redirectTimeout = setInterval(() => {
-          seconds--;
-          redirectMsg.textContent = `Você será redirecionado em ${seconds} segundos...`;
-          if (seconds <= 0) {
-            clearInterval(redirectTimeout);
-            window.location.href = 'https://jp-sistemas.com/';
-          }
-        }, 1000);
-      });
-      modalClose.addEventListener('click', function() {
-        modalBg.classList.remove('active');
-        clearInterval(redirectTimeout);
-      });
-      // Fecha modal ao clicar fora
-      modalBg.addEventListener('click', function(e) {
-        if (e.target === modalBg) {
-          modalBg.classList.remove('active');
-          clearInterval(redirectTimeout);
-        }
-      });
-    }
-
-    
-    window.addEventListener('scroll', function() {
-        const header = document.querySelector('header');
-        if (window.scrollY > 50) { 
-            header.classList.add('scrolled');
-        } else {
-            header.classList.remove('scrolled');
-        }
-    });
-  </script>
 </body>
 </html>
