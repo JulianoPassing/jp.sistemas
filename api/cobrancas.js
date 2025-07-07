@@ -458,6 +458,119 @@ router.put('/emprestimos/:emprestimo_id/parcelas/:numero_parcela/status', ensure
   }
 });
 
+// Atualizar empréstimo
+router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { 
+      cliente_id, 
+      valor, 
+      juros_mensal, 
+      data_vencimento, 
+      frequencia_pagamento, 
+      numero_parcelas, 
+      status, 
+      observacoes 
+    } = req.body;
+    
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
+    
+    // Verificar se o empréstimo existe
+    const [emprestimos] = await connection.execute(
+      'SELECT * FROM emprestimos WHERE id = ?',
+      [id]
+    );
+    
+    if (emprestimos.length === 0) {
+      await connection.end();
+      return res.status(404).json({ error: 'Empréstimo não encontrado' });
+    }
+    
+    const emprestimoAtual = emprestimos[0];
+    
+    // Atualizar empréstimo
+    await connection.execute(`
+      UPDATE emprestimos 
+      SET cliente_id = ?, 
+          valor = ?, 
+          juros_mensal = ?, 
+          data_vencimento = ?, 
+          frequencia_pagamento = ?, 
+          numero_parcelas = ?, 
+          status = ?, 
+          observacoes = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `, [
+      cliente_id, 
+      valor, 
+      juros_mensal, 
+      data_vencimento, 
+      frequencia_pagamento, 
+      numero_parcelas, 
+      status, 
+      observacoes,
+      id
+    ]);
+    
+    // Se o número de parcelas mudou, atualizar as parcelas
+    if (numero_parcelas !== emprestimoAtual.numero_parcelas) {
+      // Remover parcelas antigas
+      await connection.execute('DELETE FROM parcelas WHERE emprestimo_id = ?', [id]);
+      
+      // Criar novas parcelas se for parcelado
+      if (numero_parcelas > 1) {
+        const valorParcela = valor / numero_parcelas;
+        const dataVencimento = new Date(data_vencimento);
+        
+        for (let i = 1; i <= numero_parcelas; i++) {
+          const dataParcelaVencimento = new Date(dataVencimento);
+          
+          // Calcular data de vencimento baseada na frequência
+          switch (frequencia_pagamento) {
+            case 'weekly':
+              dataParcelaVencimento.setDate(dataParcelaVencimento.getDate() + (i - 1) * 7);
+              break;
+            case 'biweekly':
+              dataParcelaVencimento.setDate(dataParcelaVencimento.getDate() + (i - 1) * 14);
+              break;
+            case 'daily':
+              dataParcelaVencimento.setDate(dataParcelaVencimento.getDate() + (i - 1));
+              break;
+            case 'monthly':
+            default:
+              dataParcelaVencimento.setMonth(dataParcelaVencimento.getMonth() + (i - 1));
+              break;
+          }
+          
+          await connection.execute(`
+            INSERT INTO parcelas (emprestimo_id, numero_parcela, valor_parcela, data_vencimento, status)
+            VALUES (?, ?, ?, ?, ?)
+          `, [id, i, valorParcela, dataParcelaVencimento.toISOString().split('T')[0], 'Pendente']);
+        }
+      }
+    }
+    
+    // Atualizar cobranças relacionadas
+    await connection.execute(`
+      UPDATE cobrancas 
+      SET valor_original = ?, 
+          valor_atualizado = ?, 
+          data_vencimento = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE emprestimo_id = ?
+    `, [valor, valor, data_vencimento, id]);
+    
+    await connection.end();
+    res.json({ message: 'Empréstimo atualizado com sucesso' });
+    
+  } catch (error) {
+    console.error('Erro ao atualizar empréstimo:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Empréstimos
 router.get('/emprestimos', ensureDatabase, async (req, res) => {
   try {
