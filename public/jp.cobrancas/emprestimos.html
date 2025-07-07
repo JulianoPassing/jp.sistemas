@@ -598,9 +598,11 @@
             ui.showNotification('Empréstimo adicionado com sucesso!', 'success');
             closeModal();
             renderHistoricoEmprestimos();
-          } catch (error) {
-            ui.showNotification('Erro ao adicionar empréstimo', 'error');
-          }
+              } catch (error) {
+      console.error('Erro completo:', error);
+      const errorMessage = error.message.includes(' - ') ? error.message.split(' - ')[1] : 'Erro ao adicionar empréstimo';
+      ui.showNotification(`Erro: ${errorMessage}`, 'error');
+    }
         });
       }
     });
