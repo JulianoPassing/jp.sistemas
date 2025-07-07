@@ -82,6 +82,46 @@
             padding: 0.25rem 0.5rem;
             font-size: 0.75rem;
         }
+        
+        .itens-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius);
+        }
+        
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        
+        .item-row:last-child {
+            border-bottom: none;
+        }
+        
+        .item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .item-quantity {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+        
+        .item-price {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+        }
+        
+        .item-subtotal {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
     </style>
 </head>
 <body class="app-layout">
@@ -180,6 +220,7 @@
     <script src="./js/main.js"></script>
     <script>
         let mesasData = [];
+        let produtosData = [];
         
         // Verificar autenticação
         if (sessionStorage.getItem('loggedIn') !== 'true') {
@@ -196,6 +237,7 @@
         // Carregar mesas (usando pedidos em aberto)
         async function loadMesas() {
             try {
+                // Carregar pedidos
                 const response = await fetch('/api/pedidos', { credentials: 'include' });
                 if (response.ok) {
                     const allPedidos = await response.json();
@@ -217,14 +259,23 @@
                         valor_total: pedido.valor_total || 0,
                         itens: pedido.itens || []
                     }));
-                    updateStats();
-                    renderMesas();
                 } else {
                     showNotification('Erro ao carregar mesas', 'error');
                 }
+
+                // Carregar produtos
+                const produtosResponse = await fetch('/api/produtos', { credentials: 'include' });
+                if (produtosResponse.ok) {
+                    produtosData = await produtosResponse.json();
+                } else {
+                    showNotification('Erro ao carregar produtos', 'error');
+                }
+
+                updateStats();
+                renderMesas();
             } catch (error) {
-                console.error('Erro ao carregar mesas:', error);
-                showNotification('Erro ao carregar mesas', 'error');
+                console.error('Erro ao carregar dados:', error);
+                showNotification('Erro ao carregar dados', 'error');
             }
         }
         
@@ -262,6 +313,9 @@
                         <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewMesa(${mesa.id})">
                             <i class="fas fa-eye"></i>
                         </button>
+                        <button class="btn btn-success btn-sm" onclick="event.stopPropagation(); addProdutoMesa(${mesa.id})">
+                            <i class="fas fa-plus"></i>
+                        </button>
                         <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); editMesa(${mesa.id})">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -297,13 +351,16 @@
             const newStatus = mesa.status === 'livre' ? 'Em Processamento' : 'Concluído';
             
             try {
-                const response = await fetch(`/api/pedidos/${id}/status`, {
+                const response = await fetch(`/api/pedidos/${id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     credentials: 'include',
-                    body: JSON.stringify({ status: newStatus })
+                    body: JSON.stringify({ 
+                        status: newStatus,
+                        itens: mesa.itens || []
+                    })
                 });
                 
                 if (response.ok) {
@@ -429,16 +486,24 @@
                     ${mesa.itens && mesa.itens.length > 0 ? `
                         <div class="mb-4">
                             <strong>Itens do Pedido:</strong>
-                            <div style="margin-top: 0.5rem;">
+                            <div class="itens-list">
                                 ${mesa.itens.map(item => `
-                                    <div style="display: flex; justify-content: space-between; padding: 0.5rem; border-bottom: 1px solid var(--gray-200);">
-                                        <span>${item.produto} x${item.quantidade}</span>
-                                        <span>${formatCurrency(item.precoUnitario * item.quantidade)}</span>
+                                    <div class="item-row">
+                                        <div class="item-info">
+                                            <strong>${item.produto}</strong>
+                                            <span class="item-quantity">x${item.quantidade}</span>
+                                        </div>
+                                        <div class="item-price">
+                                            ${formatCurrency(item.preco_unitario)} cada
+                                        </div>
+                                        <div class="item-subtotal">
+                                            ${formatCurrency(item.preco_unitario * item.quantidade)}
+                                        </div>
                                     </div>
                                 `).join('')}
                             </div>
                         </div>
-                    ` : ''}
+                    ` : '<div class="mb-4"><em>Nenhum produto adicionado</em></div>'}
                     
                     ${mesa.observacoes ? `
                         <div class="mb-4">
@@ -450,7 +515,15 @@
                     ` : ''}
                 </div>
             `;
-            showModal(`Mesa ${mesa.numero}`, content);
+            
+            const modalContent = `
+                ${content}
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                    <button class="btn btn-success" onclick="addProdutoMesa(${mesa.id}); closeModal(this)">Adicionar Produto</button>
+                    <button class="btn btn-secondary" onclick="closeModal(this)">Fechar</button>
+                </div>
+            `;
+            showModal(`Mesa ${mesa.numero}`, modalContent);
         }
         
         // Editar mesa
@@ -570,6 +643,147 @@
                 </div>
             `;
             showModal('Configurações de Mesas', content);
+        }
+        
+        // Adicionar produto à mesa
+        function addProdutoMesa(id) {
+            const mesa = mesasData.find(m => m.id === id);
+            if (!mesa) return;
+            
+            if (produtosData.length === 0) {
+                showNotification('Nenhum produto disponível', 'warning');
+                return;
+            }
+            
+            const content = `
+                <form id="addProdutoForm">
+                    <input type="hidden" name="mesa_id" value="${mesa.id}">
+                    <div class="form-group">
+                        <label for="produto_id" class="form-label">Produto *</label>
+                        <select id="produto_id" name="produto_id" class="form-input" required>
+                            <option value="">Selecione um produto</option>
+                            ${produtosData.map(produto => `
+                                <option value="${produto.id}" data-preco="${produto.preco_venda || 0}" data-estoque="${produto.estoque || 0}">
+                                    ${produto.nome} - R$ ${formatCurrency(produto.preco_venda || 0)} (Estoque: ${produto.estoque || 0})
+                                </option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantidade" class="form-label">Quantidade *</label>
+                        <input type="number" id="quantidade" name="quantidade" class="form-input" min="1" value="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="preco_unitario" class="form-label">Preço Unitário</label>
+                        <input type="number" id="preco_unitario" name="preco_unitario" class="form-input" step="0.01" min="0" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="subtotal" class="form-label">Subtotal</label>
+                        <input type="text" id="subtotal" class="form-input" readonly>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Adicionar Produto</button>
+                    </div>
+                </form>
+            `;
+            showModal(`Adicionar Produto - Mesa ${mesa.numero}`, content);
+            
+            // Adicionar eventos
+            const form = document.getElementById('addProdutoForm');
+            const produtoSelect = document.getElementById('produto_id');
+            const quantidadeInput = document.getElementById('quantidade');
+            const precoInput = document.getElementById('preco_unitario');
+            const subtotalInput = document.getElementById('subtotal');
+            
+            // Atualizar preço quando produto for selecionado
+            produtoSelect.addEventListener('change', function() {
+                const option = this.options[this.selectedIndex];
+                const preco = parseFloat(option.dataset.preco) || 0;
+                const estoque = parseInt(option.dataset.estoque) || 0;
+                
+                precoInput.value = preco.toFixed(2);
+                quantidadeInput.max = estoque;
+                updateSubtotal();
+            });
+            
+            // Atualizar subtotal quando quantidade mudar
+            quantidadeInput.addEventListener('input', updateSubtotal);
+            
+            function updateSubtotal() {
+                const preco = parseFloat(precoInput.value) || 0;
+                const quantidade = parseInt(quantidadeInput.value) || 0;
+                const subtotal = preco * quantidade;
+                subtotalInput.value = formatCurrency(subtotal);
+            }
+            
+            // Adicionar evento de submit
+            form.addEventListener('submit', handleAddProduto);
+        }
+        
+        // Manipular adição de produto
+        async function handleAddProduto(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const mesaId = parseInt(formData.get('mesa_id'));
+            const produtoId = parseInt(formData.get('produto_id'));
+            const quantidade = parseInt(formData.get('quantidade'));
+            const precoUnitario = parseFloat(formData.get('preco_unitario'));
+            
+            const mesa = mesasData.find(m => m.id === mesaId);
+            const produto = produtosData.find(p => p.id === produtoId);
+            
+            if (!mesa || !produto) {
+                showNotification('Erro: Mesa ou produto não encontrado', 'error');
+                return;
+            }
+            
+            // Verificar estoque
+            if (quantidade > (produto.estoque || 0)) {
+                showNotification('Quantidade maior que o estoque disponível', 'warning');
+                return;
+            }
+            
+            // Criar novo item
+            const novoItem = {
+                produto_id: produtoId,
+                produto: produto.nome,
+                quantidade: quantidade,
+                preco_unitario: precoUnitario,
+                subtotal: precoUnitario * quantidade
+            };
+            
+            // Adicionar item à mesa
+            const itensAtualizados = [...(mesa.itens || []), novoItem];
+            const valorTotalAtualizado = itensAtualizados.reduce((total, item) => total + item.subtotal, 0);
+            
+            try {
+                const response = await fetch(`/api/pedidos/${mesaId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        status: mesa.status === 'livre' ? 'pendente' : 'Em Processamento',
+                        itens: itensAtualizados,
+                        valor_total: valorTotalAtualizado
+                    })
+                });
+                
+                if (response.ok) {
+                    showNotification('Produto adicionado com sucesso!', 'success');
+                    closeModal(e.target);
+                    loadMesas();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Erro ao adicionar produto', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao adicionar produto:', error);
+                showNotification('Erro ao adicionar produto', 'error');
+            }
         }
         
         // Event listeners
