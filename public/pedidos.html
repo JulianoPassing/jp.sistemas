@@ -1320,14 +1320,18 @@
       }
 
       const itemId = Date.now();
+      const produtosOptions = produtos && produtos.length > 0 
+        ? produtos.map(produto => 
+            `<option value="${produto.id || ''}">${produto.nome || 'Produto sem nome'} - R$ ${(produto.preco || 0).toFixed(2)}</option>`
+          ).join('')
+        : '<option value="">Nenhum produto disponível</option>';
+
       const itemHTML = `
         <div class="item-row" data-item-id="${itemId}">
           <div>
             <select class="produto-select" onchange="selecionarProduto(this, '${itemId}')">
               <option value="">Selecione um produto</option>
-              ${produtos.map(produto => 
-                `<option value="${produto.id}">${produto.nome} - R$ ${produto.preco.toFixed(2)}</option>`
-              ).join('')}
+              ${produtosOptions}
             </select>
             <input type="text" class="produto-nome" placeholder="Ou digite o nome do produto" style="margin-top: 5px;">
           </div>
@@ -1434,7 +1438,7 @@
         }
       });
 
-      const itens = document.querySelectorAll('.item-pedido');
+      const itens = document.querySelectorAll('.item-row');
       if (itens.length === 0) {
         mostrarNotificacao('Adicione pelo menos um item ao pedido', 'error');
         isValid = false;
@@ -1448,14 +1452,14 @@
       const tipoCliente = document.getElementById('tipoCliente').value;
       
       if (tipoCliente === 'existente') {
-        const clienteId = document.getElementById('clienteSelect').value;
+        const clienteId = document.getElementById('cliente').value;
         return clientes.find(c => c.id == clienteId);
       } else {
         return {
-          nome: document.getElementById('novoClienteNome').value,
-          telefone: document.getElementById('novoClienteTelefone').value,
-          email: document.getElementById('novoClienteEmail').value,
-          endereco: document.getElementById('novoClienteEndereco').value
+          nome: document.getElementById('nomeCliente').value,
+          telefone: document.getElementById('telefone').value,
+          email: document.getElementById('email').value,
+          endereco: document.getElementById('endereco').value
         };
       }
     }
@@ -1561,14 +1565,14 @@
       // Dados do cliente
       if (pedido.cliente.id) {
         form.querySelector('#tipoCliente').value = 'existente';
-        form.querySelector('#clienteSelect').value = pedido.cliente.id;
+        form.querySelector('#cliente').value = pedido.cliente.id;
         handleTipoClienteChange();
       } else {
         form.querySelector('#tipoCliente').value = 'novo';
-        form.querySelector('#novoClienteNome').value = pedido.cliente.nome;
-        form.querySelector('#novoClienteTelefone').value = pedido.cliente.telefone;
-        form.querySelector('#novoClienteEmail').value = pedido.cliente.email || '';
-        form.querySelector('#novoClienteEndereco').value = pedido.cliente.endereco || '';
+        form.querySelector('#nomeCliente').value = pedido.cliente.nome;
+        form.querySelector('#telefone').value = pedido.cliente.telefone;
+        form.querySelector('#email').value = pedido.cliente.email || '';
+        form.querySelector('#endereco').value = pedido.cliente.endereco || '';
         handleTipoClienteChange();
       }
       
