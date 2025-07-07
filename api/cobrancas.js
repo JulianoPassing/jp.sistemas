@@ -359,65 +359,38 @@ router.get('/emprestimos/:id', ensureDatabase, async (req, res) => {
 
 router.post('/emprestimos', ensureDatabase, async (req, res) => {
   try {
-    console.log('=== INÍCIO DA CRIAÇÃO DE EMPRÉSTIMO ===');
+    console.log('*** INÍCIO DA CRIAÇÃO DE EMPRÉSTIMO (BACKEND ATUALIZADO) ***');
     console.log('REQ.BODY:', req.body);
-    console.log('numero_parcelas:', req.body.numero_parcelas, typeof req.body.numero_parcelas);
-    console.log('valor_final:', req.body.valor_final, typeof req.body.valor_final);
-    console.log('Sessão do usuário:', req.session);
-    
     const { cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes } = req.body;
-    
     // Validação dos dados obrigatórios
     if (!cliente_id || !valor || !data_emprestimo || !data_vencimento) {
       console.error('Dados obrigatórios faltando:', { cliente_id, valor, data_emprestimo, data_vencimento });
       return res.status(400).json({ error: 'Dados obrigatórios faltando' });
     }
-    
     const username = req.session.cobrancasUser;
-    console.log('Usuário autenticado:', username);
-    
     const connection = await createCobrancasConnection(username);
-    console.log('Conexão com banco estabelecida');
-    
     // Verificar se o cliente existe
-    const [clienteRows] = await connection.execute(`
-      SELECT id, nome FROM clientes_cobrancas WHERE id = ?
-    `, [cliente_id]);
-    
+    const [clienteRows] = await connection.execute(`SELECT id, nome FROM clientes_cobrancas WHERE id = ?`, [cliente_id]);
     if (clienteRows.length === 0) {
       await connection.end();
       console.error('Cliente não encontrado:', cliente_id);
       return res.status(404).json({ error: 'Cliente não encontrado' });
     }
-    
-    console.log('Cliente encontrado:', clienteRows[0]);
-    
-    console.log('Cliente encontrado, inserindo empréstimo...');
-    
     // Inserir empréstimo
-    console.log('Tentando inserir empréstimo com dados:', {
-      cliente_id, valor, data_emprestimo, data_vencimento, 
-      juros_mensal: juros_mensal || 0, 
-      multa_atraso: multa_atraso || 0, 
-      observacoes: observacoes || ''
-    });
     const [emprestimoResult] = await connection.execute(`
       INSERT INTO emprestimos (cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal || 0, multa_atraso || 0, observacoes || '']);
     console.log('Empréstimo inserido com ID:', emprestimoResult.insertId);
-
-    // NOVA LÓGICA: Parcelamento
+    // Lógica robusta de parcelamento
     const { numero_parcelas, frequencia, valor_final } = req.body;
     const nParcelas = parseInt(numero_parcelas, 10);
+    const freq = frequencia || 'monthly';
+    const valorTotal = valor_final ? parseFloat(valor_final) : parseFloat(valor);
     if (nParcelas && nParcelas > 1) {
-      // Parcelado
-      const freq = frequencia || 'monthly';
-      const valorTotal = valor_final ? parseFloat(valor_final) : parseFloat(valor);
       const valorParcela = Math.round((valorTotal / nParcelas) * 100) / 100;
       let dataVenc = new Date(data_vencimento);
       for (let i = 0; i < nParcelas; i++) {
-        // Calcular data de vencimento da parcela
         let vencimento = new Date(dataVenc);
         if (i > 0) {
           if (freq === 'monthly') vencimento.setMonth(vencimento.getMonth() + i);
@@ -430,23 +403,20 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
           INSERT INTO cobrancas (emprestimo_id, cliente_id, valor_original, valor_atualizado, data_vencimento, status)
           VALUES (?, ?, ?, ?, ?, 'Pendente')
         `, [emprestimoResult.insertId, cliente_id, valorParcela, valorParcela, vencStr]);
-        console.log('Cobrança criada:', { parcela: i+1, valorParcela, vencStr });
+        console.log(`[PARCELA ${i+1}/${nParcelas}] Criada: valor=${valorParcela}, vencimento=${vencStr}`);
       }
-      console.log('Cobranças parceladas criadas');
+      console.log('Cobranças parceladas criadas com sucesso!');
     } else {
-      // Fixo (1 parcela)
       await connection.execute(`
         INSERT INTO cobrancas (emprestimo_id, cliente_id, valor_original, valor_atualizado, data_vencimento, status)
         VALUES (?, ?, ?, ?, ?, 'Pendente')
       `, [emprestimoResult.insertId, cliente_id, valor, valor, data_vencimento]);
-      console.log('Cobrança criada automaticamente');
+      console.log('Cobrança única criada (empréstimo fixo)');
     }
-    
     await connection.end();
     res.json({ id: emprestimoResult.insertId, message: 'Empréstimo criado com sucesso' });
   } catch (error) {
     console.error('Erro ao criar empréstimo:', error);
-    console.error('Stack trace:', error.stack);
     res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
   }
 });
