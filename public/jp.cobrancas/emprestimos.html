@@ -1091,10 +1091,11 @@
 
           // Se for parcelado, enviar campos extras
           if (dados.tipoEmprestimo === 'in_installments') {
+            let valorFinal = dados.valorFinal || dados.valor;
+            if (typeof valorFinal === 'string') valorFinal = valorFinal.replace(',', '.');
             payload.numero_parcelas = parseInt(dados.numeroParcelas) || 1;
             payload.frequencia = dados.frequencia || 'monthly';
-            // Valor final pode ser o campo valorFinal ou calculado
-            payload.valor_final = parseFloat((dados.valorFinal || dados.valor).replace(',', '.'));
+            payload.valor_final = parseFloat(valorFinal);
           }
 
           console.log('Payload enviado para API:', payload);

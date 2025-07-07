@@ -885,21 +885,29 @@ const emprestimoController = {
       cobrancas.sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento));
       // Montar HTML das parcelas
       let parcelasHtml = '';
+      let valorTotalParcelas = 0;
       if (cobrancas.length > 0) {
-        parcelasHtml = '<div style="margin-bottom:1em;"><b>Parcelas:</b></div>';
+        parcelasHtml = `
+          <div style="margin-bottom:1.2em; font-size:1.1rem; font-weight:700; color:#061058;">Parcelas</div>
+          <div style="margin-bottom:1.2em; font-size:1.2rem; font-weight:700; color:#10b981; text-align:center;">Total a Receber: R$ ${utils.formatCurrency(cobrancas.reduce((acc, p) => acc + Number(p.valor_original || 0), 0))}</div>
+        `;
         parcelasHtml += cobrancas.map((parc, idx) => {
+          valorTotalParcelas += Number(parc.valor_original || 0);
           const status = (parc.status || '').toUpperCase();
+          let badgeColor = '#fbbf24';
+          if (status === 'PAGA') badgeColor = '#10b981';
+          if (status === 'ATRASADA') badgeColor = '#ef4444';
           return `
-            <div style="border:1px solid #eee; border-radius:8px; padding:0.7em 1em; margin-bottom:0.7em; background:#f9f9f9; display:flex; align-items:center; justify-content:space-between; gap:1em;">
-              <div>
-                <div><b>Parcela ${idx+1} de ${cobrancas.length}</b></div>
-                <div>Valor: <b>R$ ${utils.formatCurrency(parc.valor_original)}</b></div>
-                <div>Vencimento: <b>${utils.formatDate(parc.data_vencimento)}</b></div>
-                <div>Status: <span style="color:${status==='PENDENTE'?'#fbbf24':status==='PAGA'?'#10b981':'#ef4444'};font-weight:600;">${status}</span></div>
+            <div style="box-shadow:0 2px 8px #002f4b11; border-radius:10px; padding:1.1em 1.2em; margin-bottom:1.1em; background:#fff; display:flex; align-items:center; justify-content:space-between; gap:1em; border:1px solid #e5e7eb;">
+              <div style="flex:1;">
+                <div style="font-size:1rem; font-weight:600; color:#061058; margin-bottom:0.2em;">Parcela ${idx+1} de ${cobrancas.length}</div>
+                <div style="font-size:1.3rem; font-weight:700; color:#002f4b; margin-bottom:0.2em;">💰 R$ ${utils.formatCurrency(parc.valor_original)}</div>
+                <div style="font-size:0.98rem; color:#374151; margin-bottom:0.2em;">📅 ${utils.formatDate(parc.data_vencimento)}</div>
+                <span style="display:inline-block; padding:0.2em 0.8em; border-radius:12px; background:${badgeColor}; color:#fff; font-weight:600; font-size:0.95rem; margin-bottom:0.2em;">${status}</span>
               </div>
-              <div style="display:flex; flex-direction:column; gap:0.3em;">
-                <button class="btn" style="background:#10b981;color:#fff;" onclick="window.quitarParcela(${parc.id})" ${status==='PAGA'?'disabled':''}>Quitar</button>
-                <button class="btn" style="background:#6366f1;color:#fff;" onclick="window.editarParcela(${parc.id})">Editar</button>
+              <div style="display:flex; flex-direction:column; gap:0.5em; align-items:flex-end;">
+                <button class="btn" style="background:#10b981;color:#fff; font-size:1.1rem; padding:0.4em 1.2em; border-radius:8px; display:flex; align-items:center; gap:0.5em;" onclick="window.quitarParcela(${parc.id})" ${status==='PAGA'?'disabled':''}>✔️ Quitar</button>
+                <button class="btn" style="background:#6366f1;color:#fff; font-size:1.1rem; padding:0.4em 1.2em; border-radius:8px; display:flex; align-items:center; gap:0.5em;" onclick="window.editarParcela(${parc.id})">✏️ Editar</button>
               </div>
             </div>
           `;
