@@ -178,6 +178,32 @@
       background: var(--secondary);
     }
     
+    .btn-tipo-calculo {
+      background: var(--gray-100);
+      color: var(--gray-500);
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+      flex: 1;
+    }
+    
+    .btn-tipo-calculo:hover {
+      background: var(--gray-300);
+    }
+    
+    .btn-tipo-calculo.btn-tipo-ativo {
+      background: var(--terciary);
+      color: white;
+    }
+    
+    .btn-tipo-calculo.btn-tipo-ativo:hover {
+      background: var(--terciary-100);
+    }
+    
     .simulacao-preview {
       background: var(--gray-100);
       border: 1px solid var(--gray-300);
@@ -236,6 +262,26 @@
       .modal-emprestimo .modal-body {
         padding: 1rem;
       }
+    }
+
+    /* Correção do botão Novo Empréstimo */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    #toggleForm.btn,
+    #toggleForm.btn-primary {
+      min-width: 0;
+      width: auto;
+      padding: 0.6rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      height: auto;
+      line-height: 1.2;
+      box-shadow: none;
+      display: inline-block;
     }
   </style>
 </head>
@@ -403,6 +449,29 @@
                 <input type="number" id="juros-mensal" class="form-input" step="0.01" min="0" required placeholder="0,00">
               </div>
             </div>
+            
+            <!-- Tipo de Cálculo -->
+            <div class="form-group">
+              <label class="form-label">Tipo de Cálculo</label>
+              <div class="flex gap-2 mt-2">
+                <button type="button" id="btn-valor-fixo" class="btn-tipo-calculo btn-tipo-ativo">
+                  <span class="font-medium text-center">Valor Fixo (R$)</span>
+                </button>
+                <button type="button" id="btn-parcela-fixa" class="btn-tipo-calculo">
+                  <span class="font-medium text-center">Parcela Fixa (R$)</span>
+                </button>
+                <button type="button" id="btn-porcentagem" class="btn-tipo-calculo">
+                  <span class="font-medium text-center">Porcentagem (%)</span>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Campo de Valor Final -->
+            <div class="form-group">
+              <label class="form-label" id="label-valor-final">Valor Final de Cobrança (R$)</label>
+              <input type="number" id="valor-final" class="form-input" step="0.01" min="0" required placeholder="0,00">
+            </div>
+            
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">Multa por atraso (%) *</label>
@@ -598,6 +667,18 @@
       const btnSimular = document.getElementById('btn-simular');
       const simulacaoPreview = document.getElementById('simulacao-preview');
       const simulacaoContent = document.getElementById('simulacao-content');
+      
+      // Botões de tipo de cálculo
+      const btnValorFixo = document.getElementById('btn-valor-fixo');
+      const btnParcelaFixa = document.getElementById('btn-parcela-fixa');
+      const btnPorcentagem = document.getElementById('btn-porcentagem');
+      const labelValorFinal = document.getElementById('label-valor-final');
+      const valorFinalInput = document.getElementById('valor-final');
+      const valorEmprestimoInput = document.getElementById('valor-emprestimo');
+      const jurosMensalInput = document.getElementById('juros-mensal');
+      const numeroParcelasInput = document.getElementById('numero-parcelas');
+      
+      let tipoCalculoAtivo = 'valor-fixo';
 
       // Abrir modal
       toggleFormBtn.addEventListener('click', async () => {
@@ -629,7 +710,70 @@
         form.reset();
         tipoInfo.style.display = 'none';
         simulacaoPreview.classList.remove('show');
+        // Resetar tipo de cálculo
+        setTipoCalculo('valor-fixo');
       };
+      
+      // Função para definir tipo de cálculo
+      function setTipoCalculo(tipo) {
+        tipoCalculoAtivo = tipo;
+        
+        // Remover classe ativa de todos os botões
+        btnValorFixo.classList.remove('btn-tipo-ativo');
+        btnParcelaFixa.classList.remove('btn-tipo-ativo');
+        btnPorcentagem.classList.remove('btn-tipo-ativo');
+        
+        // Adicionar classe ativa ao botão selecionado
+        switch(tipo) {
+          case 'valor-fixo':
+            btnValorFixo.classList.add('btn-tipo-ativo');
+            labelValorFinal.textContent = 'Valor Final de Cobrança (R$)';
+            valorFinalInput.placeholder = 'Valor total a ser pago';
+            break;
+          case 'parcela-fixa':
+            btnParcelaFixa.classList.add('btn-tipo-ativo');
+            labelValorFinal.textContent = 'Valor da Parcela (R$)';
+            valorFinalInput.placeholder = 'Valor de cada parcela';
+            break;
+          case 'porcentagem':
+            btnPorcentagem.classList.add('btn-tipo-ativo');
+            labelValorFinal.textContent = 'Porcentagem de Juros (%)';
+            valorFinalInput.placeholder = 'Porcentagem de juros';
+            break;
+        }
+        
+        // Calcular valor final automaticamente
+        calcularValorFinal();
+      }
+      
+      // Função para calcular valor final baseado no tipo de cálculo
+      function calcularValorFinal() {
+        const valor = parseFloat(valorEmprestimoInput.value) || 0;
+        const juros = parseFloat(jurosMensalInput.value) || 0;
+        const parcelas = parseInt(numeroParcelasInput.value) || 1;
+        
+        if (!valor || !juros) return;
+        
+        let valorFinal = 0;
+        
+        switch(tipoCalculoAtivo) {
+          case 'valor-fixo':
+            // Valor fixo: valor + juros
+            valorFinal = valor * (1 + juros / 100);
+            break;
+          case 'parcela-fixa':
+            // Parcela fixa: (valor + juros) / parcelas
+            const valorTotal = valor * (1 + juros / 100);
+            valorFinal = valorTotal / parcelas;
+            break;
+          case 'porcentagem':
+            // Porcentagem: juros já está em porcentagem
+            valorFinal = juros;
+            break;
+        }
+        
+        valorFinalInput.value = valorFinal.toFixed(2);
+      }
 
       // Informações sobre tipos de empréstimo
       const tiposInfo = {
@@ -663,6 +807,16 @@
         }
       });
 
+      // Event listeners para botões de tipo de cálculo
+      btnValorFixo.addEventListener('click', () => setTipoCalculo('valor-fixo'));
+      btnParcelaFixa.addEventListener('click', () => setTipoCalculo('parcela-fixa'));
+      btnPorcentagem.addEventListener('click', () => setTipoCalculo('porcentagem'));
+      
+      // Event listeners para recalcular automaticamente
+      valorEmprestimoInput.addEventListener('input', calcularValorFinal);
+      jurosMensalInput.addEventListener('input', calcularValorFinal);
+      numeroParcelasInput.addEventListener('input', calcularValorFinal);
+      
       // Preencher dados do cliente ao selecionar
       document.getElementById('cliente-select').addEventListener('change', function() {
         const selectedId = this.value;
@@ -691,6 +845,7 @@
         const juros = parseFloat(document.getElementById('juros-mensal').value) || 0;
         const parcelas = parseInt(document.getElementById('numero-parcelas').value) || 1;
         const tipo = document.getElementById('tipo-emprestimo').value;
+        const valorFinal = parseFloat(document.getElementById('valor-final').value) || 0;
 
         if (!valor || !juros || !parcelas || !tipo) {
           alert('Preencha todos os campos obrigatórios para simular');
@@ -701,15 +856,26 @@
         
         switch(tipo) {
           case 'fixo':
-            const jurosTotal = valor * (juros / 100);
-            const valorTotal = valor + jurosTotal;
+            let jurosTotal, valorTotal;
+            
+            if (tipoCalculoAtivo === 'valor-fixo') {
+              jurosTotal = valor * (juros / 100);
+              valorTotal = valor + jurosTotal;
+            } else if (tipoCalculoAtivo === 'parcela-fixa') {
+              valorTotal = valor * (1 + juros / 100);
+              jurosTotal = valorTotal - valor;
+            } else if (tipoCalculoAtivo === 'porcentagem') {
+              jurosTotal = valor * (valorFinal / 100);
+              valorTotal = valor + jurosTotal;
+            }
+            
             simulacao = `
               <div class="simulacao-item">
                 <span>Valor principal:</span>
                 <span>R$ ${valor.toFixed(2)}</span>
               </div>
               <div class="simulacao-item">
-                <span>Juros (${juros}%):</span>
+                <span>Juros (${tipoCalculoAtivo === 'porcentagem' ? valorFinal : juros}%):</span>
                 <span>R$ ${jurosTotal.toFixed(2)}</span>
               </div>
               <div class="simulacao-item">
@@ -720,9 +886,22 @@
             break;
             
           case 'parcelado-valor-fixo':
-            const valorParcela = valor / parcelas;
-            const jurosParcela = valorParcela * (juros / 100);
-            const valorTotalParcela = valorParcela + jurosParcela;
+            let valorParcela, jurosParcela, valorTotalParcela;
+            
+            if (tipoCalculoAtivo === 'valor-fixo') {
+              valorParcela = valor / parcelas;
+              jurosParcela = valorParcela * (juros / 100);
+              valorTotalParcela = valorParcela + jurosParcela;
+            } else if (tipoCalculoAtivo === 'parcela-fixa') {
+              valorTotalParcela = valorFinal;
+              valorParcela = valor / parcelas;
+              jurosParcela = valorTotalParcela - valorParcela;
+            } else if (tipoCalculoAtivo === 'porcentagem') {
+              valorParcela = valor / parcelas;
+              jurosParcela = valorParcela * (valorFinal / 100);
+              valorTotalParcela = valorParcela + jurosParcela;
+            }
+            
             simulacao = `
               <div class="simulacao-item">
                 <span>Valor da parcela:</span>
@@ -744,15 +923,26 @@
             break;
             
           case 'parcelado-parcela-fixa':
-            const valorTotalFixo = valor * (1 + juros / 100);
-            const valorParcelaFixa = valorTotalFixo / parcelas;
+            let valorTotalFixo, valorParcelaFixa;
+            
+            if (tipoCalculoAtivo === 'valor-fixo') {
+              valorTotalFixo = valor * (1 + juros / 100);
+              valorParcelaFixa = valorTotalFixo / parcelas;
+            } else if (tipoCalculoAtivo === 'parcela-fixa') {
+              valorParcelaFixa = valorFinal;
+              valorTotalFixo = valorParcelaFixa * parcelas;
+            } else if (tipoCalculoAtivo === 'porcentagem') {
+              valorTotalFixo = valor * (1 + valorFinal / 100);
+              valorParcelaFixa = valorTotalFixo / parcelas;
+            }
+            
             simulacao = `
               <div class="simulacao-item">
                 <span>Valor principal:</span>
                 <span>R$ ${valor.toFixed(2)}</span>
               </div>
               <div class="simulacao-item">
-                <span>Juros total (${juros}%):</span>
+                <span>Juros total (${tipoCalculoAtivo === 'porcentagem' ? valorFinal : juros}%):</span>
                 <span>R$ ${(valorTotalFixo - valor).toFixed(2)}</span>
               </div>
               <div class="simulacao-item">
@@ -770,9 +960,10 @@
             let valorAtual = valor;
             let jurosAcumulado = 0;
             let valorParcelaAtual = 0;
+            const taxaJuros = tipoCalculoAtivo === 'porcentagem' ? valorFinal : juros;
             
             for (let i = 1; i <= parcelas; i++) {
-              const jurosMes = valorAtual * (juros / 100);
+              const jurosMes = valorAtual * (taxaJuros / 100);
               jurosAcumulado += jurosMes;
               valorParcelaAtual = valor / parcelas + jurosMes;
               valorAtual += jurosMes;
@@ -784,7 +975,7 @@
                 <span>R$ ${valor.toFixed(2)}</span>
               </div>
               <div class="simulacao-item">
-                <span>Juros acumulados:</span>
+                <span>Juros acumulados (${taxaJuros}%):</span>
                 <span>R$ ${jurosAcumulado.toFixed(2)}</span>
               </div>
               <div class="simulacao-item">
@@ -850,6 +1041,8 @@
           multa_atraso: parseFloat(document.getElementById('multa-atraso').value),
           parcelas: parseInt(document.getElementById('numero-parcelas').value),
           tipo_emprestimo: document.getElementById('tipo-emprestimo').value,
+          tipo_calculo: tipoCalculoAtivo,
+          valor_final: parseFloat(document.getElementById('valor-final').value),
           observacoes: document.getElementById('observacoes').value
         };
         
