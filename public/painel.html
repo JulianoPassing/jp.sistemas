@@ -5,22 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Painel Principal - J.P Sistemas</title>
     <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="mobile.css">
     <style>
+      :root {
+        --primary-color: #005a9f;
+        --primary-dark: #003766;
+        --primary-light: #0077cc;
+        --secondary-color: #022656;
+        --accent-color: #1e4a8a;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --background: #f8fafc;
+        --surface: #ffffff;
+        --border: #e5e7eb;
+        --shadow: rgba(0, 90, 159, 0.1);
+        --shadow-hover: rgba(0, 90, 159, 0.2);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
       body {
-        background: linear-gradient(135deg, var(--terciary) 0%, var(--terciary-100) 100%);
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #005a9f 0%, #003766 100%);
         min-height: 100vh;
-        color: var(--gray-900);
+        color: var(--text-primary);
       }
 
       .header {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px);
         padding: 20px 0;
-        box-shadow: var(--shadow-lg);
+        box-shadow: 0 4px 20px rgba(0, 90, 159, 0.1);
         border-bottom: 1px solid rgba(255, 255, 255, 0.2);
       }
 
@@ -34,7 +55,7 @@
       }
 
       .logo h1 {
-        color: var(--terciary);
+        color: var(--primary-color);
         font-size: 24px;
         font-weight: 700;
       }
@@ -46,23 +67,22 @@
       }
 
       .user-info span {
-        color: var(--gray-900);
-        font-family: 'Poppins', sans-serif;
+        color: var(--text-primary);
+        font-family: 'Inter', sans-serif;
         font-size: 16px;
         font-weight: 500;
       }
 
       .user-info #userDisplay {
         font-weight: 700;
-        color: var(--primary);
       }
 
       .logout-btn {
-        background: var(--primary);
-        color: var(--white);
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        color: white;
         border: none;
         padding: 8px 16px;
-        border-radius: var(--border-radius);
+        border-radius: 8px;
         cursor: pointer;
         font-size: 14px;
         font-weight: 500;
@@ -70,9 +90,8 @@
       }
 
       .logout-btn:hover {
-        background: var(--secondary);
         transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
+        box-shadow: 0 8px 20px rgba(0, 90, 159, 0.3);
       }
 
       .main-content {
@@ -84,23 +103,23 @@
       .welcome-section {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px);
-        border-radius: var(--border-radius-xl);
+        border-radius: 20px;
         padding: 32px;
         margin-bottom: 32px;
-        box-shadow: var(--shadow-lg);
+        box-shadow: 0 10px 30px rgba(0, 90, 159, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
         text-align: center;
       }
 
       .welcome-section h2 {
-        color: var(--terciary);
+        color: var(--primary-color);
         font-size: 28px;
         font-weight: 700;
         margin-bottom: 12px;
       }
 
       .welcome-section p {
-        color: var(--gray-600);
+        color: var(--text-secondary);
         font-size: 16px;
         line-height: 1.6;
       }
@@ -115,10 +134,10 @@
       .menu-card {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px);
-        border-radius: var(--border-radius-xl);
+        border-radius: 16px;
         padding: 32px;
         text-align: center;
-        box-shadow: var(--shadow);
+        box-shadow: 0 8px 25px rgba(0, 90, 159, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
         transition: all 0.3s ease;
         cursor: pointer;
@@ -128,12 +147,12 @@
 
       .menu-card:hover {
         transform: translateY(-8px);
-        box-shadow: var(--shadow-lg);
+        box-shadow: 0 20px 40px rgba(0, 90, 159, 0.2);
       }
 
       .menu-card i {
         font-size: 48px;
-        color: var(--primary);
+        color: var(--primary-color);
         margin-bottom: 20px;
         transition: transform 0.3s ease;
       }
@@ -143,14 +162,14 @@
       }
 
       .menu-card h3 {
-        color: var(--terciary);
+        color: var(--text-primary);
         font-size: 20px;
         font-weight: 600;
         margin-bottom: 12px;
       }
 
       .menu-card p {
-        color: var(--gray-600);
+        color: var(--text-secondary);
         font-size: 14px;
         line-height: 1.5;
       }
@@ -174,21 +193,246 @@
         width: 100%;
         text-align: center;
         padding: 18px 0 12px 0;
-        color: var(--white);
+        color: #fff;
         font-size: 15px;
         background: transparent;
-        font-family: 'Poppins', sans-serif;
+        font-family: 'Inter', sans-serif;
         letter-spacing: 0.02em;
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        z-index: 10;
       }
 
-      .footer a {
-        color: var(--primary);
-        text-decoration: underline;
+      /* Dashboard Styles */
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+      .dashboard-card {
+        background: rgba(255,255,255,0.97);
+        border-radius: 14px;
+        box-shadow: 0 4px 16px var(--shadow);
+        padding: 18px 0 12px 0;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.18);
+        transition: box-shadow 0.3s;
+        position: relative;
+      }
+      .dashboard-card i {
+        font-size: 28px;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+        transition: transform 0.3s ease;
+      }
+      .dashboard-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin-bottom: 6px;
+      }
+      .dashboard-label {
+        font-size: 14px;
+        color: var(--text-secondary);
         font-weight: 500;
+        letter-spacing: 0.01em;
+      }
+      @media (max-width: 768px) {
+        .dashboard-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+        .dashboard-card {
+          padding: 18px 0 12px 0;
+        }
+      }
+      .dashboard-card.pagar i {
+        color: #dc2626;
+      }
+      .dashboard-card.receber i {
+        color: #059669;
+      }
+      .dashboard-card.lucro i {
+        color: #f59e42;
+      }
+
+      .dashboard-financeiro {
+        grid-template-columns: 1fr 1fr 1fr;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 0;
+      }
+      @media (max-width: 900px) {
+        .dashboard-financeiro {
+          grid-template-columns: 1fr;
+          max-width: 100%;
+        }
+      }
+
+      .dashboard-financeiro-bloco {
+        background: linear-gradient(135deg, #f8fafc 60%, #e5e7eb 100%);
+        border-radius: 22px;
+        box-shadow: 0 8px 32px var(--shadow-hover), 0 0 0 4px #e5e7eb inset;
+        padding: 38px 0 30px 0;
+        margin: 48px auto 0 auto;
+        max-width: 760px;
+        border: 1.5px solid var(--primary-light);
+        position: relative;
+      }
+      .dashboard-financeiro-titulo {
+        text-align: center;
+        color: var(--primary-color);
+        font-size: 24px;
+        font-weight: 800;
+        margin-bottom: 28px;
+        letter-spacing: 0.01em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        text-shadow: 0 2px 8px #fff8;
+      }
+      .dashboard-card {
+        position: relative;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 18px var(--shadow);
+        padding: 32px 0 22px 0;
+        text-align: center;
+        border: 1.5px solid #e5e7eb;
+        transition: box-shadow 0.3s, transform 0.2s;
+        cursor: pointer;
+        min-width: 0;
+        overflow: visible;
+      }
+      .dashboard-card:hover {
+        box-shadow: 0 12px 32px var(--shadow-hover);
+        transform: translateY(-4px) scale(1.035);
+        z-index: 2;
+      }
+      .dashboard-indicator {
+        height: 6px;
+        border-radius: 16px 16px 0 0;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      .dashboard-indicator.pagar {
+        background: linear-gradient(90deg, #dc2626 60%, #f87171 100%);
+      }
+      .dashboard-indicator.receber {
+        background: linear-gradient(90deg, #059669 60%, #34d399 100%);
+      }
+      .dashboard-indicator.lucro {
+        background: linear-gradient(90deg, #f59e42 60%, #fbbf24 100%);
+      }
+      .dashboard-card i {
+        font-size: 38px;
+        margin-bottom: 18px;
+        margin-top: 10px;
+        transition: transform 0.3s;
+      }
+      .dashboard-card:hover i {
+        transform: scale(1.13) rotate(-4deg);
+      }
+      .dashboard-card.pagar i {
+        color: #dc2626;
+      }
+      .dashboard-card.receber i {
+        color: #059669;
+      }
+      .dashboard-card.lucro i {
+        color: #f59e42;
+      }
+      .dashboard-value {
+        font-size: 2.3rem;
+        font-weight: 800;
+        color: var(--primary-dark);
+        margin-bottom: 8px;
+        letter-spacing: 0.01em;
+        text-shadow: 0 2px 8px #e5e7eb88;
+      }
+      .dashboard-label {
+        font-size: 1.08rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+        letter-spacing: 0.01em;
+      }
+      @media (max-width: 900px) {
+        .dashboard-financeiro {
+          grid-template-columns: 1fr;
+          max-width: 100%;
+          gap: 18px;
+        }
+        .dashboard-financeiro-bloco {
+          padding: 18px 0 12px 0;
+        }
+      }
+
+      .dashboard-rapido .dashboard-card {
+        position: relative;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 18px var(--shadow);
+        padding: 18px 0 12px 0;
+        text-align: center;
+        border: 1.5px solid #e5e7eb;
+        transition: box-shadow 0.3s, transform 0.2s;
+        cursor: pointer;
+        min-width: 0;
+        overflow: visible;
+      }
+      .dashboard-rapido .dashboard-card:hover {
+        box-shadow: 0 12px 32px var(--shadow-hover);
+        transform: translateY(-4px) scale(1.035);
+        z-index: 2;
+      }
+      .dashboard-rapido .dashboard-indicator {
+        height: 6px;
+        border-radius: 16px 16px 0 0;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      .dashboard-rapido .dashboard-indicator.clientes {
+        background: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+      }
+      .dashboard-rapido .dashboard-indicator.produtos {
+        background: linear-gradient(90deg, #7c3aed 60%, #a78bfa 100%);
+      }
+      .dashboard-rapido .dashboard-indicator.pedidos {
+        background: linear-gradient(90deg, #0ea5e9 60%, #38bdf8 100%);
+      }
+      .dashboard-rapido .dashboard-indicator.vendas {
+        background: linear-gradient(90deg, #059669 60%, #34d399 100%);
+      }
+      .dashboard-rapido .dashboard-card i {
+        font-size: 28px;
+        margin-bottom: 10px;
+        margin-top: 8px;
+        color: var(--primary-color);
+        transition: transform 0.3s;
+      }
+      .dashboard-rapido .dashboard-card.vendas i {
+        color: #059669;
+      }
+      .dashboard-rapido .dashboard-card:hover i {
+        transform: scale(1.13) rotate(-4deg);
+      }
+      .dashboard-rapido .dashboard-value {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--primary-dark);
+        margin-bottom: 6px;
+        letter-spacing: 0.01em;
+        text-shadow: 0 2px 8px #e5e7eb88;
+      }
+      .dashboard-rapido .dashboard-label {
+        font-size: 14px;
+        color: var(--text-secondary);
+        font-weight: 600;
+        letter-spacing: 0.01em;
       }
     </style>
   </head>
@@ -196,11 +440,10 @@
     <header class="header">
       <div class="header-content">
         <div class="logo">
-          <h1>J.P Sistemas</h1>
+          <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 150px; height: 67px; display: block; object-fit: contain; background: none; box-shadow: none; border-radius: 0; margin: 0;" />
         </div>
         <div class="user-info">
-          <span>Bem-vindo,</span>
-          <span id="userDisplay">Usuário</span>
+          <span>Bem-vindo, <span id="userDisplay"></span></span>
           <button class="logout-btn" onclick="logout()">
             <i class="fas fa-sign-out-alt"></i> Sair
           </button>
@@ -209,114 +452,171 @@
     </header>
 
     <main class="main-content">
-      <section class="welcome-section">
-        <h2>Painel de Controle</h2>
-        <p>Selecione uma das opções abaixo para acessar os módulos do sistema</p>
-      </section>
+      <div class="welcome-section">
+        <h2>Bem-vindo(a) ao J.P Sistemas</h2>
+        <p>Gerencie seus clientes, produtos, pedidos e relatorios de forma eficiente</p>
+      </div>
+
+      <!-- Dashboard Pequeno -->
+      <div class="dashboard-grid dashboard-rapido">
+        <div class="dashboard-card clientes" title="Total de clientes cadastrados.">
+          <div class="dashboard-indicator clientes"></div>
+          <i class="fas fa-users"></i>
+          <div class="dashboard-value" id="dashboardClientes">--</div>
+          <div class="dashboard-label">Clientes</div>
+        </div>
+        <div class="dashboard-card produtos" title="Total de produtos cadastrados.">
+          <div class="dashboard-indicator produtos"></div>
+          <i class="fas fa-box"></i>
+          <div class="dashboard-value" id="dashboardProdutos">--</div>
+          <div class="dashboard-label">Produtos</div>
+        </div>
+        <div class="dashboard-card pedidos" title="Total de pedidos realizados no mês.">
+          <div class="dashboard-indicator pedidos"></div>
+          <i class="fas fa-shopping-cart"></i>
+          <div class="dashboard-value" id="dashboardPedidos">--</div>
+          <div class="dashboard-label">Pedidos</div>
+        </div>
+        <div class="dashboard-card vendas" title="Valor total das vendas concluídas no mês.">
+          <div class="dashboard-indicator vendas"></div>
+          <i class="fas fa-coins"></i>
+          <div class="dashboard-value" id="dashboardVendas">--</div>
+          <div class="dashboard-label">Vendas do mês</div>
+        </div>
+      </div>
 
       <div class="menu-grid">
+        <a href="painel-clientes.html" class="menu-card">
+          <i class="fas fa-users"></i>
+          <h3>Clientes</h3>
+          <p>Gerencie o cadastro de clientes, visualize informacoes e mantenha dados atualizados</p>
+        </a>
+
         <a href="produtos.html" class="menu-card">
           <i class="fas fa-box"></i>
           <h3>Produtos</h3>
-          <p>Gerencie seu catálogo de produtos, estoque e preços</p>
+          <p>Controle seu estoque de produtos, precos e informacoes detalhadas</p>
         </a>
 
         <a href="pedidos.html" class="menu-card">
           <i class="fas fa-shopping-cart"></i>
           <h3>Pedidos</h3>
-          <p>Controle de pedidos, vendas e histórico de transações</p>
-        </a>
-
-        <a href="clientes.html" class="menu-card">
-          <i class="fas fa-users"></i>
-          <h3>Clientes</h3>
-          <p>Cadastro e gestão de clientes e informações de contato</p>
-        </a>
-
-        <a href="mesas.html" class="menu-card">
-          <i class="fas fa-chair"></i>
-          <h3>Mesas</h3>
-          <p>Controle de mesas para restaurantes e estabelecimentos</p>
-        </a>
-
-        <a href="caixa.html" class="menu-card">
-          <i class="fas fa-cash-register"></i>
-          <h3>Caixa</h3>
-          <p>Abertura, fechamento e controle de movimentações</p>
+          <p>Crie e gerencie pedidos, acompanhe status e gere relatorios</p>
         </a>
 
         <a href="relatorios.html" class="menu-card">
           <i class="fas fa-chart-bar"></i>
-          <h3>Relatórios</h3>
-          <p>Relatórios detalhados de vendas, produtos e performance</p>
+          <h3>Relatorios</h3>
+          <p>Visualize relatorios detalhados de vendas, clientes e produtos</p>
         </a>
 
         <a href="configuracoes.html" class="menu-card">
           <i class="fas fa-cog"></i>
-          <h3>Configurações</h3>
-          <p>Configurações do sistema e preferências</p>
+          <h3>Configuracoes</h3>
+          <p>Configure preferencias do sistema e gerencie usuarios</p>
         </a>
 
         <a href="ajuda.html" class="menu-card">
           <i class="fas fa-question-circle"></i>
           <h3>Ajuda</h3>
-          <p>Manual de uso e suporte técnico</p>
+          <p>Encontre ajuda e suporte para usar o sistema</p>
         </a>
       </div>
-    </main>
 
+      <!-- Linha separada para contas a pagar e receber -->
+      <div class="dashboard-financeiro-bloco">
+        <h3 class="dashboard-financeiro-titulo"><i class="fas fa-wallet"></i> Resumo Financeiro</h3>
+        <div class="dashboard-grid dashboard-rapido dashboard-financeiro">
+          <div class="dashboard-card pagar" title="Total de contas a pagar, somando todos os lançamentos em aberto.">
+            <div class="dashboard-indicator pagar"></div>
+            <i class="fas fa-arrow-circle-up"></i>
+            <div class="dashboard-value" id="dashboardPagar">--</div>
+            <div class="dashboard-label">Contas a Pagar</div>
+          </div>
+          <div class="dashboard-card receber" title="Total de contas a receber, somando todos os lançamentos em aberto.">
+            <div class="dashboard-indicator receber"></div>
+            <i class="fas fa-arrow-circle-down"></i>
+            <div class="dashboard-value" id="dashboardReceber">--</div>
+            <div class="dashboard-label">Contas a Receber</div>
+          </div>
+          <div class="dashboard-card lucro" title="Lucro estimado do mês, considerando vendas concluídas.">
+            <div class="dashboard-indicator lucro"></div>
+            <i class="fas fa-coins"></i>
+            <div class="dashboard-value" id="dashboardLucro">--</div>
+            <div class="dashboard-label">Lucro do mês</div>
+          </div>
+        </div>
+      </div>
+    </main>
     <footer class="footer">
-      © 2025 J.P Sistemas. Todos os direitos reservados. 
-      <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank">
-        Fale conosco no WhatsApp
-      </a>
+      © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ola,%20gostaria%20de%20mais%20informacoes%20sobre%20os%20sistemas." target="_blank" style="color: #fff; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
     </footer>
 
     <script>
-      // Verificar autenticação via cookie/JWT
-      async function checkAuth() {
-        try {
-          const res = await fetch('/api/auth/check', { credentials: 'include' });
-          if (!res.ok) throw new Error('Não autenticado');
-          const data = await res.json();
-          if (!data.authenticated) throw new Error('Não autenticado');
-        } catch (err) {
-          window.location.href = 'sistema.html';
+      document.addEventListener('DOMContentLoaded', () => {
+        // Verificar se esta logado
+        if (sessionStorage.getItem('loggedIn') !== 'true') {
+          window.location.href = 'index.html';
         }
-      }
-      checkAuth();
 
-      // Exibir nome do usuário
-      const username = sessionStorage.getItem('username') || 'Usuário';
-      const userDisplay = document.getElementById('userDisplay');
-      // Capitalizar primeira letra do nome
-      const capitalizedUsername = username.charAt(0).toUpperCase() + username.slice(1);
-      userDisplay.textContent = capitalizedUsername;
+        // Exibir nome do usuario
+        const username = sessionStorage.getItem('username') || 'Usuario';
+        document.getElementById('userDisplay').textContent = username;
 
-      // Função de logout
+        // Buscar dados do dashboard
+        fetch('/api/relatorios/estatisticas', { credentials: 'include' })
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById('dashboardClientes').textContent = data.totalClientes ?? '--';
+            document.getElementById('dashboardProdutos').textContent = data.totalProdutos ?? '--';
+            document.getElementById('dashboardPedidos').textContent = data.pedidosMes ?? '--';
+            document.getElementById('dashboardVendas').textContent = data.vendasMes ? 'R$ ' + Number(data.vendasMes).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '--';
+          })
+          .catch(() => {
+            document.getElementById('dashboardClientes').textContent = '--';
+            document.getElementById('dashboardProdutos').textContent = '--';
+            document.getElementById('dashboardPedidos').textContent = '--';
+            document.getElementById('dashboardVendas').textContent = '--';
+          });
+
+        // Buscar contas a pagar e receber
+        fetch('/api/contas/pagar', { credentials: 'include' })
+          .then(res => res.json())
+          .then(lista => {
+            const total = lista.reduce((acc, c) => acc + Number(c.valor || 0), 0);
+            document.getElementById('dashboardPagar').textContent = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+          })
+          .catch(() => {
+            document.getElementById('dashboardPagar').textContent = '--';
+          });
+        fetch('/api/contas/receber', { credentials: 'include' })
+          .then(res => res.json())
+          .then(lista => {
+            const total = lista.reduce((acc, c) => acc + Number(c.valor || 0), 0);
+            document.getElementById('dashboardReceber').textContent = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+          })
+          .catch(() => {
+            document.getElementById('dashboardReceber').textContent = '--';
+          });
+
+        // Buscar lucro do mês
+        fetch('/api/relatorios/estatisticas', { credentials: 'include' })
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById('dashboardLucro').textContent = data.lucroMes ? 'R$ ' + Number(data.lucroMes).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '--';
+          })
+          .catch(() => {
+            document.getElementById('dashboardLucro').textContent = '--';
+          });
+      });
+      
+      // Função logout global
       async function logout() {
         await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+        sessionStorage.removeItem('loggedIn');
         sessionStorage.removeItem('username');
-        sessionStorage.removeItem('loginTime');
         window.location.href = 'sistema.html';
       }
-
-      // Verificar tempo de sessão (8 horas)
-      function checkSessionTimeout() {
-        const loginTime = sessionStorage.getItem('loginTime');
-        if (loginTime) {
-          const loginDate = new Date(loginTime);
-          const currentDate = new Date();
-          const timeDiff = currentDate.getTime() - loginDate.getTime();
-          const hoursDiff = timeDiff / (1000 * 3600);
-          if (hoursDiff >= 8) {
-            alert('Sessão expirada. Faça login novamente.');
-            logout();
-          }
-        }
-      }
-      setInterval(checkSessionTimeout, 5 * 60 * 1000);
-      checkSessionTimeout();
     </script>
   </body>
 </html>

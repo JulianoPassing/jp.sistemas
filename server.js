@@ -924,15 +924,6 @@ app.get('/ajuda', (req, res) => {
 
 app.use('/api/contas', require('./api/contas'));
 
-// Rota para checar autenticação (JWT via cookie)
-app.get('/api/auth/check', requireAuthJWT, (req, res) => {
-  if (req.user) {
-    res.json({ authenticated: true, user: req.user });
-  } else {
-    res.status(401).json({ authenticated: false });
-  }
-});
-
 // Inicialização do servidor (apenas se executado diretamente)
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
