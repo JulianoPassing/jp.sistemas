@@ -441,26 +441,16 @@
           <!-- Seção: Tipo de Cálculo -->
           <div class="form-group">
             <label class="label-primary">Tipo de Cálculo</label>
-            <div class="tipo-emprestimo-container" style="grid-template-columns: repeat(3, 1fr);">
-              <div class="tipo-option">
-                <input type="radio" id="calc-valor-fixo" name="tipoCalculo" value="fixed" checked>
-                <label for="calc-valor-fixo">Valor Fixo (R$)</label>
-              </div>
-              <div class="tipo-option">
-                <input type="radio" id="calc-parcela-fixa" name="tipoCalculo" value="fixed-installment">
-                <label for="calc-parcela-fixa">Parcela Fixa (R$)</label>
-              </div>
-              <div class="tipo-option">
-                <input type="radio" id="calc-porcentagem" name="tipoCalculo" value="percentage">
-                <label for="calc-porcentagem">Porcentagem (%)</label>
-              </div>
+            <div class="tipo-emprestimo-container" id="tipoCalculoBtns" style="grid-template-columns: repeat(3, 1fr);">
+              <button type="button" class="tipo-option" id="btnCalcValorFixo" data-calc="fixed">Valor Fixo (R$)</button>
+              <button type="button" class="tipo-option" id="btnCalcParcelaFixa" data-calc="fixed-installment">Parcela Fixa (R$)</button>
+              <button type="button" class="tipo-option" id="btnCalcPorcentagem" data-calc="percentage">Porcentagem (%)</button>
             </div>
           </div>
 
-          <!-- Seção: Valor Final de Cobrança -->
-          <div class="form-group" id="valorFinalSection">
-            <label class="label-primary">Valor Final de Cobrança (R$)</label>
-            <input type="text" name="valorFinal" id="valorFinal" class="input-primary" placeholder="ex.: 1000">
+          <!-- Campos dinâmicos -->
+          <div id="camposCalculo">
+            <!-- Os campos específicos aparecerão aqui -->
           </div>
 
           <!-- Seção: Parcelas e Frequência -->
@@ -502,8 +492,6 @@
           </div>
 
           <small class="font-semibold text-terciary text-xs">* Caso seja número decimal utilize ponto, exemplo <strong>(20,5)</strong> deve ser informado <strong>(20.5)</strong>.</small>
-
-
 
           <!-- Seção: Observações -->
           <div class="form-group">
@@ -743,9 +731,9 @@
       const clienteExistente = document.getElementById('clienteExistente');
       const novoCliente = document.getElementById('novoCliente');
       const tipoEmprestimoSelect = document.getElementById('tipoEmprestimo');
-      const tipoCalculoInputs = document.querySelectorAll('input[name="tipoCalculo"]');
-      const valorFinalSection = document.getElementById('valorFinalSection');
-      const simulacaoPreview = document.getElementById('simulacaoPreview');
+      const tipoCalculoBtns = document.getElementById('tipoCalculoBtns');
+      const camposCalculo = document.getElementById('camposCalculo');
+      let tipoCalculoSelecionado = 'fixed';
 
       // Toggle do formulário
       toggleFormBtn.addEventListener('click', async () => {
@@ -779,19 +767,53 @@
       tipoEmprestimoSelect.addEventListener('change', () => {
         const tipoEmprestimo = tipoEmprestimoSelect.value;
         if (tipoEmprestimo === 'in_installments') {
-          valorFinalSection.style.display = 'block';
+          camposCalculo.style.display = 'block';
         } else {
-          valorFinalSection.style.display = 'none';
+          camposCalculo.style.display = 'none';
         }
       });
 
-      // Controle de tipo de cálculo
-      tipoCalculoInputs.forEach(input => {
-        input.addEventListener('change', () => {
-          const tipoCalculo = document.querySelector('input[name="tipoCalculo"]:checked').value;
-          // Aqui você pode adicionar lógica específica para cada tipo de cálculo
-        });
+      // Substituir o controle de tipo de cálculo por botões e campos dinâmicos
+      function renderCamposCalculo() {
+        let html = '';
+        if (tipoCalculoSelecionado === 'fixed') {
+          html = `
+            <div class="form-group">
+              <label class="label-primary">Valor Final de Cobrança (R$)</label>
+              <input type="text" name="valorFinal" id="valorFinal" class="input-primary" placeholder="ex.: 1000">
+            </div>
+          `;
+        } else if (tipoCalculoSelecionado === 'fixed-installment') {
+          html = `
+            <div class="form-group">
+              <label class="label-primary">Valor da Parcela (R$)</label>
+              <input type="text" name="valorParcela" id="valorParcela" class="input-primary" placeholder="ex.: 100">
+            </div>
+          `;
+        } else if (tipoCalculoSelecionado === 'percentage') {
+          html = `
+            <div class="form-group">
+              <label class="label-primary">Porcentagem (%)</label>
+              <input type="number" name="porcentagem" id="porcentagem" class="input-primary" placeholder="ex.: 20">
+            </div>
+          `;
+        }
+        camposCalculo.innerHTML = html;
+      }
+
+      tipoCalculoBtns.addEventListener('click', (e) => {
+        if (e.target && e.target.dataset.calc) {
+          tipoCalculoSelecionado = e.target.dataset.calc;
+          // Atualiza visual dos botões
+          Array.from(tipoCalculoBtns.children).forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.calc === tipoCalculoSelecionado);
+          });
+          renderCamposCalculo();
+        }
       });
+
+      // Inicializa campos dinâmicos
+      renderCamposCalculo();
 
       // Carregar clientes
       async function carregarClientes() {
@@ -845,7 +867,7 @@
         const valorFinal = parseFloat(document.getElementById('valorFinal').value.replace(',', '.')) || 0;
         const numeroParcelas = parseInt(document.getElementById('numeroParcelas').value) || 1;
         const tipoEmprestimo = document.getElementById('tipoEmprestimo').value;
-        const tipoCalculo = document.querySelector('input[name="tipoCalculo"]:checked').value;
+        const tipoCalculo = tipoCalculoSelecionado;
 
         let simulacao = {
           valor: valor,
@@ -929,7 +951,7 @@
         novoEmprestimoForm.reset();
         document.getElementById('clienteInfo').style.display = 'none';
         simulacaoPreview.classList.remove('show');
-        valorFinalSection.style.display = 'none';
+        camposCalculo.style.display = 'none';
         clienteExistente.style.display = 'block';
         novoCliente.style.display = 'none';
       }
@@ -1053,7 +1075,7 @@
             cliente_id: parseInt(clienteId),
             valor: parseFloat(dados.valor.replace(',', '.')),
             tipo_emprestimo: dados.tipoEmprestimo,
-            tipo_calculo: document.querySelector('input[name="tipoCalculo"]:checked').value,
+            tipo_calculo: tipoCalculoSelecionado,
             valor_final: parseFloat(dados.valorFinal?.replace(',', '.')) || 0,
             numero_parcelas: parseInt(dados.numeroParcelas) || 1,
             frequencia: dados.frequencia || 'monthly',
@@ -1077,8 +1099,8 @@
           console.error('Erro ao criar empréstimo:', error);
           alert('Erro ao criar empréstimo. Tente novamente.');
         }
-              });
-      }
-    </script>
+      });
+    }
+  </script>
 </body>
 </html> 
