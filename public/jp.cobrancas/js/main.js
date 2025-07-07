@@ -1646,7 +1646,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Modal de Novo Empréstimo
   /*const novoEmprestimoBtn = document.getElementById('toggleForm');
   if (novoEmprestimoBtn) {
-    novoEmprestimoBtn.addEventListener('click', async () => {
+    novoEmprestimoBtn.addEventListener('click', async () => {*/
       // Buscar clientes
       let clientes = [];
       try {
@@ -1727,7 +1727,6 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
       const modal = ui.showModal(modalContent, 'Adicionar Empréstimo');
       const form = modal.querySelector('#modal-emprestimo-form');
-      */
       // Preencher campos ao selecionar cliente
       const select = modal.querySelector('#modal-cliente-select');
       const nomeInput = modal.querySelector('#modal-nome');
