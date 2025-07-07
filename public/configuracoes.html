@@ -3,366 +3,536 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Configuracoes - J.P Sistemas Comercial</title>
+  <title>Configurações - J.P Sistemas Comercial</title>
   <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="mobile.css">
-  <style>
-    :root {
-              --primary-color: #005a9f;
-      --primary-dark: #003766;
-      --primary-light: #0077cc;
-      --secondary-color: #022656;
-      --accent-color: #1e4a8a;
-      --text-primary: #1f2937;
-      --text-secondary: #6b7280;
-      --background: #f8fafc;
-      --surface: #ffffff;
-      --border: #e5e7eb;
-      --shadow: rgba(0, 90, 159, 0.1);
-      --shadow-hover: rgba(0, 90, 159, 0.2);
-      --success-color: #059669;
-      --danger-color: #dc2626;
-      --light-color: #f9fafb;
-      --dark-color: #111827;
-      --bg-color: #f3f4f6;
-      --card-bg: #ffffff;
-      --border-color: #e0e0e0;
-      --border-radius: 12px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      background: linear-gradient(135deg, #005a9f 0%, #003766 100%);
-      color: var(--text-primary);
-      padding: 0;
-      min-height: 100vh;
-    }
-    .header {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px);
-      padding: 20px 0;
-      box-shadow: 0 4px 20px rgba(0, 90, 159, 0.1);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    .header-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .logo {
-      display: flex;
-      align-items: center;
-    }
-    .logo h1 {
-      color: var(--primary-color);
-      font-size: 24px;
-      font-weight: 700;
-      text-align: left;
-    }
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .user-info span {
-      color: var(--text-primary);
-      font-family: 'Inter', sans-serif;
-      font-size: 16px;
-      font-weight: 500;
-    }
-    .user-info #userDisplay {
-      font-weight: 700;
-    }
-    .logout-btn {
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      text-decoration: none;
-    }
-    .logout-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(0, 90, 159, 0.3);
-    }
-    .main-content {
-      max-width: 1200px;
-      margin: 40px auto;
-      padding: 0 20px;
-    }
-    .container { max-width: 1200px; margin: 0 auto; }
-    #logo-container { text-align: center; margin-bottom: 25px; }
-    #logo { 
-      max-width: 100%; 
-      height: auto; 
-      max-height: 80px; 
-      filter: brightness(0) invert(1);
-      opacity: 0.9;
-    }
-e    .card { 
-      background-color: var(--card-bg); 
-      border-radius: var(--border-radius); 
-      box-shadow: var(--shadow); 
-      padding: 25px; 
-      margin-bottom: 25px; 
-      border: 1px solid var(--border-color); 
-    }
-    .card-header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid var(--border-color);
-    }
-    .card-header h2 { 
-      font-size: 1.8em; 
-      color: var(--dark-color); 
-      font-weight: 600; 
-      text-align: center;
-    }
-    .btn { 
-      display: inline-flex; 
-      align-items: center; 
-      justify-content: center; 
-      gap: 8px; 
-      padding: 12px 20px; 
-      border-radius: 8px; 
-      border: none; 
-      font-family: "Poppins", sans-serif; 
-      font-weight: 500; 
-      font-size: 0.95em; 
-      cursor: pointer; 
-      transition: all 0.3s ease; 
-      text-decoration: none; 
-    }
-    .btn-primary { 
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); 
-      color: white; 
-    }
-    .btn-primary:hover { 
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-    }
-    .btn-success { 
-      background: linear-gradient(135deg, var(--success-color), #20c997); 
-      color: white; 
-    }
-    .btn-success:hover { 
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
-    }
-    .btn-danger { 
-      background: linear-gradient(135deg, var(--danger-color), #c82333); 
-      color: white; 
-    }
-    .btn-danger:hover { 
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
-    }
-    .config-area {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 20px;
-      margin-top: 20px;
-      min-height: 180px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-    .config-area h3 {
-      color: var(--primary-color);
-      margin-bottom: 10px;
-    }
-    .config-area label {
-      font-weight: 500;
-      color: var(--dark-color);
-      margin-top: 10px;
-      display: block;
-    }
-    .config-area input[type="text"], .config-area input[type="password"] {
-      width: 100%;
-      padding: 10px;
-      border: 1.5px solid var(--border-color);
-      border-radius: 6px;
-      margin-bottom: 10px;
-      font-size: 1em;
-      background: #fff;
-    }
-    .config-area button {
-      margin-top: 10px;
-      padding: 10px 18px;
-      border-radius: 6px;
-      border: none;
-      background: var(--primary-color);
-      color: #fff;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .config-area button:hover {
-      background: var(--primary-hover);
-    }
-    .footer {
-      width: 100%;
-      text-align: center;
-      padding: 18px 0 12px 0;
-      color: #fff;
-      font-size: 15px;
-      background: transparent;
-      font-family: 'Inter', sans-serif;
-      letter-spacing: 0.02em;
-    }
-  </style>
 </head>
 <body>
-  <header class="header">
-    <div class="header-content">
-      <div class="logo">
-        <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 150px; height: 67px; display: block; object-fit: contain; background: none; box-shadow: none; border-radius: 0; margin: 0;" />
-      </div>
-      <div class="user-info">
-        <span>Bem-vindo, <span id="userDisplay"></span></span>
-        <button class="logout-btn" onclick="logout()">
-          <i class="fas fa-sign-out-alt"></i> Sair
-        </button>
-        <a href="painel.html" class="logout-btn" style="background: var(--primary-light); margin-left: 8px;">
-          <i class="fas fa-arrow-left"></i> Voltar
+  <div class="app-layout">
+    <!-- Header -->
+    <header>
+      <div class="header-content">
+        <a href="index.html" class="logo">
+          <h1>J.P Sistemas</h1>
         </a>
+        <nav>
+          <div class="user-info">
+            <span>Bem-vindo, <span id="userDisplay"></span></span>
+            <a href="sistema.html" class="nav-link">
+              <i class="fas fa-sign-out-alt"></i> Sair
+            </a>
+          </div>
+        </nav>
       </div>
-    </div>
-  </header>
-  <main class="main-content">
-    <div class="card">
-      <div class="card-header">
-        <h2>Configuracoes do Sistema</h2>
-      </div>
-      <div class="config-area">
-        <div style="text-align: center; padding: 40px 20px;">
-          <i class="fas fa-lock" style="font-size: 48px; color: var(--primary-color); margin-bottom: 20px; display: block;"></i>
-          <h3 style="color: var(--primary-color); margin-bottom: 15px;">Configuracoes Bloqueadas</h3>
-          <p style="color: var(--text-secondary); font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-            Entre em contato com o Suporte e solicite as alteracoes.
-          </p>
-          <div style="background: rgba(0, 90, 159, 0.1); border: 1px solid rgba(0, 90, 159, 0.2); border-radius: 8px; padding: 15px; margin-top: 20px;">
-            <p style="margin: 0; color: var(--text-primary); font-size: 14px;">
-              <i class="fas fa-info-circle" style="color: var(--primary-color); margin-right: 8px;"></i>
-              Para alterar configuracoes do sistema, entre em contato com nossa equipe de suporte tecnico.
-            </p>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+      <div class="container">
+        <!-- Dashboard -->
+        <div class="dashboard">
+          <div class="dashboard-header">
+            <h1 class="dashboard-title">Configurações</h1>
+            <p class="dashboard-subtitle">Gerencie as configurações do sistema</p>
+          </div>
+        </div>
+
+        <!-- Dados da Empresa Section -->
+        <div class="section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <i class="fas fa-building"></i>
+              Dados da Empresa
+            </h2>
+          </div>
+
+          <div class="card">
+            <form id="empresaForm">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group">
+                  <label for="razaoSocial">Razão Social</label>
+                  <input type="text" id="razaoSocial" name="razaoSocial" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="cnpj">CNPJ</label>
+                  <input type="text" id="cnpj" name="cnpj" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                  <label for="telefone">Telefone</label>
+                  <input type="text" id="telefone" name="telefone" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                  <label for="email">Email</label>
+                  <input type="email" id="email" name="email" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                  <label for="endereco">Endereço</label>
+                  <input type="text" id="endereco" name="endereco" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                  <label for="cidade">Cidade</label>
+                  <input type="text" id="cidade" name="cidade" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                  <label for="estado">Estado</label>
+                  <input type="text" id="estado" name="estado" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                  <label for="cep">CEP</label>
+                  <input type="text" id="cep" name="cep" class="form-input">
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="observacoes">Observações</label>
+                <textarea id="observacoes" name="observacoes" class="form-input" rows="3"></textarea>
+              </div>
+              
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Salvar Dados da Empresa
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Alterar Senha Section -->
+        <div class="section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <i class="fas fa-key"></i>
+              Alterar Senha
+            </h2>
+          </div>
+
+          <div class="card">
+            <form id="senhaForm">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group">
+                  <label for="senhaAtual">Senha Atual</label>
+                  <input type="password" id="senhaAtual" name="senhaAtual" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="novaSenha">Nova Senha</label>
+                  <input type="password" id="novaSenha" name="novaSenha" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="confirmarSenha">Confirmar Nova Senha</label>
+                  <input type="password" id="confirmarSenha" name="confirmarSenha" class="form-input" required>
+                </div>
+              </div>
+              
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-key"></i> Alterar Senha
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Configurações do Sistema Section -->
+        <div class="section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <i class="fas fa-cog"></i>
+              Configurações do Sistema
+            </h2>
+          </div>
+
+          <div class="card">
+            <form id="sistemaForm">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group">
+                  <label for="moeda">Moeda Padrão</label>
+                  <select id="moeda" name="moeda" class="form-input">
+                    <option value="BRL">Real (R$)</option>
+                    <option value="USD">Dólar ($)</option>
+                    <option value="EUR">Euro (€)</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label for="timezone">Fuso Horário</label>
+                  <select id="timezone" name="timezone" class="form-input">
+                    <option value="America/Sao_Paulo">Brasília (GMT-3)</option>
+                    <option value="America/Manaus">Manaus (GMT-4)</option>
+                    <option value="America/Belem">Belém (GMT-3)</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label for="idioma">Idioma</label>
+                  <select id="idioma" name="idioma" class="form-input">
+                    <option value="pt-BR">Português (Brasil)</option>
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label for="tema">Tema</label>
+                  <select id="tema" name="tema" class="form-input">
+                    <option value="light">Claro</option>
+                    <option value="dark">Escuro</option>
+                    <option value="auto">Automático</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="notificacoes" name="notificacoes">
+                  Ativar notificações
+                </label>
+              </div>
+              
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="backupAutomatico" name="backupAutomatico">
+                  Backup automático
+                </label>
+              </div>
+              
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Salvar Configurações
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Backup e Restauração Section -->
+        <div class="section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <i class="fas fa-database"></i>
+              Backup e Restauração
+            </h2>
+          </div>
+
+          <div class="card">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h3 class="text-lg font-semibold mb-3">Backup</h3>
+                <p class="text-gray-600 mb-4">Faça backup dos dados do sistema</p>
+                <button onclick="fazerBackup()" class="btn btn-primary">
+                  <i class="fas fa-download"></i> Fazer Backup
+                </button>
+              </div>
+              
+              <div>
+                <h3 class="text-lg font-semibold mb-3">Restauração</h3>
+                <p class="text-gray-600 mb-4">Restaura dados de um backup</p>
+                <input type="file" id="backupFile" accept=".json,.sql" style="display: none;" onchange="restaurarBackup(event)">
+                <button onclick="document.getElementById('backupFile').click()" class="btn btn-secondary">
+                  <i class="fas fa-upload"></i> Selecionar Arquivo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Voltar Section -->
+        <div class="section">
+          <div class="card">
+            <div class="text-center">
+              <button onclick="voltarPainel()" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar ao Painel
+              </button>
+            </div>
           </div>
         </div>
       </div>
-      <div class="config-area" id="empresa-config-area">
-        <form id="empresaForm" style="max-width: 500px; margin: 0 auto;">
-          <h3>Informações da Empresa</h3>
-          <label for="nome_fantasia">Nome Fantasia</label>
-          <input type="text" id="nome_fantasia" name="nome_fantasia" required />
+    </main>
 
-          <label for="razao_social">Razão Social</label>
-          <input type="text" id="razao_social" name="razao_social" required />
-
-          <label for="cnpj">CNPJ</label>
-          <input type="text" id="cnpj" name="cnpj" required maxlength="18" />
-
-          <label for="endereco">Endereço</label>
-          <input type="text" id="endereco" name="endereco" />
-
-          <label for="email">E-mail</label>
-          <input type="text" id="email" name="email" />
-
-          <label for="telefone">Telefone</label>
-          <input type="text" id="telefone" name="telefone" />
-
-          <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Salvar Informações</button>
-          <div id="empresaMsg" style="margin-top: 10px;"></div>
-        </form>
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <p class="text-center">&copy; 2024 J.P Sistemas. Todos os direitos reservados.</p>
       </div>
-    </div>
-  </main>
-  <footer class="footer">
-    © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ola,%20gostaria%20de%20mais%20informacoes%20sobre%20os%20sistemas." target="_blank" style="color: #fff; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
-  </footer>
+    </footer>
+  </div>
+
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Verificar se está logado
-      if (sessionStorage.getItem('loggedIn') !== 'true') {
-        window.location.href = 'index.html';
+    // Carregar informações do usuário
+    document.addEventListener('DOMContentLoaded', function() {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (user && user.nome) {
+        // Capitalizar primeira letra do nome
+        const nomeCapitalizado = user.nome.charAt(0).toUpperCase() + user.nome.slice(1);
+        document.getElementById('userDisplay').textContent = nomeCapitalizado;
+      } else {
+        document.getElementById('userDisplay').textContent = 'Usuário';
       }
 
-      // Exibir nome do usuário
-      const username = sessionStorage.getItem('username') || 'Usuário';
-      document.getElementById('userDisplay').textContent = username;
+      carregarConfiguracoes();
+      configurarEventos();
     });
 
-    async function logout() {
-      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-      sessionStorage.removeItem('loggedIn');
-      sessionStorage.removeItem('username');
-      window.location.href = 'sistema.html';
-    }
-
-    // --- Empresa: carregar e salvar informações ---
-    async function carregarEmpresa() {
-      try {
-        const res = await fetch('/api/empresa');
-        if (!res.ok) return;
-        const data = await res.json();
-        // Garante que data é um objeto e preenche os campos com string vazia se não existir
-        document.getElementById('nome_fantasia').value = data?.nome_fantasia ?? '';
-        document.getElementById('razao_social').value = data?.razao_social ?? '';
-        document.getElementById('cnpj').value = data?.cnpj ?? '';
-        document.getElementById('endereco').value = data?.endereco ?? '';
-        document.getElementById('email').value = data?.email ?? '';
-        document.getElementById('telefone').value = data?.telefone ?? '';
-      } catch (e) {
-        console.error('Erro ao carregar empresa:', e);
+    // Verificar autenticação
+    function checkAuth() {
+      const user = localStorage.getItem('user');
+      if (!user) {
+        window.location.href = 'sistema.html';
       }
     }
-    document.getElementById('empresaForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const form = e.target;
-      const body = {
-        nome_fantasia: form.nome_fantasia.value,
-        razao_social: form.razao_social.value,
-        cnpj: form.cnpj.value,
-        endereco: form.endereco.value,
-        email: form.email.value,
-        telefone: form.telefone.value
-      };
+
+    // Verificar autenticação ao carregar a página
+    checkAuth();
+
+    // Verificar autenticação periodicamente
+    setInterval(checkAuth, 30000);
+
+    // Configurar eventos
+    function configurarEventos() {
+      document.getElementById('empresaForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        salvarDadosEmpresa();
+      });
+
+      document.getElementById('senhaForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        alterarSenha();
+      });
+
+      document.getElementById('sistemaForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        salvarConfiguracoesSistema();
+      });
+    }
+
+    // Carregar configurações
+    async function carregarConfiguracoes() {
       try {
-        const res = await fetch('/api/empresa', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
+        const response = await fetch('/api/empresa');
+        const dados = await response.json();
+        
+        // Preencher dados da empresa
+        document.getElementById('razaoSocial').value = dados.razao_social || '';
+        document.getElementById('cnpj').value = dados.cnpj || '';
+        document.getElementById('telefone').value = dados.telefone || '';
+        document.getElementById('email').value = dados.email || '';
+        document.getElementById('endereco').value = dados.endereco || '';
+        document.getElementById('cidade').value = dados.cidade || '';
+        document.getElementById('estado').value = dados.estado || '';
+        document.getElementById('cep').value = dados.cep || '';
+        document.getElementById('observacoes').value = dados.observacoes || '';
+        
+        // Preencher configurações do sistema
+        document.getElementById('moeda').value = dados.moeda || 'BRL';
+        document.getElementById('timezone').value = dados.timezone || 'America/Sao_Paulo';
+        document.getElementById('idioma').value = dados.idioma || 'pt-BR';
+        document.getElementById('tema').value = dados.tema || 'light';
+        document.getElementById('notificacoes').checked = dados.notificacoes || false;
+        document.getElementById('backupAutomatico').checked = dados.backup_automatico || false;
+      } catch (error) {
+        console.error('Erro ao carregar configurações:', error);
+        mostrarNotificacao('Erro ao carregar configurações', 'error');
+      }
+    }
+
+    // Salvar dados da empresa
+    async function salvarDadosEmpresa() {
+      const formData = new FormData(document.getElementById('empresaForm'));
+      const dados = Object.fromEntries(formData.entries());
+
+      try {
+        const response = await fetch('/api/empresa', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(dados)
         });
-        const data = await res.json();
-        if (res.ok) {
-          document.getElementById('empresaMsg').textContent = 'Informações salvas com sucesso!';
-          document.getElementById('empresaMsg').style.color = 'green';
-          await carregarEmpresa();
+
+        if (response.ok) {
+          mostrarNotificacao('Dados da empresa salvos com sucesso!', 'success');
         } else {
-          document.getElementById('empresaMsg').textContent = data.error || 'Erro ao salvar.';
-          document.getElementById('empresaMsg').style.color = 'red';
+          throw new Error('Erro ao salvar dados da empresa');
         }
-      } catch (e) {
-        document.getElementById('empresaMsg').textContent = 'Erro ao salvar.';
-        document.getElementById('empresaMsg').style.color = 'red';
+      } catch (error) {
+        console.error('Erro ao salvar dados da empresa:', error);
+        mostrarNotificacao('Erro ao salvar dados da empresa', 'error');
       }
-    });
-    carregarEmpresa();
+    }
+
+    // Alterar senha
+    async function alterarSenha() {
+      const senhaAtual = document.getElementById('senhaAtual').value;
+      const novaSenha = document.getElementById('novaSenha').value;
+      const confirmarSenha = document.getElementById('confirmarSenha').value;
+
+      if (novaSenha !== confirmarSenha) {
+        mostrarNotificacao('As senhas não coincidem', 'error');
+        return;
+      }
+
+      if (novaSenha.length < 6) {
+        mostrarNotificacao('A nova senha deve ter pelo menos 6 caracteres', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/auth/alterar-senha', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            senhaAtual: senhaAtual,
+            novaSenha: novaSenha
+          })
+        });
+
+        if (response.ok) {
+          mostrarNotificacao('Senha alterada com sucesso!', 'success');
+          document.getElementById('senhaForm').reset();
+        } else {
+          const error = await response.json();
+          throw new Error(error.message || 'Erro ao alterar senha');
+        }
+      } catch (error) {
+        console.error('Erro ao alterar senha:', error);
+        mostrarNotificacao(error.message || 'Erro ao alterar senha', 'error');
+      }
+    }
+
+    // Salvar configurações do sistema
+    async function salvarConfiguracoesSistema() {
+      const formData = new FormData(document.getElementById('sistemaForm'));
+      const dados = Object.fromEntries(formData.entries());
+
+      // Converter checkboxes para boolean
+      dados.notificacoes = document.getElementById('notificacoes').checked;
+      dados.backupAutomatico = document.getElementById('backupAutomatico').checked;
+
+      try {
+        const response = await fetch('/api/configuracoes', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(dados)
+        });
+
+        if (response.ok) {
+          mostrarNotificacao('Configurações salvas com sucesso!', 'success');
+        } else {
+          throw new Error('Erro ao salvar configurações');
+        }
+      } catch (error) {
+        console.error('Erro ao salvar configurações:', error);
+        mostrarNotificacao('Erro ao salvar configurações', 'error');
+      }
+    }
+
+    // Fazer backup
+    async function fazerBackup() {
+      try {
+        const response = await fetch('/api/backup');
+        const blob = await response.blob();
+        
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        mostrarNotificacao('Backup realizado com sucesso!', 'success');
+      } catch (error) {
+        console.error('Erro ao fazer backup:', error);
+        mostrarNotificacao('Erro ao fazer backup', 'error');
+      }
+    }
+
+    // Restaurar backup
+    function restaurarBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const dados = JSON.parse(e.target.result);
+          confirmarRestauracao(dados);
+        } catch (error) {
+          console.error('Erro ao processar arquivo:', error);
+          mostrarNotificacao('Arquivo inválido', 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Confirmar restauração
+    function confirmarRestauracao(dados) {
+      if (confirm('Tem certeza que deseja restaurar os dados? Esta ação não pode ser desfeita.')) {
+        executarRestauracao(dados);
+      }
+    }
+
+    // Executar restauração
+    async function executarRestauracao(dados) {
+      try {
+        const response = await fetch('/api/restaurar', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(dados)
+        });
+
+        if (response.ok) {
+          mostrarNotificacao('Restauração realizada com sucesso!', 'success');
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        } else {
+          throw new Error('Erro ao restaurar dados');
+        }
+      } catch (error) {
+        console.error('Erro ao restaurar dados:', error);
+        mostrarNotificacao('Erro ao restaurar dados', 'error');
+      }
+    }
+
+    // Voltar para o painel
+    function voltarPainel() {
+      window.location.href = 'painel.html';
+    }
+
+    // Mostrar notificação
+    function mostrarNotificacao(mensagem, tipo) {
+      const notification = document.createElement('div');
+      notification.className = `notification notification-${tipo}`;
+      notification.innerHTML = `
+        <div class="notification-content">
+          <span>${mensagem}</span>
+          <button class="notification-close" onclick="this.parentElement.parentElement.remove()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        if (notification.parentElement) {
+          notification.remove();
+        }
+      }, 5000);
+    }
   </script>
 </body>
 </html> 
