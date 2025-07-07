@@ -576,31 +576,22 @@
             if (isNaN(n)) return undefined;
             return n;
           }
-          // Montar payload com nomes alternativos
-          const value = formatValorNum(formData.get('valueFormatted'));
-          const finalValue = modo !== 'porcentagem' ? formatValorNum(formData.get('finalValueFormatted')) : undefined;
-          const installments = formData.get('payBy') ? parseInt(formData.get('payBy')) : undefined;
-          const clienteId = formData.get('clienteId') ? parseInt(formData.get('clienteId')) : undefined;
-          const payload = {
+          // Montar objeto transactionForm
+          const transactionFormPayload = {
             type,
-            valueFormatted: value,
-            value,
-            finalValueFormatted: finalValue,
-            finalValue,
-            payBy: installments,
-            installments,
+            valueFormatted: formatValorNum(formData.get('valueFormatted')),
+            finalValueFormatted: modo !== 'porcentagem' ? formatValorNum(formData.get('finalValueFormatted')) : undefined,
+            porcentagem: modo === 'porcentagem' ? formData.get('porcentagem') : undefined,
+            payBy: formData.get('payBy') ? parseInt(formData.get('payBy')) : undefined,
             frequency: formData.get('frequency') || undefined,
             startPaymentsAt: formData.get('startPaymentsAt') || undefined,
-            afiliado: formData.get('afiliado') || undefined,
-            percentageAfiliado: formData.get('percentageAfiliado') || undefined,
-            porcentagem: modo === 'porcentagem' ? formData.get('porcentagem') : undefined,
-            clienteId,
-            cliente_id: clienteId
+            clienteId: formData.get('clienteId') ? parseInt(formData.get('clienteId')) : undefined
           };
           // Remover campos undefined ou vazios
-          Object.keys(payload).forEach(key => {
-            if (payload[key] === undefined || payload[key] === '') delete payload[key];
+          Object.keys(transactionFormPayload).forEach(key => {
+            if (transactionFormPayload[key] === undefined || transactionFormPayload[key] === '') delete transactionFormPayload[key];
           });
+          const payload = { transactionForm: transactionFormPayload };
           console.log('Payload enviado para API:', payload);
           try {
             await apiService.createEmprestimo(payload);
