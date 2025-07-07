@@ -1372,6 +1372,9 @@
             const produto = produtos.find(p => p.id == produtoId);
             const preco = Number(produto?.preco_venda ?? produto?.preco ?? produto?.preco_custo ?? 0);
             precoInput.value = preco.toFixed(2).replace(',', '.');
+            // Dispara evento de input para forçar cálculo
+            const event = new Event('input', { bubbles: true });
+            precoInput.dispatchEvent(event);
           }
         }
         if (quantidadeInput && !quantidadeInput.value) quantidadeInput.value = '1';
