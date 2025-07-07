@@ -111,15 +111,17 @@
       margin: 40px auto;
       padding: 0 20px;
     }
-    .card {
+    .card, .menu-card, .stat-card, .dashboard-card {
       background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px);
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0, 90, 159, 0.1);
-      padding: 32px;
-      margin-bottom: 32px;
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0, 90, 159, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 32px;
       transition: all 0.3s ease;
+    }
+    .card:hover, .menu-card:hover, .stat-card:hover, .dashboard-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 90, 159, 0.2);
     }
     .card-header {
       display: flex;
@@ -364,6 +366,17 @@
     }
     table tr td, table tr th {
       color: var(--primary-blue) !important;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,90,159,0.18);
+      padding: 48px 36px;
+      position: relative;
+    }
+    .modal {
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(2px);
     }
   </style>
 </head>
