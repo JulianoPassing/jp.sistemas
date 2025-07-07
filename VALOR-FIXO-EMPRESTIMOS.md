@@ -15,18 +15,20 @@ O sistema agora suporta três tipos de cálculo para empréstimos, permitindo ma
   - 3 parcelas de R$ 400,00
 
 ### 2. Valor Final Fixo
-- **Como funciona**: Define o valor total a ser pago e divide pelas parcelas
+- **Como funciona**: Define o valor inicial e o valor total a ser pago, calculando juros implícitos
 - **Exemplo**:
+  - Valor inicial: R$ 1.000,00
   - Valor final: R$ 1.500,00
   - 3 parcelas
-  - Resultado: 3 parcelas de R$ 500,00
+  - Resultado: 3 parcelas de R$ 500,00 (juros implícitos de 50%)
 
 ### 3. Valor da Parcela Fixo
-- **Como funciona**: Define o valor de cada parcela e calcula o total
+- **Como funciona**: Define o valor inicial e o valor de cada parcela, calculando juros implícitos
 - **Exemplo**:
+  - Valor inicial: R$ 8.000,00
   - Valor da parcela: R$ 1.000,00
   - 10 parcelas
-  - Resultado: Total de R$ 10.000,00
+  - Resultado: Total de R$ 10.000,00 (juros implícitos de 25%)
 
 ## Como Usar
 
@@ -52,9 +54,11 @@ O sistema agora suporta três tipos de cálculo para empréstimos, permitindo ma
 - Porcentagem de Juros (%)
 
 **Para Valor Final Fixo:**
+- Valor Inicial (R$)
 - Valor Final (R$)
 
 **Para Valor da Parcela Fixo:**
+- Valor Inicial (R$)
 - Valor da Parcela (R$)
 
 #### Passo 4: Configurar Parcelamento
@@ -77,6 +81,7 @@ O sistema agora suporta três tipos de cálculo para empréstimos, permitindo ma
 ```
 Cliente: João Silva
 Tipo de Cálculo: Valor Final Fixo
+Valor Inicial: R$ 1.000,00
 Valor Final: R$ 1.500,00
 Parcelas: 3
 Frequência: Mensal
@@ -84,6 +89,7 @@ Data Primeira Parcela: 15/02/2024
 
 Resultado:
 - 3 parcelas de R$ 500,00
+- Juros Implícitos: 50% (R$ 500,00)
 - Vencimentos: 15/02, 15/03, 15/04
 ```
 
@@ -91,6 +97,7 @@ Resultado:
 ```
 Cliente: Maria Santos
 Tipo de Cálculo: Valor da Parcela Fixo
+Valor Inicial: R$ 8.000,00
 Valor da Parcela: R$ 1.000,00
 Parcelas: 10
 Frequência: Mensal
@@ -99,6 +106,7 @@ Data Primeira Parcela: 15/02/2024
 Resultado:
 - 10 parcelas de R$ 1.000,00
 - Total: R$ 10.000,00
+- Juros Implícitos: 25% (R$ 2.000,00)
 - Vencimentos: 15/02 a 15/11
 ```
 

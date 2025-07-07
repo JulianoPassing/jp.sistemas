@@ -1695,12 +1695,16 @@ document.addEventListener('DOMContentLoaded', () => {
             <input type="text" name="valor" id="modal-valor" class="form-input" required placeholder="ex.: 1000">
           </div>
           <div class="form-group" id="grupo-valor-final" style="display: none;">
+            <label>Valor Inicial (R$)</label>
+            <input type="text" name="valorInicialFinal" id="modal-valor-inicial-final" class="form-input" placeholder="ex.: 1000">
             <label>Valor Final (R$)</label>
             <input type="text" name="valorFinal" id="modal-valor-final" class="form-input" placeholder="ex.: 1500">
           </div>
           <div class="form-group" id="grupo-valor-parcela" style="display: none;">
+            <label>Valor Inicial (R$)</label>
+            <input type="text" name="valorInicialParcela" id="modal-valor-inicial-parcela" class="form-input" placeholder="ex.: 8000">
             <label>Valor da Parcela (R$)</label>
-            <input type="text" name="valorParcela" id="modal-valor-parcela" class="form-input" placeholder="ex.: 500">
+            <input type="text" name="valorParcela" id="modal-valor-parcela" class="form-input" placeholder="ex.: 1000">
           </div>
           <div class="form-group" id="grupo-porcentagem">
             <label>Porcentagem de Juros (%)</label>
@@ -1799,6 +1803,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const valorInput = modal.querySelector('#modal-valor');
       const valorFinalInput = modal.querySelector('#modal-valor-final');
       const valorParcelaInput = modal.querySelector('#modal-valor-parcela');
+      const valorInicialFinalInput = modal.querySelector('#modal-valor-inicial-final');
+      const valorInicialParcelaInput = modal.querySelector('#modal-valor-inicial-parcela');
       
       function aplicarMascaraMoeda(input) {
         input.addEventListener('input', (e) => {
@@ -1811,6 +1817,8 @@ document.addEventListener('DOMContentLoaded', () => {
       aplicarMascaraMoeda(valorInput);
       aplicarMascaraMoeda(valorFinalInput);
       aplicarMascaraMoeda(valorParcelaInput);
+      aplicarMascaraMoeda(valorInicialFinalInput);
+      aplicarMascaraMoeda(valorInicialParcelaInput);
       // Simulador de parcelas
       const btnSimular = modal.querySelector('#btn-simular');
       const previewDiv = modal.querySelector('#simulador-preview');
@@ -1837,15 +1845,19 @@ document.addEventListener('DOMContentLoaded', () => {
             break;
             
           case 'valor_final':
+            valorInicial = parseFloat(valorInicialFinalInput.value.replace(',', '.')) || 0;
             valorFinal = parseFloat(valorFinalInput.value.replace(',', '.')) || 0;
             valorParcela = valorFinal / parcelas;
-            // Para valor final fixo, não há juros percentual
+            jurosValor = valorFinal - valorInicial;
+            juros = valorInicial > 0 ? (jurosValor / valorInicial) * 100 : 0;
             break;
             
           case 'parcela_fixa':
+            valorInicial = parseFloat(valorInicialParcelaInput.value.replace(',', '.')) || 0;
             valorParcela = parseFloat(valorParcelaInput.value.replace(',', '.')) || 0;
             valorFinal = valorParcela * parcelas;
-            // Para parcela fixa, não há juros percentual
+            jurosValor = valorFinal - valorInicial;
+            juros = valorInicial > 0 ? (jurosValor / valorInicial) * 100 : 0;
             break;
         }
         
@@ -1865,13 +1877,17 @@ document.addEventListener('DOMContentLoaded', () => {
             
           case 'valor_final':
             simulacaoHTML += `
+              Valor Inicial: <b>R$ ${valorInicial.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
               Valor Final Fixo: <b>R$ ${valorFinal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
+              Juros Implícitos: <b>${juros.toFixed(2)}%</b> (R$ ${jurosValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})})<br>
             `;
             break;
             
           case 'parcela_fixa':
             simulacaoHTML += `
+              Valor Inicial: <b>R$ ${valorInicial.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
               Valor da Parcela Fixo: <b>R$ ${valorParcela.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
+              Juros Implícitos: <b>${juros.toFixed(2)}%</b> (R$ ${jurosValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})})<br>
             `;
             break;
         }
@@ -1906,14 +1922,20 @@ document.addEventListener('DOMContentLoaded', () => {
             break;
             
           case 'valor_final':
-            if (!formData.valorFinal || parseFloat(formData.valorFinal.replace(',', '.')) <= 0) {
+            if (!formData.valorInicialFinal || parseFloat(formData.valorInicialFinal.replace(',', '.')) <= 0) {
+              isValid = false;
+              errorMessage = 'Preencha o valor inicial corretamente';
+            } else if (!formData.valorFinal || parseFloat(formData.valorFinal.replace(',', '.')) <= 0) {
               isValid = false;
               errorMessage = 'Preencha o valor final corretamente';
             }
             break;
             
           case 'parcela_fixa':
-            if (!formData.valorParcela || parseFloat(formData.valorParcela.replace(',', '.')) <= 0) {
+            if (!formData.valorInicialParcela || parseFloat(formData.valorInicialParcela.replace(',', '.')) <= 0) {
+              isValid = false;
+              errorMessage = 'Preencha o valor inicial corretamente';
+            } else if (!formData.valorParcela || parseFloat(formData.valorParcela.replace(',', '.')) <= 0) {
               isValid = false;
               errorMessage = 'Preencha o valor da parcela corretamente';
             }
@@ -1981,17 +2003,17 @@ document.addEventListener('DOMContentLoaded', () => {
             break;
             
           case 'valor_final':
+            valorInicial = parseFloat(formData.valorInicialFinal.replace(',', '.')) || 0;
             valorFinal = parseFloat(formData.valorFinal.replace(',', '.')) || 0;
             valorParcela = valorFinal / parseInt(formData.parcelas);
-            // Para valor final fixo, o valor inicial é o mesmo que o final
-            valorInicial = valorFinal;
+            jurosMensal = valorInicial > 0 ? ((valorFinal - valorInicial) / valorInicial) * 100 : 0;
             break;
             
           case 'parcela_fixa':
+            valorInicial = parseFloat(formData.valorInicialParcela.replace(',', '.')) || 0;
             valorParcela = parseFloat(formData.valorParcela.replace(',', '.')) || 0;
             valorFinal = valorParcela * parseInt(formData.parcelas);
-            // Para parcela fixa, o valor inicial é o mesmo que o final
-            valorInicial = valorFinal;
+            jurosMensal = valorInicial > 0 ? ((valorFinal - valorInicial) / valorInicial) * 100 : 0;
             break;
         }
         

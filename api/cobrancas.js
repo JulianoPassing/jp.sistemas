@@ -436,6 +436,8 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
       valor, 
       valor_final,
       valor_parcela,
+      valor_inicial_final,
+      valor_inicial_parcela,
       data_emprestimo, 
       data_vencimento, 
       juros_mensal, 
@@ -481,11 +483,13 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
     
     // Ajustar valores baseado no tipo de cálculo
     if (tipo_calculo === 'valor_final' && valor_final) {
-      valorInicial = valorFinalCalculado;
+      valorInicial = parseFloat(valor_inicial_final) || valorFinalCalculado;
       valorParcelaCalculado = valorFinalCalculado / parseInt(numero_parcelas);
+      jurosMensalFinal = valorInicial > 0 ? ((valorFinalCalculado - valorInicial) / valorInicial) * 100 : 0;
     } else if (tipo_calculo === 'parcela_fixa' && valor_parcela) {
-      valorInicial = valorParcelaCalculado * parseInt(numero_parcelas);
-      valorFinalCalculado = valorInicial;
+      valorInicial = parseFloat(valor_inicial_parcela) || (valorParcelaCalculado * parseInt(numero_parcelas));
+      valorFinalCalculado = valorParcelaCalculado * parseInt(numero_parcelas);
+      jurosMensalFinal = valorInicial > 0 ? ((valorFinalCalculado - valorInicial) / valorInicial) * 100 : 0;
     } else if (tipo_calculo === 'valor_inicial') {
       valorFinalCalculado = valorInicial * (1 + jurosMensalFinal / 100);
       valorParcelaCalculado = valorFinalCalculado / parseInt(numero_parcelas);
