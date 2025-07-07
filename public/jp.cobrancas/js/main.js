@@ -1742,10 +1742,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="form-group">
             <label>Frequência</label>
             <select name="frequencia" id="modal-frequencia" class="form-input">
-              <option value="mensal">Mensal</option>
-              <option value="diario">Diário</option>
-              <option value="semanal">Semanal</option>
-              <option value="quinzenal">Quinzenal</option>
+              <option value="monthly">Mensal</option>
+              <option value="daily">Diário</option>
+              <option value="weekly">Semanal</option>
+              <option value="biweekly">Quinzenal</option>
             </select>
           </div>
           <div class="form-group">
@@ -2062,7 +2062,7 @@ document.addEventListener('DOMContentLoaded', () => {
           observacoes: formData.observacoes || '',
           tipo_emprestimo: formData.tipo === 'parcelado' ? 'in_installments' : 'fixed',
           numero_parcelas: parseInt(formData.parcelas) || 1,
-          frequencia: formData.frequencia,
+          frequencia: formData.frequencia || 'monthly',
           tipo_calculo: tipoCalculoCalculo
         };
         
