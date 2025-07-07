@@ -1245,7 +1245,6 @@
       const subtotalInput = itemRow.querySelector('.produto-subtotal');
 
       if (quantidadeInput && precoInput && subtotalInput) {
-        // Corrige vírgula para ponto
         const quantidade = parseFloat((quantidadeInput.value || '0').replace(',', '.')) || 0;
         const preco = parseFloat((precoInput.value || '0').replace(',', '.')) || 0;
         const subtotal = quantidade * preco;
@@ -1349,7 +1348,7 @@
             <input type="text" class="produto-preco" step="0.01" placeholder="0.00" onchange="calcularSubtotalItem('${itemId}')">
           </div>
           <div>
-            <input type="number" class="produto-subtotal" step="0.01" readonly>
+            <input type="text" class="produto-subtotal" step="0.01" readonly>
           </div>
           <div>
             <button type="button" class="btn btn-sm btn-danger" onclick="removerItem('${itemId}')">
@@ -1372,13 +1371,10 @@
             const produto = produtos.find(p => p.id == produtoId);
             const preco = Number(produto?.preco_venda ?? produto?.preco ?? produto?.preco_custo ?? 0);
             precoInput.value = preco.toFixed(2).replace(',', '.');
-            // Dispara evento de input para forçar cálculo
-            const event = new Event('input', { bubbles: true });
-            precoInput.dispatchEvent(event);
           }
         }
         if (quantidadeInput && !quantidadeInput.value) quantidadeInput.value = '1';
-        setTimeout(() => calcularSubtotalItem(itemId), 0);
+        calcularSubtotalItem(itemId);
       }
     }
 
