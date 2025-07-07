@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="mobile.css">
   <style>
     :root {
-              --primary-color: #005a9f;
+      --primary-color: #005a9f;
       --primary-dark: #003766;
       --primary-light: #0077cc;
       --secondary-color: #022656;
@@ -38,6 +38,8 @@
       --bg-color: #f3f4f6;
       --card-bg: #ffffff;
       --border-radius: 16px;
+      --primary-blue: #002f4b;
+      --light-text: #ecf0f1;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -86,8 +88,8 @@
       font-weight: 700;
     }
     .logout-btn {
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-      color: white;
+      background: var(--primary-blue) !important;
+      color: var(--light-text) !important;
       border: none;
       padding: 8px 16px;
       border-radius: 8px;
@@ -175,7 +177,7 @@
       flex-direction: row;
       align-items: center;
       gap: 10px;
-              box-shadow: 0 2px 8px rgba(0,90,159,0.07);
+      box-shadow: 0 2px 8px rgba(0,90,159,0.07);
     }
     .mesa-nome {
       font-size: 1.15em;
@@ -357,11 +359,7 @@
       .mesa-header { flex-direction: column; align-items: flex-start; gap: 4px; }
       .mesa-status { margin-left: 0; }
     }
-    button, .btn, .logout-btn {
-      background: var(--primary-blue) !important;
-      color: var(--light-text) !important;
-    }
-    h1, h2, h3, h4, h5, h6, .icon, i, .fa, .fa-* {
+    .logo h1, h1, h2, h3, h4, h5, h6, .fa, .fas, .icon, .destaque {
       color: var(--primary-blue) !important;
     }
   </style>

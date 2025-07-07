@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="mobile.css">
   <style>
     :root {
-              --primary-color: #005a9f;
+      --primary-color: #005a9f;
       --primary-dark: #003766;
       --primary-light: #0077cc;
       --secondary-color: #022656;
@@ -31,6 +31,8 @@
       --bg-color: #f3f4f6;
       --card-bg: #ffffff;
       --border-radius: 16px;
+      --primary-blue: #002f4b;
+      --light-text: #ecf0f1;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -123,7 +125,7 @@
     }
     .card-header h2 {
       font-size: 1.8em;
-      color: var(--primary-blue);
+      color: var(--dark-color);
       font-weight: 600;
       text-align: center;
       font-family: 'Poppins', sans-serif;
@@ -149,7 +151,7 @@
     .section-title {
       font-size: 1.2em;
       font-weight: 600;
-      color: var(--primary-blue);
+      color: var(--primary-color);
       margin-bottom: 16px;
     }
     .form-group {
@@ -218,24 +220,24 @@
       overflow: hidden;
     }
     .btn-primary {
-      background: var(--primary-blue);
-      color: var(--light-text);
+      background: var(--primary-blue) !important;
+      color: var(--light-text) !important;
     }
     .btn-primary:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
     }
     .btn-success {
-      background: var(--primary-blue);
-      color: var(--light-text);
+      background: linear-gradient(135deg, var(--success-color), #059669);
+      color: white;
     }
     .btn-success:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
     }
     .btn-danger {
-      background: var(--primary-blue);
-      color: var(--light-text);
+      background: linear-gradient(135deg, var(--danger-color), #dc2626);
+      color: white;
     }
     .btn-danger:hover {
       transform: translateY(-2px);
@@ -288,11 +290,7 @@
     .sugestoes-clientes li:hover {
       background: #f3f4f6;
     }
-    button, .btn, .logout-btn {
-      background: var(--primary-blue) !important;
-      color: var(--light-text) !important;
-    }
-    h1, h2, h3, h4, h5, h6, .icon, i, .fa, .fa-* {
+    .logo h1, h1, h2, h3, h4, h5, h6, .fa, .fas, .icon, .destaque {
       color: var(--primary-blue) !important;
     }
   </style>
