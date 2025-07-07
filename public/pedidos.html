@@ -1360,7 +1360,23 @@
       `;
 
       itensContainer.insertAdjacentHTML('beforeend', itemHTML);
-      calcularSubtotalItem(itemId);
+      // Preencher valor e quantidade se possível e forçar cálculo do subtotal
+      const novaLinha = document.querySelector(`[data-item-id="${itemId}"]`);
+      if (novaLinha) {
+        const selectProduto = novaLinha.querySelector('.produto-select');
+        const precoInput = novaLinha.querySelector('.produto-preco');
+        const quantidadeInput = novaLinha.querySelector('.produto-quantidade');
+        if (selectProduto && precoInput) {
+          const produtoId = selectProduto.value;
+          if (produtoId) {
+            const produto = produtos.find(p => p.id == produtoId);
+            const preco = Number(produto?.preco_venda ?? produto?.preco ?? produto?.preco_custo ?? 0);
+            precoInput.value = preco.toFixed(2);
+          }
+        }
+        if (quantidadeInput && !quantidadeInput.value) quantidadeInput.value = '1';
+        calcularSubtotalItem(itemId);
+      }
     }
 
     // Função para remover item (mantida para compatibilidade)
