@@ -461,17 +461,29 @@
       }
 
       window.simulate = function() {
-        const simulateInfo = document.getElementById('simulate-info');
-        const simulateLoading = document.getElementById('simulate-loading');
-        
-        simulateInfo.style.display = 'none';
-        simulateLoading.style.display = 'flex';
-        
-        setTimeout(() => {
-          simulateLoading.style.display = 'none';
-          simulateInfo.style.display = 'block';
-          ui.showNotification('Simulação concluída!', 'success');
-        }, 2000);
+        const valor = parseFloat(document.getElementById('value').value.replace(',', '.')) || 0;
+        const parcelas = parseInt(document.getElementById('payBy').value) || 1;
+        const modo = btnParceladoPorcentagem.classList.contains('bg-terciary') ? 'porcentagem' : (btnParceladoParcelaFixa.classList.contains('bg-terciary') ? 'parcela-fixa' : 'fixo');
+        let resultado = '';
+        if (modo === 'fixo') {
+          const valorFinal = parseFloat(document.getElementById('finalValue').value.replace(',', '.')) || 0;
+          const valorParcela = valorFinal / parcelas;
+          resultado = `<b>Valor Total:</b> R$ ${valorFinal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}<br><b>Parcelas:</b> ${parcelas} x R$ ${valorParcela.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        } else if (modo === 'parcela-fixa') {
+          const valorParcela = parseFloat(document.getElementById('finalValue').value.replace(',', '.')) || 0;
+          const valorTotal = valorParcela * parcelas;
+          resultado = `<b>Valor da Parcela:</b> R$ ${valorParcela.toLocaleString('pt-BR', {minimumFractionDigits: 2})}<br><b>Total:</b> R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        } else if (modo === 'porcentagem') {
+          const porcentagem = parseFloat(document.getElementById('porcentagem').value) || 0;
+          const valorJuros = valor * (porcentagem / 100);
+          const valorTotal = valor + valorJuros;
+          const valorParcela = valorTotal / parcelas;
+          resultado = `<b>Valor Total:</b> R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}<br><b>Parcelas:</b> ${parcelas} x R$ ${valorParcela.toLocaleString('pt-BR', {minimumFractionDigits: 2})}<br><b>Juros:</b> ${porcentagem}% (R$ ${valorJuros.toLocaleString('pt-BR', {minimumFractionDigits: 2})})`;
+        }
+        document.getElementById('simulate-info').innerHTML = `<div class='simulador-preview-box' style='margin-top:10px;'>${resultado}</div>`;
+        document.getElementById('simulate-info').style.display = 'block';
+        document.getElementById('simulate-loading').style.display = 'none';
+        ui.showNotification('Simulação concluída!', 'success');
       }
 
       // Fechar modal ao clicar no overlay
@@ -554,12 +566,9 @@
           event.preventDefault();
           // Montar o payload conforme o padrão do emprestimosbase.html
           const formData = new FormData(transactionForm);
-          const tipo = document.querySelector('.flex.gap-2 .bg-terciary')?.id;
-          // Detectar modo selecionado
           let modo = 'fixo';
           if (btnParceladoParcelaFixa.classList.contains('bg-terciary')) modo = 'parcela-fixa';
           if (btnParceladoPorcentagem.classList.contains('bg-terciary')) modo = 'porcentagem';
-          // Montar payload
           const payload = {
             type: formData.get('type'),
             valueFormatted: formData.get('valueFormatted'),
@@ -571,8 +580,8 @@
             afiliado: formData.get('afiliado'),
             percentageAfiliado: formData.get('percentageAfiliado')
           };
-          // Remover campos undefined
           Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
+          console.log('Payload enviado para API:', payload);
           try {
             await apiService.createEmprestimo(payload);
             ui.showNotification('Empréstimo adicionado com sucesso!', 'success');
