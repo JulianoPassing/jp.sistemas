@@ -166,6 +166,20 @@ const utils = {
     }
     
     requestAnimationFrame(updateValue);
+  },
+
+  // Formatação de data para inputs HTML
+  formatDateForInput: (dateString) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      // Verificar se a data é válida
+      if (isNaN(date.getTime())) return '';
+      return date.toISOString().split('T')[0];
+    } catch (error) {
+      console.error('Erro ao formatar data para input:', error);
+      return '';
+    }
   }
 };
 
@@ -1010,10 +1024,10 @@ const emprestimoController = {
             </div>
             
             <div class="grid grid-cols-2" style="gap: 1rem;">
-              <div class="form-group">
-                <label>Data de Vencimento *</label>
-                <input type="date" id="edit-data-vencimento" class="form-input" value="${emp.data_vencimento || ''}" required>
-              </div>
+                             <div class="form-group">
+                 <label>Data de Vencimento *</label>
+                 <input type="date" id="edit-data-vencimento" class="form-input" value="${utils.formatDateForInput(emp.data_vencimento)}" required>
+               </div>
               
               <div class="form-group">
                 <label>Frequência de Pagamento *</label>
@@ -1165,6 +1179,8 @@ const emprestimoController = {
     return parseFloat(valor.replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
   },
 
+
+
   async viewEmprestimo(id) {
     try {
       const emprestimos = await apiService.getEmprestimos();
@@ -1191,12 +1207,37 @@ const emprestimoController = {
         const jurosPercent = Number(emp.juros_mensal || 0);
         const multaAtraso = Number(emp.multa_atraso || 0);
         const jurosTotal = valorInvestido * (jurosPercent / 100);
-        const dataVencimento = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
         const hoje = new Date();
         hoje.setHours(0,0,0,0);
         let status = (emp.status || '').toUpperCase();
-        if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
-          status = 'ATRASADO';
+        let dataVencimento = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
+        
+        // Para empréstimos parcelados, verificar status baseado nas parcelas
+        if (parcelas.length > 0) {
+          const parcelasAtrasadas = parcelas.filter(p => {
+            const dataVencParcela = new Date(p.data_vencimento);
+            return dataVencParcela < hoje && (p.status !== 'Paga');
+          });
+          
+          const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
+          
+          if (parcelasPagas.length === parcelas.length) {
+            status = 'QUITADO';
+          } else if (parcelasAtrasadas.length > 0) {
+            status = 'ATRASADO';
+            // Usar a data de vencimento da parcela mais atrasada
+            const parcelaMaisAtrasada = parcelasAtrasadas.sort((a, b) => 
+              new Date(a.data_vencimento) - new Date(b.data_vencimento)
+            )[0];
+            dataVencimento = new Date(parcelaMaisAtrasada.data_vencimento);
+          } else {
+            status = 'ATIVO';
+          }
+        } else {
+          // Para empréstimos de parcela única, usar lógica original
+          if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+            status = 'ATRASADO';
+          }
         }
         let valorAtualizado = valorInvestido + jurosTotal;
         let infoJuros = '';
@@ -2499,14 +2540,40 @@ async function renderAtrasadosLista() {
     const emprestimos = await apiService.getEmprestimos();
     const hoje = new Date();
     hoje.setHours(0,0,0,0);
-    const atrasados = (emprestimos || []).filter(e => {
-      const dataVenc = e.data_vencimento ? new Date(e.data_vencimento) : null;
+    
+    // Verificar status de cada empréstimo considerando parcelas
+    const atrasados = [];
+    for (const e of emprestimos || []) {
+      let isAtrasado = false;
       let status = (e.status || '').toUpperCase();
-      if (dataVenc && dataVenc < hoje && status !== 'QUITADO') {
-        status = 'ATRASADO';
+      
+      // Se for empréstimo parcelado, verificar parcelas
+      if (e.tipo_emprestimo === 'in_installments' && e.numero_parcelas > 1) {
+        try {
+          const parcelas = await apiService.getParcelasEmprestimo(e.id);
+          const parcelasAtrasadas = parcelas.filter(p => {
+            const dataVencParcela = new Date(p.data_vencimento);
+            return dataVencParcela < hoje && (p.status !== 'Paga');
+          });
+          
+          if (parcelasAtrasadas.length > 0) {
+            isAtrasado = true;
+          }
+        } catch (error) {
+          console.error('Erro ao buscar parcelas para empréstimo', e.id, error);
+        }
+      } else {
+        // Para empréstimos de parcela única
+        const dataVenc = e.data_vencimento ? new Date(e.data_vencimento) : null;
+        if (dataVenc && dataVenc < hoje && status !== 'QUITADO') {
+          isAtrasado = true;
+        }
       }
-      return status === 'ATRASADO';
-    });
+      
+      if (isAtrasado) {
+        atrasados.push(e);
+      }
+    }
     if (atrasados.length === 0) {
       tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500">Nenhum empréstimo atrasado</td></tr>';
       return;
