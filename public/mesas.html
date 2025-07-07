@@ -42,9 +42,9 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #005a9f 0%, #003766 100%);
+      background: var(--primary-blue);
       min-height: 100vh;
-      color: var(--text-primary);
+      color: var(--light-text);
       padding: 0;
     }
     .header {
@@ -356,6 +356,13 @@
       .mesa-card { min-width: 180px; max-width: 98vw; }
       .mesa-header { flex-direction: column; align-items: flex-start; gap: 4px; }
       .mesa-status { margin-left: 0; }
+    }
+    button, .btn, .logout-btn {
+      background: var(--primary-blue) !important;
+      color: var(--light-text) !important;
+    }
+    h1, h2, h3, h4, h5, h6, .icon, i, .fa, .fa-* {
+      color: var(--primary-blue) !important;
     }
   </style>
 </head>
