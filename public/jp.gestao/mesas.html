@@ -295,14 +295,12 @@
         // Renderizar mesas
         function renderMesas() {
             const grid = document.getElementById('mesasGrid');
-            
             if (mesasData.length === 0) {
                 grid.innerHTML = '<div class="text-center text-gray-500" style="grid-column: 1 / -1; padding: 2rem;">Nenhuma mesa configurada</div>';
                 return;
             }
-            
             grid.innerHTML = mesasData.map(mesa => `
-                <div class="mesa-card ${mesa.status}" onclick="toggleMesaStatus(${mesa.id})">
+                <div class="mesa-card ${mesa.status}">
                     <div class="mesa-numero">${mesa.numero}</div>
                     <div class="mesa-status">${getStatusText(mesa.status)}</div>
                     ${mesa.cliente ? `<div class="mesa-info">${mesa.cliente}</div>` : ''}
@@ -411,19 +409,18 @@
         // Manipular adição de mesa (criando novo pedido)
         async function handleAddMesa(e) {
             e.preventDefault();
-            
             const formData = new FormData(e.target);
             const mesaData = Object.fromEntries(formData.entries());
-            
             // Criar um novo pedido para representar a mesa
             const pedidoData = {
                 nome_cliente: mesaData.numero,
                 status: 'Em Processamento',
                 mesa: mesaData.numero,
                 observacoes: mesaData.observacoes || '',
-                itens: []
+                itens: [],
+                telefone: '',
+                valor_total: 0
             };
-            
             try {
                 const response = await fetch('/api/pedidos', {
                     method: 'POST',
@@ -433,7 +430,6 @@
                     credentials: 'include',
                     body: JSON.stringify(pedidoData)
                 });
-                
                 if (response.ok) {
                     showNotification('Mesa adicionada com sucesso!', 'success');
                     closeModal(e.target);
@@ -452,7 +448,6 @@
         function viewMesa(id) {
             const mesa = mesasData.find(m => m.id === id);
             if (!mesa) return;
-            
             const content = `
                 <div>
                     <div class="grid grid-cols-2 gap-4 mb-4">
@@ -470,19 +465,16 @@
                             <strong>Capacidade:</strong> ${mesa.capacidade || 4} pessoas
                         </div>
                     </div>
-                    
                     ${mesa.horario ? `
                         <div class="mb-4">
                             <strong>Horário de Ocupação:</strong> ${formatTime(mesa.horario)}
                         </div>
                     ` : ''}
-                    
                     ${mesa.valor_total > 0 ? `
                         <div class="mb-4">
                             <strong>Valor Total:</strong> ${formatCurrency(mesa.valor_total)}
                         </div>
                     ` : ''}
-                    
                     ${mesa.itens && mesa.itens.length > 0 ? `
                         <div class="mb-4">
                             <strong>Itens do Pedido:</strong>
@@ -504,7 +496,6 @@
                             </div>
                         </div>
                     ` : '<div class="mb-4"><em>Nenhum produto adicionado</em></div>'}
-                    
                     ${mesa.observacoes ? `
                         <div class="mb-4">
                             <strong>Observações:</strong>
@@ -515,11 +506,12 @@
                     ` : ''}
                 </div>
             `;
-            
             const modalContent = `
                 ${content}
                 <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
-                    <button class="btn btn-success" onclick="addProdutoMesa(${mesa.id}); closeModal(this)">Adicionar Produto</button>
+                    <button class="btn btn-success" onclick="addProdutoMesa(${mesa.id})">Adicionar Produto</button>
+                    <button class="btn btn-primary" onclick="editMesa(${mesa.id})">Editar Mesa</button>
+                    <button class="btn btn-danger" onclick="finalizarMesa(${mesa.id})">Finalizar Mesa</button>
                     <button class="btn btn-secondary" onclick="closeModal(this)">Fechar</button>
                 </div>
             `;
@@ -783,6 +775,36 @@
             } catch (error) {
                 console.error('Erro ao adicionar produto:', error);
                 showNotification('Erro ao adicionar produto', 'error');
+            }
+        }
+        
+        // Finalizar mesa
+        async function finalizarMesa(id) {
+            const mesa = mesasData.find(m => m.id === id);
+            if (!mesa) return;
+            try {
+                const response = await fetch(`/api/pedidos/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        status: 'Concluído',
+                        itens: mesa.itens || []
+                    })
+                });
+                if (response.ok) {
+                    showNotification('Mesa finalizada com sucesso!', 'success');
+                    closeModal();
+                    loadMesas();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Erro ao finalizar mesa', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao finalizar mesa:', error);
+                showNotification('Erro ao finalizar mesa', 'error');
             }
         }
         
