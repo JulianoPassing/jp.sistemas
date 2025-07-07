@@ -515,9 +515,6 @@
       }
 
       // Adicionar lógica para alternar exibição dos campos conforme o modo selecionado
-      const btnFixo = document.getElementById('btn-tipo-fixo');
-      const btnParcelaFixa = document.getElementById('btn-tipo-parcela-fixa');
-      const btnPorcentagem = document.getElementById('btn-tipo-porcentagem');
       const finalValueSection = document.getElementById('final-value-section');
       const porcentagemSection = document.getElementById('porcentagem-section');
       const labelFinalValue = document.getElementById('label-final-value');
@@ -528,27 +525,27 @@
           porcentagemSection.style.display = 'none';
           labelFinalValue.textContent = 'Valor Final de Cobrança (R$)';
           btnFixo.className = 'bg-terciary hover:bg-terciary-100 text-white w-full p-2 rounded-lg cursor-pointer';
-          btnParcelaFixa.className = 'bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer';
-          btnPorcentagem.className = 'bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer';
+          btnParceladoParcelaFixa.className = 'bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer';
+          btnParceladoPorcentagem.className = 'bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer';
         } else if (modo === 'parcela-fixa') {
           finalValueSection.style.display = '';
           porcentagemSection.style.display = 'none';
           labelFinalValue.textContent = 'Valor da Parcela (R$)';
           btnFixo.className = 'bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer';
-          btnParcelaFixa.className = 'bg-terciary hover:bg-terciary-100 text-white w-full p-2 rounded-lg cursor-pointer';
-          btnPorcentagem.className = 'bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer';
+          btnParceladoParcelaFixa.className = 'bg-terciary hover:bg-terciary-100 text-white w-full p-2 rounded-lg cursor-pointer';
+          btnParceladoPorcentagem.className = 'bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer';
         } else if (modo === 'porcentagem') {
           finalValueSection.style.display = 'none';
           porcentagemSection.style.display = '';
           btnFixo.className = 'bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer';
-          btnParcelaFixa.className = 'bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer';
-          btnPorcentagem.className = 'bg-terciary hover:bg-terciary-100 text-white w-full p-2 rounded-lg cursor-pointer';
+          btnParceladoParcelaFixa.className = 'bg-gray-100 hover:bg-gray-300 text-gray-500 w-full p-2 rounded-lg cursor-pointer';
+          btnParceladoPorcentagem.className = 'bg-terciary hover:bg-terciary-100 text-white w-full p-2 rounded-lg cursor-pointer';
         }
       }
 
       btnFixo.addEventListener('click', function() { setModoEmprestimo('fixo'); });
-      btnParcelaFixa.addEventListener('click', function() { setModoEmprestimo('parcela-fixa'); });
-      btnPorcentagem.addEventListener('click', function() { setModoEmprestimo('porcentagem'); });
+      btnParceladoParcelaFixa.addEventListener('click', function() { setModoEmprestimo('parcela-fixa'); });
+      btnParceladoPorcentagem.addEventListener('click', function() { setModoEmprestimo('porcentagem'); });
     });
   </script>
 </body>
