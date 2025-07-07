@@ -1643,6 +1643,238 @@ function sair() {
 document.addEventListener('DOMContentLoaded', () => {
   app.init();
 
+  // Modal de Novo Empréstimo
+  const novoEmprestimoBtn = document.getElementById('toggleForm');
+  if (novoEmprestimoBtn) {
+    novoEmprestimoBtn.addEventListener('click', async () => {
+      // Buscar clientes
+      let clientes = [];
+      try {
+        clientes = await apiService.getClientes();
+      } catch (e) {
+        ui.showNotification('Erro ao carregar clientes', 'error');
+      }
+      const clienteOptions = clientes.map(c => `<option value=\"${c.id}\">${c.nome || c.razao || c.name}</option>`).join('');
+      const modalContent = `
+        <form id="modal-emprestimo-form">
+          <div class="form-group">
+            <label>Cliente (selecione ou preencha manualmente)</label>
+            <select name="clienteId" id="modal-cliente-select" class="form-input">
+              <option value="">Novo cliente (preencher abaixo)</option>
+              ${clienteOptions}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Nome *</label>
+            <input type="text" name="nome" id="modal-nome" class="form-input" required placeholder="Nome do cliente">
+          </div>
+          <div class="form-group">
+            <label>CPF (Opcional)</label>
+            <input type="text" name="cpf" id="modal-cpf" class="form-input" placeholder="CPF do cliente">
+          </div>
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" name="telefone" id="modal-telefone" class="form-input" placeholder="Telefone do cliente">
+          </div>
+          <div class="form-group">
+            <label>Tipo de Empréstimo</label>
+            <select name="tipo" id="modal-tipo" class="form-input">
+              <option value="fixo">Fixo</option>
+              <option value="parcelado">Parcelado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Valor (R$)</label>
+            <input type="text" name="valor" id="modal-valor" class="form-input" required placeholder="ex.: 1000">
+          </div>
+          <div class="form-group">
+            <label>Porcentagem de Juros (%)</label>
+            <input type="number" name="porcentagem" id="modal-porcentagem" class="form-input" step="0.01" min="0" required placeholder="ex.: 20">
+          </div>
+          <div class="form-group">
+            <label>Multa por Atraso (%)</label>
+            <input type="number" name="multa" id="modal-multa" class="form-input" step="0.01" min="0" required placeholder="ex.: 2">
+          </div>
+          <div class="form-group">
+            <label>Data de Vencimento</label>
+            <input type="date" name="dataVencimento" id="modal-data-vencimento" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label>Frequência</label>
+            <select name="frequencia" id="modal-frequencia" class="form-input">
+              <option value="mensal">Mensal</option>
+              <option value="diario">Diário</option>
+              <option value="semanal">Semanal</option>
+              <option value="quinzenal">Quinzenal</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Nº de Parcelas</label>
+            <input type="number" name="parcelas" id="modal-parcelas" class="form-input" min="1" value="1" required>
+          </div>
+          <div class="form-group">
+            <label>Observações (opcional)</label>
+            <textarea name="observacoes" class="form-input" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <button type="button" id="btn-simular" class="btn btn-secondary">Simular</button>
+          </div>
+          <div id="simulador-preview" class="form-group" style="display:none;"></div>
+          <div class="form-group">
+            <button type="submit" id="btn-adicionar-emprestimo" class="btn btn-primary">Adicionar Empréstimo</button>
+          </div>
+        </form>
+      `;
+      const modal = ui.showModal(modalContent, 'Adicionar Empréstimo');
+      const form = modal.querySelector('#modal-emprestimo-form');
+      // Preencher campos ao selecionar cliente
+      const select = modal.querySelector('#modal-cliente-select');
+      const nomeInput = modal.querySelector('#modal-nome');
+      const cpfInput = modal.querySelector('#modal-cpf');
+      const telefoneInput = modal.querySelector('#modal-telefone');
+      select.addEventListener('change', () => {
+        const selectedId = select.value;
+        if (!selectedId) {
+          nomeInput.value = '';
+          cpfInput.value = '';
+          telefoneInput.value = '';
+        } else {
+          const cliente = clientes.find(c => String(c.id) === String(selectedId));
+          nomeInput.value = cliente?.nome || cliente?.razao || cliente?.name || '';
+          cpfInput.value = cliente?.cpf || cliente?.cpf_cnpj || '';
+          telefoneInput.value = cliente?.telefone || cliente?.phone || '';
+        }
+      });
+      // Máscara de moeda para valor
+      const valorInput = modal.querySelector('#modal-valor');
+      valorInput.addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g, '');
+        v = (parseInt(v, 10) / 100).toFixed(2);
+        e.target.value = v.replace('.', ',');
+      });
+      // Simulador de parcelas
+      const btnSimular = modal.querySelector('#btn-simular');
+      const previewDiv = modal.querySelector('#simulador-preview');
+      const btnAdicionar = modal.querySelector('#btn-adicionar-emprestimo');
+      btnSimular.addEventListener('click', () => {
+        // Pega valores do formulário
+        const valor = parseFloat(valorInput.value.replace(',', '.')) || 0;
+        const juros = parseFloat(modal.querySelector('#modal-porcentagem').value) || 0;
+        const parcelas = parseInt(modal.querySelector('#modal-parcelas').value) || 1;
+        const tipo = modal.querySelector('#modal-tipo').value;
+        let total = valor;
+        let valorJuros = 0;
+        let valorParcela = 0;
+        if (tipo === 'parcelado') {
+          valorJuros = valor * (juros / 100);
+          total = valor + valorJuros;
+          valorParcela = total / parcelas;
+        } else {
+          valorJuros = valor * (juros / 100);
+          total = valor + valorJuros;
+          valorParcela = total;
+        }
+        previewDiv.style.display = 'block';
+        previewDiv.innerHTML = `
+          <div class="simulador-preview-box">
+            <strong>Resumo da Simulação:</strong><br>
+            Valor: <b>R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
+            Juros: <b>${juros}%</b> (R$ ${valorJuros.toLocaleString('pt-BR', {minimumFractionDigits: 2})})<br>
+            Total a pagar: <b>R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
+            Nº de Parcelas: <b>${parcelas}</b><br>
+            Valor da Parcela: <b>R$ ${valorParcela.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b>
+          </div>
+        `;
+      });
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = Object.fromEntries(new FormData(form).entries());
+        let cliente_id = formData.clienteId;
+        // Se não selecionou cliente, criar cliente
+        if (!cliente_id) {
+          // Validação do nome do cliente
+          if (!formData.nome || formData.nome.trim() === '' || formData.nome === 'undefined') {
+            ui.showNotification('Preencha o nome do cliente corretamente!', 'error');
+            return;
+          }
+          
+          try {
+            const clientePayload = {
+              nome: formData.nome,
+              cpf_cnpj: formData.cpf || '',
+              telefone: formData.telefone || '',
+              email: '',
+              endereco: '',
+              cidade: '',
+              estado: '',
+              cep: ''
+            };
+            const resp = await fetch('/api/cobrancas/clientes', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify(clientePayload)
+            });
+            const data = await resp.json();
+            if (!resp.ok || !data.id) throw new Error('Erro ao criar cliente');
+            cliente_id = data.id;
+            if (window.clientesApp && typeof window.clientesApp.loadClientes === 'function') {
+              window.clientesApp.loadClientes();
+            } else if (document.getElementById('clientes-lista')) {
+              location.reload();
+            }
+          } catch (err) {
+            ui.showNotification('Erro ao criar cliente', 'error');
+            return;
+          }
+        }
+        // Garantir que cliente_id seja inteiro
+        cliente_id = parseInt(cliente_id, 10);
+        // Montar payload do empréstimo (apenas campos válidos para a tabela)
+        const payload = {
+          cliente_id,
+          valor: parseFloat(formData.valor.replace(',', '.')),
+          data_emprestimo: formData.dataVencimento,
+          data_vencimento: formData.dataVencimento,
+          juros_mensal: parseFloat(formData.porcentagem) || 0,
+          multa_atraso: parseFloat(formData.multa) || 0,
+          observacoes: formData.observacoes || ''
+        };
+        
+        console.log('Payload final:', payload);
+        
+        // Validação dos dados antes de enviar
+        if (!payload.cliente_id || !payload.valor || !payload.data_emprestimo || !payload.data_vencimento) {
+          ui.showNotification('Dados obrigatórios faltando', 'error');
+          return;
+        }
+        
+        if (payload.valor <= 0) {
+          ui.showNotification('Valor deve ser maior que zero', 'error');
+          return;
+        }
+        
+        try {
+          await apiService.createEmprestimo(payload);
+          ui.showNotification('Empréstimo adicionado com sucesso!', 'success');
+          modal.remove();
+          // Atualizar lista de empréstimos de forma robusta
+          setTimeout(() => {
+            if (document.getElementById('emprestimos-lista')) {
+              renderEmprestimosLista();
+            } else {
+              // Fallback: recarregar a página se a lista não estiver pronta
+              location.reload();
+            }
+          }, 300);
+        } catch (err) {
+          ui.showNotification('Erro ao adicionar empréstimo', 'error');
+        }
+      });
+    });
+  }
+});
+
 // Exportar para uso global
 window.app = app;
 window.dashboardController = dashboardController;
@@ -1833,31 +2065,5 @@ function cobrar(id) {
     console.error('cobrancaController não está disponível');
   }
 }
-// <-- aqui termina a função cobrar
 
-} // <-- aqui fecha o document.addEventListener('DOMContentLoaded', ...)
-
-// Exportar para uso global
-window.app = app;
-window.dashboardController = dashboardController;
-window.emprestimoController = emprestimoController;
-window.cobrancaController = cobrancaController;
-window.clienteController = clienteController;
-window.ui = ui;
-window.utils = utils;
-window.authSystem = authSystem;
-
-// Exportar funções globais
-window.viewEmprestimo = viewEmprestimo;
-window.viewCliente = viewCliente;
-window.deleteCliente = deleteCliente;
-window.cobrar = cobrar;
-window.sair = sair;
-window.renderHistoricoEmprestimos = renderHistoricoEmprestimos;
-window.renderClientesLista = renderClientesLista;
-window.renderCobrancasEmAbertoLista = renderCobrancasEmAbertoLista;
-window.renderAtrasadosLista = renderAtrasadosLista;
-window.renderListaNegra = renderListaNegra;
-window.recarregarDadosPagina = recarregarDadosPagina;
-window.adicionarListaNegra = adicionarListaNegra;
-window.removerListaNegra = removerListaNegra;
+ 
