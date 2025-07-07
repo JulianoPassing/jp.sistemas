@@ -158,22 +158,37 @@
         // Carregar dados do caixa
         async function loadCaixaData() {
             try {
-                // Carregar estatísticas
-                const statsResponse = await fetch('/api/caixa/stats', { credentials: 'include' });
-                if (statsResponse.ok) {
-                    const stats = await statsResponse.json();
-                    document.getElementById('saldo-atual').textContent = formatCurrency(stats.saldoAtual || 0);
-                    document.getElementById('vendas-hoje').textContent = formatCurrency(stats.vendasHoje || 0);
-                    document.getElementById('pagamentos-pendentes').textContent = formatCurrency(stats.pagamentosPendentes || 0);
-                    document.getElementById('total-mes').textContent = formatCurrency(stats.totalMes || 0);
+                // Carregar contas a receber (entradas)
+                const receberResponse = await fetch('/api/contas/receber', { credentials: 'include' });
+                let receber = [];
+                if (receberResponse.ok) {
+                    receber = await receberResponse.json();
                 }
-                
-                // Carregar movimentações
-                const movResponse = await fetch('/api/caixa/movimentacoes', { credentials: 'include' });
-                if (movResponse.ok) {
-                    movimentacoesData = await movResponse.json();
-                    renderMovimentacoes();
+                // Carregar contas a pagar (saídas)
+                const pagarResponse = await fetch('/api/contas/pagar', { credentials: 'include' });
+                let pagar = [];
+                if (pagarResponse.ok) {
+                    pagar = await pagarResponse.json();
                 }
+                // Calcular estatísticas
+                const entradas = receber.filter(m => m.status !== 'cancelado');
+                const saidas = pagar.filter(m => m.status !== 'cancelado');
+                const saldoAtual = entradas.reduce((acc, m) => acc + (parseFloat(m.valor) || 0), 0) - saidas.reduce((acc, m) => acc + (parseFloat(m.valor) || 0), 0);
+                const hoje = new Date().toISOString().slice(0, 10);
+                const vendasHoje = entradas.filter(m => m.data_vencimento && m.data_vencimento.slice(0,10) === hoje).reduce((acc, m) => acc + (parseFloat(m.valor) || 0), 0);
+                const pagamentosPendentes = saidas.filter(m => m.status === 'pendente').reduce((acc, m) => acc + (parseFloat(m.valor) || 0), 0);
+                const mesAtual = (new Date()).toISOString().slice(0,7);
+                const totalMes = entradas.filter(m => m.data_vencimento && m.data_vencimento.slice(0,7) === mesAtual).reduce((acc, m) => acc + (parseFloat(m.valor) || 0), 0);
+                document.getElementById('saldo-atual').textContent = formatCurrency(saldoAtual || 0);
+                document.getElementById('vendas-hoje').textContent = formatCurrency(vendasHoje || 0);
+                document.getElementById('pagamentos-pendentes').textContent = formatCurrency(pagamentosPendentes || 0);
+                document.getElementById('total-mes').textContent = formatCurrency(totalMes || 0);
+                // Juntar movimentações
+                movimentacoesData = [
+                    ...entradas.map(m => ({...m, tipo: 'entrada'})),
+                    ...saidas.map(m => ({...m, tipo: 'saida'}))
+                ].sort((a, b) => new Date(b.data_vencimento) - new Date(a.data_vencimento));
+                renderMovimentacoes();
             } catch (error) {
                 console.error('Erro ao carregar dados do caixa:', error);
                 showNotification('Erro ao carregar dados do caixa', 'error');
@@ -191,7 +206,7 @@
             
             tbody.innerHTML = movimentacoesData.map(mov => `
                 <tr>
-                    <td>${formatDateTime(mov.data_hora)}</td>
+                    <td>${formatDateTime(mov.data_vencimento)}</td>
                     <td>
                         <span class="badge badge-${getTipoBadge(mov.tipo)}">${getTipoText(mov.tipo)}</span>
                     </td>
@@ -575,7 +590,7 @@
                 <div>
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <strong>Data/Hora:</strong> ${formatDateTime(mov.data_hora)}
+                            <strong>Data/Hora:</strong> ${formatDateTime(mov.data_vencimento)}
                         </div>
                         <div>
                             <strong>Tipo:</strong> 
@@ -659,7 +674,7 @@
             }
             
             const exportData = movimentacoesData.map(mov => ({
-                'Data/Hora': formatDateTime(mov.data_hora),
+                'Data/Hora': formatDateTime(mov.data_vencimento),
                 'Tipo': getTipoText(mov.tipo),
                 'Descrição': mov.descricao,
                 'Valor': mov.valor,
