@@ -7,11 +7,11 @@ const router = express.Router();
 
 // Função para criar conexão com banco de cobranças do usuário
 async function createCobrancasConnection(username) {
-  const dbName = `jpsistemas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+  const dbName = `jpcobrancas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
   const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'jpsistemas',
-    password: process.env.DB_PASSWORD || 'SuaSenhaForte123!',
+    user: process.env.DB_USER || 'jpcobrancas',
+    password: process.env.DB_PASSWORD || 'Juliano@95',
     database: dbName,
     charset: 'utf8mb4'
   };
@@ -27,14 +27,14 @@ async function createCobrancasConnection(username) {
 
 // Função para criar banco de dados de cobranças do usuário
 async function createCobrancasDatabase(username) {
-  const dbName = `jpsistemas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+  const dbName = `jpcobrancas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
   
   try {
     // Conectar como root para criar o banco
     const rootConnection = await mysql.createConnection({
       host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'jpsistemas',
-      password: process.env.DB_PASSWORD || 'SuaSenhaForte123!',
+      user: process.env.DB_USER || 'jpcobrancas',
+      password: process.env.DB_PASSWORD || 'Juliano@95',
       charset: 'utf8mb4'
     });
 
