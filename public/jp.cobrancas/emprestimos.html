@@ -1086,7 +1086,12 @@
             data_vencimento: toISODate(dados.dataPrimeiraParcela),
             juros_mensal: parseFloat(dados.porcentagem || '0') || 0,
             multa_atraso: 0,
-            observacoes: dados.observacoes || ''
+            observacoes: dados.observacoes || '',
+            tipo_emprestimo: dados.tipoEmprestimo || 'fixed',
+            numero_parcelas: parseInt(dados.numeroParcelas) || 1,
+            frequencia: dados.frequencia || 'monthly',
+            valor_parcela: parseFloat(dados.valorParcela?.replace(',', '.') || '0') || 0,
+            data_primeira_parcela: toISODate(dados.dataPrimeiraParcela)
           };
 
           console.log('Payload enviado para API:', payload);
