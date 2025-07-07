@@ -360,7 +360,9 @@ router.get('/emprestimos/:id', ensureDatabase, async (req, res) => {
 router.post('/emprestimos', ensureDatabase, async (req, res) => {
   try {
     console.log('=== INÍCIO DA CRIAÇÃO DE EMPRÉSTIMO ===');
-    console.log('Dados recebidos para criar empréstimo:', req.body);
+    console.log('REQ.BODY:', req.body);
+    console.log('numero_parcelas:', req.body.numero_parcelas, typeof req.body.numero_parcelas);
+    console.log('valor_final:', req.body.valor_final, typeof req.body.valor_final);
     console.log('Sessão do usuário:', req.session);
     
     const { cliente_id, valor, data_emprestimo, data_vencimento, juros_mensal, multa_atraso, observacoes } = req.body;
@@ -428,6 +430,7 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
           INSERT INTO cobrancas (emprestimo_id, cliente_id, valor_original, valor_atualizado, data_vencimento, status)
           VALUES (?, ?, ?, ?, ?, 'Pendente')
         `, [emprestimoResult.insertId, cliente_id, valorParcela, valorParcela, vencStr]);
+        console.log('Cobrança criada:', { parcela: i+1, valorParcela, vencStr });
       }
       console.log('Cobranças parceladas criadas');
     } else {
