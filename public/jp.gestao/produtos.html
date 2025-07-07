@@ -155,7 +155,7 @@
                         </div>
                     </td>
                     <td>${produto.categoria || 'Sem categoria'}</td>
-                    <td class="font-semibold">${formatCurrency(produto.preco)}</td>
+                    <td class="font-semibold">${formatCurrency(produto.preco_venda ?? produto.preco ?? produto.preco_custo ?? 0)}</td>
                     <td>
                         <span class="font-semibold ${produto.estoque <= (produto.estoque_minimo || 0) ? 'text-red-600' : 'text-green-600'}">
                             ${produto.estoque}
