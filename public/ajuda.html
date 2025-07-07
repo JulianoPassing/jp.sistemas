@@ -6,309 +6,379 @@
   <title>Ajuda e Suporte - J.P Sistemas Comercial</title>
   <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+              --primary-color: #005a9f;
+      --primary-dark: #003766;
+      --primary-light: #0077cc;
+      --secondary-color: #022656;
+      --accent-color: #1e4a8a;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --background: #f8fafc;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --shadow: rgba(0, 90, 159, 0.1);
+      --shadow-hover: rgba(0, 90, 159, 0.2);
+      --success-color: #059669;
+      --danger-color: #dc2626;
+      --light-color: #f9fafb;
+      --dark-color: #111827;
+      --bg-color: #f3f4f6;
+      --card-bg: #ffffff;
+      --border-color: #e0e0e0;
+      --border-radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      background: linear-gradient(135deg, #005a9f 0%, #003766 100%);
+      color: var(--text-primary);
+      padding: 0;
+      min-height: 100vh;
+    }
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 20px 0;
+      box-shadow: 0 4px 20px rgba(0, 90, 159, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+    }
+    .logo h1 {
+      color: var(--primary-color);
+      font-size: 24px;
+      font-weight: 700;
+      text-align: left;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .user-info span {
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .user-info #userDisplay {
+      font-weight: 700;
+    }
+    .logout-btn {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 90, 159, 0.3);
+    }
+    .main-content {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    #logo-container { text-align: center; margin-bottom: 25px; }
+    #logo { 
+      max-width: 100%; 
+      height: auto; 
+      max-height: 80px; 
+      filter: brightness(0) saturate(100%) invert(20%) sepia(10%) saturate(1000%) hue-rotate(200deg) brightness(0.8) contrast(1.2);
+      opacity: 0.9;
+    }
+    .card { 
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(249, 250, 251, 0.95));
+      backdrop-filter: blur(10px);
+      border-radius: var(--border-radius); 
+      box-shadow: var(--shadow); 
+      padding: 25px; 
+      margin-bottom: 25px; 
+      border: 1px solid var(--border-color); 
+    }
+    .card-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .card-header h2 { 
+      font-size: 1.8em; 
+      color: var(--dark-color); 
+      font-weight: 600; 
+      text-align: center;
+      font-family: 'Poppins', sans-serif;
+      background: none;
+    }
+    .faq-section {
+      margin-bottom: 30px;
+    }
+    .faq-section h3 {
+      color: var(--primary-color);
+      font-size: 1.4em;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--primary-light);
+    }
+    .faq-section h3 i {
+      color: var(--primary-color);
+      font-size: 1.2em;
+    }
+    .faq-item {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      border-left: 4px solid var(--primary-color);
+      transition: all 0.3s ease;
+    }
+    .faq-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 90, 159, 0.15);
+    }
+    .faq-question {
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 1.1em;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .faq-question i {
+      color: var(--primary-color);
+      font-size: 0.9em;
+    }
+    .faq-answer {
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-left: 20px;
+      padding-left: 15px;
+      border-left: 2px solid var(--border);
+    }
+    .contact-section {
+      background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
+      border-radius: 12px;
+      padding: 25px;
+      color: white;
+      box-shadow: 0 4px 20px rgba(0, 90, 159, 0.2);
+    }
+    .contact-section h3 {
+      color: white;
+      font-size: 1.4em;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    .contact-section h3 i {
+      color: white;
+      font-size: 1.2em;
+    }
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 15px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    .contact-item:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(5px);
+    }
+    .contact-item i {
+      font-size: 1.2em;
+      color: white;
+      width: 20px;
+      text-align: center;
+    }
+    .contact-item a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    .contact-item a:hover {
+      color: var(--accent-color);
+      text-decoration: underline;
+    }
+    .btn { 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 8px; 
+      padding: 12px 20px; 
+      border-radius: 8px; 
+      border: none; 
+      font-family: "Poppins", sans-serif; 
+      font-weight: 500; 
+      font-size: 0.95em; 
+      cursor: pointer; 
+      transition: all 0.3s ease; 
+      text-decoration: none; 
+    }
+    .btn-primary { 
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); 
+      color: white; 
+      box-shadow: 0 4px 15px rgba(55, 65, 81, 0.3);
+    }
+    .btn-primary:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(55, 65, 81, 0.4);
+      background: linear-gradient(135deg, var(--primary-hover), var(--primary-color));
+    }
+    .footer {
+      width: 100%;
+      text-align: center;
+      padding: 18px 0 12px 0;
+      color: #fff;
+      font-size: 15px;
+      background: transparent;
+      font-family: 'Inter', sans-serif;
+      letter-spacing: 0.02em;
+    }
+  </style>
 </head>
 <body>
-  <div class="app-layout">
-    <header>
-      <div class="header-content">
-        <a href="index.html" class="logo">
-          <h1>J.P Sistemas Comercial</h1>
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 150px; height: 67px; display: block; object-fit: contain; background: none; box-shadow: none; border-radius: 0; margin: 0;" />
+      </div>
+      <div class="user-info">
+        <span>Bem-vindo, <span id="userDisplay"></span></span>
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+        <a href="painel.html" class="logout-btn" style="background: var(--primary-light); margin-left: 8px;">
+          <i class="fas fa-arrow-left"></i> Voltar
         </a>
-        <div class="user-info">
-          <span>Bem-vindo, <span id="userDisplay"></span></span>
-          <a href="index.html" class="btn btn-secondary">
-            <i class="fas fa-sign-out-alt"></i>
-            Sair
-          </a>
-        </div>
       </div>
-    </header>
-
-    <main>
-      <div class="container">
-        <div class="dashboard">
-          <div class="dashboard-header">
-            <h1 class="dashboard-title">Ajuda e Suporte</h1>
-            <p class="dashboard-subtitle">Encontre respostas para suas dúvidas e entre em contato conosco</p>
+    </div>
+  </header>
+  <main class="main-content">
+    <div class="card">
+      <div class="card-header">
+        <h2>Ajuda e Suporte</h2>
+      </div>
+      <div class="faq-section">
+        <h3>
+          <i class="fas fa-question-circle"></i>
+          Perguntas Frequentes
+        </h3>
+        <div class="faq-item">
+          <div class="faq-question">
+            <i class="fas fa-chevron-right"></i>
+            Como cadastrar um novo cliente?
           </div>
-
-          <div class="section">
-            <div class="section-header">
-              <h2 class="section-title">
-                <i class="fas fa-question-circle"></i>
-                Perguntas Frequentes
-              </h2>
-            </div>
-
-            <div class="faq-section">
-              <h3>
-                <i class="fas fa-users"></i>
-                Gestão de Clientes
-              </h3>
-              
-              <div class="faq-item">
-                <div class="faq-question">
-                  <i class="fas fa-plus"></i>
-                  Como adicionar um novo cliente?
-                </div>
-                <div class="faq-answer">
-                  Acesse a seção "Clientes" no menu principal e clique no botão "Adicionar Cliente". Preencha todos os campos obrigatórios e clique em "Salvar".
-                </div>
-              </div>
-
-              <div class="faq-item">
-                <div class="faq-question">
-                  <i class="fas fa-plus"></i>
-                  Como editar informações de um cliente?
-                </div>
-                <div class="faq-answer">
-                  Na lista de clientes, clique no ícone de edição ao lado do cliente desejado. Faça as alterações necessárias e salve as modificações.
-                </div>
-              </div>
-
-              <div class="faq-item">
-                <div class="faq-question">
-                  <i class="fas fa-plus"></i>
-                  Como buscar um cliente específico?
-                </div>
-                <div class="faq-answer">
-                  Use a barra de pesquisa na seção de clientes. Você pode buscar por nome, CPF, telefone ou qualquer informação cadastrada.
-                </div>
-              </div>
-            </div>
-
-            <div class="faq-section">
-              <h3>
-                <i class="fas fa-shopping-cart"></i>
-                Gestão de Pedidos
-              </h3>
-              
-              <div class="faq-item">
-                <div class="faq-question">
-                  <i class="fas fa-plus"></i>
-                  Como criar um novo pedido?
-                </div>
-                <div class="faq-answer">
-                  Acesse "Pedidos" no menu e clique em "Novo Pedido". Selecione o cliente, adicione os produtos e confirme o pedido.
-                </div>
-              </div>
-
-              <div class="faq-item">
-                <div class="faq-question">
-                  <i class="fas fa-plus"></i>
-                  Como alterar o status de um pedido?
-                </div>
-                <div class="faq-answer">
-                  Na lista de pedidos, clique no status atual e selecione o novo status desejado. As alterações são salvas automaticamente.
-                </div>
-              </div>
-
-              <div class="faq-item">
-                <div class="faq-question">
-                  <i class="fas fa-plus"></i>
-                  Como cancelar um pedido?
-                </div>
-                <div class="faq-answer">
-                  Localize o pedido na lista, clique no ícone de ações e selecione "Cancelar". Confirme a ação na janela de confirmação.
-                </div>
-              </div>
-            </div>
-
-            <div class="faq-section">
-              <h3>
-                <i class="fas fa-box"></i>
-                Gestão de Produtos
-              </h3>
-              
-              <div class="faq-item">
-                <div class="faq-question">
-                  <i class="fas fa-plus"></i>
-                  Como cadastrar um novo produto?
-                </div>
-                <div class="faq-answer">
-                  Acesse "Produtos" no menu e clique em "Adicionar Produto". Preencha nome, preço, categoria e outras informações necessárias.
-                </div>
-              </div>
-
-              <div class="faq-item">
-                <div class="faq-question">
-                  <i class="fas fa-plus"></i>
-                  Como atualizar o preço de um produto?
-                </div>
-                <div class="faq-answer">
-                  Na lista de produtos, clique no ícone de edição e modifique o preço. Salve as alterações para aplicar a atualização.
-                </div>
-              </div>
-
-              <div class="faq-item">
-                <div class="faq-question">
-                  <i class="fas fa-plus"></i>
-                  Como organizar produtos por categoria?
-                </div>
-                <div class="faq-answer">
-                  Use o filtro de categorias na seção de produtos ou crie novas categorias conforme necessário para melhor organização.
-                </div>
-              </div>
-            </div>
-
-            <div class="faq-section">
-              <h3>
-                <i class="fas fa-chart-bar"></i>
-                Relatórios e Análises
-              </h3>
-              
-              <div class="faq-item">
-                <div class="faq-question">
-                  <i class="fas fa-plus"></i>
-                  Como gerar relatórios de vendas?
-                </div>
-                <div class="faq-answer">
-                  Acesse "Relatórios" no menu, selecione o período desejado e o tipo de relatório. Clique em "Gerar" para visualizar os dados.
-                </div>
-              </div>
-
-              <div class="faq-item">
-                <div class="faq-question">
-                  <i class="fas fa-plus"></i>
-                  Como exportar dados para Excel?
-                </div>
-                <div class="faq-answer">
-                  Na maioria das listas, você encontrará um botão "Exportar" que permite baixar os dados em formato Excel ou CSV.
-                </div>
-              </div>
-
-              <div class="faq-item">
-                <div class="faq-question">
-                  <i class="fas fa-plus"></i>
-                  Como visualizar estatísticas do negócio?
-                </div>
-                <div class="faq-answer">
-                  O dashboard principal mostra as principais métricas. Para análises mais detalhadas, use a seção de relatórios.
-                </div>
-              </div>
-            </div>
+          <div class="faq-answer">
+            Acesse o modulo "Gestao de Clientes" e clique em "Cadastrar Novo Cliente".
           </div>
-
-          <div class="section">
-            <div class="section-header">
-              <h2 class="section-title">
-                <i class="fas fa-phone"></i>
-                Contato e Suporte
-              </h2>
-            </div>
-            
-            <div class="cards">
-              <div class="card">
-                <div class="card-header">
-                  <i class="fas fa-phone card-icon"></i>
-                  <h3 class="card-title">Telefone</h3>
-                </div>
-                <div class="card-value">(11) 99999-9999</div>
-                <p class="text-gray-600">Segunda a Sexta, 8h às 18h</p>
-              </div>
-
-              <div class="card">
-                <div class="card-header">
-                  <i class="fas fa-envelope card-icon"></i>
-                  <h3 class="card-title">E-mail</h3>
-                </div>
-                <div class="card-value">suporte@jpsistemas.com</div>
-                <p class="text-gray-600">Resposta em até 24h</p>
-              </div>
-
-              <div class="card">
-                <div class="card-header">
-                  <i class="fas fa-comments card-icon"></i>
-                  <h3 class="card-title">WhatsApp</h3>
-                </div>
-                <div class="card-value">(11) 99999-9999</div>
-                <p class="text-gray-600">Suporte em tempo real</p>
-              </div>
-            </div>
-
-            <div class="mt-6">
-              <h3 class="text-xl font-semibold mb-4">Horário de Atendimento</h3>
-              <div class="table-container">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>Dia</th>
-                      <th>Horário</th>
-                      <th>Tipo de Atendimento</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Segunda a Sexta</td>
-                      <td>8h às 18h</td>
-                      <td><span class="badge badge-success">Completo</span></td>
-                    </tr>
-                    <tr>
-                      <td>Sábado</td>
-                      <td>8h às 12h</td>
-                      <td><span class="badge badge-warning">Limitado</span></td>
-                    </tr>
-                    <tr>
-                      <td>Domingo</td>
-                      <td>Fechado</td>
-                      <td><span class="badge badge-danger">Indisponível</span></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-question">
+            <i class="fas fa-chevron-right"></i>
+            Como cadastrar um novo produto?
+          </div>
+          <div class="faq-answer">
+            Acesse o modulo "Gestao de Produtos" e clique em "+ Novo Produto".
+          </div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-question">
+            <i class="fas fa-chevron-right"></i>
+            Como exportar relatorios?
+          </div>
+          <div class="faq-answer">
+            No modulo "Relatorios", utilize os botoes de exportacao para PDF ou Excel.
+          </div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-question">
+            <i class="fas fa-chevron-right"></i>
+            Como redefinir minha senha?
+          </div>
+          <div class="faq-answer">
+            Entre em contato com o administrador do sistema.
           </div>
         </div>
       </div>
-    </main>
-
-    <footer>
-      <div class="container">
-        <p class="text-center">&copy; 2024 J.P Sistemas Comercial. Todos os direitos reservados.</p>
+      <div class="contact-section">
+        <h3>
+          <i class="fas fa-phone"></i>
+          Contato de Suporte
+        </h3>
+        <div class="contact-item">
+          <i class="fas fa-envelope"></i>
+          <a href="mailto:suporte.jpsistemas@gmail.com">suporte.jpsistemas@gmail.com</a>
+        </div>
+        <div class="contact-item">
+          <i class="fab fa-whatsapp"></i>
+          <a href="https://wa.me/5548996852138" target="_blank">(48) 99685-2138</a>
+        </div>
       </div>
-    </footer>
-  </div>
-
+    </div>
+  </main>
+  <footer class="footer">
+    © 2025 J.P Sistemas. Todos os direitos reservados. <a href="https://whatsa.me/5548996852138/?t=Ola,%20gostaria%20de%20mais%20informacoes%20sobre%20os%20sistemas." target="_blank" style="color: #fff; text-decoration: underline; font-weight: 500;">Fale conosco no WhatsApp</a>
+  </footer>
   <script>
-    // Verificar se o usuário está logado
-    document.addEventListener('DOMContentLoaded', function() {
-      const user = localStorage.getItem('user');
-      if (!user) {
-        window.location.href = 'index.html';
-        return;
-      }
-
-      try {
-        const userData = JSON.parse(user);
-        const userDisplay = document.getElementById('userDisplay');
-        if (userDisplay && userData.nome) {
-          // Capitalizar primeira letra do nome
-          const nome = userData.nome.charAt(0).toUpperCase() + userData.nome.slice(1);
-          userDisplay.textContent = nome;
-        }
-      } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
+    document.addEventListener('DOMContentLoaded', () => {
+      // Verificar se está logado
+      if (sessionStorage.getItem('loggedIn') !== 'true') {
         window.location.href = 'index.html';
       }
+      // Exibir nome do usuário
+      const username = sessionStorage.getItem('username') || 'Usuário';
+      document.getElementById('userDisplay').textContent = username;
     });
 
-    // Toggle FAQ items
-    document.querySelectorAll('.faq-question').forEach(question => {
-      question.addEventListener('click', function() {
-        const answer = this.nextElementSibling;
-        const icon = this.querySelector('i');
-        
-        if (answer.style.display === 'none' || answer.style.display === '') {
-          answer.style.display = 'block';
-          icon.className = 'fas fa-minus';
-        } else {
-          answer.style.display = 'none';
-          icon.className = 'fas fa-plus';
-        }
-      });
-    });
+    async function logout() {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      sessionStorage.removeItem('loggedIn');
+      sessionStorage.removeItem('username');
+      window.location.href = 'sistema.html';
+    }
   </script>
 </body>
 </html> 
