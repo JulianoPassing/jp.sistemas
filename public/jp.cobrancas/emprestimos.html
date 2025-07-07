@@ -576,22 +576,38 @@
             if (isNaN(n)) return undefined;
             return n;
           }
-          // Montar objeto transactionForm
-          const transactionFormPayload = {
-            type,
-            valueFormatted: formatValorNum(formData.get('valueFormatted')),
-            finalValueFormatted: modo !== 'porcentagem' ? formatValorNum(formData.get('finalValueFormatted')) : undefined,
-            porcentagem: modo === 'porcentagem' ? formData.get('porcentagem') : undefined,
-            payBy: formData.get('payBy') ? parseInt(formData.get('payBy')) : undefined,
-            frequency: formData.get('frequency') || undefined,
-            startPaymentsAt: formData.get('startPaymentsAt') || undefined,
-            clienteId: formData.get('clienteId') ? parseInt(formData.get('clienteId')) : undefined
-          };
+              // Montar objeto transactionForm
+    const transactionFormPayload = {
+      type,
+      valueFormatted: formatValorNum(formData.get('valueFormatted')),
+      finalValueFormatted: modo !== 'porcentagem' ? formatValorNum(formData.get('finalValueFormatted')) : undefined,
+      porcentagem: modo === 'porcentagem' ? formData.get('porcentagem') : undefined,
+      payBy: formData.get('payBy') ? parseInt(formData.get('payBy')) : undefined,
+      frequency: formData.get('frequency') || undefined,
+      startPaymentsAt: formData.get('startPaymentsAt') || undefined,
+      clienteId: formData.get('clienteId') ? parseInt(formData.get('clienteId')) : undefined,
+      afiliado: formData.get('afiliado') || undefined,
+      percentageAfiliado: formData.get('percentageAfiliado') || undefined
+    };
           // Remover campos undefined ou vazios
           Object.keys(transactionFormPayload).forEach(key => {
             if (transactionFormPayload[key] === undefined || transactionFormPayload[key] === '') delete transactionFormPayload[key];
           });
-          const payload = { transactionForm: transactionFormPayload };
+          // Tentar diferentes formatos de payload
+          let payload = { transactionForm: transactionFormPayload };
+          
+          // Se não funcionar, tentar com cliente separado
+          if (transactionFormPayload.clienteId) {
+            payload = { 
+              transactionForm: transactionFormPayload,
+              cliente_id: transactionFormPayload.clienteId
+            };
+          }
+          
+          // Terceira tentativa: adicionar cliente_id dentro do transactionForm também
+          if (transactionFormPayload.clienteId) {
+            transactionFormPayload.cliente_id = transactionFormPayload.clienteId;
+          }
           console.log('Payload enviado para API:', payload);
           try {
             await apiService.createEmprestimo(payload);
