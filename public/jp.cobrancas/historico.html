@@ -264,6 +264,13 @@
       
       // Configurar mensagem de boas-vindas
       carregarMensagemBoasVindas();
+      
+      // Função para recarregar dados manualmente se necessário
+      window.recarregarDados = async function() {
+        await carregarEmprestimos();
+        await carregarEstatisticas();
+        mostrarNotificacao('Dados recarregados com sucesso!', 'success');
+      };
 
       // Event listeners para filtros
       document.getElementById('search-input').addEventListener('input', aplicarFiltros);
@@ -300,6 +307,14 @@
     // Função para carregar empréstimos
     async function carregarEmprestimos() {
       try {
+        // Primeiro, tentar corrigir inconsistências no backend
+        await fetch('/api/cobrancas/corrigir-status-emprestimos', {
+          method: 'POST',
+          credentials: 'include'
+        }).catch(() => {
+          // Se falhar, não bloquear o carregamento
+        });
+
         const response = await fetch('/api/cobrancas/emprestimos', {
           method: 'GET',
           headers: {
@@ -323,6 +338,19 @@
             });
             if (parcelasResponse.ok) {
               emprestimo.parcelas = await parcelasResponse.json();
+              
+              // Marcar parcelas atrasadas automaticamente no frontend
+              if (emprestimo.parcelas && emprestimo.parcelas.length > 0) {
+                const hoje = new Date();
+                emprestimo.parcelas.forEach(parcela => {
+                  if (parcela.status === 'Pendente') {
+                    const dataVencimento = criarDataValida(parcela.data_vencimento);
+                    if (dataVencimento && hoje > dataVencimento) {
+                      parcela.status = 'Atrasada';
+                    }
+                  }
+                });
+              }
             } else {
               emprestimo.parcelas = [];
             }
@@ -343,6 +371,14 @@
     // Função para carregar estatísticas
     async function carregarEstatisticas() {
       try {
+        // Primeiro, tentar corrigir inconsistências no backend
+        await fetch('/api/cobrancas/corrigir-status-emprestimos', {
+          method: 'POST',
+          credentials: 'include'
+        }).catch(() => {
+          // Se falhar, não bloquear o carregamento das estatísticas
+        });
+
         const response = await fetch('/api/cobrancas/historico-emprestimos/estatisticas', {
           credentials: 'include'
         });
@@ -420,17 +456,32 @@
 
     // Função para determinar status do empréstimo
     function determinarStatus(emprestimo) {
-      if (!emprestimo.parcelas || emprestimo.parcelas.length === 0) {
-        return emprestimo.status || 'Ativo';
+      // Se é empréstimo parcelado (tem parcelas)
+      if (emprestimo.parcelas && emprestimo.parcelas.length > 0) {
+        const parcelas = emprestimo.parcelas;
+        const todasPagas = parcelas.every(p => p.status === 'Paga');
+        const temAtrasada = parcelas.some(p => p.status === 'Atrasada');
+
+        if (todasPagas) return 'Quitado';
+        if (temAtrasada) return 'Em Atraso';
+        return 'Ativo';
       }
 
-      const parcelas = emprestimo.parcelas;
-      const todasPagas = parcelas.every(p => p.status === 'Paga');
-      const temAtrasada = parcelas.some(p => p.status === 'Atrasada');
-
-      if (todasPagas) return 'Quitado';
-      if (temAtrasada) return 'Em Atraso';
-      return 'Ativo';
+      // Se é empréstimo de valor fixo (sem parcelas)
+      // Verificar se está vencido e se foi pago
+      const hoje = new Date();
+      const dataVencimento = criarDataValida(emprestimo.data_vencimento);
+      
+      if (emprestimo.status === 'Quitado') {
+        return 'Quitado';
+      }
+      
+      if (dataVencimento && hoje > dataVencimento && emprestimo.status === 'Ativo') {
+        // Empréstimo vencido - considerado em atraso apenas se não foi pago
+        return 'Em Atraso';
+      }
+      
+      return emprestimo.status || 'Ativo';
     }
 
     // Função para calcular resumo das parcelas

@@ -845,12 +845,15 @@ router.get('/historico-emprestimos/estatisticas', ensureDatabase, async (req, re
           THEN e.id 
         END) as emprestimos_quitados,
         
-        -- Empréstimos em atraso: têm parcelas atrasadas OU valor fixo vencido
+        -- Empréstimos em atraso: têm parcelas atrasadas OU valor fixo vencido (sem pagamento)
         COUNT(DISTINCT CASE 
           WHEN EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id AND p.status = 'Atrasada')
             OR (NOT EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id) 
                 AND e.data_vencimento < CURDATE() 
-                AND e.status = 'Ativo')
+                AND e.status = 'Ativo'
+                AND NOT EXISTS (SELECT 1 FROM pagamentos pg 
+                               JOIN cobrancas c ON pg.cobranca_id = c.id 
+                               WHERE c.emprestimo_id = e.id AND pg.valor_pago >= e.valor))
           THEN e.id 
         END) as emprestimos_atraso,
         
@@ -904,7 +907,6 @@ router.post('/corrigir-status-emprestimos', ensureDatabase, async (req, res) => 
     console.log(`Empréstimos marcados como quitados: ${quitadosUpdate.affectedRows}`);
     
     // 3. Empréstimos de valor fixo vencidos devem ser marcados como 'Em Atraso' apenas se realmente não foram pagos
-    // Vamos deixar apenas como debug por enquanto, sem alterar o status
     const [emprestimosValorFixoVencidos] = await connection.execute(`
       SELECT 
         e.id,
@@ -912,15 +914,21 @@ router.post('/corrigir-status-emprestimos', ensureDatabase, async (req, res) => 
         c.nome as cliente_nome,
         e.data_vencimento,
         e.status,
-        e.tipo_emprestimo
+        e.tipo_emprestimo,
+        e.valor,
+        COALESCE(SUM(pg.valor_pago), 0) as valor_total_pago
       FROM emprestimos e
       LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
+      LEFT JOIN cobrancas cb ON cb.emprestimo_id = e.id
+      LEFT JOIN pagamentos pg ON pg.cobranca_id = cb.id
       WHERE NOT EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id)
         AND e.data_vencimento < CURDATE()
         AND e.status = 'Ativo'
+      GROUP BY e.id
+      HAVING COALESCE(SUM(pg.valor_pago), 0) < e.valor
     `);
     
-    console.log(`Empréstimos de valor fixo vencidos encontrados: ${emprestimosValorFixoVencidos.length}`);
+    console.log(`Empréstimos de valor fixo vencidos e não pagos encontrados: ${emprestimosValorFixoVencidos.length}`);
     
     await connection.end();
     
