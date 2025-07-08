@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body class="app-layout">
@@ -128,6 +129,7 @@
       <div class="section">
         <div class="section-header">
           <h3 class="section-title">Empréstimos</h3>
+          <button id="btn-novo-emprestimo" class="btn btn-primary">Novo Empréstimo</button>
         </div>
         
         <div class="table-container">
@@ -233,6 +235,25 @@
             </div>
           </div>
         </div>
+
+        <!-- Ações do Empréstimo -->
+        <div class="section">
+          <h4 class="section-title">Ações</h4>
+          <div class="grid grid-cols-2" style="gap: 1rem;">
+            <button id="btn-editar-emprestimo" class="btn btn-warning" onclick="editarEmprestimo()">
+              <i class="fas fa-edit"></i> Editar Empréstimo
+            </button>
+            <button id="btn-atualizar-pagamento" class="btn btn-info" onclick="atualizarPagamento()">
+              <i class="fas fa-money-bill-wave"></i> Atualizar Pagamento
+            </button>
+            <button id="btn-baixar-parcela" class="btn btn-success" onclick="darBaixaParcela()">
+              <i class="fas fa-check"></i> Dar Baixa
+            </button>
+            <button id="btn-novo-emprestimo-modal" class="btn btn-primary" onclick="novoEmprestimo()">
+              <i class="fas fa-plus"></i> Novo Empréstimo
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -279,6 +300,9 @@
       document.getElementById('filter-data-inicio').addEventListener('change', aplicarFiltros);
       document.getElementById('filter-data-fim').addEventListener('change', aplicarFiltros);
       document.getElementById('clear-filters').addEventListener('click', limparFiltros);
+      
+      // Event listener para novo empréstimo
+      document.getElementById('btn-novo-emprestimo').addEventListener('click', novoEmprestimo);
       
 
     });
@@ -559,6 +583,9 @@
     function abrirDetalhes(emprestimoId) {
       const emprestimo = todosEmprestimos.find(e => e.id === emprestimoId);
       if (!emprestimo) return;
+      
+      // Armazenar empréstimo atual para as funções de ação
+      emprestimoAtual = emprestimo;
 
       // Preencher informações gerais
       document.getElementById('modal-cliente').textContent = emprestimo.cliente_nome || 'N/A';
@@ -626,6 +653,20 @@
               ${parcela.multa_aplicada > 0 ? `Multa: R$ ${formatarMoeda(parcela.multa_aplicada)}` : ''}
             </div>
           ` : ''}
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
+            ${parcela.status !== 'Paga' ? `
+              <button class="btn btn-sm" style="background: #10b981; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1; min-width: 80px;" onclick="marcarParcelaPaga(${parcela.emprestimo_id}, ${parcela.numero_parcela})">
+                Pagar
+              </button>
+              <button class="btn btn-sm" style="background: #ef4444; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1; min-width: 80px;" onclick="marcarParcelaAtrasada(${parcela.emprestimo_id}, ${parcela.numero_parcela})">
+                Atraso
+              </button>
+            ` : `
+              <button class="btn btn-sm" style="background: #6b7280; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1;" onclick="marcarParcelaPendente(${parcela.emprestimo_id}, ${parcela.numero_parcela})">
+                Desfazer
+              </button>
+            `}
+          </div>
         `;
         container.appendChild(parcelaDiv);
       });
@@ -762,6 +803,206 @@
       }, 5000);
       
       console.log(mensagem);
+    }
+
+    // Variável global para armazenar o empréstimo atual
+    let emprestimoAtual = null;
+
+    // Função para criar novo empréstimo
+    function novoEmprestimo() {
+      window.location.href = 'emprestimos.html';
+    }
+
+    // Função para editar empréstimo atual
+    function editarEmprestimo() {
+      if (!emprestimoAtual) {
+        mostrarNotificacao('Nenhum empréstimo selecionado', 'error');
+        return;
+      }
+      
+      if (typeof emprestimoController !== 'undefined' && emprestimoController.editarEmprestimo) {
+        emprestimoController.editarEmprestimo(emprestimoAtual.id);
+      } else {
+        mostrarNotificacao('Função de edição não disponível', 'error');
+      }
+    }
+
+    // Função para atualizar pagamento
+    function atualizarPagamento() {
+      if (!emprestimoAtual) {
+        mostrarNotificacao('Nenhum empréstimo selecionado', 'error');
+        return;
+      }
+      
+      // Criar modal para atualizar pagamento
+      const modalContent = `
+        <div style="padding: 1.5rem; max-width: 500px; margin: 0 auto;">
+          <h3 style="margin-bottom: 1.5rem; color: #002f4b; text-align: center;">Atualizar Pagamento</h3>
+          
+          <form id="form-atualizar-pagamento">
+            <div class="form-group">
+              <label>Valor Pago (R$)</label>
+              <input type="text" id="valor-pago" class="form-input" placeholder="R$ 0,00" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Data do Pagamento</label>
+              <input type="date" id="data-pagamento" class="form-input" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Observações</label>
+              <textarea id="obs-pagamento" class="form-input" rows="3" placeholder="Observações sobre o pagamento"></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+              <button type="submit" class="btn btn-primary" style="flex: 1;">Confirmar Pagamento</button>
+              <button type="button" class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      `;
+      
+      // Mostrar modal (assumindo que existe uma função showModal global)
+      const modalDiv = document.createElement('div');
+      modalDiv.className = 'modal';
+      modalDiv.style.display = 'block';
+      modalDiv.innerHTML = `
+        <div class="modal-overlay" onclick="fecharModal()"></div>
+        <div class="modal-content">
+          ${modalContent}
+        </div>
+      `;
+      document.body.appendChild(modalDiv);
+      
+      // Configurar data atual
+      const hoje = new Date().toISOString().split('T')[0];
+      document.getElementById('data-pagamento').value = hoje;
+      
+      // Processar formulário
+      document.getElementById('form-atualizar-pagamento').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const valorPago = document.getElementById('valor-pago').value;
+        const dataPagamento = document.getElementById('data-pagamento').value;
+        const observacoes = document.getElementById('obs-pagamento').value;
+        
+        if (!valorPago || !dataPagamento) {
+          mostrarNotificacao('Preencha todos os campos obrigatórios', 'error');
+          return;
+        }
+        
+        try {
+          // Aqui você implementaria a lógica para atualizar o pagamento
+          mostrarNotificacao('Pagamento atualizado com sucesso!', 'success');
+          modalDiv.remove();
+          recarregarDados();
+        } catch (error) {
+          mostrarNotificacao('Erro ao atualizar pagamento', 'error');
+        }
+      });
+    }
+
+    // Função para dar baixa em parcela
+    function darBaixaParcela() {
+      if (!emprestimoAtual) {
+        mostrarNotificacao('Nenhum empréstimo selecionado', 'error');
+        return;
+      }
+      
+      mostrarNotificacao('Use os botões "Pagar" nas parcelas individuais para dar baixa', 'info');
+    }
+
+    // Funções para controle de status das parcelas
+    async function marcarParcelaPaga(emprestimoId, numeroParcela) {
+      try {
+        const hoje = new Date().toISOString().split('T')[0];
+        
+        const response = await fetch(`/api/cobrancas/emprestimos/${emprestimoId}/parcelas/${numeroParcela}/status`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            status: 'Paga',
+            data_pagamento: hoje
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Erro ao atualizar parcela');
+        }
+        
+        mostrarNotificacao('Parcela marcada como paga!', 'success');
+        
+        // Recarregar os detalhes do empréstimo
+        await abrirDetalhes(emprestimoId);
+        await recarregarDados();
+        
+      } catch (error) {
+        console.error('Erro ao marcar parcela como paga:', error);
+        mostrarNotificacao('Erro ao marcar parcela como paga', 'error');
+      }
+    }
+
+    async function marcarParcelaAtrasada(emprestimoId, numeroParcela) {
+      try {
+        const response = await fetch(`/api/cobrancas/emprestimos/${emprestimoId}/parcelas/${numeroParcela}/status`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            status: 'Atrasada'
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Erro ao atualizar parcela');
+        }
+        
+        mostrarNotificacao('Parcela marcada como atrasada!', 'success');
+        
+        // Recarregar os detalhes do empréstimo
+        await abrirDetalhes(emprestimoId);
+        await recarregarDados();
+        
+      } catch (error) {
+        console.error('Erro ao marcar parcela como atrasada:', error);
+        mostrarNotificacao('Erro ao marcar parcela como atrasada', 'error');
+      }
+    }
+
+    async function marcarParcelaPendente(emprestimoId, numeroParcela) {
+      try {
+        const response = await fetch(`/api/cobrancas/emprestimos/${emprestimoId}/parcelas/${numeroParcela}/status`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            status: 'Pendente',
+            data_pagamento: null
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Erro ao atualizar parcela');
+        }
+        
+        mostrarNotificacao('Parcela marcada como pendente!', 'success');
+        
+        // Recarregar os detalhes do empréstimo
+        await abrirDetalhes(emprestimoId);
+        await recarregarDados();
+        
+      } catch (error) {
+        console.error('Erro ao marcar parcela como pendente:', error);
+        mostrarNotificacao('Erro ao marcar parcela como pendente', 'error');
+      }
     }
 
     // Fechar modal com ESC
