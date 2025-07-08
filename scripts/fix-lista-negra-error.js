@@ -1,12 +1,74 @@
 const mysql = require('mysql2/promise');
-const { createCobrancasConnection } = require('../api/cobrancas');
+require('dotenv').config();
+
+// Função para criar conexão com banco de cobranças
+async function createCobrancasConnection(username) {
+  const dbName = `jpcobrancas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+  const dbConfig = {
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'jpcobrancas',
+    password: process.env.DB_PASSWORD || 'Juliano@95',
+    database: dbName,
+    charset: 'utf8mb4'
+  };
+  
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    return connection;
+  } catch (error) {
+    console.error(`Erro ao conectar ao banco de cobranças do usuário ${username}:`, error);
+    throw error;
+  }
+}
 
 async function fixListaNegraError() {
   console.log('🔧 Diagnosticando e corrigindo erro 500 da lista negra...');
   
   try {
-    const username = 'test_user';
-    const connection = await createCobrancasConnection(username);
+    // Primeiro, vamos tentar conectar diretamente com o banco principal
+    console.log('\n🔍 Tentando conectar com diferentes configurações...');
+    
+    let connection;
+    const configs = [
+      // Configuração 1: Banco específico do usuário
+      {
+        host: process.env.DB_HOST || 'localhost',
+        user: process.env.DB_USER || 'jpcobrancas',
+        password: process.env.DB_PASSWORD || 'Juliano@95',
+        database: 'jpcobrancas_test_user',
+        charset: 'utf8mb4'
+      },
+      // Configuração 2: Banco principal jpsistemas_cobrancas
+      {
+        host: process.env.DB_HOST || 'localhost',
+        user: process.env.DB_USER || 'jpcobrancas',
+        password: process.env.DB_PASSWORD || 'Juliano@95',
+        database: 'jpsistemas_cobrancas',
+        charset: 'utf8mb4'
+      },
+      // Configuração 3: Tentar com usuário root
+      {
+        host: process.env.DB_HOST || 'localhost',
+        user: 'root',
+        password: process.env.DB_ROOT_PASSWORD || process.env.DB_PASSWORD || 'Juliano@95',
+        database: 'jpsistemas_cobrancas',
+        charset: 'utf8mb4'
+      }
+    ];
+    
+    for (let i = 0; i < configs.length; i++) {
+      try {
+        console.log(`Tentativa ${i + 1}: ${configs[i].database} com usuário ${configs[i].user}`);
+        connection = await mysql.createConnection(configs[i]);
+        console.log(`✅ Conectado com sucesso!`);
+        break;
+      } catch (error) {
+        console.log(`❌ Falha na tentativa ${i + 1}: ${error.message}`);
+        if (i === configs.length - 1) {
+          throw new Error('Não foi possível conectar com nenhuma configuração');
+        }
+      }
+    }
     
     // 1. Verificar se a tabela clientes_cobrancas existe
     console.log('\n1. Verificando estrutura da tabela clientes_cobrancas...');
