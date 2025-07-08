@@ -9,7 +9,7 @@ async function testCobrancaDatabase() {
     // Conectar ao banco do usuário "cobranca"
     const dbConfig = {
       host: 'localhost',
-      user: 'jpcobrancas',
+      user: 'jpsistemas',
       password: 'Juliano@95',
       database: 'jpcobrancas_cobranca',
       charset: 'utf8mb4'
@@ -75,7 +75,7 @@ async function testCobrancaDatabase() {
     try {
       const dbConfigAlt = {
         host: 'localhost',
-        user: 'jpcobrancas',
+        user: 'jpsistemas',
         password: 'Juliano@95!',
         database: 'jpcobrancas_cobranca',
         charset: 'utf8mb4'
