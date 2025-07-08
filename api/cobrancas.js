@@ -219,7 +219,7 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     let emprestimosAtivos = [{ total: 0 }];
     
     try {
-      // Atualizar dias de atraso
+      // Atualizar dias de atraso - Query corrigida
       console.log('Dashboard: Atualizando dias de atraso');
       await connection.execute(`
         UPDATE cobrancas 
@@ -227,7 +227,7 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
           WHEN data_vencimento < CURDATE() THEN DATEDIFF(CURDATE(), data_vencimento)
           ELSE 0 
         END
-        WHERE status = 'Pendente'
+        WHERE TRIM(UPPER(status)) = 'PENDENTE'
       `);
       console.log('Dashboard: Dias de atraso atualizados');
     } catch (error) {
@@ -235,14 +235,14 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Estatísticas de empréstimos
+      // Estatísticas de empréstimos - Query corrigida
       console.log('Dashboard: Buscando estatísticas de empréstimos');
       [emprestimosStats] = await connection.execute(`
         SELECT 
-          COUNT(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN 1 END) as total_emprestimos,
-          COALESCE(SUM(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN COALESCE(valor_inicial, valor) ELSE 0 END), 0) as valor_total_emprestimos,
-          COUNT(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN 1 END) as emprestimos_ativos,
-          COUNT(CASE WHEN status = 'Quitado' AND cliente_id IS NOT NULL THEN 1 END) as emprestimos_quitados
+          COUNT(CASE WHEN TRIM(UPPER(status)) IN ('ATIVO', 'PENDENTE') AND cliente_id IS NOT NULL THEN 1 END) as total_emprestimos,
+          COALESCE(SUM(CASE WHEN TRIM(UPPER(status)) IN ('ATIVO', 'PENDENTE') AND cliente_id IS NOT NULL THEN COALESCE(valor_inicial, valor) ELSE 0 END), 0) as valor_total_emprestimos,
+          COUNT(CASE WHEN TRIM(UPPER(status)) IN ('ATIVO', 'PENDENTE') AND cliente_id IS NOT NULL THEN 1 END) as emprestimos_ativos,
+          COUNT(CASE WHEN TRIM(UPPER(status)) = 'QUITADO' AND cliente_id IS NOT NULL THEN 1 END) as emprestimos_quitados
         FROM emprestimos
       `);
       console.log('Dashboard: Estatísticas de empréstimos obtidas:', emprestimosStats[0]);
@@ -251,14 +251,14 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Estatísticas de cobranças
+      // Estatísticas de cobranças - Query corrigida
       console.log('Dashboard: Buscando estatísticas de cobranças');
       [cobrancasStats] = await connection.execute(`
         SELECT 
           COUNT(*) as total_cobrancas,
           COALESCE(SUM(valor_atualizado), 0) as valor_total_cobrancas,
-          COUNT(CASE WHEN status = 'Pendente' THEN 1 END) as cobrancas_pendentes,
-          COUNT(CASE WHEN status = 'Paga' THEN 1 END) as cobrancas_pagas,
+          COUNT(CASE WHEN TRIM(UPPER(status)) = 'PENDENTE' THEN 1 END) as cobrancas_pendentes,
+          COUNT(CASE WHEN TRIM(UPPER(status)) = 'PAGA' THEN 1 END) as cobrancas_pagas,
           COALESCE(SUM(CASE WHEN dias_atraso > 0 THEN valor_atualizado ELSE 0 END), 0) as valor_atrasado
         FROM cobrancas
         WHERE cliente_id IS NOT NULL
@@ -274,10 +274,10 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
       const [tables] = await connection.execute(`SHOW TABLES LIKE 'clientes_cobrancas'`);
       
       if (tables.length > 0) {
-        // Estatísticas de clientes
+        // Estatísticas de clientes - Query corrigida
         console.log('Dashboard: Buscando estatísticas de clientes');
         [clientesStats] = await connection.execute(`
-          SELECT COUNT(*) as total_clientes FROM clientes_cobrancas WHERE status IN ('Ativo', 'Pendente')
+          SELECT COUNT(*) as total_clientes FROM clientes_cobrancas WHERE TRIM(UPPER(status)) IN ('ATIVO', 'PENDENTE')
         `);
         console.log('Dashboard: Estatísticas de clientes obtidas:', clientesStats[0]);
       } else {
@@ -288,13 +288,13 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Empréstimos recentes
+      // Empréstimos recentes - Query corrigida
       console.log('Dashboard: Buscando empréstimos recentes');
       [emprestimosRecentes] = await connection.execute(`
         SELECT e.*, c.nome as cliente_nome, c.telefone as telefone
         FROM emprestimos e
         LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
-        WHERE e.status IN ('Ativo', 'Pendente') AND e.cliente_id IS NOT NULL
+        WHERE TRIM(UPPER(e.status)) IN ('ATIVO', 'PENDENTE') AND e.cliente_id IS NOT NULL
         ORDER BY e.created_at DESC
         LIMIT 5
       `);
@@ -304,14 +304,14 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Cobranças pendentes
+      // Cobranças pendentes - Query corrigida
       console.log('Dashboard: Buscando cobranças pendentes');
       [cobrancasPendentes] = await connection.execute(`
         SELECT cb.*, c.nome as cliente_nome, c.telefone as telefone
         FROM cobrancas cb
         LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
         LEFT JOIN emprestimos e ON cb.emprestimo_id = e.id
-        WHERE cb.status = 'Pendente' AND cb.cliente_id IS NOT NULL AND e.status IN ('Ativo', 'Pendente')
+        WHERE TRIM(UPPER(cb.status)) = 'PENDENTE' AND cb.cliente_id IS NOT NULL AND TRIM(UPPER(e.status)) IN ('ATIVO', 'PENDENTE')
         ORDER BY cb.data_vencimento ASC
         LIMIT 10
       `);
@@ -321,14 +321,14 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Clientes em atraso
+      // Clientes em atraso - Query corrigida
       console.log('Dashboard: Buscando clientes em atraso');
       [clientesEmAtraso] = await connection.execute(`
         SELECT COUNT(DISTINCT c.id) as total
         FROM clientes_cobrancas c
         JOIN emprestimos e ON e.cliente_id = c.id
-        WHERE e.status IN ('Ativo', 'Pendente')
-          AND e.status <> 'Quitado'
+        WHERE TRIM(UPPER(e.status)) IN ('ATIVO', 'PENDENTE')
+          AND TRIM(UPPER(e.status)) <> 'QUITADO'
           AND e.data_vencimento < CURDATE()
       `);
       console.log('Dashboard: Clientes em atraso obtidos:', clientesEmAtraso[0]);
@@ -337,13 +337,13 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Empréstimos em atraso
+      // Empréstimos em atraso - Query corrigida
       console.log('Dashboard: Buscando empréstimos em atraso');
       [emprestimosEmAtraso] = await connection.execute(`
         SELECT COUNT(*) as total
         FROM emprestimos e
-        WHERE e.status IN ('Ativo', 'Pendente')
-          AND e.status <> 'Quitado'
+        WHERE TRIM(UPPER(e.status)) IN ('ATIVO', 'PENDENTE')
+          AND TRIM(UPPER(e.status)) <> 'QUITADO'
           AND e.data_vencimento < CURDATE()
       `);
       console.log('Dashboard: Empréstimos em atraso obtidos:', emprestimosEmAtraso[0]);
@@ -352,14 +352,14 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Clientes ativos
+      // Clientes ativos - Query corrigida
       console.log('Dashboard: Buscando clientes ativos');
       [clientesAtivos] = await connection.execute(`
         SELECT COUNT(DISTINCT c.id) as total
         FROM clientes_cobrancas c
         JOIN emprestimos e ON e.cliente_id = c.id
-        WHERE e.status IN ('Ativo', 'Pendente')
-          AND e.status <> 'Quitado'
+        WHERE TRIM(UPPER(e.status)) IN ('ATIVO', 'PENDENTE')
+          AND TRIM(UPPER(e.status)) <> 'QUITADO'
       `);
       console.log('Dashboard: Clientes ativos obtidos:', clientesAtivos[0]);
     } catch (error) {
@@ -367,13 +367,13 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Empréstimos ativos
+      // Empréstimos ativos - Query corrigida
       console.log('Dashboard: Buscando empréstimos ativos');
       [emprestimosAtivos] = await connection.execute(`
         SELECT COUNT(*) as total
         FROM emprestimos
-        WHERE status IN ('Ativo', 'Pendente')
-          AND status <> 'Quitado'
+        WHERE TRIM(UPPER(status)) IN ('ATIVO', 'PENDENTE')
+          AND TRIM(UPPER(status)) <> 'QUITADO'
       `);
       console.log('Dashboard: Empréstimos ativos obtidos:', emprestimosAtivos[0]);
     } catch (error) {
