@@ -238,8 +238,8 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
       // Estatísticas de empréstimos - Query robusta com múltiplas tentativas
       console.log('Dashboard: Buscando estatísticas de empréstimos');
       
-      // Query simples - somar TODOS os empréstimos
-      console.log('Dashboard: Buscando TODOS os empréstimos (solução simplificada)');
+      // Query para somar o VALOR INICIAL de todos os empréstimos
+      console.log('Dashboard: Buscando VALOR INICIAL de todos os empréstimos');
       [emprestimosStats] = await connection.execute(`
         SELECT 
           COUNT(*) as total_emprestimos,
@@ -249,7 +249,8 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
         FROM emprestimos
         WHERE valor > 0
       `);
-      console.log('Dashboard: Estatísticas simplificadas obtidas:', emprestimosStats[0]);
+      console.log('Dashboard: Total investido (valor inicial):', emprestimosStats[0].valor_total_emprestimos);
+      console.log('Dashboard: Estatísticas completas:', emprestimosStats[0]);
     } catch (error) {
       console.log('Dashboard: Erro ao buscar estatísticas de empréstimos:', error.message);
     }
