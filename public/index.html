@@ -210,6 +210,10 @@
       font-family: 'Inter', sans-serif;
       line-height: 1.5;
     }
+    .feature-card p strong {
+      color: var(--accent-blue);
+      font-weight: 600;
+    }
     footer {
       text-align: center;
       padding: 2.5rem 0 1.5rem 0; 
@@ -591,7 +595,7 @@
   <section class="hero">
     <h1>Transforme sua gestão com tecnologia 100% em nuvem</h1>
     <p>
-      O <strong>JP. Sistemas</strong> oferece duas soluções completas para sua empresa: o <strong>Sistema de Gestão</strong> para controle empresarial completo e o <strong>Sistema de Empréstimos</strong> para gestão financeira especializada. Ambos com tecnologia em nuvem, segurança, mobilidade e performance.
+      O <strong>JP. Sistemas</strong> oferece duas soluções completas para sua empresa: o <strong>Sistema de Gestão</strong> para controle empresarial completo e o <strong>Sistema de Empréstimos</strong> para gestão financeira especializada. Também desenvolvemos <strong>sistemas 100% personalizados</strong> para atender às necessidades específicas do seu negócio. Tudo com tecnologia em nuvem, segurança, mobilidade e performance.
     </p>
     <button class="cta-btn" id="conheca-btn-link"><span>Conheça os Sistemas</span></button>
     <div class="typewriter-msg">
@@ -600,18 +604,17 @@
     <div class="sistema-funcional-msg">
       Funcionam em <strong>Desktop</strong> (navegador ou executável) e <strong>Smartphones</strong> (via navegador).
     </div>
+    <div class="sistema-funcional-msg" style="margin-top: 1rem; font-size: 1rem; color: var(--dark-text);">
+      💡 Também desenvolvemos <strong>sistemas personalizados</strong> para sua empresa!
+    </div>
     <a href="https://drive.google.com/file/d/1u4Azxd2rECC79PAewxA_CgxNFzBKV58q/view?usp=sharing" target="_blank" rel="noopener" class="download-btn">
       <button class="cta-btn"><span>Download Windows</span></button>
     </a>
   </section>
   <section class="features" id="recursos">
     <div class="feature-card">
-      <i class="fas fa-cogs icon"></i> <h3>Sistema de Gestão</h3>
-      <p>Controle completo de clientes, produtos, pedidos, estoque e relatórios. Gestão empresarial integrada em uma plataforma moderna.</p>
-    </div>
-    <div class="feature-card">
-      <i class="fas fa-money-bill-wave icon"></i> <h3>Sistema de Empréstimos</h3>
-      <p>Gestão completa de empréstimos, controle de cobranças, histórico de pagamentos e lista negra. Tudo para sua gestão financeira.</p>
+      <i class="fas fa-laptop-code icon"></i> <h3>Nossas Soluções</h3>
+      <p><strong>Sistema de Gestão:</strong> Controle completo empresarial. <strong>Sistema de Empréstimos:</strong> Gestão financeira especializada. <strong>Sistemas Personalizados:</strong> Desenvolvemos sob medida para sua empresa.</p>
     </div>
     <div class="feature-card">
       <i class="fas fa-cloud icon"></i> <h3>100% em Nuvem</h3>
@@ -620,6 +623,10 @@
     <div class="feature-card">
       <i class="fas fa-shield-alt icon"></i> <h3>Segurança e Backup</h3>
       <p>Seus dados protegidos com criptografia avançada e backups automáticos, garantindo tranquilidade e conformidade total.</p>
+    </div>
+    <div class="feature-card">
+      <i class="fas fa-headset icon"></i> <h3>Suporte Técnico</h3>
+      <p>Suporte especializado e treinamento completo para sua equipe. Estamos sempre prontos para ajudar no sucesso do seu negócio.</p>
     </div>
   </section>
   <footer id="contato">
@@ -794,11 +801,11 @@
 
     
     const typewriterTexts = [
-      "Sistema de Gestão Empresarial",
-      "Sistema de Empréstimos",
+      "Soluções Completas para Empresas",
+      "Sistemas 100% Personalizados",
       "100% em Nuvem",
       "Segurança e Backup",
-      "Interface Moderna",
+      "Suporte Técnico Especializado",
       "Acesse de Qualquer Lugar",
       "Gestão Completa e Integrada",
       "Entre em contato e saiba mais"
