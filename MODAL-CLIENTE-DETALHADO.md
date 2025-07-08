@@ -203,6 +203,7 @@ node scripts/test-modal-cliente-detalhado.js
 - ✅ `public/jp.cobrancas/js/main.js` - Função `viewCliente()` completamente reescrita
 - ✅ `scripts/test-modal-cliente-detalhado.js` - Script de teste criado
 - ✅ `scripts/test-modal-formatacao.js` - Script de teste de formatação criado
+- ✅ `scripts/test-valor-parcelas.js` - Script de teste de valores das parcelas criado
 - ✅ `MODAL-CLIENTE-DETALHADO.md` - Documentação criada
 
 ## Correções de Formatação Aplicadas
@@ -242,10 +243,43 @@ const valorInicial = Number(emp.valor || 0) || 0; // Resultado: 0 se valor for i
 - **Linha 1737**: Juros - removido "R$" duplicado  
 - **Linha 1738**: Valor Final - removido "R$" duplicado
 - **Linha 1743**: Valor da Parcela - removido "R$" duplicado
-- **Linha 1775**: Valores das Parcelas - removido "R$" duplicado + validação NaN
+- **Linha 1775**: Valores das Parcelas - removido "R$" duplicado + validação NaN + correção do campo
 - **Linha 1631**: Validação de valor inicial - adicionada proteção contra NaN
 - **Linha 1632**: Validação de juros - adicionada proteção contra NaN
 - **Linha 1642**: Validação de valor da parcela - adicionada proteção contra NaN
+
+### 🔧 Correção Adicional: Campo de Valor das Parcelas
+
+4. **Campo Incorreto para Valor das Parcelas**:
+   - **Problema**: Valores das parcelas apareciam como "R$ 0,00"
+   - **Causa**: Estava acessando `parcela.valor` mas o campo correto é `parcela.valor_parcela`
+   - **Solução**: Corrigido para usar `parcela.valor_parcela` conforme retornado pela API
+
+```javascript
+// ANTES (problemático):
+${utils.formatCurrency(Number(parcela.valor) || 0)}
+
+// DEPOIS (corrigido):
+${utils.formatCurrency(Number(parcela.valor_parcela) || 0)}
+```
+
+### 📊 Estrutura da API de Parcelas
+
+A API `/api/cobrancas/emprestimos/:id/parcelas` retorna:
+
+```sql
+SELECT p.*, e.valor as valor_total_emprestimo, e.juros_mensal, e.multa_atraso
+FROM parcelas p
+LEFT JOIN emprestimos e ON p.emprestimo_id = e.id
+WHERE p.emprestimo_id = ?
+```
+
+**Campos importantes da tabela `parcelas`:**
+- `valor_parcela` - Valor individual da parcela ✅ (campo correto)
+- `numero_parcela` - Número sequencial da parcela
+- `data_vencimento` - Data de vencimento
+- `status` - Status da parcela (Pendente, Paga, Atrasada)
+- `data_pagamento` - Data do pagamento (se paga)
 
 ## Próximos Passos
 
