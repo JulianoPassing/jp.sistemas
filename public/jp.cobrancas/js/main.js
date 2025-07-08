@@ -400,6 +400,8 @@ const dashboardController = {
 
   updateDashboardCards(data) {
     // Atualizar cards com animação baseado no formato da API
+    console.log('📊 Dados recebidos do dashboard:', data);
+    
     const cards = {
       'total-clientes': data.clientes?.total_clientes || 0,
       'total-emprestimos': data.emprestimos?.total_emprestimos || 0,
@@ -410,6 +412,8 @@ const dashboardController = {
       'emprestimos-ativos': data.emprestimosAtivos || 0,
       'total-investido': data.emprestimos?.valor_total_emprestimos || 0
     };
+    
+    console.log('📊 Valores mapeados para os cards:', cards);
 
     Object.entries(cards).forEach(([id, value]) => {
       const element = document.getElementById(id);
