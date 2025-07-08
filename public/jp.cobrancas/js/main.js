@@ -1632,28 +1632,164 @@ const clienteController = {
         return;
       }
       
+      // Buscar todos os empréstimos do cliente
+      const emprestimos = await apiService.getEmprestimos();
+      const emprestimosCliente = emprestimos.filter(e => e.cliente_id === parseInt(id));
+      
+      // Processar cada empréstimo para obter informações detalhadas
+      const emprestimosDetalhados = await Promise.all(
+        emprestimosCliente.map(async (emp) => {
+          const valorInicial = Number(emp.valor || 0);
+          const jurosPercent = Number(emp.juros_mensal || 0);
+          const jurosTotal = valorInicial * (jurosPercent / 100);
+          const valorFinal = valorInicial + jurosTotal;
+          
+          // Determinar tipo de empréstimo
+          let tipoEmprestimo = 'Parcela Única';
+          let valorParcela = valorFinal;
+          let parcelas = [];
+          
+          if (emp.tipo_emprestimo === 'in_installments' && emp.numero_parcelas > 1) {
+            tipoEmprestimo = `Parcelado (${emp.numero_parcelas}x)`;
+            valorParcela = Number(emp.valor_parcela || (valorFinal / emp.numero_parcelas));
+            
+            // Buscar parcelas se for parcelado
+            try {
+              parcelas = await apiService.getParcelasEmprestimo(emp.id);
+            } catch (error) {
+              console.error('Erro ao buscar parcelas:', error);
+            }
+          }
+          
+          // Determinar status atual baseado em parcelas
+          const hoje = new Date();
+          hoje.setHours(0,0,0,0);
+          let statusAtual = (emp.status || '').toUpperCase();
+          
+          if (parcelas.length > 0) {
+            const parcelasAtrasadas = parcelas.filter(p => {
+              const dataVencParcela = new Date(p.data_vencimento);
+              return dataVencParcela < hoje && (p.status !== 'Paga');
+            });
+            
+            const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
+            
+            if (parcelasPagas.length === parcelas.length) {
+              statusAtual = 'QUITADO';
+            } else if (parcelasAtrasadas.length > 0) {
+              statusAtual = 'ATRASADO';
+            } else {
+              statusAtual = 'ATIVO';
+            }
+          } else {
+            // Para empréstimos de parcela única
+            const dataVenc = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
+            if (dataVenc && dataVenc < hoje && statusAtual !== 'QUITADO') {
+              statusAtual = 'ATRASADO';
+            }
+          }
+          
+          return {
+            ...emp,
+            valorInicial,
+            jurosTotal,
+            valorFinal,
+            valorParcela,
+            tipoEmprestimo,
+            statusAtual,
+            parcelas
+          };
+        })
+      );
+      
       const modalContent = `
-        <div class="cliente-modal-box" style="padding: 1.5rem; max-width: 500px; margin: 0 auto;">
+        <div class="cliente-modal-box" style="padding: 1.5rem; max-width: 800px; margin: 0 auto; max-height: 80vh; overflow-y: auto;">
           <h3 style="margin-bottom: 1rem; color: #002f4b;">${cliente.nome}</h3>
-          <div style="margin-bottom: 1rem;">
-            <p><strong>CPF/CNPJ:</strong> ${cliente.cpf_cnpj || 'Não informado'}</p>
-            <p><strong>Telefone:</strong> ${cliente.telefone || 'Não informado'}</p>
-            <p><strong>Email:</strong> ${cliente.email || 'Não informado'}</p>
+          
+          <!-- Dados do Cliente -->
+          <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <h4 style="margin-bottom: 0.5rem; color: #002f4b;">Dados Pessoais</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+              <p><strong>CPF/CNPJ:</strong> ${cliente.cpf_cnpj || 'Não informado'}</p>
+              <p><strong>Telefone:</strong> ${cliente.telefone || 'Não informado'}</p>
+              <p><strong>Email:</strong> ${cliente.email || 'Não informado'}</p>
+              <p><strong>Cidade:</strong> ${cliente.cidade || 'Não informada'}</p>
+            </div>
             <p><strong>Endereço:</strong> ${cliente.endereco || 'Não informado'}</p>
-            <p><strong>Cidade:</strong> ${cliente.cidade || 'Não informada'}</p>
-            <p><strong>Estado:</strong> ${cliente.estado || 'Não informado'}</p>
-            <p><strong>CEP:</strong> ${cliente.cep || 'Não informado'}</p>
           </div>
-          <div style="margin-top: 1.5rem;">
-            <h4>Empréstimos Ativos: ${cliente.emprestimos?.length || 0}</h4>
-            ${cliente.emprestimos && cliente.emprestimos.length > 0 ? 
-              cliente.emprestimos.map(emp => `
-                <div style="border: 1px solid #eee; padding: 0.5rem; margin: 0.5rem 0; border-radius: 4px;">
-                  <p><strong>Valor:</strong> ${utils.formatCurrency(emp.valor)}</p>
-                  <p><strong>Vencimento:</strong> ${utils.formatDate(emp.data_vencimento)}</p>
-                  <p><strong>Status:</strong> <span class="badge badge-${emp.status === 'Ativo' ? 'success' : 'warning'}">${emp.status}</span></p>
+          
+          <!-- Resumo dos Empréstimos -->
+          <div style="margin-bottom: 1.5rem;">
+            <h4 style="color: #002f4b;">Empréstimos (${emprestimosDetalhados.length})</h4>
+            ${emprestimosDetalhados.length === 0 ? 
+              '<p style="color: #666; font-style: italic;">Nenhum empréstimo encontrado</p>' :
+              emprestimosDetalhados.map((emp, index) => `
+                <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin: 1rem 0; background: #fff;">
+                  <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 1rem;">
+                    <h5 style="margin: 0; color: #002f4b;">Empréstimo #${emp.id}</h5>
+                    <span class="badge badge-${emp.statusAtual === 'ATIVO' ? 'success' : (emp.statusAtual === 'ATRASADO' ? 'danger' : 'info')}" style="font-size: 0.9rem;">${emp.statusAtual}</span>
+                  </div>
+                  
+                  <!-- Informações Principais -->
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                      <p style="margin: 0.3rem 0;"><strong>Tipo:</strong> ${emp.tipoEmprestimo}</p>
+                      <p style="margin: 0.3rem 0;"><strong>Valor Inicial:</strong> <span style="color: #10b981; font-weight: bold;">R$ ${utils.formatCurrency(emp.valorInicial)}</span></p>
+                      <p style="margin: 0.3rem 0;"><strong>Juros (${emp.juros_mensal || 0}%):</strong> <span style="color: #f59e0b; font-weight: bold;">R$ ${utils.formatCurrency(emp.jurosTotal)}</span></p>
+                      <p style="margin: 0.3rem 0;"><strong>Valor Final:</strong> <span style="color: #ef4444; font-weight: bold;">R$ ${utils.formatCurrency(emp.valorFinal)}</span></p>
+                    </div>
+                    <div>
+                      <p style="margin: 0.3rem 0;"><strong>Data Empréstimo:</strong> ${emp.data_emprestimo ? utils.formatDate(emp.data_emprestimo) : 'N/A'}</p>
+                      <p style="margin: 0.3rem 0;"><strong>Data Vencimento:</strong> ${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : 'N/A'}</p>
+                      <p style="margin: 0.3rem 0;"><strong>Valor da Parcela:</strong> <span style="color: #6366f1; font-weight: bold;">R$ ${utils.formatCurrency(emp.valorParcela)}</span></p>
+                      <p style="margin: 0.3rem 0;"><strong>Frequência:</strong> ${emp.frequencia === 'monthly' ? 'Mensal' : (emp.frequencia === 'weekly' ? 'Semanal' : 'N/A')}</p>
+                    </div>
+                  </div>
+                  
+                  <!-- Parcelas (se houver) -->
+                  ${emp.parcelas.length > 0 ? `
+                    <div style="margin-top: 1rem;">
+                      <h6 style="margin-bottom: 0.5rem; color: #002f4b;">Parcelas (${emp.parcelas.length})</h6>
+                      <div style="max-height: 200px; overflow-y: auto; border: 1px solid #eee; border-radius: 4px;">
+                        ${emp.parcelas.map(parcela => {
+                          const dataVenc = new Date(parcela.data_vencimento);
+                          const hoje = new Date();
+                          hoje.setHours(0,0,0,0);
+                          let statusParcela = parcela.status;
+                          let corStatus = '#6366f1'; // Pendente
+                          
+                          if (statusParcela === 'Paga') {
+                            corStatus = '#10b981'; // Verde
+                          } else if (dataVenc < hoje) {
+                            corStatus = '#ef4444'; // Vermelho (atrasada)
+                            statusParcela = 'Atrasada';
+                          }
+                          
+                          return `
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-bottom: 1px solid #f0f0f0;">
+                              <div>
+                                <strong>Parcela ${parcela.numero_parcela}</strong><br>
+                                <small>Venc: ${utils.formatDate(parcela.data_vencimento)}</small>
+                                ${parcela.data_pagamento ? `<br><small style="color: #10b981;">Pago em: ${utils.formatDate(parcela.data_pagamento)}</small>` : ''}
+                              </div>
+                              <div style="text-align: right;">
+                                <div style="color: ${corStatus}; font-weight: bold;">R$ ${utils.formatCurrency(parcela.valor)}</div>
+                                <span style="background: ${corStatus}; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">${statusParcela}</span>
+                              </div>
+                            </div>
+                          `;
+                        }).join('')}
+                      </div>
+                    </div>
+                  ` : ''}
+                  
+                  <!-- Botões de Ação -->
+                  <div style="margin-top: 1rem; text-align: center;">
+                    <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})" style="margin-right: 0.5rem;">Ver Detalhes</button>
+                    <button class="btn btn-success btn-sm" onclick="cobrar(${emp.id})">Cobrar</button>
+                  </div>
                 </div>
-              `).join('') : '<p>Nenhum empréstimo ativo</p>'
+              `).join('')
             }
           </div>
         </div>
