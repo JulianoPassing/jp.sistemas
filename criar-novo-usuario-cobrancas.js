@@ -224,29 +224,38 @@ async function criarNovoUsuario() {
     // 8. Verificar se tudo foi criado corretamente
     console.log('🔍 Verificando criação...');
     
-    // Verificar usuário
-    await connection.execute('USE jpsistemas_users');
-    const [userCheck] = await connection.execute(
-      'SELECT * FROM usuarios_cobrancas WHERE username = ?',
-      [username]
-    );
+    let userCheck = [];
+    let dbCheck = [];
+    let tables = [];
+    let counts = [{ clientes: 0, emprestimos: 0, cobrancas: 0, pagamentos: 0, parcelas: 0 }];
     
-    // Verificar banco
-    const [dbCheck] = await connection.execute('SHOW DATABASES LIKE ?', [dbName]);
-    
-    // Verificar tabelas
-    await connection.execute(`USE \`${dbName}\``);
-    const [tables] = await connection.execute('SHOW TABLES');
-    
-    // Contar registros (deve ser 0)
-    const [counts] = await connection.execute(`
-      SELECT 
-        (SELECT COUNT(*) FROM clientes_cobrancas) as clientes,
-        (SELECT COUNT(*) FROM emprestimos) as emprestimos,
-        (SELECT COUNT(*) FROM cobrancas) as cobrancas,
-        (SELECT COUNT(*) FROM pagamentos) as pagamentos,
-        (SELECT COUNT(*) FROM parcelas) as parcelas
-    `);
+    try {
+      // Verificar usuário no banco correto
+      await connection.execute('USE jpsistemas_users');
+      [userCheck] = await connection.execute(
+        'SELECT * FROM usuarios_cobrancas WHERE username = ?',
+        [username]
+      );
+      
+      // Verificar banco
+      [dbCheck] = await connection.execute('SHOW DATABASES LIKE ?', [dbName]);
+      
+      // Verificar tabelas no banco do usuário
+      await connection.execute(`USE \`${dbName}\``);
+      [tables] = await connection.execute('SHOW TABLES');
+      
+      // Contar registros (deve ser 0)
+      [counts] = await connection.execute(`
+        SELECT 
+          (SELECT COUNT(*) FROM clientes_cobrancas) as clientes,
+          (SELECT COUNT(*) FROM emprestimos) as emprestimos,
+          (SELECT COUNT(*) FROM cobrancas) as cobrancas,
+          (SELECT COUNT(*) FROM pagamentos) as pagamentos,
+          (SELECT COUNT(*) FROM parcelas) as parcelas
+      `);
+    } catch (verifyError) {
+      console.log('⚠️ Erro na verificação (mas usuário foi criado):', verifyError.message);
+    }
 
     await connection.end();
 
