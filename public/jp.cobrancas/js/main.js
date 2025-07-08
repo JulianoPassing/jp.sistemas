@@ -535,17 +535,17 @@ const dashboardController = {
       const valor = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
-      }).format(valorAtualizado);
+      }).format(emprestimo.valorAtualizado);
       const data = new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR');
-      const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : 'info'));
+      const statusClass = emprestimo.status === 'ATRASADO' ? 'danger' : (emprestimo.status === 'PENDENTE' ? 'warning' : (emprestimo.status === 'ATIVO' ? 'success' : 'info'));
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${emprestimo.cliente_nome || 'N/A'}</td>
-        <td>${valor}${infoJuros}</td>
+        <td>${valor}${emprestimo.infoJuros}</td>
         <td>${emprestimo.parcelas || '-'}</td>
         <td>${data}</td>
         <td>${emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-'}</td>
-        <td><span class="badge badge-${statusClass}">${status}</span></td>
+        <td><span class="badge badge-${statusClass}">${emprestimo.status}</span></td>
         <td>
           <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
         </td>
