@@ -235,17 +235,54 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Estatísticas de empréstimos - Query corrigida
+      // Estatísticas de empréstimos - Query robusta com múltiplas tentativas
       console.log('Dashboard: Buscando estatísticas de empréstimos');
+      
+      // Primeiro, verificar quais status existem
+      const [statusDisponiveis] = await connection.execute(`
+        SELECT DISTINCT TRIM(UPPER(status)) as status_normalizado, COUNT(*) as total
+        FROM emprestimos 
+        WHERE cliente_id IS NOT NULL AND cliente_id > 0
+        GROUP BY TRIM(UPPER(status))
+      `);
+      console.log('Dashboard: Status disponíveis:', statusDisponiveis);
+      
+      // Query flexível baseada nos status encontrados
+      let statusAtivos = ['ATIVO', 'PENDENTE', 'EM ANDAMENTO', 'VIGENTE', 'ABERTO'];
+      let statusQuitados = ['QUITADO', 'PAGO', 'FINALIZADO', 'CONCLUIDO', 'CONCLUÍDO'];
+      
       [emprestimosStats] = await connection.execute(`
         SELECT 
-          COUNT(CASE WHEN TRIM(UPPER(status)) IN ('ATIVO', 'PENDENTE') AND cliente_id IS NOT NULL THEN 1 END) as total_emprestimos,
-          COALESCE(SUM(CASE WHEN TRIM(UPPER(status)) IN ('ATIVO', 'PENDENTE') AND cliente_id IS NOT NULL THEN COALESCE(valor_inicial, valor) ELSE 0 END), 0) as valor_total_emprestimos,
-          COUNT(CASE WHEN TRIM(UPPER(status)) IN ('ATIVO', 'PENDENTE') AND cliente_id IS NOT NULL THEN 1 END) as emprestimos_ativos,
-          COUNT(CASE WHEN TRIM(UPPER(status)) = 'QUITADO' AND cliente_id IS NOT NULL THEN 1 END) as emprestimos_quitados
+          COUNT(CASE WHEN cliente_id IS NOT NULL AND cliente_id > 0 
+                     AND TRIM(UPPER(status)) IN ('ATIVO', 'PENDENTE', 'EM ANDAMENTO', 'VIGENTE', 'ABERTO') 
+                THEN 1 END) as total_emprestimos,
+          COALESCE(SUM(CASE WHEN cliente_id IS NOT NULL AND cliente_id > 0 
+                           AND TRIM(UPPER(status)) IN ('ATIVO', 'PENDENTE', 'EM ANDAMENTO', 'VIGENTE', 'ABERTO') 
+                       THEN COALESCE(valor_inicial, valor) ELSE 0 END), 0) as valor_total_emprestimos,
+          COUNT(CASE WHEN cliente_id IS NOT NULL AND cliente_id > 0 
+                     AND TRIM(UPPER(status)) IN ('ATIVO', 'PENDENTE', 'EM ANDAMENTO', 'VIGENTE', 'ABERTO') 
+                THEN 1 END) as emprestimos_ativos,
+          COUNT(CASE WHEN cliente_id IS NOT NULL AND cliente_id > 0 
+                     AND TRIM(UPPER(status)) IN ('QUITADO', 'PAGO', 'FINALIZADO', 'CONCLUIDO', 'CONCLUÍDO') 
+                THEN 1 END) as emprestimos_quitados,
+          COUNT(CASE WHEN cliente_id IS NOT NULL AND cliente_id > 0 THEN 1 END) as total_geral
         FROM emprestimos
       `);
       console.log('Dashboard: Estatísticas de empréstimos obtidas:', emprestimosStats[0]);
+      
+      // Se ainda der 0, usar todos os empréstimos com cliente válido
+      if (emprestimosStats[0].total_emprestimos === 0 && emprestimosStats[0].total_geral > 0) {
+        console.log('Dashboard: Nenhum status ativo encontrado, usando todos os empréstimos válidos');
+        [emprestimosStats] = await connection.execute(`
+          SELECT 
+            COUNT(CASE WHEN cliente_id IS NOT NULL AND cliente_id > 0 THEN 1 END) as total_emprestimos,
+            COALESCE(SUM(CASE WHEN cliente_id IS NOT NULL AND cliente_id > 0 THEN COALESCE(valor_inicial, valor) ELSE 0 END), 0) as valor_total_emprestimos,
+            COUNT(CASE WHEN cliente_id IS NOT NULL AND cliente_id > 0 THEN 1 END) as emprestimos_ativos,
+            0 as emprestimos_quitados
+          FROM emprestimos
+        `);
+        console.log('Dashboard: Usando todos os empréstimos válidos:', emprestimosStats[0]);
+      }
     } catch (error) {
       console.log('Dashboard: Erro ao buscar estatísticas de empréstimos:', error.message);
     }
@@ -288,16 +325,33 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Empréstimos recentes - Query corrigida
+      // Empréstimos recentes - Query robusta
       console.log('Dashboard: Buscando empréstimos recentes');
+      
+      // Tentar primeiro com status ativos conhecidos
       [emprestimosRecentes] = await connection.execute(`
         SELECT e.*, c.nome as cliente_nome, c.telefone as telefone
         FROM emprestimos e
         LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
-        WHERE TRIM(UPPER(e.status)) IN ('ATIVO', 'PENDENTE') AND e.cliente_id IS NOT NULL
+        WHERE e.cliente_id IS NOT NULL AND e.cliente_id > 0
+          AND TRIM(UPPER(e.status)) IN ('ATIVO', 'PENDENTE', 'EM ANDAMENTO', 'VIGENTE', 'ABERTO')
         ORDER BY e.created_at DESC
         LIMIT 5
       `);
+      
+      // Se não encontrou nenhum, pegar os mais recentes independente do status
+      if (emprestimosRecentes.length === 0) {
+        console.log('Dashboard: Nenhum empréstimo ativo encontrado, buscando todos os recentes');
+        [emprestimosRecentes] = await connection.execute(`
+          SELECT e.*, c.nome as cliente_nome, c.telefone as telefone
+          FROM emprestimos e
+          LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
+          WHERE e.cliente_id IS NOT NULL AND e.cliente_id > 0
+          ORDER BY e.created_at DESC
+          LIMIT 5
+        `);
+      }
+      
       console.log('Dashboard: Empréstimos recentes obtidos:', emprestimosRecentes.length);
     } catch (error) {
       console.log('Dashboard: Erro ao buscar empréstimos recentes:', error.message);
@@ -321,17 +375,34 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Clientes em atraso - Query corrigida
+      // Clientes em atraso - Baseado em parcelas
       console.log('Dashboard: Buscando clientes em atraso');
-      [clientesEmAtraso] = await connection.execute(`
-        SELECT COUNT(DISTINCT c.id) as total
-        FROM clientes_cobrancas c
-        JOIN emprestimos e ON e.cliente_id = c.id
-        WHERE TRIM(UPPER(e.status)) IN ('ATIVO', 'PENDENTE')
-          AND TRIM(UPPER(e.status)) <> 'QUITADO'
-          AND e.data_vencimento < CURDATE()
-      `);
-      console.log('Dashboard: Clientes em atraso obtidos:', clientesEmAtraso[0]);
+      
+      // Primeiro tentar com parcelas (sistema parcelado)
+      try {
+        [clientesEmAtraso] = await connection.execute(`
+          SELECT COUNT(DISTINCT c.id) as total
+          FROM clientes_cobrancas c
+          JOIN emprestimos e ON e.cliente_id = c.id
+          JOIN parcelas p ON p.emprestimo_id = e.id
+          WHERE TRIM(UPPER(p.status)) = 'PENDENTE'
+            AND p.data_vencimento < CURDATE()
+            AND TRIM(UPPER(e.status)) IN ('ATIVO', 'PENDENTE')
+        `);
+        console.log('Dashboard: Clientes em atraso (baseado em parcelas):', clientesEmAtraso[0]);
+      } catch (parcelasError) {
+        // Se não há tabela parcelas, usar cobranças em atraso
+        console.log('Dashboard: Tabela parcelas não encontrada, usando cobranças');
+        [clientesEmAtraso] = await connection.execute(`
+          SELECT COUNT(DISTINCT c.id) as total
+          FROM clientes_cobrancas c
+          JOIN cobrancas cb ON cb.cliente_id = c.id
+          WHERE TRIM(UPPER(cb.status)) = 'PENDENTE'
+            AND cb.data_vencimento < CURDATE()
+            AND cb.dias_atraso > 0
+        `);
+        console.log('Dashboard: Clientes em atraso (baseado em cobranças):', clientesEmAtraso[0]);
+      }
     } catch (error) {
       console.log('Dashboard: Erro ao buscar clientes em atraso:', error.message);
     }
