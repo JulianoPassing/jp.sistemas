@@ -862,6 +862,124 @@ router.get('/historico-emprestimos/estatisticas', ensureDatabase, async (req, re
       FROM emprestimos e
     `);
     
+    // Debug detalhado: vamos investigar cada empréstimo individualmente
+    const [todosEmprestimos] = await connection.execute(`
+      SELECT 
+        e.id,
+        e.cliente_id,
+        c.nome as cliente_nome,
+        e.data_vencimento,
+        e.status,
+        e.tipo_emprestimo,
+        e.numero_parcelas,
+        COUNT(p.id) as total_parcelas_db,
+        SUM(CASE WHEN p.status = 'Paga' THEN 1 ELSE 0 END) as parcelas_pagas,
+        SUM(CASE WHEN p.status = 'Pendente' THEN 1 ELSE 0 END) as parcelas_pendentes,
+        SUM(CASE WHEN p.status = 'Atrasada' THEN 1 ELSE 0 END) as parcelas_atrasadas,
+        -- Verificar se seria contado como "em atraso" pela query das estatísticas
+        CASE 
+          WHEN EXISTS (SELECT 1 FROM parcelas p2 WHERE p2.emprestimo_id = e.id AND p2.status = 'Atrasada') THEN 'ATRASO_POR_PARCELA'
+          WHEN NOT EXISTS (SELECT 1 FROM parcelas p2 WHERE p2.emprestimo_id = e.id) 
+               AND e.data_vencimento < CURDATE() 
+               AND e.status = 'Ativo' THEN 'ATRASO_VALOR_FIXO'
+          ELSE 'NAO_ATRASO'
+        END as classificacao_atraso
+      FROM emprestimos e
+      LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
+      LEFT JOIN parcelas p ON e.id = p.emprestimo_id
+      GROUP BY e.id, e.cliente_id, c.nome, e.data_vencimento, e.status, e.tipo_emprestimo, e.numero_parcelas
+      ORDER BY e.id
+    `);
+    
+    console.log('🔍 COMPARAÇÃO DETALHADA - Análise individual de cada empréstimo:');
+    console.log(`Total de empréstimos encontrados: ${todosEmprestimos.length}`);
+    
+    const emprestimosClassificadosAtraso = todosEmprestimos.filter(emp => emp.classificacao_atraso !== 'NAO_ATRASO');
+    
+    console.log(`Empréstimos classificados como "em atraso" pela query das estatísticas: ${emprestimosClassificadosAtraso.length}`);
+    console.log(`Contagem reportada pela query agregada: ${statusStats[0].emprestimos_atraso}`);
+    
+    if (emprestimosClassificadosAtraso.length > 0) {
+      console.log('Detalhes dos empréstimos classificados como "em atraso":');
+      emprestimosClassificadosAtraso.forEach(emp => {
+        console.log(`  ID ${emp.id}: ${emp.cliente_nome} | Tipo: ${emp.tipo_emprestimo} | Status: ${emp.status} | Classificação: ${emp.classificacao_atraso}`);
+        console.log(`    Parcelas - Total: ${emp.total_parcelas_db}, Pagas: ${emp.parcelas_pagas}, Atrasadas: ${emp.parcelas_atrasadas}`);
+        console.log(`    Vencimento: ${emp.data_vencimento}`);
+        
+        // Verificar se este empréstimo deveria realmente estar em atraso
+        const statusCalculado = emp.parcelas_pagas === emp.total_parcelas_db && emp.total_parcelas_db > 0 ? 'Quitado' : 
+                               emp.parcelas_atrasadas > 0 ? 'Em Atraso' : 'Ativo';
+        
+        console.log(`    Status calculado pela lógica de correção: ${statusCalculado}`);
+        
+        if (emp.classificacao_atraso !== 'NAO_ATRASO' && statusCalculado !== 'Em Atraso') {
+          console.log(`    ⚠️  DISCREPÂNCIA ENCONTRADA: Query das estatísticas classifica como atraso, mas lógica de correção não!`);
+        }
+      });
+    }
+    
+    // Verificar se há diferença na contagem
+    if (emprestimosClassificadosAtraso.length !== statusStats[0].emprestimos_atraso) {
+      console.log(`⚠️  INCONSISTÊNCIA: Contagem individual (${emprestimosClassificadosAtraso.length}) != Query agregada (${statusStats[0].emprestimos_atraso})`);
+    }
+    
+    // Correção automática: se há discrepância, corrigir status dos empréstimos
+    let correcoes_automaticas = 0;
+    for (const emp of todosEmprestimos) {
+      const statusCalculado = emp.parcelas_pagas === emp.total_parcelas_db && emp.total_parcelas_db > 0 ? 'Quitado' : 
+                             emp.parcelas_atrasadas > 0 ? 'Em Atraso' : 'Ativo';
+      
+      if (emp.status !== statusCalculado) {
+        console.log(`🔧 Correção automática: Empréstimo ${emp.id} (${emp.cliente_nome}) | ${emp.status} → ${statusCalculado}`);
+        
+        await connection.execute(`
+          UPDATE emprestimos 
+          SET status = ? 
+          WHERE id = ?
+        `, [statusCalculado, emp.id]);
+        
+        correcoes_automaticas++;
+      }
+    }
+    
+    if (correcoes_automaticas > 0) {
+      console.log(`✅ Correções automáticas aplicadas: ${correcoes_automaticas} empréstimos`);
+      
+      // Recalcular estatísticas após correções
+      const [statusStatsAtualizadas] = await connection.execute(`
+        SELECT 
+          COUNT(DISTINCT CASE 
+            WHEN (EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id AND p.status = 'Pendente')
+                  AND NOT EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id AND p.status = 'Atrasada'))
+              OR (NOT EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id) 
+                  AND e.data_vencimento >= CURDATE() 
+                  AND e.status = 'Ativo')
+            THEN e.id 
+          END) as emprestimos_ativos,
+          
+          COUNT(DISTINCT CASE 
+            WHEN (NOT EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id AND p.status IN ('Pendente', 'Atrasada'))
+                  AND EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id AND p.status = 'Paga'))
+              OR (NOT EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id) 
+                  AND e.status = 'Quitado')
+            THEN e.id 
+          END) as emprestimos_quitados,
+          
+          COUNT(DISTINCT CASE 
+            WHEN EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id AND p.status = 'Atrasada')
+              OR (NOT EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id) 
+                  AND e.data_vencimento < CURDATE() 
+                  AND e.status = 'Ativo')
+            THEN e.id 
+          END) as emprestimos_atraso
+        FROM emprestimos e
+      `);
+      
+      // Usar estatísticas atualizadas
+      Object.assign(statusStats[0], statusStatsAtualizadas[0]);
+      console.log(`📊 Estatísticas atualizadas após correção: Ativos: ${statusStats[0].emprestimos_ativos}, Quitados: ${statusStats[0].emprestimos_quitados}, Atraso: ${statusStats[0].emprestimos_atraso}`);
+    }
+    
     // Debug: verificar parcelas atrasadas
     const [parcelasAtrasadas] = await connection.execute(`
       SELECT 
@@ -976,7 +1094,8 @@ router.get('/historico-emprestimos/estatisticas', ensureDatabase, async (req, re
         emprestimos_atraso_detalhado: emprestimosAtraso,
         parcelas_atrasadas: parcelasAtrasadas,
         emprestimos_parcelados: emprestimosParceladosDebug
-      }
+      },
+      correcoes_automaticas: correcoes_automaticas
     });
   } catch (error) {
     console.error('Erro ao buscar estatísticas do histórico:', error);

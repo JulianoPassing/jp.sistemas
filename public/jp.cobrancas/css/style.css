@@ -955,6 +955,10 @@ footer {
   border-left-color: var(--yellow-500);
 }
 
+.notification.notification-info {
+  border-left-color: #3B82F6;
+}
+
 .notification-content {
   display: flex;
   justify-content: space-between;
