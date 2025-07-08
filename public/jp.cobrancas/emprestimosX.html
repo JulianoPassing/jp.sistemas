@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JP-Cobranças - Histórico de Empréstimos</title>
+  <link rel="icon" type="image/png" href="https://i.imgur.com/6N82fk2.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="app-layout">
+  <header>
+    <div class="header-content">
+      <a href="index.html" class="logo" style="display: flex; align-items: center;">
+        <img src="https://i.imgur.com/EQ1tjZX.png" alt="JP-Cobranças" style="height: 5rem; width: auto; object-fit: contain;">
+      </a>
+      <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Abrir menu"><span class="menu-icon"></span></button>
+      <div class="nav-wrapper">
+        <nav>
+          <a href="dashboard.html" class="nav-link">Dashboard</a>
+          <a href="clientes.html" class="nav-link">Clientes</a>
+          <a href="adicionar-cliente.html" class="nav-link">Adicionar Cliente</a>
+          <a href="cobrancas.html" class="nav-link">Cobranças</a>
+          <a href="atrasados.html" class="nav-link">Atrasados</a>
+          <a href="lista-negra.html" class="nav-link">Lista Negra</a>
+          <a href="emprestimos.html" class="nav-link active">Histórico de Empréstimos</a>
+          <a href="#" class="nav-link" onclick="sair()">Sair</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="container">
+      <div class="dashboard-header">
+        <div class="welcome-message" id="welcomeMessage">Bem-vindo(a)!</div>
+        <div class="dashboard-title">Histórico de Empréstimos</div>
+        <div class="dashboard-subtitle">
+          Visualize todo o histórico de empréstimos do sistema.
+        </div>
+      </div>
+      <!-- Tabela de Histórico de Empréstimos -->
+      <div class="section">
+        <div class="section-header">
+          <h3 class="section-title">Empréstimos</h3>
+          <button id="toggleForm" class="btn btn-primary">Novo Empréstimo</button>
+        </div>
+        
+        <!-- Caixa de Busca -->
+        <div class="search-container" style="margin-bottom: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+          <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 250px;">
+              <input 
+                type="text" 
+                id="search-emprestimos" 
+                class="form-input" 
+                placeholder="Buscar por cliente, valor, status..."
+                style="width: 100%;"
+              >
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <select id="filter-status" class="form-input" style="min-width: 120px;">
+                <option value="">Todos os Status</option>
+                <option value="Ativo">Ativo</option>
+                <option value="Pendente">Pendente</option>
+                <option value="Em Atraso">Em Atraso</option>
+                <option value="Quitado">Quitado</option>
+                <option value="Cancelado">Cancelado</option>
+              </select>
+              <button id="clear-search" class="btn btn-secondary" style="white-space: nowrap;">Limpar</button>
+            </div>
+          </div>
+          <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">
+            <span id="search-results-info">Mostrando todos os empréstimos</span>
+          </div>
+        </div>
+        
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Valor Inicial</th>
+                <th>Valor Final</th>
+                <th>Data Empréstimo</th>
+                <th>Vencimento</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="historico-emprestimos">
+              <tr>
+                <td colspan="7" class="text-center text-gray-500">Carregando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="text-center p-4 mt-8">
+    © 2024 JP-Cobranças. Todos os direitos reservados.
+  </footer>
+  <script src="./js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuBtn = document.getElementById('mobile-menu-toggle');
+      const navWrapper = document.querySelector('.nav-wrapper');
+      if (menuBtn && navWrapper) {
+        menuBtn.addEventListener('click', function() {
+          navWrapper.classList.toggle('open');
+        });
+      }
+
+      // Carregar histórico de empréstimos
+      renderHistoricoEmprestimos();
+      
+      // Funcionalidade de busca
+      const searchInput = document.getElementById('search-emprestimos');
+      const filterStatus = document.getElementById('filter-status');
+      const clearSearchBtn = document.getElementById('clear-search');
+      const searchResultsInfo = document.getElementById('search-results-info');
+      
+      let allEmprestimos = []; // Armazenar todos os empréstimos
+      let filteredEmprestimos = []; // Empréstimos filtrados
+      
+      // Função para aplicar filtros
+      function applyFilters() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const statusFilter = filterStatus.value;
+        
+        filteredEmprestimos = allEmprestimos.filter(emp => {
+          // Filtro por termo de busca
+          const matchesSearch = !searchTerm || 
+            (emp.cliente_nome && emp.cliente_nome.toLowerCase().includes(searchTerm)) ||
+            (emp.valor && emp.valor.toString().includes(searchTerm)) ||
+            (emp.status && emp.status.toLowerCase().includes(searchTerm)) ||
+            (emp.data_emprestimo && emp.data_emprestimo.includes(searchTerm)) ||
+            (emp.data_vencimento && emp.data_vencimento.includes(searchTerm));
+          
+          // Filtro por status
+          const matchesStatus = !statusFilter || emp.status === statusFilter;
+          
+          return matchesSearch && matchesStatus;
+        });
+        
+        // Atualizar tabela
+        renderFilteredEmprestimos();
+        
+        // Atualizar informação de resultados
+        updateSearchResultsInfo();
+      }
+      
+      // Função para renderizar empréstimos filtrados
+      function renderFilteredEmprestimos() {
+        const tbody = document.getElementById('historico-emprestimos');
+        if (!tbody) return;
+        
+        if (filteredEmprestimos.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = '';
+        filteredEmprestimos.forEach(emp => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${emp.cliente_nome || 'N/A'}</td>
+            <td>R$ ${utils.formatCurrency(emp.valor || 0)}</td>
+            <td>R$ ${utils.formatCurrency(emp.valor_final || emp.valor || 0)}</td>
+            <td>${emp.data_emprestimo ? utils.formatDate(emp.data_emprestimo) : '-'}</td>
+            <td>${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</td>
+            <td><span class="badge badge-${getStatusBadgeClass(emp.status)}">${emp.status || 'N/A'}</span></td>
+            <td>
+              <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+      
+      // Função para obter classe do badge baseado no status
+      function getStatusBadgeClass(status) {
+        switch(status) {
+          case 'Ativo': return 'success';
+          case 'Pendente': return 'warning';
+          case 'Em Atraso': return 'danger';
+          case 'Quitado': return 'info';
+          case 'Cancelado': return 'secondary';
+          default: return 'secondary';
+        }
+      }
+      
+      // Função para atualizar informação de resultados
+      function updateSearchResultsInfo() {
+        const total = allEmprestimos.length;
+        const filtered = filteredEmprestimos.length;
+        
+        if (filtered === total) {
+          searchResultsInfo.textContent = `Mostrando todos os ${total} empréstimos`;
+        } else {
+          searchResultsInfo.textContent = `Mostrando ${filtered} de ${total} empréstimos`;
+        }
+      }
+      
+      // Função para limpar busca
+      function clearSearch() {
+        searchInput.value = '';
+        filterStatus.value = '';
+        filteredEmprestimos = [...allEmprestimos];
+        renderFilteredEmprestimos();
+        updateSearchResultsInfo();
+      }
+      
+      // Event listeners
+      searchInput.addEventListener('input', applyFilters);
+      filterStatus.addEventListener('change', applyFilters);
+      clearSearchBtn.addEventListener('click', clearSearch);
+      
+      // Sobrescrever a função renderHistoricoEmprestimos para incluir busca
+      const originalRenderHistoricoEmprestimos = window.renderHistoricoEmprestimos;
+      window.renderHistoricoEmprestimos = async function() {
+        console.log('🔍 Histórico: Iniciando carregamento de empréstimos...');
+        
+        try {
+          const emprestimos = await apiService.getEmprestimos();
+          console.log(`📋 Histórico: API retornou ${emprestimos ? emprestimos.length : 0} empréstimos`);
+          
+          if (emprestimos) {
+            console.log('📝 Histórico: IDs retornados pela API:', emprestimos.map(e => e.id));
+            console.log('💰 Histórico: Valores retornados pela API:', emprestimos.map(e => ({
+              id: e.id,
+              cliente: e.cliente_nome,
+              valor: e.valor,
+              valor_final: e.valor_final,
+              tipo: e.tipo_emprestimo
+            })));
+          }
+          
+          // Aplicar a mesma lógica de remoção de duplicatas
+          const emprestimosUnicos = new Map();
+          const emprestimosProcessados = [];
+          
+          for (const emprestimo of emprestimos || []) {
+            // Verificar se já processamos este empréstimo
+            if (emprestimosUnicos.has(emprestimo.id)) {
+              console.warn(`🚨 Histórico: Empréstimo duplicado ignorado: ID ${emprestimo.id} - ${emprestimo.cliente_nome}`);
+              continue;
+            }
+            
+            console.log(`✅ Histórico: Processando empréstimo ID ${emprestimo.id} - ${emprestimo.cliente_nome}`);
+            
+            // Verificar status baseado em parcelas
+            try {
+              const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
+              const hoje = new Date();
+              hoje.setHours(0,0,0,0);
+              let status = (emprestimo.status || '').toUpperCase();
+              
+              if (parcelas && parcelas.length > 0) {
+                console.log(`  📅 Empréstimo ${emprestimo.id} tem ${parcelas.length} parcelas`);
+                
+                const parcelasAtrasadas = parcelas.filter(p => {
+                  const dataVencParcela = new Date(p.data_vencimento);
+                  return dataVencParcela < hoje && (p.status !== 'Paga');
+                });
+                
+                const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
+                
+                if (parcelasPagas.length === parcelas.length) {
+                  status = 'QUITADO';
+                } else if (parcelasAtrasadas.length > 0) {
+                  status = 'ATRASADO';
+                } else {
+                  status = 'ATIVO';
+                }
+                
+                console.log(`  🔄 Status atualizado para: ${status} (${parcelasPagas.length}/${parcelas.length} pagas, ${parcelasAtrasadas.length} atrasadas)`);
+              } else {
+                console.log(`  📄 Empréstimo ${emprestimo.id} sem parcelas, usando data de vencimento`);
+                // Sem parcelas - usar lógica original
+                const dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
+                if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+                  status = 'ATRASADO';
+                }
+              }
+              
+              // Atualizar status no empréstimo
+              emprestimo.status = status;
+              
+            } catch (error) {
+              console.error(`❌ Erro ao verificar parcelas do empréstimo ${emprestimo.id}:`, error);
+            }
+            
+            // Marcar como processado e adicionar à lista
+            emprestimosUnicos.set(emprestimo.id, true);
+            emprestimosProcessados.push(emprestimo);
+          }
+          
+          console.log(`✅ Histórico: ${emprestimosProcessados.length} empréstimos únicos processados`);
+          console.log('📝 Histórico: IDs finais:', emprestimosProcessados.map(e => e.id));
+          
+          allEmprestimos = emprestimosProcessados;
+          filteredEmprestimos = [...allEmprestimos];
+          
+          renderFilteredEmprestimos();
+          updateSearchResultsInfo();
+        } catch (err) {
+          console.error('❌ Erro ao carregar empréstimos:', err);
+          const tbody = document.getElementById('historico-emprestimos');
+          if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
+          }
+        }
+      };
+    });
+  </script>
+</body>
+</html> 
