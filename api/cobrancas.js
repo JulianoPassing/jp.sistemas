@@ -181,215 +181,119 @@ async function ensureDatabase(req, res, next) {
   }
 }
 
-// Dashboard
-router.get('/dashboard', ensureDatabase, async (req, res) => {
+// Dashboard - Versão Simplificada para Debug
+router.get('/dashboard', async (req, res) => {
+  console.log('=== DASHBOARD DEBUG - INICIO ===');
+  
   try {
-    console.log('Dashboard: Iniciando busca de dados');
-    const username = req.session.cobrancasUser;
-    console.log('Dashboard: Username da sessão:', username);
+    // Verificar sessão
+    console.log('1. Verificando sessão...');
+    console.log('Session:', req.session);
+    console.log('Session ID:', req.sessionID);
+    console.log('Session store:', req.sessionStore);
+    
+    const username = req.session?.cobrancasUser;
+    console.log('2. Username da sessão:', username);
     
     if (!username) {
-      console.log('Dashboard: Erro - usuário não autenticado');
+      console.log('3. ERRO: Usuário não autenticado');
       return res.status(401).json({ error: 'Usuário não autenticado' });
     }
     
-    const connection = await createCobrancasConnection(username);
-    console.log('Dashboard: Conexão criada com sucesso');
+    console.log('4. Usuário autenticado, tentando conectar ao banco...');
     
-    // Testar queries uma por uma
-    let emprestimosStats = [{ total_emprestimos: 0, valor_total_emprestimos: 0, emprestimos_ativos: 0, emprestimos_quitados: 0 }];
-    let cobrancasStats = [{ total_cobrancas: 0, valor_total_cobrancas: 0, cobrancas_pendentes: 0, cobrancas_pagas: 0, valor_atrasado: 0 }];
-    let clientesStats = [{ total_clientes: 0 }];
-    let emprestimosRecentes = [];
-    let cobrancasPendentes = [];
-    let clientesEmAtraso = [{ total: 0 }];
-    let emprestimosEmAtraso = [{ total: 0 }];
-    let clientesAtivos = [{ total: 0 }];
-    let emprestimosAtivos = [{ total: 0 }];
+    // Testar conexão básica
+    const dbName = `jpcobrancas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+    console.log('5. Nome do banco:', dbName);
     
-    try {
-      // Atualizar dias de atraso
-      console.log('Dashboard: Atualizando dias de atraso');
-      await connection.execute(`
-        UPDATE cobrancas 
-        SET dias_atraso = CASE 
-          WHEN data_vencimento < CURDATE() THEN DATEDIFF(CURDATE(), data_vencimento)
-          ELSE 0 
-        END
-        WHERE status = 'Pendente'
-      `);
-      console.log('Dashboard: Dias de atraso atualizados');
-    } catch (error) {
-      console.log('Dashboard: Erro ao atualizar dias de atraso:', error.message);
-    }
-
-    try {
-      // Estatísticas de empréstimos
-      console.log('Dashboard: Buscando estatísticas de empréstimos');
-      [emprestimosStats] = await connection.execute(`
-        SELECT 
-          COUNT(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN 1 END) as total_emprestimos,
-          SUM(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN COALESCE(valor_inicial, valor) ELSE 0 END) as valor_total_emprestimos,
-          COUNT(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN 1 END) as emprestimos_ativos,
-          COUNT(CASE WHEN status = 'Quitado' AND cliente_id IS NOT NULL THEN 1 END) as emprestimos_quitados
-        FROM emprestimos
-      `);
-      console.log('Dashboard: Estatísticas de empréstimos obtidas');
-    } catch (error) {
-      console.log('Dashboard: Erro ao buscar estatísticas de empréstimos:', error.message);
-    }
-
-    try {
-      // Estatísticas de cobranças
-      console.log('Dashboard: Buscando estatísticas de cobranças');
-      [cobrancasStats] = await connection.execute(`
-        SELECT 
-          COUNT(*) as total_cobrancas,
-          SUM(COALESCE(valor_atualizado, 0)) as valor_total_cobrancas,
-          COUNT(CASE WHEN status = 'Pendente' THEN 1 END) as cobrancas_pendentes,
-          COUNT(CASE WHEN status = 'Paga' THEN 1 END) as cobrancas_pagas,
-          SUM(CASE WHEN dias_atraso > 0 THEN COALESCE(valor_atualizado, 0) ELSE 0 END) as valor_atrasado
-        FROM cobrancas
-        WHERE cliente_id IS NOT NULL
-      `);
-      console.log('Dashboard: Estatísticas de cobranças obtidas');
-    } catch (error) {
-      console.log('Dashboard: Erro ao buscar estatísticas de cobranças:', error.message);
-    }
-
-    try {
-      // Verificar se a tabela clientes_cobrancas existe
-      console.log('Dashboard: Verificando tabela clientes_cobrancas');
-      const [tables] = await connection.execute(`SHOW TABLES LIKE 'clientes_cobrancas'`);
-      
-      if (tables.length > 0) {
-        // Estatísticas de clientes
-        console.log('Dashboard: Buscando estatísticas de clientes');
-        [clientesStats] = await connection.execute(`
-          SELECT COUNT(*) as total_clientes FROM clientes_cobrancas WHERE status IN ('Ativo', 'Pendente')
-        `);
-        console.log('Dashboard: Estatísticas de clientes obtidas');
-      } else {
-        console.log('Dashboard: Tabela clientes_cobrancas não existe, usando valor padrão');
-      }
-    } catch (error) {
-      console.log('Dashboard: Erro ao buscar estatísticas de clientes:', error.message);
-    }
-
-    try {
-      // Empréstimos recentes
-      console.log('Dashboard: Buscando empréstimos recentes');
-      [emprestimosRecentes] = await connection.execute(`
-        SELECT e.*, c.nome as cliente_nome, c.telefone as telefone
-        FROM emprestimos e
-        LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
-        WHERE e.status IN ('Ativo', 'Pendente') AND e.cliente_id IS NOT NULL
-        ORDER BY e.created_at DESC
-        LIMIT 5
-      `);
-      console.log('Dashboard: Empréstimos recentes obtidos');
-    } catch (error) {
-      console.log('Dashboard: Erro ao buscar empréstimos recentes:', error.message);
-    }
-
-    try {
-      // Cobranças pendentes
-      console.log('Dashboard: Buscando cobranças pendentes');
-      [cobrancasPendentes] = await connection.execute(`
-        SELECT cb.*, c.nome as cliente_nome, c.telefone as telefone
-        FROM cobrancas cb
-        LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
-        LEFT JOIN emprestimos e ON cb.emprestimo_id = e.id
-        WHERE cb.status = 'Pendente' AND cb.cliente_id IS NOT NULL AND e.status IN ('Ativo', 'Pendente')
-        ORDER BY cb.data_vencimento ASC
-        LIMIT 10
-      `);
-      console.log('Dashboard: Cobranças pendentes obtidas');
-    } catch (error) {
-      console.log('Dashboard: Erro ao buscar cobranças pendentes:', error.message);
-    }
-
-    try {
-      // Clientes em atraso
-      console.log('Dashboard: Buscando clientes em atraso');
-      [clientesEmAtraso] = await connection.execute(`
-        SELECT COUNT(DISTINCT c.id) as total
-        FROM clientes_cobrancas c
-        JOIN emprestimos e ON e.cliente_id = c.id
-        WHERE e.status IN ('Ativo', 'Pendente')
-          AND e.status <> 'Quitado'
-          AND e.data_vencimento < CURDATE()
-      `);
-      console.log('Dashboard: Clientes em atraso obtidos');
-    } catch (error) {
-      console.log('Dashboard: Erro ao buscar clientes em atraso:', error.message);
-    }
-
-    try {
-      // Empréstimos em atraso
-      console.log('Dashboard: Buscando empréstimos em atraso');
-      [emprestimosEmAtraso] = await connection.execute(`
-        SELECT COUNT(*) as total
-        FROM emprestimos e
-        WHERE e.status IN ('Ativo', 'Pendente')
-          AND e.status <> 'Quitado'
-          AND e.data_vencimento < CURDATE()
-      `);
-      console.log('Dashboard: Empréstimos em atraso obtidos');
-    } catch (error) {
-      console.log('Dashboard: Erro ao buscar empréstimos em atraso:', error.message);
-    }
-
-    try {
-      // Clientes ativos
-      console.log('Dashboard: Buscando clientes ativos');
-      [clientesAtivos] = await connection.execute(`
-        SELECT COUNT(DISTINCT c.id) as total
-        FROM clientes_cobrancas c
-        JOIN emprestimos e ON e.cliente_id = c.id
-        WHERE e.status IN ('Ativo', 'Pendente')
-          AND e.status <> 'Quitado'
-      `);
-      console.log('Dashboard: Clientes ativos obtidos');
-    } catch (error) {
-      console.log('Dashboard: Erro ao buscar clientes ativos:', error.message);
-    }
-
-    try {
-      // Empréstimos ativos
-      console.log('Dashboard: Buscando empréstimos ativos');
-      [emprestimosAtivos] = await connection.execute(`
-        SELECT COUNT(*) as total
-        FROM emprestimos
-        WHERE status IN ('Ativo', 'Pendente')
-          AND status <> 'Quitado'
-      `);
-      console.log('Dashboard: Empréstimos ativos obtidos');
-    } catch (error) {
-      console.log('Dashboard: Erro ao buscar empréstimos ativos:', error.message);
-    }
-
-    await connection.end();
-    console.log('Dashboard: Conexão fechada');
-
-    const response = {
-      emprestimos: emprestimosStats[0],
-      cobrancas: cobrancasStats[0],
-      clientes: clientesStats[0],
-      emprestimosRecentes,
-      cobrancasPendentes,
-      clientesEmAtraso: clientesEmAtraso[0].total,
-      emprestimosEmAtraso: emprestimosEmAtraso[0].total,
-      clientesAtivos: clientesAtivos[0].total,
-      emprestimosAtivos: emprestimosAtivos[0].total
+    const dbConfig = {
+      host: process.env.DB_HOST || 'localhost',
+      user: process.env.DB_USER || 'jpcobrancas',
+      password: process.env.DB_PASSWORD || 'Juliano@95',
+      database: dbName,
+      charset: 'utf8mb4'
     };
     
-    console.log('Dashboard: Resposta preparada:', JSON.stringify(response, null, 2));
+    console.log('6. Configuração do banco:', { 
+      host: dbConfig.host, 
+      user: dbConfig.user, 
+      database: dbConfig.database 
+    });
+    
+    let connection;
+    try {
+      connection = await mysql.createConnection(dbConfig);
+      console.log('7. ✅ Conexão estabelecida com sucesso');
+    } catch (dbError) {
+      console.log('7. ❌ Erro ao conectar ao banco:', dbError.message);
+      
+      // Tentar criar o banco
+      console.log('8. Tentando criar banco...');
+      try {
+        const rootConnection = await mysql.createConnection({
+          host: process.env.DB_HOST || 'localhost',
+          user: process.env.DB_USER || 'jpcobrancas',
+          password: process.env.DB_PASSWORD || 'Juliano@95',
+          charset: 'utf8mb4'
+        });
+        
+        await rootConnection.execute(`CREATE DATABASE IF NOT EXISTS \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+        await rootConnection.end();
+        
+        connection = await mysql.createConnection(dbConfig);
+        console.log('8. ✅ Banco criado e conexão estabelecida');
+      } catch (createError) {
+        console.log('8. ❌ Erro ao criar banco:', createError.message);
+        throw createError;
+      }
+    }
+    
+    // Testar query simples
+    console.log('9. Testando query simples...');
+    try {
+      const [result] = await connection.execute('SELECT 1 as test');
+      console.log('9. ✅ Query simples funcionou:', result);
+    } catch (queryError) {
+      console.log('9. ❌ Erro na query simples:', queryError.message);
+      throw queryError;
+    }
+    
+    // Verificar tabelas existentes
+    console.log('10. Verificando tabelas...');
+    try {
+      const [tables] = await connection.execute('SHOW TABLES');
+      console.log('10. ✅ Tabelas encontradas:', tables.map(t => Object.values(t)[0]));
+    } catch (tableError) {
+      console.log('10. ❌ Erro ao listar tabelas:', tableError.message);
+    }
+    
+    await connection.end();
+    console.log('11. ✅ Conexão fechada');
+    
+    // Resposta simples
+    const response = {
+      success: true,
+      message: 'Dashboard funcionando',
+      username: username,
+      database: dbName,
+      timestamp: new Date().toISOString()
+    };
+    
+    console.log('12. ✅ Enviando resposta:', response);
+    console.log('=== DASHBOARD DEBUG - FIM ===');
+    
     res.json(response);
+    
   } catch (error) {
-    console.error('Erro ao buscar dados do dashboard:', error);
-    console.error('Stack trace:', error.stack);
-    res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
+    console.log('❌ ERRO GERAL:', error.message);
+    console.log('❌ Stack trace:', error.stack);
+    console.log('=== DASHBOARD DEBUG - ERRO ===');
+    
+    res.status(500).json({ 
+      error: 'Erro interno do servidor', 
+      details: error.message,
+      stack: error.stack 
+    });
   }
 });
 
