@@ -10,6 +10,11 @@
 - **Problema**: Cada empréstimo estava aparecendo múltiplas vezes na tabela
 - **Causa**: Lógica de renderização que não garantia unicidade por ID
 
+### 3. Vencimento e Valor Incorretos para Empréstimos Parcelados
+- **Problema**: Empréstimos parcelados mostravam valor total e vencimento do empréstimo
+- **Causa**: Não considerava que se deve cobrar apenas a próxima parcela
+- **Impacto**: Confusão na cobrança (cobrar R$ 8.100 quando deveria cobrar R$ 1.000 da parcela)
+
 ## Soluções Implementadas
 
 ### Correção 1: Lógica de Atraso Baseada em Parcelas
@@ -87,6 +92,39 @@ tbody.innerHTML = linhasTabela.join('');
 - **Array**: Constrói todas as linhas antes de inserir
 - **Performance**: Menor manipulação do DOM
 - **Logs**: Debug para verificar quantos empréstimos únicos foram encontrados
+
+### Correção 3: Vencimento e Valor Precisos
+
+#### Arquivo Modificado
+`public/jp.cobrancas/js/main.js` - Função `renderCobrancasEmAbertoLista()`
+
+#### Nova Lógica
+```javascript
+// Variáveis para vencimento e valor corretos
+let valorACobrar = emp.valor || 0;
+let vencimentoACobrar = emp.data_vencimento;
+
+// Encontrar próxima parcela não paga
+const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
+if (parcelasNaoPagas.length > 0) {
+  // Ordenar por data de vencimento e pegar a mais próxima
+  parcelasNaoPagas.sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento));
+  proximaParcela = parcelasNaoPagas[0];
+  
+  // Para empréstimos parcelados, usar dados da próxima parcela
+  valorACobrar = proximaParcela.valor_parcela || valorACobrar;
+  vencimentoACobrar = proximaParcela.data_vencimento || vencimentoACobrar;
+}
+```
+
+#### Regras de Exibição
+- **📅 Vencimento**:
+  - Parcelado: Data da próxima parcela não paga
+  - Fixo/Juros: Data de vencimento do empréstimo
+- **💰 Valor**:
+  - Parcelado: Valor da próxima parcela
+  - Fixo/Juros: Valor total do empréstimo
+- **🎯 Resultado**: Mostra exatamente o que precisa ser cobrado AGORA
 
 ## Arquivos Criados
 
