@@ -129,12 +129,17 @@ async function criarNovoUsuario() {
         multa_atraso DECIMAL(5,2) DEFAULT 0.00,
         status VARCHAR(50) DEFAULT 'Ativo',
         observacoes TEXT,
+        tipo_emprestimo ENUM('fixed', 'in_installments') DEFAULT 'fixed',
+        numero_parcelas INT DEFAULT 1,
+        frequencia ENUM('daily', 'weekly', 'biweekly', 'monthly') DEFAULT 'monthly',
+        valor_parcela DECIMAL(10,2) DEFAULT 0.00,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (cliente_id) REFERENCES clientes_cobrancas(id) ON DELETE SET NULL,
         INDEX idx_cliente_id (cliente_id),
         INDEX idx_data_emprestimo (data_emprestimo),
-        INDEX idx_status (status)
+        INDEX idx_status (status),
+        INDEX idx_tipo_emprestimo (tipo_emprestimo)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     console.log('✅ Tabela emprestimos criada');
