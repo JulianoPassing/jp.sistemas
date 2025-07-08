@@ -75,13 +75,6 @@
         </div>
       </div>
 
-      <!-- Botão temporário para debug -->
-      <div class="section" style="margin-bottom: 1rem;">
-        <button id="btn-debug-corrigir" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
-          🔧 Debug: Corrigir Status (Temporário)
-        </button>
-      </div>
-
       <!-- Filtros de Busca -->
       <div class="section">
         <div class="search-container">
@@ -280,58 +273,10 @@
       document.getElementById('filter-data-fim').addEventListener('change', aplicarFiltros);
       document.getElementById('clear-filters').addEventListener('click', limparFiltros);
       
-      // Event listener para botão de debug
-      document.getElementById('btn-debug-corrigir').addEventListener('click', corrigirStatusEmprestimos);
+
     });
 
-    // Função temporária para corrigir status de empréstimos
-    async function corrigirStatusEmprestimos() {
-      try {
-        const btnDebug = document.getElementById('btn-debug-corrigir');
-        const originalText = btnDebug.textContent;
-        btnDebug.textContent = 'Corrigindo...';
-        btnDebug.disabled = true;
-        
-        const response = await fetch('/api/cobrancas/corrigir-status-emprestimos', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          
-          console.group('🔧 CORREÇÃO DE STATUS EXECUTADA');
-          console.log('Resultado:', data);
-          
-          if (data.emprestimos_valor_fixo_vencidos && data.emprestimos_valor_fixo_vencidos.length > 0) {
-            console.log('⚠️ Empréstimos de valor fixo vencidos encontrados:');
-            console.table(data.emprestimos_valor_fixo_vencidos);
-          }
-          
-          console.groupEnd();
-          
-          // Recarregar estatísticas
-          await carregarEstatisticas();
-          
-          // Recarregar lista de empréstimos
-          await carregarEmprestimos();
-          
-          mostrarNotificacao(`Correção executada! Parcelas atrasadas: ${data.correcoes.parcelas_atrasadas}, Empréstimos quitados: ${data.correcoes.emprestimos_quitados}`, 'success');
-        } else {
-          mostrarNotificacao('Erro ao executar correção', 'error');
-        }
-      } catch (error) {
-        console.error('Erro ao corrigir status:', error);
-        mostrarNotificacao('Erro ao executar correção', 'error');
-      } finally {
-        const btnDebug = document.getElementById('btn-debug-corrigir');
-        btnDebug.textContent = '🔧 Debug: Corrigir Status (Temporário)';
-        btnDebug.disabled = false;
-      }
-    }
+
 
     // Função para carregar mensagem de boas-vindas
     async function carregarMensagemBoasVindas() {
@@ -408,34 +353,6 @@
           document.getElementById('emprestimos-quitados').textContent = data.status?.emprestimos_quitados || 0;
           document.getElementById('emprestimos-ativos').textContent = data.status?.emprestimos_ativos || 0;
           document.getElementById('emprestimos-atraso').textContent = data.status?.emprestimos_atraso || 0;
-          
-          // Debug temporário: verificar empréstimos classificados como em atraso
-          if (data.debug && data.debug.emprestimos_atraso_detalhado) {
-            console.group('🔍 DEBUG: Empréstimos em Atraso');
-            console.log('Total encontrado:', data.debug.emprestimos_atraso_detalhado.length);
-            
-            if (data.debug.emprestimos_atraso_detalhado.length > 0) {
-              console.table(data.debug.emprestimos_atraso_detalhado.map(emp => ({
-                ID: emp.id,
-                Cliente: emp.cliente_nome,
-                Vencimento: emp.data_vencimento,
-                Status: emp.status_emprestimo,
-                Tipo: emp.tipo_emprestimo,
-                Motivo: emp.motivo_atraso,
-                'Total Parcelas': emp.total_parcelas,
-                'Parcelas Atrasadas': emp.parcelas_atrasadas
-              })));
-            }
-            
-            if (data.debug.parcelas_atrasadas) {
-              console.log('Parcelas atrasadas encontradas:', data.debug.parcelas_atrasadas.length);
-              if (data.debug.parcelas_atrasadas.length > 0) {
-                console.table(data.debug.parcelas_atrasadas);
-              }
-            }
-            
-            console.groupEnd();
-          }
         }
       } catch (error) {
         console.error('Erro ao carregar estatísticas:', error);
