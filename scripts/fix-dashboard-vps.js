@@ -87,7 +87,7 @@ async function main() {
     console.log('🔄 Tentando credenciais padrão do sistema...');
     
     const credenciaisAlternativas = [
-      {
+        {
         host: 'localhost',
         user: 'jpsistemas',
         password: 'Juliano@95',

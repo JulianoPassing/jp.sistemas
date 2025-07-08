@@ -10,6 +10,11 @@
 - **Problema**: Cada empréstimo estava aparecendo múltiplas vezes na tabela
 - **Causa**: Lógica de renderização que não garantia unicidade por ID
 
+### 3. Vencimento e Valor Incorretos para Empréstimos Parcelados
+- **Problema**: Empréstimos parcelados mostravam valor total e vencimento do empréstimo
+- **Causa**: Não considerava que se deve cobrar apenas a próxima parcela
+- **Impacto**: Confusão na cobrança (cobrar R$ 8.100 quando deveria cobrar R$ 1.000 da parcela)
+
 ## Soluções Implementadas
 
 ### Correção 1: Lógica de Atraso Baseada em Parcelas
@@ -88,6 +93,39 @@ tbody.innerHTML = linhasTabela.join('');
 - **Performance**: Menor manipulação do DOM
 - **Logs**: Debug para verificar quantos empréstimos únicos foram encontrados
 
+### Correção 3: Vencimento e Valor Precisos
+
+#### Arquivo Modificado
+`public/jp.cobrancas/js/main.js` - Função `renderCobrancasEmAbertoLista()`
+
+#### Nova Lógica
+```javascript
+// Variáveis para vencimento e valor corretos
+let valorACobrar = emp.valor || 0;
+let vencimentoACobrar = emp.data_vencimento;
+
+// Encontrar próxima parcela não paga
+const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
+if (parcelasNaoPagas.length > 0) {
+  // Ordenar por data de vencimento e pegar a mais próxima
+  parcelasNaoPagas.sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento));
+  proximaParcela = parcelasNaoPagas[0];
+  
+  // Para empréstimos parcelados, usar dados da próxima parcela
+  valorACobrar = proximaParcela.valor_parcela || valorACobrar;
+  vencimentoACobrar = proximaParcela.data_vencimento || vencimentoACobrar;
+}
+```
+
+#### Regras de Exibição
+- **📅 Vencimento**:
+  - Parcelado: Data da próxima parcela não paga
+  - Fixo/Juros: Data de vencimento do empréstimo
+- **💰 Valor**:
+  - Parcelado: Valor da próxima parcela
+  - Fixo/Juros: Valor total do empréstimo
+- **🎯 Resultado**: Mostra exatamente o que precisa ser cobrado AGORA
+
 ## Arquivos Criados
 
 ### Scripts de Debug
@@ -95,10 +133,12 @@ tbody.innerHTML = linhasTabela.join('');
 - `scripts/debug-duplicatas-cobrancas.js` - Analisa duplicatas
 - `scripts/test-correcao-atraso.js` - Testa correção de atraso
 - `scripts/test-correcao-duplicatas.js` - Testa correção de duplicatas
+- `scripts/test-vencimento-valor-cobrancas.js` - Testa vencimento e valor corretos
 
 ### Scripts de Execução
 - `corrigir-atraso-cobrancas.sh` - Script para corrigir atraso
 - `corrigir-duplicatas-cobrancas.sh` - Script para corrigir duplicatas
+- `melhorar-cobrancas-vencimento-valor.sh` - Script para testar vencimento e valor
 
 ### Documentação
 - `CORRECAO-ATRASO-COBRANCAS.md` - Documentação do problema de atraso
@@ -116,14 +156,21 @@ node scripts/test-correcao-atraso.js
 node scripts/test-correcao-duplicatas.js
 ```
 
+### Teste 3: Vencimento e Valor Corretos
+```bash
+node scripts/test-vencimento-valor-cobrancas.js
+```
+
 ### Teste Completo
 ```bash
-# Executar ambos os testes
+# Executar todos os testes
 chmod +x corrigir-atraso-cobrancas.sh
 chmod +x corrigir-duplicatas-cobrancas.sh
+chmod +x melhorar-cobrancas-vencimento-valor.sh
 
 ./corrigir-atraso-cobrancas.sh
 ./corrigir-duplicatas-cobrancas.sh
+./melhorar-cobrancas-vencimento-valor.sh
 ```
 
 ### Teste Manual
@@ -132,6 +179,9 @@ chmod +x corrigir-duplicatas-cobrancas.sh
    - Não há empréstimos duplicados
    - Empréstimos com parcelas em dia mostram "Em Dia"
    - Apenas empréstimos com parcelas vencidas mostram "Em Atraso"
+   - Empréstimos parcelados mostram valor da próxima parcela (não o total)
+   - Empréstimos parcelados mostram vencimento da próxima parcela
+   - Empréstimos fixos mostram valor total e vencimento do empréstimo
 3. Abra o Console (F12) para ver logs de debug
 
 ## Resultado Final
@@ -139,12 +189,16 @@ chmod +x corrigir-duplicatas-cobrancas.sh
 ### Antes das Correções
 - ❌ Empréstimos em dia apareciam como "Em Atraso"
 - ❌ Cada empréstimo aparecia múltiplas vezes
+- ❌ Empréstimos parcelados mostravam valor total (confuso)
+- ❌ Vencimento sempre do empréstimo (não da parcela)
 - ❌ Interface confusa e incorreta
 
 ### Depois das Correções
 - ✅ Status calculado corretamente baseado em parcelas
 - ✅ Cada empréstimo aparece apenas uma vez
-- ✅ Interface limpa e precisa
+- ✅ Empréstimos parcelados mostram valor da próxima parcela
+- ✅ Vencimento preciso (parcela ou empréstimo conforme o tipo)
+- ✅ Interface limpa, precisa e útil para cobranças
 - ✅ Performance melhorada
 - ✅ Logs de debug para futuras manutenções
 
@@ -160,8 +214,9 @@ Para ver os logs, abra o Console do navegador (F12) e navegue até a página de 
 
 ---
 
-**Status**: ✅ Correções Completas  
+**Status**: ✅ Três Correções Completas  
 **Data**: Hoje  
 **Impacto**: Correção crítica da página de cobranças  
+**Correções**: Atraso + Duplicatas + Vencimento/Valor  
 **Arquivos Modificados**: `public/jp.cobrancas/js/main.js`  
 **Testes**: Implementados e funcionando 

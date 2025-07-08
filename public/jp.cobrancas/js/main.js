@@ -2174,13 +2174,16 @@ async function renderCobrancasEmAbertoLista() {
     
     // Verificar status de cada empréstimo com base nas parcelas
     for (const emp of emprestimosUnicos.values()) {
-      const valor = utils.formatCurrency(emp.valor || 0);
-      const vencimento = emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-';
+      // Variáveis para vencimento e valor corretos
+      let valorACobrar = emp.valor || 0;
+      let vencimentoACobrar = emp.data_vencimento;
       let badge = '';
       let status = (emp.status || '').toLowerCase();
       
       // Verificar se tem parcelas e determinar status real
       let statusReal = status;
+      let proximaParcela = null;
+      
       try {
         const parcelas = await apiService.getParcelasEmprestimo(emp.id);
         if (parcelas && parcelas.length > 0) {
@@ -2190,6 +2193,18 @@ async function renderCobrancasEmAbertoLista() {
           
           let parcelasAtrasadas = 0;
           let parcelasPagas = 0;
+          
+          // Encontrar próxima parcela não paga
+          const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
+          if (parcelasNaoPagas.length > 0) {
+            // Ordenar por data de vencimento e pegar a mais próxima
+            parcelasNaoPagas.sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento));
+            proximaParcela = parcelasNaoPagas[0];
+            
+            // Para empréstimos parcelados, usar dados da próxima parcela
+            valorACobrar = proximaParcela.valor_parcela || valorACobrar;
+            vencimentoACobrar = proximaParcela.data_vencimento || vencimentoACobrar;
+          }
           
           parcelas.forEach(parcela => {
             const dataVencParcela = new Date(parcela.data_vencimento);
@@ -2229,6 +2244,10 @@ async function renderCobrancasEmAbertoLista() {
           statusReal = 'atrasado';
         }
       }
+      
+      // Formatar valores para exibição
+      const valor = utils.formatCurrency(valorACobrar);
+      const vencimento = vencimentoACobrar ? utils.formatDate(vencimentoACobrar) : '-';
       
       // Criar badge baseado no status real
       if (statusReal === 'quitado') {
