@@ -202,7 +202,50 @@ node scripts/test-modal-cliente-detalhado.js
 
 - ✅ `public/jp.cobrancas/js/main.js` - Função `viewCliente()` completamente reescrita
 - ✅ `scripts/test-modal-cliente-detalhado.js` - Script de teste criado
+- ✅ `scripts/test-modal-formatacao.js` - Script de teste de formatação criado
 - ✅ `MODAL-CLIENTE-DETALHADO.md` - Documentação criada
+
+## Correções de Formatação Aplicadas
+
+### 🐛 Problemas Identificados e Corrigidos
+
+1. **Formatação Dupla de Moeda**: 
+   - **Problema**: Valores apareciam como "R$ R$ 1.000,00" (R$ duplicado)
+   - **Causa**: Função `utils.formatCurrency()` já adiciona "R$", mas estava sendo adicionado manualmente no HTML
+   - **Solução**: Removido "R$" manual do HTML, mantendo apenas `${utils.formatCurrency(valor)}`
+
+2. **Valores NaN**:
+   - **Problema**: Valores inválidos resultavam em "NaN" na interface
+   - **Causa**: Campos vazios ou inválidos não eram tratados adequadamente
+   - **Solução**: Adicionada validação dupla: `Number(valor || 0) || 0`
+
+3. **Parcelas com Valores Inválidos**:
+   - **Problema**: Parcelas individuais podiam ter valores NaN
+   - **Causa**: Valores das parcelas não eram validados antes da formatação
+   - **Solução**: Adicionada validação: `Number(parcela.valor) || 0`
+
+### 🔧 Correções Implementadas
+
+```javascript
+// Antes (problemático)
+<span>R$ ${utils.formatCurrency(valor)}</span>  // Resultado: "R$ R$ 1.000,00"
+const valorInicial = Number(emp.valor || 0);    // Resultado: NaN se valor for inválido
+
+// Depois (corrigido)
+<span>${utils.formatCurrency(valor)}</span>     // Resultado: "R$ 1.000,00"
+const valorInicial = Number(emp.valor || 0) || 0; // Resultado: 0 se valor for inválido
+```
+
+### 📋 Linhas Corrigidas
+
+- **Linha 1736**: Valor Inicial - removido "R$" duplicado
+- **Linha 1737**: Juros - removido "R$" duplicado  
+- **Linha 1738**: Valor Final - removido "R$" duplicado
+- **Linha 1743**: Valor da Parcela - removido "R$" duplicado
+- **Linha 1775**: Valores das Parcelas - removido "R$" duplicado + validação NaN
+- **Linha 1631**: Validação de valor inicial - adicionada proteção contra NaN
+- **Linha 1632**: Validação de juros - adicionada proteção contra NaN
+- **Linha 1642**: Validação de valor da parcela - adicionada proteção contra NaN
 
 ## Próximos Passos
 
