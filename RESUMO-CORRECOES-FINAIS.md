@@ -15,9 +15,10 @@
 - **Resultado**: Status correto, sem duplicatas, vencimento da próxima parcela
 
 ### 3. Histórico de Empréstimos (emprestimos.html) ✅
-- **Problema**: Empréstimos em dia aparecendo como atrasados
-- **Solução**: Mesma lógica de parcelas aplicada ao histórico
-- **Resultado**: Status correto baseado no estado real das parcelas
+- **Problema 1**: Empréstimos em dia aparecendo como atrasados
+- **Problema 2**: Empréstimos aparecendo duplicados no histórico
+- **Solução**: Lógica de parcelas + controle de duplicatas com Map
+- **Resultado**: Status correto e sem duplicatas no histórico
 
 ### 4. Lista Negra (500 Error) ✅
 - **Problema**: Erro 500 ao tentar adicionar cliente à lista negra
@@ -28,9 +29,9 @@
 
 ### Frontend
 - `public/jp.cobrancas/js/main.js`
-  - Função `renderCobrancasEmAbertoLista()` - Lógica de parcelas
-  - Função `renderHistoricoEmprestimos()` - Lógica de parcelas
-  - Eliminação de duplicatas e valores precisos
+  - Função `renderCobrancasEmAbertoLista()` - Lógica de parcelas + eliminação de duplicatas
+  - Função `renderHistoricoEmprestimos()` - Lógica de parcelas + controle de duplicatas
+  - Valores precisos e vencimento correto para parcelados
 
 ### Backend
 - `api/cobrancas.js`
@@ -45,6 +46,7 @@
 - `scripts/debug-duplicatas-cobrancas.js`
 - `scripts/debug-lista-negra-error.js`
 - `scripts/test-historico-emprestimos-corrigido.js`
+- `scripts/test-duplicatas-historico-emprestimos.js`
 
 ### Correção Automática
 - `scripts/fix-dashboard-vps.js`
@@ -57,6 +59,7 @@
 - `corrigir-atraso-cobrancas.sh`
 - `corrigir-duplicatas-cobrancas.sh`
 - `corrigir-historico-emprestimos.sh`
+- `corrigir-duplicatas-historico-emprestimos.sh`
 - `melhorar-cobrancas-vencimento-valor.sh`
 - `fix-lista-negra.sh`
 
@@ -64,7 +67,7 @@
 - `CORRECAO-DASHBOARD-ZERADO.md`
 - `CORRECAO-ATRASO-COBRANCAS.md`
 - `CORRECAO-COMPLETA-COBRANCAS.md`
-- `CORRECAO-HISTORICO-EMPRESTIMOS.md`
+- `CORRECAO-HISTORICO-EMPRESTIMOS.md` (inclui correção de duplicatas)
 - `CORRECAO-LISTA-NEGRA-500.md`
 - `EXEMPLO-COBRANCAS-MELHORADAS.md`
 
@@ -104,8 +107,10 @@
 
 ### Histórico de Empréstimos
 - ✅ Status correto para parcelados
+- ✅ Eliminação de duplicatas com Map
 - ✅ Cálculo de juros baseado em parcelas atrasadas
 - ✅ Fallback para empréstimos únicos
+- ✅ Logs de debug para duplicatas ignoradas
 
 ### Lista Negra
 - ✅ Funcionalidade restaurada

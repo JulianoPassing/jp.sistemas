@@ -1833,8 +1833,17 @@ async function renderHistoricoEmprestimos() {
       return;
     }
     tbody.innerHTML = '';
+    
+    // Usar Map para eliminar duplicatas por ID
+    const emprestimosUnicos = new Map();
+    
     // Processar cada empréstimo com verificação de parcelas
     for (const emprestimo of emprestimos) {
+      // Verificar se já processamos este empréstimo
+      if (emprestimosUnicos.has(emprestimo.id)) {
+        console.log(`Empréstimo duplicado ignorado: ID ${emprestimo.id}`);
+        continue;
+      }
       // Cálculo de atraso e juros diário
       const valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
       const jurosPercent = Number(emprestimo.juros_mensal || 0);
@@ -1900,6 +1909,10 @@ async function renderHistoricoEmprestimos() {
         valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
         infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
       }
+      
+      // Marcar empréstimo como processado para evitar duplicatas
+      emprestimosUnicos.set(emprestimo.id, true);
+      
       const valor = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
