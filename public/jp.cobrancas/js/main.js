@@ -2158,28 +2158,76 @@ async function renderCobrancasEmAbertoLista() {
       return;
     }
     tbody.innerHTML = '';
-    emAberto.forEach(emp => {
+    
+    // Verificar status de cada empréstimo com base nas parcelas
+    for (const emp of emAberto) {
       const valor = utils.formatCurrency(emp.valor || 0);
       const vencimento = emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-';
-      const diasAtraso = emp.dias_atraso || 0;
       let badge = '';
       let status = (emp.status || '').toLowerCase();
-      // Verifica se está vencido
-      const hoje = new Date();
-      hoje.setHours(0,0,0,0);
-      const dataVenc = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
-      if (dataVenc && dataVenc < hoje) {
-        status = 'atrasado';
+      
+      // Verificar se tem parcelas e determinar status real
+      let statusReal = status;
+      try {
+        const parcelas = await apiService.getParcelasEmprestimo(emp.id);
+        if (parcelas && parcelas.length > 0) {
+          // Tem parcelas - verificar status das parcelas
+          const hoje = new Date();
+          hoje.setHours(0,0,0,0);
+          
+          let parcelasAtrasadas = 0;
+          let parcelasPagas = 0;
+          
+          parcelas.forEach(parcela => {
+            const dataVencParcela = new Date(parcela.data_vencimento);
+            const atrasadaParcela = dataVencParcela < hoje && parcela.status !== 'Paga';
+            
+            if (parcela.status === 'Paga') {
+              parcelasPagas++;
+            } else if (atrasadaParcela) {
+              parcelasAtrasadas++;
+            }
+          });
+          
+          // Determinar status real baseado nas parcelas
+          if (parcelasPagas === parcelas.length) {
+            statusReal = 'quitado';
+          } else if (parcelasAtrasadas > 0) {
+            statusReal = 'atrasado';
+          } else {
+            statusReal = 'em_dia';
+          }
+        } else {
+          // Sem parcelas - usar data de vencimento do empréstimo
+          const hoje = new Date();
+          hoje.setHours(0,0,0,0);
+          const dataVenc = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
+          if (dataVenc && dataVenc < hoje) {
+            statusReal = 'atrasado';
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao verificar parcelas do empréstimo', emp.id, error);
+        // Fallback para verificação pela data de vencimento
+        const hoje = new Date();
+        hoje.setHours(0,0,0,0);
+        const dataVenc = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
+        if (dataVenc && dataVenc < hoje) {
+          statusReal = 'atrasado';
+        }
       }
-      if (status === 'quitado') {
+      
+      // Criar badge baseado no status real
+      if (statusReal === 'quitado') {
         badge = '<span class="badge" style="background:#10b981;color:#fff;">Quitado</span>';
-      } else if (status === 'em atraso' || status === 'atrasado') {
+      } else if (statusReal === 'atrasado' || statusReal === 'em atraso') {
         badge = '<span class="badge" style="background:#ef4444;color:#fff;">Em Atraso</span>';
-      } else if (status === 'ativo' || status === 'pendente') {
-        badge = '<span class="badge" style="background:#6366f1;color:#fff;">Pendente</span>';
+      } else if (statusReal === 'em_dia' || statusReal === 'ativo' || statusReal === 'pendente') {
+        badge = '<span class="badge" style="background:#6366f1;color:#fff;">Em Dia</span>';
       } else {
         badge = `<span class="badge" style="background:#888;color:#fff;">${emp.status || '-'}</span>`;
       }
+      
       tbody.innerHTML += `
         <tr>
           <td>${emp.cliente_nome || 'N/A'}</td>
@@ -2192,7 +2240,7 @@ async function renderCobrancasEmAbertoLista() {
           </td>
         </tr>
       `;
-    });
+    }
   } catch (err) {
     console.error('Erro ao carregar cobranças:', err);
     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-red-500">Erro ao carregar cobranças</td></tr>';
