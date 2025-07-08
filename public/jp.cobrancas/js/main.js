@@ -1639,19 +1639,19 @@ const clienteController = {
       // Processar cada empréstimo para obter informações detalhadas
       const emprestimosDetalhados = await Promise.all(
         emprestimosCliente.map(async (emp) => {
-          const valorInicial = Number(emp.valor || 0);
-          const jurosPercent = Number(emp.juros_mensal || 0);
-          const jurosTotal = valorInicial * (jurosPercent / 100);
-          const valorFinal = valorInicial + jurosTotal;
-          
-          // Determinar tipo de empréstimo
-          let tipoEmprestimo = 'Parcela Única';
-          let valorParcela = valorFinal;
+                   const valorInicial = Number(emp.valor || 0) || 0;
+         const jurosPercent = Number(emp.juros_mensal || 0) || 0;
+         const jurosTotal = valorInicial * (jurosPercent / 100);
+         const valorFinal = valorInicial + jurosTotal;
+         
+         // Determinar tipo de empréstimo
+         let tipoEmprestimo = 'Parcela Única';
+         let valorParcela = valorFinal;
           let parcelas = [];
           
-          if (emp.tipo_emprestimo === 'in_installments' && emp.numero_parcelas > 1) {
-            tipoEmprestimo = `Parcelado (${emp.numero_parcelas}x)`;
-            valorParcela = Number(emp.valor_parcela || (valorFinal / emp.numero_parcelas));
+                     if (emp.tipo_emprestimo === 'in_installments' && emp.numero_parcelas > 1) {
+             tipoEmprestimo = `Parcelado (${emp.numero_parcelas}x)`;
+             valorParcela = Number(emp.valor_parcela || (valorFinal / emp.numero_parcelas)) || 0;
             
             // Buscar parcelas se for parcelado
             try {
@@ -1734,14 +1734,14 @@ const clienteController = {
                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                     <div>
                       <p style="margin: 0.3rem 0;"><strong>Tipo:</strong> ${emp.tipoEmprestimo}</p>
-                      <p style="margin: 0.3rem 0;"><strong>Valor Inicial:</strong> <span style="color: #10b981; font-weight: bold;">R$ ${utils.formatCurrency(emp.valorInicial)}</span></p>
-                      <p style="margin: 0.3rem 0;"><strong>Juros (${emp.juros_mensal || 0}%):</strong> <span style="color: #f59e0b; font-weight: bold;">R$ ${utils.formatCurrency(emp.jurosTotal)}</span></p>
-                      <p style="margin: 0.3rem 0;"><strong>Valor Final:</strong> <span style="color: #ef4444; font-weight: bold;">R$ ${utils.formatCurrency(emp.valorFinal)}</span></p>
+                                             <p style="margin: 0.3rem 0;"><strong>Valor Inicial:</strong> <span style="color: #10b981; font-weight: bold;">${utils.formatCurrency(emp.valorInicial)}</span></p>
+                       <p style="margin: 0.3rem 0;"><strong>Juros (${emp.juros_mensal || 0}%):</strong> <span style="color: #f59e0b; font-weight: bold;">${utils.formatCurrency(emp.jurosTotal)}</span></p>
+                       <p style="margin: 0.3rem 0;"><strong>Valor Final:</strong> <span style="color: #ef4444; font-weight: bold;">${utils.formatCurrency(emp.valorFinal)}</span></p>
                     </div>
                     <div>
                       <p style="margin: 0.3rem 0;"><strong>Data Empréstimo:</strong> ${emp.data_emprestimo ? utils.formatDate(emp.data_emprestimo) : 'N/A'}</p>
                       <p style="margin: 0.3rem 0;"><strong>Data Vencimento:</strong> ${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : 'N/A'}</p>
-                      <p style="margin: 0.3rem 0;"><strong>Valor da Parcela:</strong> <span style="color: #6366f1; font-weight: bold;">R$ ${utils.formatCurrency(emp.valorParcela)}</span></p>
+                                             <p style="margin: 0.3rem 0;"><strong>Valor da Parcela:</strong> <span style="color: #6366f1; font-weight: bold;">${utils.formatCurrency(emp.valorParcela)}</span></p>
                       <p style="margin: 0.3rem 0;"><strong>Frequência:</strong> ${emp.frequencia === 'monthly' ? 'Mensal' : (emp.frequencia === 'weekly' ? 'Semanal' : 'N/A')}</p>
                     </div>
                   </div>
@@ -1773,7 +1773,7 @@ const clienteController = {
                                 ${parcela.data_pagamento ? `<br><small style="color: #10b981;">Pago em: ${utils.formatDate(parcela.data_pagamento)}</small>` : ''}
                               </div>
                               <div style="text-align: right;">
-                                <div style="color: ${corStatus}; font-weight: bold;">R$ ${utils.formatCurrency(parcela.valor)}</div>
+                                <div style="color: ${corStatus}; font-weight: bold;">${utils.formatCurrency(Number(parcela.valor) || 0)}</div>
                                 <span style="background: ${corStatus}; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">${statusParcela}</span>
                               </div>
                             </div>
