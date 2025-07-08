@@ -715,11 +715,21 @@ router.get('/emprestimos', ensureDatabase, async (req, res) => {
         AND data_vencimento < CURDATE()
     `);
     
+    // Query simplificada para evitar erros com valores NULL
     const [emprestimos] = await connection.execute(`
-      SELECT DISTINCT e.*, c.nome as cliente_nome, c.telefone as telefone,
+      SELECT e.*, 
+             c.nome as cliente_nome, 
+             c.telefone as telefone,
+             COALESCE(e.valor, 0) as valor,
+             COALESCE(e.juros_mensal, 0) as juros_mensal,
+             COALESCE(e.numero_parcelas, 1) as numero_parcelas,
+             COALESCE(e.valor_parcela, 0) as valor_parcela,
              CASE 
-               WHEN e.tipo_emprestimo = 'in_installments' THEN (e.valor_parcela * e.numero_parcelas)
-               ELSE e.valor * (1 + (e.juros_mensal / 100))
+               WHEN e.tipo_emprestimo = 'in_installments' AND e.valor_parcela > 0 AND e.numero_parcelas > 0 
+                 THEN (e.valor_parcela * e.numero_parcelas)
+               WHEN e.valor > 0 AND e.juros_mensal > 0 
+                 THEN e.valor * (1 + (e.juros_mensal / 100))
+               ELSE COALESCE(e.valor, 0)
              END as valor_final,
              DATE_FORMAT(e.data_emprestimo, '%Y-%m-%d') as data_emprestimo_formatada,
              DATE_FORMAT(e.data_vencimento, '%Y-%m-%d') as data_vencimento_formatada
@@ -736,17 +746,26 @@ router.get('/emprestimos', ensureDatabase, async (req, res) => {
       if (emp.data_vencimento_formatada) {
         emp.data_vencimento = emp.data_vencimento_formatada;
       }
+      // Garantir que valor_final nunca seja NULL
+      if (!emp.valor_final) {
+        emp.valor_final = emp.valor || 0;
+      }
     });
     
     console.log(`API /emprestimos: Retornando ${emprestimos.length} empréstimos para usuário ${username}`);
-    emprestimos.forEach(emp => {
-      console.log(`  - ID ${emp.id}: ${emp.cliente_nome} - R$ ${emp.valor} (${emp.status})`);
-    });
+    if (emprestimos.length > 0) {
+      emprestimos.forEach(emp => {
+        console.log(`  - ID ${emp.id}: ${emp.cliente_nome} - R$ ${emp.valor} (${emp.status})`);
+      });
+    } else {
+      console.log('  - Nenhum empréstimo encontrado (tabela vazia)');
+    }
     
     await connection.end();
     res.json(emprestimos);
   } catch (error) {
-    console.error('Erro ao buscar empréstimos:', error);
+    console.error('Erro detalhado ao buscar empréstimos:', error);
+    console.error('Stack trace:', error.stack);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
