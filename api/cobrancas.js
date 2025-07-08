@@ -862,11 +862,121 @@ router.get('/historico-emprestimos/estatisticas', ensureDatabase, async (req, re
       FROM emprestimos e
     `);
     
+    // Debug: verificar parcelas atrasadas
+    const [parcelasAtrasadas] = await connection.execute(`
+      SELECT 
+        p.id,
+        p.emprestimo_id,
+        p.numero_parcela,
+        p.data_vencimento,
+        p.status,
+        e.cliente_id,
+        c.nome as cliente_nome
+      FROM parcelas p
+      LEFT JOIN emprestimos e ON p.emprestimo_id = e.id
+      LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
+      WHERE p.status = 'Atrasada'
+    `);
+    
+    console.log('Histórico: Parcelas atrasadas encontradas:', parcelasAtrasadas.length);
+    
+    // Debug: listar empréstimos considerados em atraso
+    const [emprestimosAtraso] = await connection.execute(`
+      SELECT 
+        e.id,
+        e.cliente_id,
+        c.nome as cliente_nome,
+        e.data_emprestimo,
+        e.data_vencimento,
+        e.status as status_emprestimo,
+        e.tipo_emprestimo,
+        e.numero_parcelas,
+        COUNT(p.id) as total_parcelas,
+        COUNT(CASE WHEN p.status = 'Atrasada' THEN 1 END) as parcelas_atrasadas,
+        'parcelas_atrasadas' as motivo_atraso
+      FROM emprestimos e
+      LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
+      LEFT JOIN parcelas p ON p.emprestimo_id = e.id
+      WHERE EXISTS (SELECT 1 FROM parcelas p2 WHERE p2.emprestimo_id = e.id AND p2.status = 'Atrasada')
+      GROUP BY e.id, e.cliente_id, c.nome, e.data_emprestimo, e.data_vencimento, e.status, e.tipo_emprestimo, e.numero_parcelas
+      
+      UNION
+      
+      SELECT 
+        e.id,
+        e.cliente_id,
+        c.nome as cliente_nome,
+        e.data_emprestimo,
+        e.data_vencimento,
+        e.status as status_emprestimo,
+        e.tipo_emprestimo,
+        e.numero_parcelas,
+        0 as total_parcelas,
+        0 as parcelas_atrasadas,
+        'valor_fixo_vencido' as motivo_atraso
+      FROM emprestimos e
+      LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
+      WHERE NOT EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id)
+        AND e.data_vencimento < CURDATE()
+        AND e.status = 'Ativo'
+      ORDER BY id
+    `);
+    
+    console.log('Histórico: Empréstimos considerados em atraso:', emprestimosAtraso.length);
+    if (emprestimosAtraso.length > 0) {
+      console.log('Lista de empréstimos em atraso:');
+      emprestimosAtraso.forEach(emp => {
+        console.log(`  - ID ${emp.id}: ${emp.cliente_nome} | Vencimento: ${emp.data_vencimento} | Motivo: ${emp.motivo_atraso} | Status: ${emp.status_emprestimo} | Tipo: ${emp.tipo_emprestimo}`);
+      });
+    }
+    
+    // Debug específico para empréstimos parcelados
+    const [emprestimosParceladosDebug] = await connection.execute(`
+      SELECT 
+        e.id,
+        e.cliente_id,
+        c.nome as cliente_nome,
+        e.data_vencimento,
+        e.status,
+        e.tipo_emprestimo,
+        e.numero_parcelas,
+        COUNT(p.id) as total_parcelas_db,
+        SUM(CASE WHEN p.status = 'Paga' THEN 1 ELSE 0 END) as parcelas_pagas,
+        SUM(CASE WHEN p.status = 'Pendente' THEN 1 ELSE 0 END) as parcelas_pendentes,
+        SUM(CASE WHEN p.status = 'Atrasada' THEN 1 ELSE 0 END) as parcelas_atrasadas
+      FROM emprestimos e
+      LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
+      LEFT JOIN parcelas p ON e.id = p.emprestimo_id
+      WHERE e.tipo_emprestimo = 'in_installments'
+      GROUP BY e.id
+      ORDER BY e.id
+    `);
+    
+    console.log('🔍 EMPRÉSTIMOS PARCELADOS - Debug das estatísticas:');
+    console.log(`Total de empréstimos parcelados: ${emprestimosParceladosDebug.length}`);
+    
+    emprestimosParceladosDebug.forEach(emp => {
+      const statusCalculado = emp.parcelas_pagas === emp.total_parcelas_db && emp.total_parcelas_db > 0 ? 'Quitado' : 
+                             emp.parcelas_atrasadas > 0 ? 'Em Atraso' : 'Ativo';
+      
+      console.log(`  ID ${emp.id}: ${emp.cliente_nome} | Status: ${emp.status} | Calculado: ${statusCalculado}`);
+      console.log(`    Parcelas - Total: ${emp.total_parcelas_db}, Pagas: ${emp.parcelas_pagas}, Atrasadas: ${emp.parcelas_atrasadas}`);
+      
+      if (emp.status !== statusCalculado) {
+        console.log(`    ⚠️  STATUS INCONSISTENTE: ${emp.status} deveria ser ${statusCalculado}`);
+      }
+    });
+    
     await connection.end();
     
     res.json({
       geral: stats[0],
-      status: statusStats[0]
+      status: statusStats[0],
+      debug: {
+        emprestimos_atraso_detalhado: emprestimosAtraso,
+        parcelas_atrasadas: parcelasAtrasadas,
+        emprestimos_parcelados: emprestimosParceladosDebug
+      }
     });
   } catch (error) {
     console.error('Erro ao buscar estatísticas do histórico:', error);
@@ -880,7 +990,7 @@ router.post('/corrigir-status-emprestimos', ensureDatabase, async (req, res) => 
     const username = req.session.cobrancasUser;
     const connection = await createCobrancasConnection(username);
     
-    console.log('Iniciando correção de status de empréstimos...');
+    console.log('🔧 Iniciando correção de status de empréstimos...');
     
     // 1. Atualizar parcelas atrasadas
     const [parcelasUpdate] = await connection.execute(`
@@ -890,7 +1000,7 @@ router.post('/corrigir-status-emprestimos', ensureDatabase, async (req, res) => 
         AND data_vencimento < CURDATE()
     `);
     
-    console.log(`Parcelas atualizadas para atrasadas: ${parcelasUpdate.affectedRows}`);
+    console.log(`📊 Parcelas atualizadas para atrasadas: ${parcelasUpdate.affectedRows}`);
     
     // 2. Marcar empréstimos como quitados se todas as parcelas estão pagas
     const [quitadosUpdate] = await connection.execute(`
@@ -901,10 +1011,102 @@ router.post('/corrigir-status-emprestimos', ensureDatabase, async (req, res) => 
         AND NOT EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id AND p.status IN ('Pendente', 'Atrasada'))
     `);
     
-    console.log(`Empréstimos marcados como quitados: ${quitadosUpdate.affectedRows}`);
+    console.log(`✅ Empréstimos marcados como quitados: ${quitadosUpdate.affectedRows}`);
     
-    // 3. Empréstimos de valor fixo vencidos devem ser marcados como 'Em Atraso' apenas se realmente não foram pagos
-    // Vamos deixar apenas como debug por enquanto, sem alterar o status
+    // 3. Investigar empréstimos parcelados especificamente
+    const [emprestimosParcelados] = await connection.execute(`
+      SELECT 
+        e.id,
+        e.cliente_id,
+        c.nome as cliente_nome,
+        e.data_vencimento,
+        e.status,
+        e.tipo_emprestimo,
+        e.numero_parcelas,
+        COUNT(p.id) as total_parcelas_db,
+        SUM(CASE WHEN p.status = 'Paga' THEN 1 ELSE 0 END) as parcelas_pagas,
+        SUM(CASE WHEN p.status = 'Pendente' THEN 1 ELSE 0 END) as parcelas_pendentes,
+        SUM(CASE WHEN p.status = 'Atrasada' THEN 1 ELSE 0 END) as parcelas_atrasadas
+      FROM emprestimos e
+      LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
+      LEFT JOIN parcelas p ON e.id = p.emprestimo_id
+      WHERE e.tipo_emprestimo = 'in_installments'
+      GROUP BY e.id
+      ORDER BY e.id
+    `);
+    
+    console.log(`🔍 INVESTIGAÇÃO DE EMPRÉSTIMOS PARCELADOS - Total encontrados: ${emprestimosParcelados.length}`);
+    
+    let emprestimosProblematicos = [];
+    
+    for (const emprestimo of emprestimosParcelados) {
+      console.log(`\n📋 EMPRÉSTIMO PARCELADO ID: ${emprestimo.id}`);
+      console.log(`   Cliente: ${emprestimo.cliente_nome}`);
+      console.log(`   Status atual: ${emprestimo.status}`);
+      console.log(`   Número de parcelas configurado: ${emprestimo.numero_parcelas}`);
+      console.log(`   Total parcelas no banco: ${emprestimo.total_parcelas_db}`);
+      console.log(`   Parcelas pagas: ${emprestimo.parcelas_pagas}`);
+      console.log(`   Parcelas pendentes: ${emprestimo.parcelas_pendentes}`);
+      console.log(`   Parcelas atrasadas: ${emprestimo.parcelas_atrasadas}`);
+      
+      // Buscar detalhes das parcelas para análise
+      const [parcelas] = await connection.execute(`
+        SELECT 
+          numero_parcela,
+          data_vencimento,
+          status,
+          valor_parcela,
+          CASE 
+            WHEN status = 'Pendente' AND data_vencimento < CURDATE() THEN 'DEVERIA_SER_ATRASADA'
+            WHEN status = 'Atrasada' AND data_vencimento >= CURDATE() THEN 'NAO_DEVERIA_SER_ATRASADA'
+            ELSE 'OK'
+          END as verificacao
+        FROM parcelas
+        WHERE emprestimo_id = ?
+        ORDER BY numero_parcela
+      `, [emprestimo.id]);
+      
+      console.log(`   Detalhes das parcelas:`);
+      console.table(parcelas);
+      
+      // Determinar se este empréstimo está sendo incorretamente classificado
+      let statusCalculado = 'Ativo';
+      
+      if (emprestimo.parcelas_pagas === emprestimo.total_parcelas_db && emprestimo.total_parcelas_db > 0) {
+        statusCalculado = 'Quitado';
+      } else if (emprestimo.parcelas_atrasadas > 0) {
+        statusCalculado = 'Em Atraso';
+      }
+      
+      console.log(`   Status calculado: ${statusCalculado}`);
+      
+      // Se o status está incorreto, marcar como problemático
+      if (emprestimo.status !== statusCalculado) {
+        console.log(`   ⚠️  STATUS INCONSISTENTE: ${emprestimo.status} → ${statusCalculado}`);
+        emprestimosProblematicos.push({
+          id: emprestimo.id,
+          cliente: emprestimo.cliente_nome,
+          status_atual: emprestimo.status,
+          status_calculado: statusCalculado,
+          numero_parcelas: emprestimo.numero_parcelas,
+          total_parcelas_db: emprestimo.total_parcelas_db,
+          parcelas_pagas: emprestimo.parcelas_pagas,
+          parcelas_atrasadas: emprestimo.parcelas_atrasadas,
+          parcelas_problematicas: parcelas.filter(p => p.verificacao !== 'OK')
+        });
+        
+        // Corrigir o status
+        await connection.execute(`
+          UPDATE emprestimos 
+          SET status = ? 
+          WHERE id = ?
+        `, [statusCalculado, emprestimo.id]);
+        
+        console.log(`   ✅ Status corrigido para: ${statusCalculado}`);
+      }
+    }
+    
+    // 4. Empréstimos de valor fixo vencidos
     const [emprestimosValorFixoVencidos] = await connection.execute(`
       SELECT 
         e.id,
@@ -920,7 +1122,7 @@ router.post('/corrigir-status-emprestimos', ensureDatabase, async (req, res) => 
         AND e.status = 'Ativo'
     `);
     
-    console.log(`Empréstimos de valor fixo vencidos encontrados: ${emprestimosValorFixoVencidos.length}`);
+    console.log(`📋 Empréstimos de valor fixo vencidos encontrados: ${emprestimosValorFixoVencidos.length}`);
     
     await connection.end();
     
@@ -929,9 +1131,11 @@ router.post('/corrigir-status-emprestimos', ensureDatabase, async (req, res) => 
       correcoes: {
         parcelas_atrasadas: parcelasUpdate.affectedRows,
         emprestimos_quitados: quitadosUpdate.affectedRows,
-        valor_fixo_vencidos: emprestimosValorFixoVencidos.length
+        valor_fixo_vencidos: emprestimosValorFixoVencidos.length,
+        emprestimos_parcelados_corrigidos: emprestimosProblematicos.length
       },
-      emprestimos_valor_fixo_vencidos: emprestimosValorFixoVencidos
+      emprestimos_valor_fixo_vencidos: emprestimosValorFixoVencidos,
+      emprestimos_parcelados_problematicos: emprestimosProblematicos
     });
   } catch (error) {
     console.error('Erro ao corrigir status de empréstimos:', error);

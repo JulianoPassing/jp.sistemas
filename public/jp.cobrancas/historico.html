@@ -75,6 +75,13 @@
         </div>
       </div>
 
+      <!-- Botão temporário para debug -->
+      <div class="section" style="margin-bottom: 1rem;">
+        <button id="btn-debug-corrigir" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+          🔧 Debug: Corrigir Status & Identificar Problema
+        </button>
+      </div>
+
       <!-- Filtros de Busca -->
       <div class="section">
         <div class="search-container">
@@ -273,8 +280,66 @@
       document.getElementById('filter-data-fim').addEventListener('change', aplicarFiltros);
       document.getElementById('clear-filters').addEventListener('click', limparFiltros);
       
+      // Event listener para botão de debug
+      document.getElementById('btn-debug-corrigir').addEventListener('click', corrigirStatusEmprestimos);
 
     });
+
+    // Função para corrigir status de empréstimos
+    async function corrigirStatusEmprestimos() {
+      try {
+        const response = await fetch('/api/cobrancas/corrigir-status-emprestimos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include'
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          console.log('🔧 Correção executada com sucesso:', data);
+          
+          // Exibir informações dos empréstimos parcelados problemáticos
+          if (data.emprestimos_parcelados_problematicos && data.emprestimos_parcelados_problematicos.length > 0) {
+            console.group('🚨 EMPRÉSTIMOS PARCELADOS PROBLEMÁTICOS ENCONTRADOS');
+            console.log(`Total de empréstimos parcelados corrigidos: ${data.emprestimos_parcelados_problematicos.length}`);
+            
+            data.emprestimos_parcelados_problematicos.forEach(emp => {
+              console.log(`\n📋 Empréstimo ID: ${emp.id} - Cliente: ${emp.cliente}`);
+              console.log(`   Status: ${emp.status_atual} → ${emp.status_calculado}`);
+              console.log(`   Parcelas configuradas: ${emp.numero_parcelas}`);
+              console.log(`   Parcelas no banco: ${emp.total_parcelas_db}`);
+              console.log(`   Parcelas pagas: ${emp.parcelas_pagas}`);
+              console.log(`   Parcelas atrasadas: ${emp.parcelas_atrasadas}`);
+              
+              if (emp.parcelas_problematicas && emp.parcelas_problematicas.length > 0) {
+                console.log(`   Parcelas com problemas:`);
+                console.table(emp.parcelas_problematicas);
+              }
+            });
+            
+            console.groupEnd();
+            
+            mostrarNotificacao(`Correção executada! ${data.emprestimos_parcelados_problematicos.length} empréstimos parcelados corrigidos. Verifique o console para detalhes.`, 'success');
+          } else {
+            console.log('✅ Nenhum empréstimo parcelado problemático encontrado.');
+            mostrarNotificacao('Correção executada! Nenhum problema encontrado nos empréstimos parcelados.', 'success');
+          }
+          
+          // Recarregar dados
+          carregarEmprestimos();
+          carregarEstatisticas();
+        } else {
+          console.error('Erro na correção:', data.error);
+          mostrarNotificacao('Erro na correção: ' + data.error, 'error');
+        }
+      } catch (error) {
+        console.error('Erro na correção:', error);
+        mostrarNotificacao('Erro na correção: ' + error.message, 'error');
+      }
+    }
 
 
 
@@ -353,6 +418,66 @@
           document.getElementById('emprestimos-quitados').textContent = data.status?.emprestimos_quitados || 0;
           document.getElementById('emprestimos-ativos').textContent = data.status?.emprestimos_ativos || 0;
           document.getElementById('emprestimos-atraso').textContent = data.status?.emprestimos_atraso || 0;
+          
+          // Debug temporário: verificar empréstimos classificados como em atraso
+          if (data.debug && data.debug.emprestimos_atraso_detalhado) {
+            console.group('🔍 DEBUG: Empréstimos em Atraso');
+            console.log('Total encontrado:', data.debug.emprestimos_atraso_detalhado.length);
+            
+            if (data.debug.emprestimos_atraso_detalhado.length > 0) {
+              console.table(data.debug.emprestimos_atraso_detalhado.map(emp => ({
+                ID: emp.id,
+                Cliente: emp.cliente_nome,
+                Vencimento: emp.data_vencimento,
+                Status: emp.status_emprestimo,
+                Tipo: emp.tipo_emprestimo,
+                Motivo: emp.motivo_atraso,
+                'Total Parcelas': emp.total_parcelas,
+                'Parcelas Atrasadas': emp.parcelas_atrasadas
+              })));
+            }
+            
+            if (data.debug.parcelas_atrasadas) {
+              console.log('Parcelas atrasadas encontradas:', data.debug.parcelas_atrasadas.length);
+              if (data.debug.parcelas_atrasadas.length > 0) {
+                console.table(data.debug.parcelas_atrasadas);
+              }
+            }
+            
+            console.groupEnd();
+          }
+          
+          // Debug específico para empréstimos parcelados
+          if (data.debug && data.debug.emprestimos_parcelados) {
+            console.group('🔍 DEBUG: Empréstimos Parcelados');
+            console.log('Total de empréstimos parcelados:', data.debug.emprestimos_parcelados.length);
+            
+            if (data.debug.emprestimos_parcelados.length > 0) {
+              const parceladosProblematicos = data.debug.emprestimos_parcelados.filter(emp => {
+                const statusCalculado = emp.parcelas_pagas === emp.total_parcelas_db && emp.total_parcelas_db > 0 ? 'Quitado' : 
+                                       emp.parcelas_atrasadas > 0 ? 'Em Atraso' : 'Ativo';
+                return emp.status !== statusCalculado;
+              });
+              
+              console.log('Empréstimos parcelados com status inconsistente:', parceladosProblematicos.length);
+              
+              if (parceladosProblematicos.length > 0) {
+                console.table(parceladosProblematicos.map(emp => ({
+                  ID: emp.id,
+                  Cliente: emp.cliente_nome,
+                  'Status Atual': emp.status,
+                  'Status Calculado': emp.parcelas_pagas === emp.total_parcelas_db && emp.total_parcelas_db > 0 ? 'Quitado' : 
+                                     emp.parcelas_atrasadas > 0 ? 'Em Atraso' : 'Ativo',
+                  'Parcelas Configuradas': emp.numero_parcelas,
+                  'Parcelas no DB': emp.total_parcelas_db,
+                  'Parcelas Pagas': emp.parcelas_pagas,
+                  'Parcelas Atrasadas': emp.parcelas_atrasadas
+                })));
+              }
+            }
+            
+            console.groupEnd();
+          }
         }
       } catch (error) {
         console.error('Erro ao carregar estatísticas:', error);
