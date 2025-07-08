@@ -591,14 +591,14 @@
   <section class="hero">
     <h1>Transforme sua gestão com tecnologia 100% em nuvem</h1>
     <p>
-      O <strong>JP. Sistemas</strong> oferece soluções inovadoras para gestão empresarial, com banco de dados integrados, segurança, mobilidade e performance. Tudo isso em uma plataforma moderna, intuitiva e acessível de qualquer lugar.
+      O <strong>JP. Sistemas</strong> oferece duas soluções completas para sua empresa: o <strong>Sistema de Gestão</strong> para controle empresarial completo e o <strong>Sistema de Empréstimos</strong> para gestão financeira especializada. Ambos com tecnologia em nuvem, segurança, mobilidade e performance.
     </p>
-    <button class="cta-btn" id="conheca-btn-link"><span>Conheça o Sistema</span></button>
+    <button class="cta-btn" id="conheca-btn-link"><span>Conheça os Sistemas</span></button>
     <div class="typewriter-msg">
       <span id="typewriter"></span>
     </div>
     <div class="sistema-funcional-msg">
-      Funciona em <strong>Desktop</strong> (navegador ou executável) e <strong>Smartphones</strong> (via navegador).
+      Funcionam em <strong>Desktop</strong> (navegador ou executável) e <strong>Smartphones</strong> (via navegador).
     </div>
     <a href="https://drive.google.com/file/d/1u4Azxd2rECC79PAewxA_CgxNFzBKV58q/view?usp=sharing" target="_blank" rel="noopener" class="download-btn">
       <button class="cta-btn"><span>Download Windows</span></button>
@@ -606,20 +606,20 @@
   </section>
   <section class="features" id="recursos">
     <div class="feature-card">
-      <i class="fas fa-database icon"></i> <h3>Banco de Dados Integrados</h3>
-      <p>Centralize todas as informações do seu negócio em um só lugar, com integração total entre módulos e dados sempre atualizados em tempo real.</p>
+      <i class="fas fa-cogs icon"></i> <h3>Sistema de Gestão</h3>
+      <p>Controle completo de clientes, produtos, pedidos, estoque e relatórios. Gestão empresarial integrada em uma plataforma moderna.</p>
+    </div>
+    <div class="feature-card">
+      <i class="fas fa-money-bill-wave icon"></i> <h3>Sistema de Empréstimos</h3>
+      <p>Gestão completa de empréstimos, controle de cobranças, histórico de pagamentos e lista negra. Tudo para sua gestão financeira.</p>
     </div>
     <div class="feature-card">
       <i class="fas fa-cloud icon"></i> <h3>100% em Nuvem</h3>
-      <p>Acesse o sistema de qualquer dispositivo, a qualquer hora, com total segurança e sem necessidade de instalações locais.</p>
+      <p>Acesse os sistemas de qualquer dispositivo, a qualquer hora, com total segurança e sem necessidade de instalações locais.</p>
     </div>
     <div class="feature-card">
       <i class="fas fa-shield-alt icon"></i> <h3>Segurança e Backup</h3>
-      <p>Seus dados protegidos com criptografia avançada e backups automáticos, garantindo tranquilidade e conformidade.</p>
-    </div>
-    <div class="feature-card">
-      <i class="fas fa-desktop icon"></i> <h3>Interface Moderna</h3>
-      <p>Design intuitivo, responsivo e pensado para facilitar o dia a dia da sua equipe, com dashboards e relatórios inteligentes.</p>
+      <p>Seus dados protegidos com criptografia avançada e backups automáticos, garantindo tranquilidade e conformidade total.</p>
     </div>
   </section>
   <footer id="contato">
@@ -637,7 +637,7 @@
           </div>
           <div class="sistema-info">
             <h3>Sistema de Gestão</h3>
-            <p>Gerencie clientes, produtos, pedidos e relatórios</p>
+            <p>Gerencie clientes, produtos, pedidos, estoque e relatórios</p>
           </div>
           <div class="sistema-arrow">
             <i class="fas fa-arrow-right"></i>
@@ -645,11 +645,11 @@
         </div>
         <div class="sistema-opcao" onclick="window.location.href='jp.cobrancas/index.html'">
           <div class="sistema-icon">
-            <i class="fas fa-credit-card"></i>
+            <i class="fas fa-money-bill-wave"></i>
           </div>
           <div class="sistema-info">
-            <h3>Sistema de Cobrança</h3>
-            <p>Controle de cobranças, empréstimos e lista negra</p>
+            <h3>Sistema de Empréstimos</h3>
+            <p>Controle de empréstimos, cobranças e gestão financeira</p>
           </div>
           <div class="sistema-arrow">
             <i class="fas fa-arrow-right"></i>
@@ -671,10 +671,10 @@
           <a href="sistema.html" class="demo-btn">Acessar Sistema de Gestão</a>
         </div>
         <div class="demo-sistema">
-          <div class="demo-title">Sistema de Cobrança</div>
+          <div class="demo-title">Sistema de Empréstimos</div>
           <div><strong>Usuário:</strong> <span class="demo-user">cobranca</span></div>
           <div><strong>Senha:</strong> <span class="demo-pass">cobranca</span></div>
-          <a href="jp.cobrancas/index.html" class="demo-btn">Acessar Sistema de Cobrança</a>
+          <a href="jp.cobrancas/index.html" class="demo-btn">Acessar Sistema de Empréstimos</a>
         </div>
       </div>
     </div>
@@ -794,12 +794,13 @@
 
     
     const typewriterTexts = [
-      "Banco de Dados Integrados",
+      "Sistema de Gestão Empresarial",
+      "Sistema de Empréstimos",
       "100% em Nuvem",
       "Segurança e Backup",
       "Interface Moderna",
       "Acesse de Qualquer Lugar",
-      "Gestão Empresarial Simplificada",
+      "Gestão Completa e Integrada",
       "Entre em contato e saiba mais"
     ];
     let twIndex = 0, charIndex = 0, isDeleting = false;
@@ -828,7 +829,7 @@
     }
     if (twElem) typeWriterLoop();
 
-    // Modal logic para "Conheça o Sistema"
+    // Modal logic para "Conheça os Sistemas"
     const conhecaBtn = document.getElementById('conheca-btn-link');
     const modalBg = document.getElementById('modal-bg');
     const modalClose = document.getElementById('modal-close');
