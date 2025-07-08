@@ -919,10 +919,18 @@
       // Criar modal
       const modalDiv = document.createElement('div');
       modalDiv.className = 'modal';
-      modalDiv.style.display = 'block';
+      modalDiv.style.display = 'flex';
+      modalDiv.style.position = 'fixed';
+      modalDiv.style.top = '0';
+      modalDiv.style.left = '0';
+      modalDiv.style.width = '100%';
+      modalDiv.style.height = '100%';
+      modalDiv.style.alignItems = 'center';
+      modalDiv.style.justifyContent = 'center';
+      modalDiv.style.zIndex = '9999';
       modalDiv.innerHTML = `
-        <div class="modal-overlay" onclick="this.parentElement.remove()"></div>
-        <div class="modal-content" style="max-width: 600px; width: 90%;">
+        <div class="modal-overlay" onclick="this.parentElement.remove()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);"></div>
+        <div class="modal-content" style="max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; position: relative; z-index: 10000; margin: 2rem;">
           <div class="modal-header">
             <h3>Adicionar Empréstimo</h3>
             <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
@@ -1313,19 +1321,27 @@
             
             <div style="display: flex; gap: 1rem; margin-top: 2rem;">
               <button type="submit" class="btn btn-primary" style="flex: 1;">Confirmar Pagamento</button>
-              <button type="button" class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
+              <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
             </div>
           </form>
         </div>
       `;
       
-      // Mostrar modal (assumindo que existe uma função showModal global)
+      // Mostrar modal
       const modalDiv = document.createElement('div');
       modalDiv.className = 'modal';
-      modalDiv.style.display = 'block';
+      modalDiv.style.display = 'flex';
+      modalDiv.style.position = 'fixed';
+      modalDiv.style.top = '0';
+      modalDiv.style.left = '0';
+      modalDiv.style.width = '100%';
+      modalDiv.style.height = '100%';
+      modalDiv.style.alignItems = 'center';
+      modalDiv.style.justifyContent = 'center';
+      modalDiv.style.zIndex = '9999';
       modalDiv.innerHTML = `
-        <div class="modal-overlay" onclick="fecharModal()"></div>
-        <div class="modal-content">
+        <div class="modal-overlay" onclick="this.parentElement.remove()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);"></div>
+        <div class="modal-content" style="position: relative; z-index: 10000;">
           ${modalContent}
         </div>
       `;
