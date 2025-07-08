@@ -223,23 +223,45 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
       SELECT COUNT(*) as total_clientes FROM clientes_cobrancas WHERE status IN ('Ativo', 'Pendente')
     `);
 
-    // Clientes em atraso: pelo menos um empréstimo em atraso
+    // Clientes em atraso: pelo menos um empréstimo em atraso (considerando parcelas para empréstimos parcelados)
     const [clientesEmAtraso] = await connection.execute(`
       SELECT COUNT(DISTINCT c.id) as total
       FROM clientes_cobrancas c
       JOIN emprestimos e ON e.cliente_id = c.id
       WHERE e.status IN ('Ativo', 'Pendente')
-        AND e.data_vencimento < CURDATE()
         AND e.status <> 'Quitado'
+        AND (
+          -- Para empréstimos de parcela única
+          (e.tipo_emprestimo != 'in_installments' AND e.data_vencimento < CURDATE())
+          OR
+          -- Para empréstimos parcelados, verificar se há parcelas atrasadas
+          (e.tipo_emprestimo = 'in_installments' AND EXISTS (
+            SELECT 1 FROM parcelas p 
+            WHERE p.emprestimo_id = e.id 
+              AND p.data_vencimento < CURDATE() 
+              AND p.status != 'Paga'
+          ))
+        )
     `);
 
-    // Empréstimos em atraso
+    // Empréstimos em atraso (considerando parcelas para empréstimos parcelados)
     const [emprestimosEmAtraso] = await connection.execute(`
       SELECT COUNT(*) as total
-      FROM emprestimos
-      WHERE status IN ('Ativo', 'Pendente')
-        AND data_vencimento < CURDATE()
-        AND status <> 'Quitado'
+      FROM emprestimos e
+      WHERE e.status IN ('Ativo', 'Pendente')
+        AND e.status <> 'Quitado'
+        AND (
+          -- Para empréstimos de parcela única
+          (e.tipo_emprestimo != 'in_installments' AND e.data_vencimento < CURDATE())
+          OR
+          -- Para empréstimos parcelados, verificar se há parcelas atrasadas
+          (e.tipo_emprestimo = 'in_installments' AND EXISTS (
+            SELECT 1 FROM parcelas p 
+            WHERE p.emprestimo_id = e.id 
+              AND p.data_vencimento < CURDATE() 
+              AND p.status != 'Paga'
+          ))
+        )
     `);
 
     // Clientes ativos: pelo menos um empréstimo ativo/pendente e não quitado

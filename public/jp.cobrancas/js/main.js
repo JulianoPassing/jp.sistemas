@@ -383,20 +383,9 @@ const dashboardController = {
       await this.updateRecentEmprestimos(data.emprestimosRecentes || []);
       await this.updateCobrancasPendentes(data.cobrancasPendentes || []);
       
-      // Calcular clientes em atraso: recalcula status localmente
-      const clientesEmAtrasoSet = new Set();
-      emprestimos.forEach(emprestimo => {
-        const dataVencimento = new Date(emprestimo.data_vencimento);
-        let status = (emprestimo.status || '').toUpperCase();
-        if (dataVencimento < hoje && status !== 'QUITADO') {
-          status = 'ATRASADO';
-        }
-        const clienteId = emprestimo.cliente_id || emprestimo.cliente || emprestimo.cliente_nome || null;
-        if (status === 'ATRASADO' && clienteId) {
-          clientesEmAtrasoSet.add(clienteId);
-        }
-      });
-      data.cobrancas.clientes_em_atraso = clientesEmAtrasoSet.size;
+      // Usar o valor calculado pela API que já considera parcelas corretamente
+      // Não sobrescrever o valor da API com cálculo local incorreto
+      // data.cobrancas.clientes_em_atraso já vem correto da API
       
     } catch (error) {
       console.error('Erro ao carregar dashboard:', error);
