@@ -153,69 +153,29 @@
       
       // Função para renderizar empréstimos filtrados
       function renderFilteredEmprestimos() {
-        console.log('🎨 [DEBUG] Iniciando renderização de empréstimos filtrados...');
-        console.log(`📋 [DEBUG] Renderização: ${filteredEmprestimos.length} empréstimos para renderizar`);
-        
         const tbody = document.getElementById('historico-emprestimos');
-        if (!tbody) {
-          console.error('❌ [DEBUG] Tabela não encontrada!');
-          return;
-        }
+        if (!tbody) return;
         
-        // Verificação final de duplicatas antes da renderização
-        const idsRenderizacao = new Set();
-        const emprestimosSemDuplicatas = [];
-        
-        for (const emprestimo of filteredEmprestimos) {
-          if (idsRenderizacao.has(emprestimo.id)) {
-            console.error(`🚨 [DEBUG] DUPLICATA DETECTADA NA RENDERIZAÇÃO: ID ${emprestimo.id} - ${emprestimo.cliente_nome}`);
-            continue;
-          }
-          idsRenderizacao.add(emprestimo.id);
-          emprestimosSemDuplicatas.push(emprestimo);
-        }
-        
-        console.log(`🔍 [DEBUG] Após verificação de renderização: ${emprestimosSemDuplicatas.length} empréstimos únicos`);
-        
-        if (emprestimosSemDuplicatas.length !== filteredEmprestimos.length) {
-          console.warn(`⚠️  [DEBUG] Foram removidas ${filteredEmprestimos.length - emprestimosSemDuplicatas.length} duplicatas na renderização`);
-        }
-        
-        tbody.innerHTML = '';
-        
-        if (emprestimosSemDuplicatas.length === 0) {
+        if (filteredEmprestimos.length === 0) {
           tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
           return;
         }
         
-        console.log('📝 [DEBUG] Empréstimos que serão renderizados:');
-        emprestimosSemDuplicatas.forEach((emprestimo, index) => {
-          console.log(`  ${index + 1}. ID: ${emprestimo.id} | Cliente: ${emprestimo.cliente_nome} | Status: ${emprestimo.status}`);
-          
+        tbody.innerHTML = '';
+        filteredEmprestimos.forEach(emp => {
           const row = document.createElement('tr');
           row.innerHTML = `
-            <td class="px-4 py-2 font-medium text-gray-900">${emprestimo.cliente_nome || 'N/A'}</td>
-            <td class="px-4 py-2 text-gray-700">R$ ${parseFloat(emprestimo.valor || 0).toFixed(2).replace('.', ',')}</td>
-            <td class="px-4 py-2 text-gray-700">${emprestimo.data_emprestimo ? new Date(emprestimo.data_emprestimo + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A'}</td>
-            <td class="px-4 py-2 text-gray-700">${emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A'}</td>
-            <td class="px-4 py-2">
-              <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(emprestimo.status)}">
-                ${emprestimo.status || 'N/A'}
-              </span>
-            </td>
-            <td class="px-4 py-2">
-              <button 
-                class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors"
-                onclick="window.location.href='emprestimo-detalhes.html?id=${emprestimo.id}'"
-              >
-                Ver
-              </button>
+            <td>${emp.cliente_nome || 'N/A'}</td>
+            <td>R$ ${utils.formatCurrency(emp.valor || 0)}</td>
+            <td>${emp.data_emprestimo ? utils.formatDate(emp.data_emprestimo) : '-'}</td>
+            <td>${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</td>
+            <td><span class="badge badge-${getStatusBadgeClass(emp.status)}">${emp.status || 'N/A'}</span></td>
+            <td>
+              <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
             </td>
           `;
           tbody.appendChild(row);
         });
-        
-        console.log(`✅ [DEBUG] Renderização concluída: ${emprestimosSemDuplicatas.length} linhas adicionadas à tabela`);
       }
       
       // Função para obter classe do badge baseado no status
@@ -259,42 +219,28 @@
       // Sobrescrever a função renderHistoricoEmprestimos para incluir busca
       const originalRenderHistoricoEmprestimos = window.renderHistoricoEmprestimos;
       window.renderHistoricoEmprestimos = async function() {
-        console.log('🔍 [DEBUG] Histórico: Iniciando carregamento de empréstimos...');
+        console.log('🔍 Histórico: Iniciando carregamento de empréstimos...');
         
         try {
           const emprestimos = await apiService.getEmprestimos();
-          console.log(`📋 [DEBUG] Histórico: API retornou ${emprestimos ? emprestimos.length : 0} empréstimos`);
+          console.log(`📋 Histórico: API retornou ${emprestimos ? emprestimos.length : 0} empréstimos`);
           
-          if (!emprestimos || emprestimos.length === 0) {
-            console.warn('⚠️  [DEBUG] Nenhum empréstimo retornado pela API');
-            allEmprestimos = [];
-            filteredEmprestimos = [];
-            renderFilteredEmprestimos();
-            return;
+          if (emprestimos) {
+            console.log('📝 Histórico: IDs retornados pela API:', emprestimos.map(e => e.id));
           }
           
-          // Log detalhado de TODOS os empréstimos recebidos
-          console.log('📝 [DEBUG] Empréstimos recebidos da API:');
-          emprestimos.forEach((emp, index) => {
-            console.log(`  ${index + 1}. ID: ${emp.id} | Cliente: ${emp.cliente_nome} | Valor: R$ ${emp.valor} | Status: ${emp.status}`);
-          });
+          // Aplicar a mesma lógica de remoção de duplicatas
+          const emprestimosUnicos = new Map();
+          const emprestimosProcessados = [];
           
-          // Usar Set para garantir IDs únicos de forma mais rigorosa
-          const idsProcessados = new Set();
-          const emprestimosUnicos = [];
-          
-          console.log('🔄 [DEBUG] Iniciando filtragem de duplicatas...');
-          
-          for (let i = 0; i < emprestimos.length; i++) {
-            const emprestimo = emprestimos[i];
-            
-            // Verificar se já processamos este ID
-            if (idsProcessados.has(emprestimo.id)) {
-              console.warn(`🚨 [DEBUG] DUPLICATA DETECTADA E IGNORADA: ID ${emprestimo.id} - ${emprestimo.cliente_nome} (posição ${i + 1})`);
+          for (const emprestimo of emprestimos || []) {
+            // Verificar se já processamos este empréstimo
+            if (emprestimosUnicos.has(emprestimo.id)) {
+              console.warn(`🚨 Histórico: Empréstimo duplicado ignorado: ID ${emprestimo.id} - ${emprestimo.cliente_nome}`);
               continue;
             }
             
-            console.log(`✅ [DEBUG] Processando empréstimo único: ID ${emprestimo.id} - ${emprestimo.cliente_nome}`);
+            console.log(`✅ Histórico: Processando empréstimo ID ${emprestimo.id} - ${emprestimo.cliente_nome}`);
             
             // Verificar status baseado em parcelas
             try {
@@ -304,7 +250,7 @@
               let status = (emprestimo.status || '').toUpperCase();
               
               if (parcelas && parcelas.length > 0) {
-                console.log(`  📅 [DEBUG] Empréstimo ${emprestimo.id} tem ${parcelas.length} parcelas`);
+                console.log(`  📅 Empréstimo ${emprestimo.id} tem ${parcelas.length} parcelas`);
                 
                 const parcelasAtrasadas = parcelas.filter(p => {
                   const dataVencParcela = new Date(p.data_vencimento);
@@ -321,9 +267,10 @@
                   status = 'ATIVO';
                 }
                 
-                console.log(`  🔄 [DEBUG] Status atualizado para: ${status} (${parcelasPagas.length}/${parcelas.length} pagas, ${parcelasAtrasadas.length} atrasadas)`);
+                console.log(`  🔄 Status atualizado para: ${status} (${parcelasPagas.length}/${parcelas.length} pagas, ${parcelasAtrasadas.length} atrasadas)`);
               } else {
-                console.log(`  📄 [DEBUG] Empréstimo ${emprestimo.id} sem parcelas, usando data de vencimento`);
+                console.log(`  📄 Empréstimo ${emprestimo.id} sem parcelas, usando data de vencimento`);
+                // Sem parcelas - usar lógica original
                 const dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
                 if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
                   status = 'ATRASADO';
@@ -334,98 +281,30 @@
               emprestimo.status = status;
               
             } catch (error) {
-              console.error(`❌ [DEBUG] Erro ao verificar parcelas do empréstimo ${emprestimo.id}:`, error);
+              console.error(`❌ Erro ao verificar parcelas do empréstimo ${emprestimo.id}:`, error);
             }
             
-            // Marcar ID como processado e adicionar à lista
-            idsProcessados.add(emprestimo.id);
-            emprestimosUnicos.push(emprestimo);
-            
-            console.log(`  ✅ [DEBUG] Empréstimo ID ${emprestimo.id} adicionado à lista única`);
+            // Marcar como processado e adicionar à lista
+            emprestimosUnicos.set(emprestimo.id, true);
+            emprestimosProcessados.push(emprestimo);
           }
           
-          console.log(`📊 [DEBUG] RESULTADO DA FILTRAGEM:`);
-          console.log(`  - Empréstimos recebidos: ${emprestimos.length}`);
-          console.log(`  - Empréstimos únicos: ${emprestimosUnicos.length}`);
-          console.log(`  - Duplicatas removidas: ${emprestimos.length - emprestimosUnicos.length}`);
+          console.log(`✅ Histórico: ${emprestimosProcessados.length} empréstimos únicos processados`);
+          console.log('📝 Histórico: IDs finais:', emprestimosProcessados.map(e => e.id));
           
-          console.log('📝 [DEBUG] Lista final de empréstimos únicos:');
-          emprestimosUnicos.forEach((emp, index) => {
-            console.log(`  ${index + 1}. ID: ${emp.id} | Cliente: ${emp.cliente_nome} | Valor: R$ ${emp.valor} | Status: ${emp.status}`);
-          });
-          
-          // Garantir que não há duplicatas na lista final
-          const verificacaoFinal = new Set();
-          const listaFinalLimpa = [];
-          
-          for (const emp of emprestimosUnicos) {
-            if (!verificacaoFinal.has(emp.id)) {
-              verificacaoFinal.add(emp.id);
-              listaFinalLimpa.push(emp);
-            } else {
-              console.error(`🚨 [DEBUG] ERRO: Ainda há duplicata na lista final! ID ${emp.id}`);
-            }
-          }
-          
-          console.log(`🔒 [DEBUG] Verificação final: ${listaFinalLimpa.length} empréstimos únicos confirmados`);
-          
-          allEmprestimos = listaFinalLimpa;
+          allEmprestimos = emprestimosProcessados;
           filteredEmprestimos = [...allEmprestimos];
           
           renderFilteredEmprestimos();
           updateSearchResultsInfo();
-          
-          console.log('✅ [DEBUG] Renderização concluída com sucesso!');
-          
         } catch (err) {
-          console.error('❌ [DEBUG] Erro ao carregar empréstimos:', err);
+          console.error('❌ Erro ao carregar empréstimos:', err);
           const tbody = document.getElementById('historico-emprestimos');
           if (tbody) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
           }
         }
       };
-
-      // Função para limpar cache e forçar recarregamento
-      function limparCacheCompleto() {
-        console.log('🧹 [DEBUG] Limpando cache completo...');
-        
-        // Limpar todas as variáveis globais
-        allEmprestimos = [];
-        filteredEmprestimos = [];
-        
-        // Limpar localStorage se existir
-        if (typeof Storage !== 'undefined') {
-          localStorage.removeItem('emprestimos');
-          localStorage.removeItem('filteredEmprestimos');
-          sessionStorage.removeItem('emprestimos');
-          sessionStorage.removeItem('filteredEmprestimos');
-        }
-        
-        // Limpar a tabela
-        const tbody = document.getElementById('historico-emprestimos');
-        if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="6" class="text-center">Recarregando...</td></tr>';
-        }
-        
-        console.log('🧹 [DEBUG] Cache limpo, recarregando dados...');
-        
-        // Aguardar um pouco e recarregar
-        setTimeout(() => {
-          window.renderHistoricoEmprestimos();
-        }, 500);
-      }
-
-      // Adicionar botão de debug na página
-      const debugButton = document.createElement('button');
-      debugButton.innerHTML = '🔧 Debug Limpar Cache';
-      debugButton.className = 'bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors';
-      debugButton.style.position = 'fixed';
-      debugButton.style.top = '10px';
-      debugButton.style.right = '10px';
-      debugButton.style.zIndex = '9999';
-      debugButton.onclick = limparCacheCompleto;
-      document.body.appendChild(debugButton);
     });
   </script>
 </body>
