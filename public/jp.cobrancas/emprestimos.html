@@ -247,7 +247,7 @@
         
         // Processar cada empréstimo para obter o vencimento correto
         for (const emp of filteredEmprestimos) {
-          let proximoVencimento = emp.data_vencimento;
+          let proximoVencimento = null;
           
           try {
             // Buscar parcelas do empréstimo
@@ -264,17 +264,30 @@
                 // Ordenar por data de vencimento e pegar a próxima
                 parcelasEmAberto.sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento));
                 proximoVencimento = parcelasEmAberto[0].data_vencimento;
+              } else {
+                // Se todas as parcelas estão pagas, mostrar a data da última parcela
+                const ultimaParcela = parcelas.sort((a, b) => new Date(b.data_vencimento) - new Date(a.data_vencimento))[0];
+                proximoVencimento = ultimaParcela.data_vencimento;
+              }
+            } else {
+              // Se não há parcelas, usar data de vencimento original apenas se diferente da data do empréstimo
+              if (emp.data_vencimento && emp.data_vencimento !== emp.data_emprestimo) {
+                proximoVencimento = emp.data_vencimento;
               }
             }
           } catch (error) {
             console.error(`Erro ao buscar parcelas do empréstimo ${emp.id}:`, error);
+            // Em caso de erro, usar data de vencimento original se diferente da data do empréstimo
+            if (emp.data_vencimento && emp.data_vencimento !== emp.data_emprestimo) {
+              proximoVencimento = emp.data_vencimento;
+            }
           }
           
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${emp.cliente_nome || 'N/A'}</td>
-            <td>R$ ${utils.formatCurrency(emp.valor || 0)}</td>
-            <td>R$ ${utils.formatCurrency(emp.valor_final || emp.valor || 0)}</td>
+            <td>${utils.formatCurrency(emp.valor || 0)}</td>
+            <td>${utils.formatCurrency(emp.valor_final || emp.valor || 0)}</td>
             <td>${emp.data_emprestimo ? utils.formatDate(emp.data_emprestimo) : '-'}</td>
             <td>${proximoVencimento ? utils.formatDate(proximoVencimento) : '-'}</td>
             <td><span class="badge badge-${getStatusBadgeClass(emp.status)}">${emp.status || 'N/A'}</span></td>
