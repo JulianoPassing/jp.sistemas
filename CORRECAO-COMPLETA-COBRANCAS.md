@@ -179,6 +179,9 @@ chmod +x melhorar-cobrancas-vencimento-valor.sh
    - Não há empréstimos duplicados
    - Empréstimos com parcelas em dia mostram "Em Dia"
    - Apenas empréstimos com parcelas vencidas mostram "Em Atraso"
+   - Empréstimos parcelados mostram valor da próxima parcela (não o total)
+   - Empréstimos parcelados mostram vencimento da próxima parcela
+   - Empréstimos fixos mostram valor total e vencimento do empréstimo
 3. Abra o Console (F12) para ver logs de debug
 
 ## Resultado Final
@@ -186,12 +189,16 @@ chmod +x melhorar-cobrancas-vencimento-valor.sh
 ### Antes das Correções
 - ❌ Empréstimos em dia apareciam como "Em Atraso"
 - ❌ Cada empréstimo aparecia múltiplas vezes
+- ❌ Empréstimos parcelados mostravam valor total (confuso)
+- ❌ Vencimento sempre do empréstimo (não da parcela)
 - ❌ Interface confusa e incorreta
 
 ### Depois das Correções
 - ✅ Status calculado corretamente baseado em parcelas
 - ✅ Cada empréstimo aparece apenas uma vez
-- ✅ Interface limpa e precisa
+- ✅ Empréstimos parcelados mostram valor da próxima parcela
+- ✅ Vencimento preciso (parcela ou empréstimo conforme o tipo)
+- ✅ Interface limpa, precisa e útil para cobranças
 - ✅ Performance melhorada
 - ✅ Logs de debug para futuras manutenções
 
@@ -207,8 +214,9 @@ Para ver os logs, abra o Console do navegador (F12) e navegue até a página de 
 
 ---
 
-**Status**: ✅ Correções Completas  
+**Status**: ✅ Três Correções Completas  
 **Data**: Hoje  
 **Impacto**: Correção crítica da página de cobranças  
+**Correções**: Atraso + Duplicatas + Vencimento/Valor  
 **Arquivos Modificados**: `public/jp.cobrancas/js/main.js`  
 **Testes**: Implementados e funcionando 
