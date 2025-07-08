@@ -10,7 +10,7 @@ async function createCobrancasConnection(username) {
   const dbName = `jpcobrancas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
   const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'jpcobrancas',
+    user: process.env.DB_USER || 'jpsistemas',
     password: process.env.DB_PASSWORD || 'Juliano@95',
     database: dbName,
     charset: 'utf8mb4'
@@ -33,7 +33,7 @@ async function createCobrancasDatabase(username) {
     // Conectar como root para criar o banco
     const rootConnection = await mysql.createConnection({
       host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'jpcobrancas',
+      user: process.env.DB_USER || 'jpsistemas',
       password: process.env.DB_PASSWORD || 'Juliano@95',
       charset: 'utf8mb4'
     });

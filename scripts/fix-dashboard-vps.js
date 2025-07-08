@@ -20,7 +20,7 @@ async function main() {
     const dbName = `jpcobrancas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
     const dbConfig = {
       host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'jpcobrancas',
+      user: process.env.DB_USER || 'jpsistemas',
       password: process.env.DB_PASSWORD || 'Juliano@95',
       database: dbName,
       charset: 'utf8mb4'
@@ -87,18 +87,6 @@ async function main() {
     console.log('🔄 Tentando credenciais padrão do sistema...');
     
     const credenciaisAlternativas = [
-      {
-        host: 'localhost',
-        user: 'jpcobrancas',
-        password: 'Juliano@95',
-        database: 'jpcobrancas_cobranca'
-      },
-      {
-        host: 'localhost',
-        user: 'jpcobrancas',
-        password: 'Juliano@95!',
-        database: 'jpcobrancas_cobranca'
-      },
       {
         host: 'localhost',
         user: 'jpsistemas',
