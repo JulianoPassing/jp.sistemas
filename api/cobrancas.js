@@ -720,11 +720,23 @@ router.get('/emprestimos', ensureDatabase, async (req, res) => {
              CASE 
                WHEN e.tipo_emprestimo = 'in_installments' THEN (e.valor_parcela * e.numero_parcelas)
                ELSE e.valor * (1 + (e.juros_mensal / 100))
-             END as valor_final
+             END as valor_final,
+             DATE_FORMAT(e.data_emprestimo, '%Y-%m-%d') as data_emprestimo_formatada,
+             DATE_FORMAT(e.data_vencimento, '%Y-%m-%d') as data_vencimento_formatada
       FROM emprestimos e
       LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
       ORDER BY e.created_at DESC
     `);
+    
+    // Garantir que as datas estão no formato correto
+    emprestimos.forEach(emp => {
+      if (emp.data_emprestimo_formatada) {
+        emp.data_emprestimo = emp.data_emprestimo_formatada;
+      }
+      if (emp.data_vencimento_formatada) {
+        emp.data_vencimento = emp.data_vencimento_formatada;
+      }
+    });
     
     console.log(`API /emprestimos: Retornando ${emprestimos.length} empréstimos para usuário ${username}`);
     emprestimos.forEach(emp => {
@@ -871,12 +883,24 @@ router.get('/emprestimos/:id/parcelas', ensureDatabase, async (req, res) => {
     `, [id]);
     
     const [parcelas] = await connection.execute(`
-      SELECT p.*, e.valor as valor_total_emprestimo, e.juros_mensal, e.multa_atraso
+      SELECT p.*, e.valor as valor_total_emprestimo, e.juros_mensal, e.multa_atraso,
+             DATE_FORMAT(p.data_vencimento, '%Y-%m-%d') as data_vencimento_formatada,
+             DATE_FORMAT(p.data_pagamento, '%Y-%m-%d') as data_pagamento_formatada
       FROM parcelas p
       LEFT JOIN emprestimos e ON p.emprestimo_id = e.id
       WHERE p.emprestimo_id = ?
       ORDER BY p.numero_parcela ASC
     `, [id]);
+    
+    // Garantir que as datas estão no formato correto
+    parcelas.forEach(parcela => {
+      if (parcela.data_vencimento_formatada) {
+        parcela.data_vencimento = parcela.data_vencimento_formatada;
+      }
+      if (parcela.data_pagamento_formatada) {
+        parcela.data_pagamento = parcela.data_pagamento_formatada;
+      }
+    });
     
     await connection.end();
     res.json(parcelas);
