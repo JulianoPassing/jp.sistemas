@@ -133,10 +133,12 @@ if (parcelasNaoPagas.length > 0) {
 - `scripts/debug-duplicatas-cobrancas.js` - Analisa duplicatas
 - `scripts/test-correcao-atraso.js` - Testa correção de atraso
 - `scripts/test-correcao-duplicatas.js` - Testa correção de duplicatas
+- `scripts/test-vencimento-valor-cobrancas.js` - Testa vencimento e valor corretos
 
 ### Scripts de Execução
 - `corrigir-atraso-cobrancas.sh` - Script para corrigir atraso
 - `corrigir-duplicatas-cobrancas.sh` - Script para corrigir duplicatas
+- `melhorar-cobrancas-vencimento-valor.sh` - Script para testar vencimento e valor
 
 ### Documentação
 - `CORRECAO-ATRASO-COBRANCAS.md` - Documentação do problema de atraso
@@ -154,14 +156,21 @@ node scripts/test-correcao-atraso.js
 node scripts/test-correcao-duplicatas.js
 ```
 
+### Teste 3: Vencimento e Valor Corretos
+```bash
+node scripts/test-vencimento-valor-cobrancas.js
+```
+
 ### Teste Completo
 ```bash
-# Executar ambos os testes
+# Executar todos os testes
 chmod +x corrigir-atraso-cobrancas.sh
 chmod +x corrigir-duplicatas-cobrancas.sh
+chmod +x melhorar-cobrancas-vencimento-valor.sh
 
 ./corrigir-atraso-cobrancas.sh
 ./corrigir-duplicatas-cobrancas.sh
+./melhorar-cobrancas-vencimento-valor.sh
 ```
 
 ### Teste Manual
