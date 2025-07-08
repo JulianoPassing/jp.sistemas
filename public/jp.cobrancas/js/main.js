@@ -1833,12 +1833,13 @@ async function renderHistoricoEmprestimos() {
       return;
     }
     tbody.innerHTML = '';
-    emprestimos.forEach(emprestimo => {
+    // Processar cada empréstimo com verificação de parcelas
+    for (const emprestimo of emprestimos) {
       // Cálculo de atraso e juros diário
       const valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
       const jurosPercent = Number(emprestimo.juros_mensal || 0);
       const jurosTotal = valorInvestido * (jurosPercent / 100);
-      const dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
+      let dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
       const hoje = new Date();
       hoje.setHours(0,0,0,0);
       let status = (emprestimo.status || '').toUpperCase();
@@ -1847,8 +1848,49 @@ async function renderHistoricoEmprestimos() {
       let diasAtraso = 0;
       let jurosDiario = 0;
       let jurosAplicado = 0;
-      if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
-        status = 'ATRASADO';
+      
+      // Verificar status baseado em parcelas para empréstimos parcelados
+      try {
+        const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
+        if (parcelas && parcelas.length > 0) {
+          // Tem parcelas - verificar status das parcelas individuais
+          const parcelasAtrasadas = parcelas.filter(p => {
+            const dataVencParcela = new Date(p.data_vencimento);
+            return dataVencParcela < hoje && (p.status !== 'Paga');
+          });
+          
+          const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
+          
+          // Determinar status real baseado nas parcelas
+          if (parcelasPagas.length === parcelas.length) {
+            status = 'QUITADO';
+          } else if (parcelasAtrasadas.length > 0) {
+            status = 'ATRASADO';
+            // Usar a data de vencimento da parcela mais atrasada para cálculo de juros
+            const parcelaMaisAtrasada = parcelasAtrasadas.sort((a, b) => 
+              new Date(a.data_vencimento) - new Date(b.data_vencimento)
+            )[0];
+            dataVencimento = new Date(parcelaMaisAtrasada.data_vencimento);
+          } else {
+            // Parcelas existem mas nenhuma está atrasada
+            status = status === 'QUITADO' ? 'QUITADO' : 'ATIVO';
+          }
+        } else {
+          // Sem parcelas - usar lógica original baseada na data de vencimento do empréstimo
+          if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+            status = 'ATRASADO';
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao verificar parcelas do empréstimo', emprestimo.id, error);
+        // Fallback para verificação pela data de vencimento
+        if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+          status = 'ATRASADO';
+        }
+      }
+      
+      // Calcular juros de atraso se status for ATRASADO
+      if (status === 'ATRASADO' && dataVencimento) {
         // Calcular dias de atraso
         const diffTime = hoje.getTime() - dataVencimento.getTime();
         diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -1877,7 +1919,7 @@ async function renderHistoricoEmprestimos() {
         </td>
       `;
       tbody.appendChild(row);
-    });
+    }
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
   }
