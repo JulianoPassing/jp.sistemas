@@ -507,28 +507,7 @@ router.post('/clientes', ensureDatabase, async (req, res) => {
   }
 });
 
-// Buscar parcelas de um empréstimo
-router.get('/emprestimos/:id/parcelas', ensureDatabase, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const username = req.session.cobrancasUser;
-    const connection = await createCobrancasConnection(username);
-    
-    const [parcelas] = await connection.execute(`
-      SELECT p.*, c.status as cobranca_status, c.id as cobranca_id, c.valor_original, c.valor_atualizado
-      FROM parcelas p
-      LEFT JOIN cobrancas c ON c.emprestimo_id = p.emprestimo_id AND c.data_vencimento = p.data_vencimento
-      WHERE p.emprestimo_id = ?
-      ORDER BY p.numero_parcela ASC
-    `, [id]);
-    
-    await connection.end();
-    res.json(parcelas);
-  } catch (error) {
-    console.error('Erro ao buscar parcelas:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
+// Buscar parcelas de um empréstimo (rota duplicada removida - mantendo apenas a mais completa abaixo)
 
 // Atualizar status de uma parcela específica
 router.put('/emprestimos/:emprestimo_id/parcelas/:numero_parcela/status', ensureDatabase, async (req, res) => {
@@ -728,11 +707,17 @@ router.get('/emprestimos', ensureDatabase, async (req, res) => {
     const username = req.session.cobrancasUser;
     const connection = await createCobrancasConnection(username);
     const [emprestimos] = await connection.execute(`
-      SELECT e.*, c.nome as cliente_nome, c.telefone as telefone
+      SELECT DISTINCT e.*, c.nome as cliente_nome, c.telefone as telefone
       FROM emprestimos e
       LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
       ORDER BY e.created_at DESC
     `);
+    
+    console.log(`API /emprestimos: Retornando ${emprestimos.length} empréstimos para usuário ${username}`);
+    emprestimos.forEach(emp => {
+      console.log(`  - ID ${emp.id}: ${emp.cliente_nome} - R$ ${emp.valor} (${emp.status})`);
+    });
+    
     await connection.end();
     res.json(emprestimos);
   } catch (error) {
