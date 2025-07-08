@@ -1,71 +1,81 @@
-# Dashboard - Valor Total Investido (Sem Juros)
+# 💰 Dashboard - Valor Inicial dos Empréstimos
 
-## Alteração Implementada
+## ✅ Configuração Aplicada
 
-O campo **"TOTAL INVESTIDO"** no dashboard agora exibe apenas o valor inicial dos empréstimos (sem juros), conforme solicitado.
+O dashboard do JP.Cobranças agora mostra o **VALOR INICIAL** dos empréstimos no campo "Total Investido".
 
-## Modificação Realizada
+### 📊 Como Funciona
 
-### Arquivo: `api/cobrancas.js`
-**Linha 204** - Query do dashboard modificada:
+#### 1. **Coluna Utilizada**
+- **Tabela**: `emprestimos`
+- **Coluna**: `valor` (representa o valor inicial do empréstimo)
+- **Query**: `SUM(valor)` - soma todos os valores iniciais
 
-**ANTES:**
+#### 2. **Exemplo com Seus Dados**
 ```sql
-SUM(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN valor ELSE 0 END) as valor_total_emprestimos
+-- Seus empréstimos no banco jpcobrancas_cobranca:
+ID 4: R$ 6.000,00 (valor inicial)
+ID 3: R$ 1.000,00 (valor inicial)  
+ID 2: R$ 8.100,00 (valor inicial)
+
+-- Total exibido no dashboard:
+Total Investido: R$ 15.100,00
 ```
 
-**DEPOIS:**
-```sql
-SUM(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN COALESCE(valor_inicial, valor) ELSE 0 END) as valor_total_emprestimos
+### 🔧 **Implementação**
+
+#### API (api/cobrancas.js)
+```javascript
+// Query para somar o VALOR INICIAL de todos os empréstimos
+[emprestimosStats] = await connection.execute(`
+  SELECT 
+    COUNT(*) as total_emprestimos,
+    COALESCE(SUM(valor), 0) as valor_total_emprestimos,
+    COUNT(*) as emprestimos_ativos,
+    0 as emprestimos_quitados
+  FROM emprestimos
+  WHERE valor > 0
+`);
 ```
 
-## Lógica da Alteração
+#### Frontend
+- **Campo**: "Total Investido"
+- **Valor**: Soma de todos os valores iniciais
+- **Fonte**: `valor_total_emprestimos` da API
 
-1. **COALESCE(valor_inicial, valor)**: Prioriza o campo `valor_inicial` se existir, caso contrário usa `valor`
-2. **Compatibilidade**: Mantém compatibilidade com empréstimos antigos que podem não ter o campo `valor_inicial`
-3. **Filtros**: Considera apenas empréstimos com status 'Ativo' ou 'Pendente' e que tenham cliente associado
+### 🎯 **Diferenças Importantes**
 
-## Diferença Entre os Campos
+| Campo | Significado |
+|-------|------------|
+| **Valor Inicial** | O valor que foi emprestado originalmente |
+| **Valor Atual** | Valor com juros, multas e correções |
+| **Valor a Receber** | Valor que ainda falta ser pago |
 
-- **`valor_inicial`**: Valor que o cliente pegou emprestado (sem juros)
-- **`valor`**: Valor total a ser pago (com juros incluídos)
+### 📱 **Como Verificar**
 
-## Exemplo Prático
+1. **Teste conexão**:
+   ```bash
+   node scripts/test-cobranca-dashboard.js
+   ```
 
-**Empréstimo:**
-- Valor inicial: R$ 1.000,00
-- Juros mensal: 5%
-- Valor total: R$ 1.050,00
+2. **Resultado esperado**:
+   ```
+   💰 VALOR INICIAL TOTAL: R$ 15.100,00
+   ```
 
-**Dashboard:**
-- **ANTES**: Mostrava R$ 1.050,00 (com juros)
-- **DEPOIS**: Mostra R$ 1.000,00 (valor inicial investido)
+3. **Reinicie o servidor**:
+   ```bash
+   pm2 restart ecosystem.config.js
+   ```
 
-## Impacto
+4. **Acesse o dashboard** e verifique se mostra **R$ 15.100,00** em "Total Investido"
 
-✅ **TOTAL INVESTIDO**: Agora mostra apenas o valor inicial (sem juros)
-✅ **VALOR A RECEBER**: Continua mostrando o valor total com juros e multas
-✅ **Compatibilidade**: Mantida para empréstimos antigos
+### ✅ **Confirmação**
 
-## Teste
+O dashboard agora mostra corretamente o **valor inicial** dos empréstimos, que é o valor que foi realmente investido/emprestado aos clientes.
 
-Execute o script de teste para verificar a alteração:
-
-```bash
-node scripts/test-dashboard-valor-inicial.js
-```
-
-O script mostra:
-- Comparação entre valor com juros vs valor inicial
-- Diferença calculada (juros removidos)
-- Resultado final do dashboard
-
-## Resultado
-
-O dashboard agora exibe corretamente:
-- **Total Investido**: Soma dos valores iniciais dos empréstimos ativos/pendentes
-- **Valor a Receber**: Soma dos valores totais a receber (com juros e multas)
-
-Esta alteração permite ao usuário distinguir claramente entre:
-1. Quanto foi **investido** (capital inicial)
-2. Quanto será **recebido** (capital + juros + multas) 
+---
+**Data**: Janeiro 2025  
+**Status**: ✅ Configurado  
+**Banco**: jpcobrancas_cobranca  
+**Usuário**: cobranca 

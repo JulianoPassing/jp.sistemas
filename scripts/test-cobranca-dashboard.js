@@ -42,7 +42,7 @@ async function testCobrancaDatabase() {
       });
     }
     
-    // Calcular estatísticas
+    // Calcular estatísticas - VALOR INICIAL dos empréstimos
     const [stats] = await connection.execute(`
       SELECT 
         COUNT(*) as total_emprestimos,
@@ -54,7 +54,7 @@ async function testCobrancaDatabase() {
     
     console.log('\n📈 Estatísticas do Dashboard:');
     console.log(`Total Empréstimos: ${stats[0].total_emprestimos}`);
-    console.log(`Valor Total: R$ ${stats[0].valor_total_emprestimos}`);
+    console.log(`💰 VALOR INICIAL TOTAL: R$ ${stats[0].valor_total_emprestimos}`);
     console.log(`Empréstimos Ativos: ${stats[0].emprestimos_ativos}`);
     
     // Verificar clientes
