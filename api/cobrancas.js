@@ -238,51 +238,18 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
       // Estatísticas de empréstimos - Query robusta com múltiplas tentativas
       console.log('Dashboard: Buscando estatísticas de empréstimos');
       
-      // Primeiro, verificar quais status existem
-      const [statusDisponiveis] = await connection.execute(`
-        SELECT DISTINCT TRIM(UPPER(status)) as status_normalizado, COUNT(*) as total
-        FROM emprestimos 
-        WHERE cliente_id IS NOT NULL AND cliente_id > 0
-        GROUP BY TRIM(UPPER(status))
-      `);
-      console.log('Dashboard: Status disponíveis:', statusDisponiveis);
-      
-      // Query flexível baseada nos status encontrados
-      let statusAtivos = ['ATIVO', 'PENDENTE', 'EM ANDAMENTO', 'VIGENTE', 'ABERTO'];
-      let statusQuitados = ['QUITADO', 'PAGO', 'FINALIZADO', 'CONCLUIDO', 'CONCLUÍDO'];
-      
+      // Query simples - somar TODOS os empréstimos
+      console.log('Dashboard: Buscando TODOS os empréstimos (solução simplificada)');
       [emprestimosStats] = await connection.execute(`
         SELECT 
-          COUNT(CASE WHEN cliente_id IS NOT NULL AND cliente_id > 0 
-                     AND TRIM(UPPER(status)) IN ('ATIVO', 'PENDENTE', 'EM ANDAMENTO', 'VIGENTE', 'ABERTO') 
-                THEN 1 END) as total_emprestimos,
-          COALESCE(SUM(CASE WHEN cliente_id IS NOT NULL AND cliente_id > 0 
-                           AND TRIM(UPPER(status)) IN ('ATIVO', 'PENDENTE', 'EM ANDAMENTO', 'VIGENTE', 'ABERTO') 
-                       THEN COALESCE(valor_inicial, valor) ELSE 0 END), 0) as valor_total_emprestimos,
-          COUNT(CASE WHEN cliente_id IS NOT NULL AND cliente_id > 0 
-                     AND TRIM(UPPER(status)) IN ('ATIVO', 'PENDENTE', 'EM ANDAMENTO', 'VIGENTE', 'ABERTO') 
-                THEN 1 END) as emprestimos_ativos,
-          COUNT(CASE WHEN cliente_id IS NOT NULL AND cliente_id > 0 
-                     AND TRIM(UPPER(status)) IN ('QUITADO', 'PAGO', 'FINALIZADO', 'CONCLUIDO', 'CONCLUÍDO') 
-                THEN 1 END) as emprestimos_quitados,
-          COUNT(CASE WHEN cliente_id IS NOT NULL AND cliente_id > 0 THEN 1 END) as total_geral
+          COUNT(*) as total_emprestimos,
+          COALESCE(SUM(COALESCE(valor_inicial, valor, 0)), 0) as valor_total_emprestimos,
+          COUNT(*) as emprestimos_ativos,
+          0 as emprestimos_quitados
         FROM emprestimos
+        WHERE (valor_inicial > 0 OR valor > 0)
       `);
-      console.log('Dashboard: Estatísticas de empréstimos obtidas:', emprestimosStats[0]);
-      
-      // Se ainda der 0, usar todos os empréstimos com cliente válido
-      if (emprestimosStats[0].total_emprestimos === 0 && emprestimosStats[0].total_geral > 0) {
-        console.log('Dashboard: Nenhum status ativo encontrado, usando todos os empréstimos válidos');
-        [emprestimosStats] = await connection.execute(`
-          SELECT 
-            COUNT(CASE WHEN cliente_id IS NOT NULL AND cliente_id > 0 THEN 1 END) as total_emprestimos,
-            COALESCE(SUM(CASE WHEN cliente_id IS NOT NULL AND cliente_id > 0 THEN COALESCE(valor_inicial, valor) ELSE 0 END), 0) as valor_total_emprestimos,
-            COUNT(CASE WHEN cliente_id IS NOT NULL AND cliente_id > 0 THEN 1 END) as emprestimos_ativos,
-            0 as emprestimos_quitados
-          FROM emprestimos
-        `);
-        console.log('Dashboard: Usando todos os empréstimos válidos:', emprestimosStats[0]);
-      }
+      console.log('Dashboard: Estatísticas simplificadas obtidas:', emprestimosStats[0]);
     } catch (error) {
       console.log('Dashboard: Erro ao buscar estatísticas de empréstimos:', error.message);
     }
