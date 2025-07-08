@@ -17,7 +17,8 @@
 ### 3. Histórico de Empréstimos (emprestimos.html) ✅
 - **Problema 1**: Empréstimos em dia aparecendo como atrasados
 - **Problema 2**: Empréstimos aparecendo duplicados no histórico
-- **Solução**: Lógica de parcelas + controle de duplicatas com Map
+- **Problema 3**: Função JavaScript embutida sobrescrevendo correções
+- **Solução**: Lógica de parcelas + controle de duplicatas + correção da função sobrescrita
 - **Resultado**: Status correto e sem duplicatas no histórico
 
 ### 4. Lista Negra (500 Error) ✅
@@ -32,6 +33,9 @@
   - Função `renderCobrancasEmAbertoLista()` - Lógica de parcelas + eliminação de duplicatas
   - Função `renderHistoricoEmprestimos()` - Lógica de parcelas + controle de duplicatas
   - Valores precisos e vencimento correto para parcelados
+- `public/jp.cobrancas/emprestimos.html`
+  - Função JavaScript embutida corrigida para eliminar duplicatas
+  - Integração com lógica de verificação de parcelas
 
 ### Backend
 - `api/cobrancas.js`
@@ -47,6 +51,7 @@
 - `scripts/debug-lista-negra-error.js`
 - `scripts/test-historico-emprestimos-corrigido.js`
 - `scripts/test-duplicatas-historico-emprestimos.js`
+- `scripts/test-emprestimos-html-corrigido.js`
 
 ### Correção Automática
 - `scripts/fix-dashboard-vps.js`
@@ -60,6 +65,7 @@
 - `corrigir-duplicatas-cobrancas.sh`
 - `corrigir-historico-emprestimos.sh`
 - `corrigir-duplicatas-historico-emprestimos.sh`
+- `corrigir-duplicatas-emprestimos-html.sh`
 - `melhorar-cobrancas-vencimento-valor.sh`
 - `fix-lista-negra.sh`
 
@@ -68,6 +74,7 @@
 - `CORRECAO-ATRASO-COBRANCAS.md`
 - `CORRECAO-COMPLETA-COBRANCAS.md`
 - `CORRECAO-HISTORICO-EMPRESTIMOS.md` (inclui correção de duplicatas)
+- `CORRECAO-EMPRESTIMOS-HTML-DUPLICATAS.md` (correção crítica)
 - `CORRECAO-LISTA-NEGRA-500.md`
 - `EXEMPLO-COBRANCAS-MELHORADAS.md`
 
@@ -78,6 +85,7 @@
 - Cálculo de status baseado em regras reais
 - Eliminação de duplicatas com Map
 - Valor e vencimento precisos
+- Correção de funções JavaScript sobrescritas
 
 ### Frontend
 - Async/await para chamadas de API
@@ -117,12 +125,28 @@
 - ✅ Validações implementadas
 - ✅ Tabela corrigida automaticamente
 
+## Lições Aprendidas
+
+### Problemas Identificados Durante a Correção
+1. **Funções Sobrescritas**: Páginas HTML podem ter JavaScript embutido que sobrescreve correções
+2. **Múltiplas Implementações**: Uma mesma função pode existir em diferentes arquivos
+3. **Teste Completo**: Importante testar todas as páginas que usam a funcionalidade
+4. **Debug Essencial**: Logs no console são fundamentais para identificar problemas
+
+### Correções Críticas Implementadas
+- **Dashboard**: Credenciais e queries SQL corrigidas
+- **Cobranças**: Lógica de parcelas + eliminação de duplicatas + valores precisos
+- **Histórico**: Status baseado em parcelas + controle de duplicatas
+- **emprestimos.html**: Função JavaScript embutida corrigida
+- **Lista Negra**: Funcionalidade restaurada com validações
+
 ## Próximos Passos Recomendados
 
 1. **Backup**: Fazer backup da VPS após as correções
 2. **Monitoramento**: Acompanhar o sistema por alguns dias
 3. **Testes**: Executar testes periódicos com os scripts criados
 4. **Documentação**: Manter documentação atualizada
+5. **Verificação Regular**: Checar se não há outras funções sobrescritas
 
 ---
 

@@ -221,7 +221,61 @@
       window.renderHistoricoEmprestimos = async function() {
         try {
           const emprestimos = await apiService.getEmprestimos();
-          allEmprestimos = emprestimos || [];
+          
+          // Aplicar a mesma lógica de remoção de duplicatas
+          const emprestimosUnicos = new Map();
+          const emprestimosProcessados = [];
+          
+          for (const emprestimo of emprestimos || []) {
+            // Verificar se já processamos este empréstimo
+            if (emprestimosUnicos.has(emprestimo.id)) {
+              console.log(`Empréstimo duplicado ignorado: ID ${emprestimo.id}`);
+              continue;
+            }
+            
+            // Verificar status baseado em parcelas
+            try {
+              const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
+              const hoje = new Date();
+              hoje.setHours(0,0,0,0);
+              let status = (emprestimo.status || '').toUpperCase();
+              
+              if (parcelas && parcelas.length > 0) {
+                const parcelasAtrasadas = parcelas.filter(p => {
+                  const dataVencParcela = new Date(p.data_vencimento);
+                  return dataVencParcela < hoje && (p.status !== 'Paga');
+                });
+                
+                const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
+                
+                if (parcelasPagas.length === parcelas.length) {
+                  status = 'QUITADO';
+                } else if (parcelasAtrasadas.length > 0) {
+                  status = 'ATRASADO';
+                } else {
+                  status = 'ATIVO';
+                }
+              } else {
+                // Sem parcelas - usar lógica original
+                const dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
+                if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+                  status = 'ATRASADO';
+                }
+              }
+              
+              // Atualizar status no empréstimo
+              emprestimo.status = status;
+              
+            } catch (error) {
+              console.error('Erro ao verificar parcelas do empréstimo', emprestimo.id, error);
+            }
+            
+            // Marcar como processado e adicionar à lista
+            emprestimosUnicos.set(emprestimo.id, true);
+            emprestimosProcessados.push(emprestimo);
+          }
+          
+          allEmprestimos = emprestimosProcessados;
           filteredEmprestimos = [...allEmprestimos];
           
           renderFilteredEmprestimos();
