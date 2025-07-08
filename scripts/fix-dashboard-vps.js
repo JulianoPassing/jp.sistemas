@@ -35,7 +35,7 @@ async function main() {
     const [emprestimos] = await connection.execute(`
       SELECT 
         id,
-        COALESCE(valor_inicial, valor, 0) as valor,
+        valor,
         status,
         cliente_id,
         created_at
@@ -56,11 +56,11 @@ async function main() {
     const [stats] = await connection.execute(`
       SELECT 
         COUNT(*) as total_emprestimos,
-        COALESCE(SUM(COALESCE(valor_inicial, valor, 0)), 0) as valor_total_emprestimos,
+        COALESCE(SUM(valor), 0) as valor_total_emprestimos,
         COUNT(*) as emprestimos_ativos,
         0 as emprestimos_quitados
       FROM emprestimos
-      WHERE (valor_inicial > 0 OR valor > 0)
+      WHERE valor > 0
     `);
     
     console.log('\n📈 Estatísticas do Dashboard:');
@@ -125,9 +125,9 @@ async function main() {
         const [stats] = await connection.execute(`
           SELECT 
             COUNT(*) as total_emprestimos,
-            COALESCE(SUM(COALESCE(valor_inicial, valor, 0)), 0) as valor_total
+            COALESCE(SUM(valor), 0) as valor_total
           FROM emprestimos
-          WHERE (valor_inicial > 0 OR valor > 0)
+          WHERE valor > 0
         `);
         
         console.log('📊 Estatísticas:', {
