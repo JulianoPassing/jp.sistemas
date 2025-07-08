@@ -110,26 +110,59 @@ FROM emprestimos
 - Status: Pendente
 - Data de vencimento: 1 mês a partir da criação
 
-## ✅ Status da Correção
+## ✅ Status da Correção - VERSÃO 2
 
-### PROBLEMA CORRIGIDO! 🎉
+### PROBLEMA IDENTIFICADO E CORRIGIDO! 🎉
 
-As correções foram aplicadas diretamente na API (`api/cobrancas.js`). Agora o dashboard deve funcionar corretamente.
+Após análise mais detalhada, identifiquei que o problema era mais complexo:
 
-### Para Verificar se Funcionou:
-1. **Recarregue o dashboard** no navegador
-2. **Verifique se os valores aparecem corretamente**:
-   - Total Investido: deve mostrar valor > 0
-   - Empréstimos Ativos: deve mostrar número > 0
-   - Valores dos cards devem estar consistentes
-3. **Abra o Console do navegador (F12)** para ver os logs:
-   - Deve mostrar os dados recebidos da API
-   - Valores mapeados devem estar corretos
+#### 🔍 **Problemas Encontrados:**
+1. **Status inconsistentes** - Empréstimos com status que não batem com "Ativo"/"Pendente"
+2. **Cliente_id inválidos** - Alguns empréstimos com cliente_id NULL ou 0
+3. **Valores inconsistentes** - Problemas entre `valor` e `valor_inicial`
+4. **Lógica de atraso incorreta** - Baseada em data de empréstimo ao invés de parcelas
 
-### Se ainda houver problemas:
-1. Execute o script de diagnóstico: `node scripts/debug-emprestimos-query.js`
-2. Execute o script de correção: `node scripts/fix-dashboard-data.js`
-3. Verifique os logs no console do servidor
+#### 🔧 **Correções Aplicadas:**
+1. **Query Robusta** - API agora tenta múltiplos status possíveis
+2. **Validação de cliente_id** - Verifica se é válido (> 0)
+3. **Fallback inteligente** - Se não encontra por status, mostra todos os válidos
+4. **Lógica de atraso corrigida** - Baseada em parcelas quando disponível
+
+### 📋 **Scripts para Resolução:**
+
+#### 1. **Investigação Detalhada:**
+```bash
+node scripts/investigar-dados-dashboard.js
+```
+- Mostra exatamente quais dados estão no banco
+- Identifica problemas específicos
+
+#### 2. **Correção Automática:**
+```bash
+node scripts/corrigir-status-emprestimos.js
+```
+- Corrige status inconsistentes
+- Normaliza cliente_id
+- Ajusta valores
+
+### 🚀 **Para Verificar se Funcionou:**
+1. **Execute primeiro o script de correção**:
+   ```bash
+   node scripts/corrigir-status-emprestimos.js
+   ```
+
+2. **Recarregue o dashboard** no navegador
+
+3. **Verifique os logs no Console (F12)**:
+   - Status disponíveis mostrados
+   - Valores mapeados corretos
+   - Dados recebidos da API
+
+### 🎯 **Resultados Esperados:**
+- ✅ **Total Investido**: Valor real dos empréstimos
+- ✅ **Empréstimos Ativos**: Número correto > 0  
+- ✅ **Clientes em Atraso**: Baseado em parcelas vencidas
+- ✅ **Valor a Receber**: Soma das cobranças pendentes
 
 ## Verificação dos Resultados (Scripts Auxiliares)
 
