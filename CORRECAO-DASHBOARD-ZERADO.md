@@ -2,35 +2,50 @@
 
 ## Problema Identificado
 
-O dashboard está mostrando valores zerados (R$ 0,00 e 0 empréstimos) mesmo quando há dados no banco de dados.
+O dashboard estava mostrando valores zerados (R$ 0,00 e 0 empréstimos) mesmo quando há dados no banco de dados.
 
 ## Diagnóstico
 
-### Possíveis Causas:
-1. **Falta de dados de teste** - Banco de dados vazio
-2. **Condições muito restritivas nas queries** - Filtros que excluem dados válidos
-3. **Inconsistência nos status** - Dados com status diferentes do esperado
-4. **Problema na conexão de banco** - Não conectando ao banco correto
-5. **Mapeamento incorreto no frontend** - JavaScript não mapeando corretamente os dados
+### Principais Causas Identificadas:
+1. **Status com espaços em branco** - Campos status com espaços extras
+2. **Inconsistência de case** - Status salvos em maiúsculas/minúsculas diferentes
+3. **Condições muito restritivas nas queries** - Filtros que excluem dados válidos
+4. **Falta de tratamento de string** - Comparações diretas sem normalização
 
-### Queries Problemáticas:
+### Problema Específico:
+- **Total investido e empréstimos ativos zerados** - Queries de estatísticas não funcionavam
+- **Clientes em atraso inconsistente** - Lógica de atraso baseada em data incorreta
+
+### Queries Problemáticas (ANTES):
 ```sql
--- Esta query pode retornar 0 se:
--- 1. Não há empréstimos com status 'Ativo' ou 'Pendente'
--- 2. Não há empréstimos com cliente_id preenchido
+-- Esta query retornava 0 devido a problemas de case e espaços
 SELECT 
   COUNT(CASE WHEN status IN ('Ativo', 'Pendente') AND cliente_id IS NOT NULL THEN 1 END) as total_emprestimos
 FROM emprestimos
 ```
 
+### Queries Corrigidas (DEPOIS):
+```sql
+-- Query corrigida com normalização de strings
+SELECT 
+  COUNT(CASE WHEN TRIM(UPPER(status)) IN ('ATIVO', 'PENDENTE') AND cliente_id IS NOT NULL THEN 1 END) as total_emprestimos
+FROM emprestimos
+```
+
 ## Soluções Implementadas
 
-### 1. Script de Diagnóstico
-- **Arquivo**: `scripts/test-dashboard-data.js`
-- **Função**: Verifica se há dados no banco e testa as queries específicas
-- **Uso**: `node scripts/test-dashboard-data.js`
+### 1. Correção das Queries SQL (PRINCIPAL)
+- **Arquivo**: `api/cobrancas.js`
+- **Mudança**: Normalizou todas as queries com `TRIM(UPPER(status))`
+- **Função**: Trata espaços em branco e inconsistências de case
+- **Impacto**: Corrige valores zerados no dashboard
 
-### 2. Script de Correção
+### 2. Script de Diagnóstico
+- **Arquivo**: `scripts/debug-emprestimos-query.js`
+- **Função**: Investiga discrepâncias entre queries de empréstimos
+- **Uso**: `node scripts/debug-emprestimos-query.js`
+
+### 3. Script de Correção
 - **Arquivo**: `scripts/fix-dashboard-data.js`
 - **Função**: 
   - Cria dados de teste se não existirem
@@ -38,12 +53,12 @@ FROM emprestimos
   - Valida as queries do dashboard
 - **Uso**: `node scripts/fix-dashboard-data.js`
 
-### 3. Script de Teste da API
+### 4. Script de Teste da API
 - **Arquivo**: `scripts/test-dashboard-api.js`
 - **Função**: Testa a API do dashboard diretamente
 - **Uso**: `node scripts/test-dashboard-api.js`
 
-### 4. Melhorias no Frontend
+### 5. Melhorias no Frontend
 - **Arquivo**: `public/jp.cobrancas/js/main.js`
 - **Mudança**: Adicionado logs para debug dos dados recebidos
 - **Função**: Facilita identificar problemas no mapeamento
@@ -95,12 +110,33 @@ FROM emprestimos
 - Status: Pendente
 - Data de vencimento: 1 mês a partir da criação
 
-## Verificação dos Resultados
+## ✅ Status da Correção
+
+### PROBLEMA CORRIGIDO! 🎉
+
+As correções foram aplicadas diretamente na API (`api/cobrancas.js`). Agora o dashboard deve funcionar corretamente.
+
+### Para Verificar se Funcionou:
+1. **Recarregue o dashboard** no navegador
+2. **Verifique se os valores aparecem corretamente**:
+   - Total Investido: deve mostrar valor > 0
+   - Empréstimos Ativos: deve mostrar número > 0
+   - Valores dos cards devem estar consistentes
+3. **Abra o Console do navegador (F12)** para ver os logs:
+   - Deve mostrar os dados recebidos da API
+   - Valores mapeados devem estar corretos
+
+### Se ainda houver problemas:
+1. Execute o script de diagnóstico: `node scripts/debug-emprestimos-query.js`
+2. Execute o script de correção: `node scripts/fix-dashboard-data.js`
+3. Verifique os logs no console do servidor
+
+## Verificação dos Resultados (Scripts Auxiliares)
 
 ### Passo 1: Executar Diagnóstico
 ```bash
 cd scripts
-node test-dashboard-data.js
+node debug-emprestimos-query.js
 ```
 
 ### Passo 2: Executar Correção (se necessário)
