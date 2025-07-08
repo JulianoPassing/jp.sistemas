@@ -229,6 +229,13 @@
           
           if (emprestimos) {
             console.log('📝 Histórico: IDs retornados pela API:', emprestimos.map(e => e.id));
+            console.log('💰 Histórico: Valores retornados pela API:', emprestimos.map(e => ({
+              id: e.id,
+              cliente: e.cliente_nome,
+              valor: e.valor,
+              valor_final: e.valor_final,
+              tipo: e.tipo_emprestimo
+            })));
           }
           
           // Aplicar a mesma lógica de remoção de duplicatas
