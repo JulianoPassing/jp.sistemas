@@ -449,6 +449,7 @@ const dashboardController = {
     });
   },
 
+  // Atualizar tabela de empréstimos recentes (corrigido para 5 colunas)
   async updateRecentEmprestimos(emprestimos) {
     const tbody = document.getElementById('emprestimos-recentes');
     if (!tbody) return;
@@ -524,20 +525,23 @@ const dashboardController = {
       })
     );
 
-    emprestimosProcessados.forEach(emprestimo => {
+        emprestimosProcessados.forEach(emprestimo => {
       const valor = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
       }).format(emprestimo.valorAtualizado);
-      const data = new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR');
+      
+      // Usar data de vencimento se disponível, senão mostrar "-"
+      const dataExibida = emprestimo.data_vencimento ? 
+        new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : 
+        '-';
+      
       const statusClass = emprestimo.status === 'ATRASADO' ? 'danger' : (emprestimo.status === 'PENDENTE' ? 'warning' : (emprestimo.status === 'ATIVO' ? 'success' : 'info'));
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${emprestimo.cliente_nome || 'N/A'}</td>
         <td>${valor}${emprestimo.infoJuros}</td>
-        <td>${emprestimo.parcelas || '-'}</td>
-        <td>${data}</td>
-        <td>${emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-'}</td>
+        <td>${dataExibida}</td>
         <td><span class="badge badge-${statusClass}">${emprestimo.status}</span></td>
         <td>
           <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
