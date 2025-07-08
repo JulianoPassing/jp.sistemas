@@ -811,8 +811,6 @@ router.get('/historico-emprestimos/estatisticas', ensureDatabase, async (req, re
         AND data_vencimento < CURDATE()
     `);
     
-    console.log('Histórico: Parcelas atualizadas para atrasadas:', updateResult.affectedRows);
-    
     // Buscar estatísticas gerais
     const [stats] = await connection.execute(`
       SELECT 
@@ -824,33 +822,6 @@ router.get('/historico-emprestimos/estatisticas', ensureDatabase, async (req, re
         END), 0) as valor_total_final
       FROM emprestimos e
     `);
-    
-    // Debug: verificar parcelas atrasadas
-    const [parcelasAtrasadas] = await connection.execute(`
-      SELECT 
-        p.id,
-        p.emprestimo_id,
-        p.numero_parcela,
-        p.data_vencimento,
-        p.status,
-        e.cliente_id,
-        c.nome as cliente_nome
-      FROM parcelas p
-      LEFT JOIN emprestimos e ON p.emprestimo_id = e.id
-      LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
-      WHERE p.status = 'Atrasada'
-    `);
-    
-    console.log('Histórico: Parcelas atrasadas encontradas:', parcelasAtrasadas.length);
-    if (parcelasAtrasadas.length > 0) {
-      console.log('Parcelas atrasadas:', parcelasAtrasadas.map(p => ({
-        emprestimo_id: p.emprestimo_id,
-        cliente: p.cliente_nome,
-        parcela: p.numero_parcela,
-        vencimento: p.data_vencimento,
-        status: p.status
-      })));
-    }
     
     // Contar empréstimos por status baseado nas parcelas
     const [statusStats] = await connection.execute(`
@@ -891,67 +862,11 @@ router.get('/historico-emprestimos/estatisticas', ensureDatabase, async (req, re
       FROM emprestimos e
     `);
     
-    console.log('Histórico: Estatísticas calculadas:', statusStats[0]);
-    
-    // Debug: listar empréstimos considerados em atraso
-    const [emprestimosAtraso] = await connection.execute(`
-      SELECT 
-        e.id,
-        e.cliente_id,
-        c.nome as cliente_nome,
-        e.data_emprestimo,
-        e.data_vencimento,
-        e.status as status_emprestimo,
-        e.tipo_emprestimo,
-        e.numero_parcelas,
-        COUNT(p.id) as total_parcelas,
-        COUNT(CASE WHEN p.status = 'Atrasada' THEN 1 END) as parcelas_atrasadas,
-        'parcelas_atrasadas' as motivo_atraso
-      FROM emprestimos e
-      LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
-      LEFT JOIN parcelas p ON p.emprestimo_id = e.id
-      WHERE EXISTS (SELECT 1 FROM parcelas p2 WHERE p2.emprestimo_id = e.id AND p2.status = 'Atrasada')
-      GROUP BY e.id, e.cliente_id, c.nome, e.data_emprestimo, e.data_vencimento, e.status, e.tipo_emprestimo, e.numero_parcelas
-      
-      UNION
-      
-      SELECT 
-        e.id,
-        e.cliente_id,
-        c.nome as cliente_nome,
-        e.data_emprestimo,
-        e.data_vencimento,
-        e.status as status_emprestimo,
-        e.tipo_emprestimo,
-        e.numero_parcelas,
-        0 as total_parcelas,
-        0 as parcelas_atrasadas,
-        'valor_fixo_vencido' as motivo_atraso
-      FROM emprestimos e
-      LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
-      WHERE NOT EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id)
-        AND e.data_vencimento < CURDATE()
-        AND e.status = 'Ativo'
-      ORDER BY id
-    `);
-    
-    console.log('Histórico: Empréstimos considerados em atraso:', emprestimosAtraso.length);
-    if (emprestimosAtraso.length > 0) {
-      console.log('Lista de empréstimos em atraso:');
-      emprestimosAtraso.forEach(emp => {
-        console.log(`  - ID ${emp.id}: ${emp.cliente_nome} | Vencimento: ${emp.data_vencimento} | Motivo: ${emp.motivo_atraso} | Status: ${emp.status_emprestimo}`);
-      });
-    }
-    
     await connection.end();
     
     res.json({
       geral: stats[0],
-      status: statusStats[0],
-      debug: {
-        emprestimos_atraso_detalhado: emprestimosAtraso,
-        parcelas_atrasadas: parcelasAtrasadas
-      }
+      status: statusStats[0]
     });
   } catch (error) {
     console.error('Erro ao buscar estatísticas do histórico:', error);
