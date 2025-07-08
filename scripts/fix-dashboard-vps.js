@@ -2,6 +2,13 @@ const mysql = require('mysql2/promise');
 const fs = require('fs');
 const path = require('path');
 
+// Carregar variáveis de ambiente se existir arquivo .env
+try {
+  require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+} catch (e) {
+  console.log('💡 Arquivo .env não encontrado, usando configurações padrão');
+}
+
 console.log('🔧 Testando Dashboard na VPS...');
 
 async function main() {
@@ -9,7 +16,17 @@ async function main() {
   
   try {
     // Conectar ao banco usando a configuração do database-config.js
-    const dbConfig = require('../database-config.js');
+    const { getCobrancasDatabaseConfig } = require('../database-config.js');
+    const dbConfig = getCobrancasDatabaseConfig();
+    
+    console.log('🔍 Configuração do banco:', {
+      host: dbConfig.host,
+      user: dbConfig.user,
+      database: dbConfig.database,
+      port: dbConfig.port,
+      temSenha: !!dbConfig.password
+    });
+    
     connection = await mysql.createConnection(dbConfig);
     
     console.log('✅ Conectado ao banco!');
@@ -59,22 +76,71 @@ async function main() {
     console.error('❌ Erro:', error.message);
     console.log('\n🔧 Tentando solução alternativa...');
     
-    // Tentar com credenciais padrão
-    try {
-      connection = await mysql.createConnection({
+    // Tentar com credenciais padrão do sistema
+    console.log('🔄 Tentando credenciais padrão do sistema...');
+    
+    const credenciaisAlternativas = [
+      {
+        host: 'localhost',
+        user: 'jpsistemas',
+        password: 'Juliano@95!',
+        database: 'jpsistemas_cobrancas'
+      },
+      {
+        host: 'localhost',
+        user: 'jpsistemas',
+        password: 'Juliano@95',
+        database: 'jpsistemas_cobrancas'
+      },
+      {
         host: 'localhost',
         user: 'root',
-        password: 'senha123',
+        password: 'Juliano@95!',
+        database: 'jpsistemas_cobrancas'
+      },
+      {
+        host: 'localhost',
+        user: 'root',
+        password: 'Juliano@95',
+        database: 'jpsistemas_cobrancas'
+      },
+      {
+        host: 'localhost',
+        user: 'jpsistemas',
+        password: 'Juliano@95!',
         database: 'jp_cobrancas'
-      });
-      
-      console.log('✅ Conectado com credenciais padrão!');
-      
-      const [emprestimos] = await connection.execute('SELECT COUNT(*) as total FROM emprestimos');
-      console.log('Total empréstimos:', emprestimos[0].total);
-      
-    } catch (error2) {
-      console.error('❌ Erro na conexão alternativa:', error2.message);
+      }
+    ];
+    
+    for (const cred of credenciaisAlternativas) {
+      try {
+        console.log(`🔍 Tentando: ${cred.user}@${cred.host}/${cred.database}`);
+        connection = await mysql.createConnection(cred);
+        
+        console.log('✅ Conectado com credenciais alternativas!');
+        
+        const [emprestimos] = await connection.execute('SELECT COUNT(*) as total FROM emprestimos');
+        console.log('Total empréstimos:', emprestimos[0].total);
+        
+        const [stats] = await connection.execute(`
+          SELECT 
+            COUNT(*) as total_emprestimos,
+            COALESCE(SUM(COALESCE(valor_inicial, valor, 0)), 0) as valor_total
+          FROM emprestimos
+          WHERE (valor_inicial > 0 OR valor > 0)
+        `);
+        
+        console.log('📊 Estatísticas:', {
+          total: stats[0].total_emprestimos,
+          valor_total: stats[0].valor_total
+        });
+        
+        break;
+        
+      } catch (error2) {
+        console.log(`❌ Falhou com ${cred.user}: ${error2.message}`);
+        continue;
+      }
     }
   } finally {
     if (connection) {
