@@ -1,8 +1,15 @@
 # Correção do Histórico de Empréstimos - JP.Cobranças
 
-## Problema Identificado
+## Problemas Identificados
 
-Na página `emprestimos.html`, o histórico de empréstimos estava exibindo empréstimos como "Atrasado" mesmo quando suas parcelas estavam em dia. O problema estava na função `renderHistoricoEmprestimos()` que usava apenas a data de vencimento do empréstimo para determinar o status, sem considerar as parcelas individuais.
+Na página `emprestimos.html`, o histórico de empréstimos apresentava dois problemas:
+
+1. **Status incorreto**: Empréstimos aparecendo como "Atrasado" mesmo quando suas parcelas estavam em dia
+2. **Duplicatas**: Empréstimos aparecendo duplicados na listagem
+
+O problema estava na função `renderHistoricoEmprestimos()` que:
+- Usava apenas a data de vencimento do empréstimo para determinar status
+- Não controlava duplicatas por ID do empréstimo
 
 ## Correção Implementada
 
@@ -13,39 +20,65 @@ Na página `emprestimos.html`, o histórico de empréstimos estava exibindo empr
 
 **Antes:**
 ```javascript
-if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
-  status = 'ATRASADO';
-}
+// Sem controle de duplicatas
+emprestimos.forEach(emprestimo => {
+  if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+    status = 'ATRASADO';
+  }
+});
 ```
 
 **Depois:**
 ```javascript
-// Verificar status baseado em parcelas para empréstimos parcelados
-try {
-  const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
-  if (parcelas && parcelas.length > 0) {
-    // Tem parcelas - verificar status das parcelas individuais
-    const parcelasAtrasadas = parcelas.filter(p => {
-      const dataVencParcela = new Date(p.data_vencimento);
-      return dataVencParcela < hoje && (p.status !== 'Paga');
-    });
-    
-    const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
-    
-    // Determinar status real baseado nas parcelas
-    if (parcelasPagas.length === parcelas.length) {
-      status = 'QUITADO';
-    } else if (parcelasAtrasadas.length > 0) {
-      status = 'ATRASADO';
-    } else {
-      status = 'ATIVO';
-    }
+// Usar Map para eliminar duplicatas por ID
+const emprestimosUnicos = new Map();
+
+for (const emprestimo of emprestimos) {
+  // Verificar se já processamos este empréstimo
+  if (emprestimosUnicos.has(emprestimo.id)) {
+    console.log(`Empréstimo duplicado ignorado: ID ${emprestimo.id}`);
+    continue;
   }
+  
+  // Verificar status baseado em parcelas para empréstimos parcelados
+  try {
+    const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
+    if (parcelas && parcelas.length > 0) {
+      // Tem parcelas - verificar status das parcelas individuais
+      const parcelasAtrasadas = parcelas.filter(p => {
+        const dataVencParcela = new Date(p.data_vencimento);
+        return dataVencParcela < hoje && (p.status !== 'Paga');
+      });
+      
+      const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
+      
+      // Determinar status real baseado nas parcelas
+      if (parcelasPagas.length === parcelas.length) {
+        status = 'QUITADO';
+      } else if (parcelasAtrasadas.length > 0) {
+        status = 'ATRASADO';
+      } else {
+        status = 'ATIVO';
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao verificar parcelas', error);
+  }
+  
+  // Marcar empréstimo como processado para evitar duplicatas
+  emprestimosUnicos.set(emprestimo.id, true);
 }
 ```
 
-### Regras de Status Implementadas
+### Regras Implementadas
 
+#### Controle de Duplicatas
+1. **Map de controle**: Usa `Map` para rastrear IDs já processados
+2. **Verificação prévia**: Verifica se o ID já foi processado antes de renderizar
+3. **Log de debug**: Registra duplicatas ignoradas no console
+4. **Unicidade garantida**: Cada empréstimo aparece apenas uma vez
+
+#### Status Baseado em Parcelas
 1. **QUITADO**: Todas as parcelas foram pagas
 2. **ATRASADO**: Pelo menos uma parcela vencida e não paga
 3. **ATIVO**: Parcelas existem mas nenhuma está vencida
@@ -81,11 +114,36 @@ chmod +x corrigir-historico-emprestimos.sh
 ## Scripts Criados
 
 1. **`scripts/test-historico-emprestimos-corrigido.js`** - Teste detalhado dos dados
-2. **`corrigir-historico-emprestimos.sh`** - Script de execução e verificação
+2. **`scripts/test-duplicatas-historico-emprestimos.js`** - Teste específico para duplicatas
+3. **`corrigir-historico-emprestimos.sh`** - Script de execução e verificação
+4. **`corrigir-duplicatas-historico-emprestimos.sh`** - Script específico para duplicatas
 
 ## Resultado Final
 
-O histórico de empréstimos agora exibe o status correto baseado no estado real das parcelas, eliminando falsos positivos de atraso e fornecendo informações mais precisas aos usuários.
+O histórico de empréstimos agora:
+
+1. **Elimina duplicatas**: Cada empréstimo aparece apenas uma vez
+2. **Status correto**: Baseado no estado real das parcelas
+3. **Sem falsos positivos**: Apenas empréstimos com parcelas vencidas aparecem como "Atrasado"
+4. **Logs de debug**: Console mostra duplicatas ignoradas para debug
+5. **Informações precisas**: Dados confiáveis para tomada de decisões
+
+### Exemplo de Correção
+
+**Antes:**
+```
+testeprazo    | R$ 10.000,20 | 20/07/2025 | ATIVO
+testeprazo    | R$ 10.000,20 | 20/07/2025 | ATIVO  ← DUPLICATA
+teste         | R$ 1.300,00  | 08/07/2025 | ATIVO
+teste         | R$ 1.300,00  | 08/07/2025 | ATIVO  ← DUPLICATA
+```
+
+**Depois:**
+```
+testeprazo    | R$ 10.000,20 | 20/07/2025 | ATIVO
+teste         | R$ 1.300,00  | 08/07/2025 | ATIVO
+testeparcelado| R$ 8.100,00  | 30/06/2025 | ATIVO
+```
 
 ---
 
