@@ -603,7 +603,18 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
       observacoes 
     } = req.body;
     
+    console.log('=== ATUALIZAR EMPRÉSTIMO ===');
+    console.log('ID:', id);
+    console.log('Dados recebidos:', req.body);
+    
+    // Validação dos dados obrigatórios
+    if (!cliente_id || !valor || !data_vencimento || !numero_parcelas) {
+      console.log('Erro: Dados obrigatórios não informados');
+      return res.status(400).json({ error: 'Dados obrigatórios não informados' });
+    }
+    
     const username = req.session.cobrancasUser;
+    console.log('Usuário da sessão:', username);
     const connection = await createCobrancasConnection(username);
     
     // Verificar se o empréstimo existe
@@ -619,85 +630,194 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
     
     const emprestimoAtual = emprestimos[0];
     
-    // Atualizar empréstimo
-    await connection.execute(`
-      UPDATE emprestimos 
-      SET cliente_id = ?, 
-          valor = ?, 
-          juros_mensal = ?, 
-          data_vencimento = ?, 
-          frequencia_pagamento = ?, 
-          numero_parcelas = ?, 
-          status = ?, 
-          observacoes = ?,
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `, [
-      cliente_id, 
-      valor, 
-      juros_mensal, 
-      data_vencimento, 
-      frequencia_pagamento, 
-      numero_parcelas, 
-      status, 
-      observacoes,
-      id
-    ]);
+    // Calcular valor final baseado no tipo de empréstimo
+    let valorFinal = valor;
+    const jurosMensalNum = parseFloat(juros_mensal) || 0;
+    const numeroParcelasNum = parseInt(numero_parcelas) || 1;
     
-    // Se o número de parcelas mudou, atualizar as parcelas
-    if (numero_parcelas !== emprestimoAtual.numero_parcelas) {
-      // Remover parcelas antigas
-      await connection.execute('DELETE FROM parcelas WHERE emprestimo_id = ?', [id]);
-      
-      // Criar novas parcelas se for parcelado
-      if (numero_parcelas > 1) {
-        const valorParcela = valor / numero_parcelas;
-        const dataVencimento = new Date(data_vencimento);
-        
-        for (let i = 1; i <= numero_parcelas; i++) {
-          const dataParcelaVencimento = new Date(dataVencimento);
-          
-          // Calcular data de vencimento baseada na frequência
-          switch (frequencia_pagamento) {
-            case 'weekly':
-              dataParcelaVencimento.setDate(dataParcelaVencimento.getDate() + (i - 1) * 7);
-              break;
-            case 'biweekly':
-              dataParcelaVencimento.setDate(dataParcelaVencimento.getDate() + (i - 1) * 14);
-              break;
-            case 'daily':
-              dataParcelaVencimento.setDate(dataParcelaVencimento.getDate() + (i - 1));
-              break;
-            case 'monthly':
-            default:
-              dataParcelaVencimento.setMonth(dataParcelaVencimento.getMonth() + (i - 1));
-              break;
-          }
-          
-          await connection.execute(`
-            INSERT INTO parcelas (emprestimo_id, numero_parcela, valor_parcela, data_vencimento, status)
-            VALUES (?, ?, ?, ?, ?)
-          `, [id, i, valorParcela, dataParcelaVencimento.toISOString().split('T')[0], 'Pendente']);
-        }
-      }
+    if (jurosMensalNum > 0) {
+      valorFinal = valor * (1 + jurosMensalNum / 100);
     }
     
+    const valorParcela = valorFinal / numeroParcelasNum;
+    const tipoEmprestimo = numeroParcelasNum > 1 ? 'in_installments' : 'fixed';
+    
+    // Mapear frequencia_pagamento para frequencia (campo da tabela)
+    const frequenciaMap = {
+      'monthly': 'monthly',
+      'weekly': 'weekly',
+      'daily': 'daily',
+      'biweekly': 'biweekly'
+    };
+    
+    const frequencia = frequenciaMap[frequencia_pagamento] || 'monthly';
+    
+    // Verificar estrutura da tabela
+    const [columns] = await connection.execute(
+      'DESCRIBE emprestimos'
+    );
+    
+    console.log('Estrutura da tabela emprestimos:');
+    columns.forEach(col => {
+      console.log(`  ${col.Field}: ${col.Type} (${col.Null === 'YES' ? 'NULL' : 'NOT NULL'})`);
+    });
+    
+    const hasValorFinal = columns.some(col => col.Field === 'valor_final');
+    const hasValorParcela = columns.some(col => col.Field === 'valor_parcela');
+    const hasTipoEmprestimo = columns.some(col => col.Field === 'tipo_emprestimo');
+    const hasFrequencia = columns.some(col => col.Field === 'frequencia');
+    
+    console.log('Campos disponíveis:', {
+      hasValorFinal,
+      hasValorParcela,
+      hasTipoEmprestimo,
+      hasFrequencia
+    });
+    
+    // Construir query dinamicamente baseado nos campos disponíveis
+    let updateFields = [
+      'cliente_id = ?',
+      'valor = ?',
+      'juros_mensal = ?',
+      'data_vencimento = ?',
+      'numero_parcelas = ?',
+      'status = ?',
+      'observacoes = ?',
+      'updated_at = CURRENT_TIMESTAMP'
+    ];
+    
+    let updateValues = [
+      cliente_id,
+      valor,
+      jurosMensalNum,
+      data_vencimento,
+      numeroParcelasNum,
+      status,
+      observacoes
+    ];
+    
+    // Adicionar campos opcionais se existirem
+    if (hasFrequencia) {
+      updateFields.push('frequencia = ?');
+      updateValues.push(frequencia);
+    }
+    
+    if (hasValorParcela) {
+      updateFields.push('valor_parcela = ?');
+      updateValues.push(valorParcela);
+    }
+    
+    if (hasTipoEmprestimo) {
+      updateFields.push('tipo_emprestimo = ?');
+      updateValues.push(tipoEmprestimo);
+    }
+    
+    if (hasValorFinal) {
+      updateFields.push('valor_final = ?');
+      updateValues.push(valorFinal);
+    }
+    
+    // Adicionar ID no final
+    updateValues.push(id);
+    
+    const updateQuery = `
+      UPDATE emprestimos 
+      SET ${updateFields.join(', ')}
+      WHERE id = ?
+    `;
+    
+    console.log('Query de atualização:', updateQuery);
+    console.log('Valores:', updateValues);
+    
+    await connection.execute(updateQuery, updateValues);
+    
+          // Se o número de parcelas mudou, atualizar as parcelas
+      if (numeroParcelasNum !== emprestimoAtual.numero_parcelas) {
+        // Remover parcelas antigas
+        await connection.execute('DELETE FROM parcelas WHERE emprestimo_id = ?', [id]);
+        
+        // Criar novas parcelas se for parcelado
+        if (numeroParcelasNum > 1) {
+          const dataVencimento = new Date(data_vencimento);
+          
+          for (let i = 1; i <= numeroParcelasNum; i++) {
+            const dataParcelaVencimento = new Date(dataVencimento);
+            
+            // Calcular data de vencimento baseada na frequência
+            switch (frequencia) {
+              case 'weekly':
+                dataParcelaVencimento.setDate(dataParcelaVencimento.getDate() + (i - 1) * 7);
+                break;
+              case 'biweekly':
+                dataParcelaVencimento.setDate(dataParcelaVencimento.getDate() + (i - 1) * 14);
+                break;
+              case 'daily':
+                dataParcelaVencimento.setDate(dataParcelaVencimento.getDate() + (i - 1));
+                break;
+              case 'monthly':
+              default:
+                dataParcelaVencimento.setMonth(dataParcelaVencimento.getMonth() + (i - 1));
+                break;
+            }
+            
+            await connection.execute(`
+              INSERT INTO parcelas (emprestimo_id, numero_parcela, valor_parcela, data_vencimento, status)
+              VALUES (?, ?, ?, ?, ?)
+            `, [id, i, valorParcela, dataParcelaVencimento.toISOString().split('T')[0], 'Pendente']);
+          }
+        }
+      }
+    
     // Atualizar cobranças relacionadas
-    await connection.execute(`
-      UPDATE cobrancas 
-      SET valor_original = ?, 
-          valor_atualizado = ?, 
-          data_vencimento = ?,
-          updated_at = CURRENT_TIMESTAMP
-      WHERE emprestimo_id = ?
-    `, [valor, valor, data_vencimento, id]);
+    try {
+      await connection.execute(`
+        UPDATE cobrancas 
+        SET valor_original = ?, 
+            valor_atualizado = ?, 
+            data_vencimento = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE emprestimo_id = ?
+      `, [valor, valorFinal, data_vencimento, id]);
+    } catch (cobrancaError) {
+      console.warn('Erro ao atualizar cobranças relacionadas:', cobrancaError);
+      // Não interromper o processo se a atualização das cobranças falhar
+    }
     
     await connection.end();
-    res.json({ message: 'Empréstimo atualizado com sucesso' });
+    res.json({ 
+      message: 'Empréstimo atualizado com sucesso',
+      emprestimo: {
+        id,
+        cliente_id,
+        valor,
+        valor_final: valorFinal,
+        valor_parcela: valorParcela,
+        juros_mensal: jurosMensalNum,
+        data_vencimento,
+        frequencia,
+        numero_parcelas: numeroParcelasNum,
+        status,
+        observacoes,
+        tipo_emprestimo: tipoEmprestimo
+      }
+    });
     
   } catch (error) {
-    console.error('Erro ao atualizar empréstimo:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error('Erro detalhado ao atualizar empréstimo:', error);
+    console.error('Stack trace:', error.stack);
+    console.error('Dados recebidos:', req.body);
+    
+    // Verificar se é um erro de conexão
+    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+      return res.status(503).json({ error: 'Erro de conexão com o banco de dados' });
+    }
+    
+    // Verificar se é um erro de SQL
+    if (error.code && error.code.startsWith('ER_')) {
+      return res.status(400).json({ error: 'Erro de validação dos dados: ' + error.message });
+    }
+    
+    res.status(500).json({ error: 'Erro interno do servidor: ' + error.message });
   }
 });
 
