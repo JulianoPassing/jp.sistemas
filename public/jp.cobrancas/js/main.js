@@ -1175,11 +1175,14 @@ const emprestimoController = {
           return;
         }
         
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn ? submitBtn.textContent : 'Salvar Alterações';
+        
         try {
-          const submitBtn = form.querySelector('button[type="submit"]');
-          const originalText = submitBtn.textContent;
-          submitBtn.textContent = 'Salvando...';
-          submitBtn.disabled = true;
+          if (submitBtn) {
+            submitBtn.textContent = 'Salvando...';
+            submitBtn.disabled = true;
+          }
           
           // Enviar dados para a API
           const response = await fetch(`/api/cobrancas/emprestimos/${id}`, {
@@ -1209,9 +1212,10 @@ const emprestimoController = {
           console.error('Erro ao atualizar empréstimo:', error);
           ui.showNotification('Erro ao atualizar empréstimo: ' + error.message, 'error');
         } finally {
-          const submitBtn = form.querySelector('button[type="submit"]');
-          submitBtn.textContent = originalText;
-          submitBtn.disabled = false;
+          if (submitBtn) {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+          }
         }
       });
       
