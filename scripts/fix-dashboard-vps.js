@@ -15,11 +15,18 @@ async function main() {
   let connection;
   
   try {
-    // Conectar ao banco usando a configuração do database-config.js
-    const { getCobrancasDatabaseConfig } = require('../database-config.js');
-    const dbConfig = getCobrancasDatabaseConfig();
+    // Conectar ao banco do usuário "cobranca" usando a mesma função da API
+    const username = 'cobranca';
+    const dbName = `jpcobrancas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+    const dbConfig = {
+      host: process.env.DB_HOST || 'localhost',
+      user: process.env.DB_USER || 'jpcobrancas',
+      password: process.env.DB_PASSWORD || 'Juliano@95',
+      database: dbName,
+      charset: 'utf8mb4'
+    };
     
-    console.log('🔍 Configuração do banco:', {
+    console.log('🔍 Configuração do banco (usuário cobranca):', {
       host: dbConfig.host,
       user: dbConfig.user,
       database: dbConfig.database,
@@ -82,33 +89,33 @@ async function main() {
     const credenciaisAlternativas = [
       {
         host: 'localhost',
-        user: 'jpsistemas',
+        user: 'jpcobrancas',
+        password: 'Juliano@95',
+        database: 'jpcobrancas_cobranca'
+      },
+      {
+        host: 'localhost',
+        user: 'jpcobrancas',
         password: 'Juliano@95!',
-        database: 'jpsistemas_cobrancas'
+        database: 'jpcobrancas_cobranca'
       },
       {
         host: 'localhost',
         user: 'jpsistemas',
         password: 'Juliano@95',
-        database: 'jpsistemas_cobrancas'
-      },
-      {
-        host: 'localhost',
-        user: 'root',
-        password: 'Juliano@95!',
-        database: 'jpsistemas_cobrancas'
-      },
-      {
-        host: 'localhost',
-        user: 'root',
-        password: 'Juliano@95',
-        database: 'jpsistemas_cobrancas'
+        database: 'jpcobrancas_cobranca'
       },
       {
         host: 'localhost',
         user: 'jpsistemas',
         password: 'Juliano@95!',
-        database: 'jp_cobrancas'
+        database: 'jpcobrancas_cobranca'
+      },
+      {
+        host: 'localhost',
+        user: 'root',
+        password: 'Juliano@95',
+        database: 'jpcobrancas_cobranca'
       }
     ];
     
