@@ -1196,12 +1196,13 @@
         }
         
         // Montar payload do empréstimo
+        const hoje = new Date().toISOString().split('T')[0]; // Data atual para data_emprestimo
         const payload = {
           cliente_id,
           valor: valorInicial,
           valor_final: valorFinal,
           valor_parcela: valorParcela,
-          data_emprestimo: formData.dataVencimento,
+          data_emprestimo: hoje,
           data_vencimento: formData.dataVencimento,
           data_primeira_parcela: formData.dataVencimento,
           juros_mensal: jurosMensal,
