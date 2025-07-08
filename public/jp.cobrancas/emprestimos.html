@@ -219,8 +219,15 @@
       // Sobrescrever a função renderHistoricoEmprestimos para incluir busca
       const originalRenderHistoricoEmprestimos = window.renderHistoricoEmprestimos;
       window.renderHistoricoEmprestimos = async function() {
+        console.log('🔍 Histórico: Iniciando carregamento de empréstimos...');
+        
         try {
           const emprestimos = await apiService.getEmprestimos();
+          console.log(`📋 Histórico: API retornou ${emprestimos ? emprestimos.length : 0} empréstimos`);
+          
+          if (emprestimos) {
+            console.log('📝 Histórico: IDs retornados pela API:', emprestimos.map(e => e.id));
+          }
           
           // Aplicar a mesma lógica de remoção de duplicatas
           const emprestimosUnicos = new Map();
@@ -229,9 +236,11 @@
           for (const emprestimo of emprestimos || []) {
             // Verificar se já processamos este empréstimo
             if (emprestimosUnicos.has(emprestimo.id)) {
-              console.log(`Empréstimo duplicado ignorado: ID ${emprestimo.id}`);
+              console.warn(`🚨 Histórico: Empréstimo duplicado ignorado: ID ${emprestimo.id} - ${emprestimo.cliente_nome}`);
               continue;
             }
+            
+            console.log(`✅ Histórico: Processando empréstimo ID ${emprestimo.id} - ${emprestimo.cliente_nome}`);
             
             // Verificar status baseado em parcelas
             try {
@@ -241,6 +250,8 @@
               let status = (emprestimo.status || '').toUpperCase();
               
               if (parcelas && parcelas.length > 0) {
+                console.log(`  📅 Empréstimo ${emprestimo.id} tem ${parcelas.length} parcelas`);
+                
                 const parcelasAtrasadas = parcelas.filter(p => {
                   const dataVencParcela = new Date(p.data_vencimento);
                   return dataVencParcela < hoje && (p.status !== 'Paga');
@@ -255,7 +266,10 @@
                 } else {
                   status = 'ATIVO';
                 }
+                
+                console.log(`  🔄 Status atualizado para: ${status} (${parcelasPagas.length}/${parcelas.length} pagas, ${parcelasAtrasadas.length} atrasadas)`);
               } else {
+                console.log(`  📄 Empréstimo ${emprestimo.id} sem parcelas, usando data de vencimento`);
                 // Sem parcelas - usar lógica original
                 const dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
                 if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
@@ -267,7 +281,7 @@
               emprestimo.status = status;
               
             } catch (error) {
-              console.error('Erro ao verificar parcelas do empréstimo', emprestimo.id, error);
+              console.error(`❌ Erro ao verificar parcelas do empréstimo ${emprestimo.id}:`, error);
             }
             
             // Marcar como processado e adicionar à lista
@@ -275,13 +289,16 @@
             emprestimosProcessados.push(emprestimo);
           }
           
+          console.log(`✅ Histórico: ${emprestimosProcessados.length} empréstimos únicos processados`);
+          console.log('📝 Histórico: IDs finais:', emprestimosProcessados.map(e => e.id));
+          
           allEmprestimos = emprestimosProcessados;
           filteredEmprestimos = [...allEmprestimos];
           
           renderFilteredEmprestimos();
           updateSearchResultsInfo();
         } catch (err) {
-          console.error('Erro ao carregar empréstimos:', err);
+          console.error('❌ Erro ao carregar empréstimos:', err);
           const tbody = document.getElementById('historico-emprestimos');
           if (tbody) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';

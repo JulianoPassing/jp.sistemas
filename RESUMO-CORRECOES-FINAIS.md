@@ -18,7 +18,8 @@
 - **Problema 1**: Empréstimos em dia aparecendo como atrasados
 - **Problema 2**: Empréstimos aparecendo duplicados no histórico
 - **Problema 3**: Função JavaScript embutida sobrescrevendo correções
-- **Solução**: Lógica de parcelas + controle de duplicatas + correção da função sobrescrita
+- **Problema 4**: Rota duplicada na API e query SQL sem DISTINCT
+- **Solução**: Correção completa na API + Frontend + logs detalhados
 - **Resultado**: Status correto e sem duplicatas no histórico
 
 ### 4. Lista Negra (500 Error) ✅
@@ -52,6 +53,7 @@
 - `scripts/test-historico-emprestimos-corrigido.js`
 - `scripts/test-duplicatas-historico-emprestimos.js`
 - `scripts/test-emprestimos-html-corrigido.js`
+- `scripts/test-correcao-final-emprestimos.js`
 
 ### Correção Automática
 - `scripts/fix-dashboard-vps.js`
@@ -66,6 +68,7 @@
 - `corrigir-historico-emprestimos.sh`
 - `corrigir-duplicatas-historico-emprestimos.sh`
 - `corrigir-duplicatas-emprestimos-html.sh`
+- `correcao-final-emprestimos-duplicatas.sh`
 - `melhorar-cobrancas-vencimento-valor.sh`
 - `fix-lista-negra.sh`
 
@@ -138,6 +141,7 @@
 - **Cobranças**: Lógica de parcelas + eliminação de duplicatas + valores precisos
 - **Histórico**: Status baseado em parcelas + controle de duplicatas
 - **emprestimos.html**: Função JavaScript embutida corrigida
+- **API empréstimos**: Rota duplicada removida + DISTINCT + logs detalhados
 - **Lista Negra**: Funcionalidade restaurada com validações
 
 ## Próximos Passos Recomendados
