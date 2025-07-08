@@ -14,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png">
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
   <link rel="stylesheet" href="mobile.css">
   <style>
     :root {
@@ -140,7 +141,7 @@
     .planos-container {
       display: flex;
       flex-wrap: nowrap;
-      justify-content: space-between;
+      justify-content: center;
       gap: 2rem;
       margin: 2rem 0 3rem 0;
       padding: 0 2vw;
@@ -216,7 +217,7 @@
         gap: 1.5rem;
       }
       .plano-card {
-        width: 45vw;
+        width: 280px;
         max-width: 98vw;
         padding: 1.5rem;
       }
@@ -651,9 +652,217 @@
       color: var(--primary-blue);
       transform: translateX(3px);
     }
+    
+    /* Partículas de fundo */
+    #particles-js {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      background: transparent;
+      opacity: 20%;
+    }
+    body > *:not(#particles-js):not(.modal-bg):not(.promo-modal-bg) {
+      position: relative; 
+      z-index: 1; 
+    }
+    
+    /* Melhorar visual dos cards */
+    .plano-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .plano-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transition: left 0.5s;
+    }
+    .plano-card:hover::before {
+      left: 100%;
+    }
+    
+    /* Melhorar textos */
+    .plano-card .plano-titulo i {
+      margin-right: 0.5rem;
+    }
+    
+    /* Estilo para mensagem de sistemas personalizados */
+    .sistema-funcional-msg {
+      text-align: center;
+      font-family: 'Inter', sans-serif;
+      letter-spacing: 0.5px;
+      text-shadow: none;
+    }
+    
+    /* Estilo para cards de benefícios */
+    .beneficio-card {
+      background: var(--primary-blue);
+      border-radius: 12px;
+      padding: 2rem;
+      width: 300px;
+      text-align: center;
+      color: var(--light-text);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .beneficio-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transition: left 0.5s;
+    }
+    .beneficio-card:hover::before {
+      left: 100%;
+    }
+    .beneficio-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 47, 75, 0.3);
+    }
+    .beneficio-card i {
+      font-size: 2.5rem;
+      color: var(--accent-blue);
+      margin-bottom: 1rem;
+      transition: transform 0.3s ease;
+    }
+    .beneficio-card:hover i {
+      transform: scale(1.1);
+    }
+    .beneficio-card h3 {
+      margin-bottom: 1rem;
+      color: var(--light-text);
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+    .beneficio-card p {
+      margin: 0;
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+    
+    /* Estilo para seção de informações */
+    .info-section {
+      background: var(--light-gray);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      border-left: 4px solid var(--accent-blue);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .info-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0, 230, 255, 0.05), transparent);
+      transition: left 0.5s;
+    }
+    .info-section:hover::before {
+      left: 100%;
+    }
+    .info-section:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 47, 75, 0.1);
+    }
+    .info-section h3 {
+      color: var(--primary-blue);
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+      position: relative;
+      z-index: 1;
+    }
+    .info-section p {
+      color: var(--dark-text);
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.6;
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Responsividade para seção de benefícios */
+    @media (max-width: 900px) {
+      .precos-hero h1 {
+        font-size: 2rem;
+      }
+      .precos-hero p {
+        font-size: 1rem;
+      }
+      .beneficio-card {
+        width: 90vw;
+        max-width: 350px;
+      }
+      .info-section {
+        padding: 1.5rem;
+      }
+      .info-section h3 {
+        font-size: 1.2rem;
+      }
+      .info-section p {
+        font-size: 0.95rem;
+      }
+    }
+    
+    /* Estilo para mensagem de contato */
+    .contato-msg {
+      color: var(--dark-text);
+      font-size: 1rem;
+      font-weight: 500;
+      margin: 0;
+      background: rgba(0, 230, 255, 0.1);
+      border-radius: 8px;
+      padding: 1rem;
+      border: 1px solid var(--accent-blue);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+    }
+    .contato-msg::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0, 230, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+    .contato-msg:hover::before {
+      left: 100%;
+    }
+    .contato-msg:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 230, 255, 0.2);
+      background: rgba(0, 230, 255, 0.15);
+    }
+    
+    /* Separador visual para cards de planos */
+    .planos-container {
+      background: rgba(0, 47, 75, 0.03);
+      border-radius: 20px;
+      padding: 2rem 1rem !important;
+      margin: 1rem auto 2rem auto !important;
+      border: 1px solid rgba(0, 230, 255, 0.1);
+    }
   </style>
-</head>
+  </head>
 <body>
+  <div id="particles-js"></div>
   <header>
     <div class="logo">
       <img src="https://i.imgur.com/6N82fk2.png" alt="JP Sistemas Logo" />
@@ -667,14 +876,22 @@
   </header>
   <section class="precos-hero">
     <h1>Planos e Preços</h1>
-    <p>Escolha o plano ideal para o seu negócio. Todos os planos incluem acesso completo ao sistema, suporte e atualizações.</p>
+    <p>Escolha o plano ideal para o seu negócio. Cada plano dá acesso completo a <strong>um sistema específico</strong> (Sistema de Gestão ou Sistema de Empréstimos), além de suporte técnico especializado e atualizações constantes. Também oferecemos desenvolvimento de sistemas personalizados.</p>
+    <div class="sistema-funcional-msg" style="margin-top: 1.5rem; font-size: 1rem; color: var(--dark-text); font-weight: 500;">
+      💡 Também desenvolvemos <strong>sistemas personalizados</strong> para sua empresa!
+    </div>
   </section>
-  <section class="planos-container">
-    <div class="plano-card">
+  
+  <!-- Cards de Planos -->
+  <section style="max-width: 1200px; margin: 3rem auto; padding: 0 2rem;">
+    <h2 style="text-align: center; font-size: 2rem; font-weight: 700; color: var(--primary-blue); margin-bottom: 2rem; transition: color 0.3s ease; cursor: default;" onmouseover="this.style.color='var(--accent-blue)'" onmouseout="this.style.color='var(--primary-blue)'">Escolha seu Plano</h2>
+    <div class="planos-container">
+      <div class="plano-card">
       <div class="plano-titulo"><i class="fas fa-calendar-alt"></i> Plano Mensal</div>
       <div class="plano-preco">R$99</div>
       <div class="plano-mes">por mês</div>
       <div class="plano-detalhe">Pagamento mensal, sem fidelidade.</div>
+      <div class="plano-obs">✓ Acesso a um sistema completo<br>✓ Suporte técnico<br>✓ Atualizações gratuitas</div>
     </div>
     <div class="plano-card">
       <div class="plano-titulo"><i class="fas fa-calendar"></i> Plano Trimestral</div>
@@ -682,6 +899,7 @@
       <div class="plano-total">R$267</div>
       <div class="plano-mes">(R$89/mês)</div>
       <div class="plano-detalhe">Pagamento único para 3 meses.</div>
+      <div class="plano-obs">✓ Acesso a um sistema completo<br>✓ Suporte técnico<br>✓ Atualizações gratuitas</div>
     </div>
     <div class="plano-card">
       <div class="plano-titulo"><i class="fas fa-calendar-check"></i> Plano Semestral</div>
@@ -689,6 +907,7 @@
       <div class="plano-total">R$474</div>
       <div class="plano-mes">(R$79/mês)</div>
       <div class="plano-detalhe">Pagamento único para 6 meses.</div>
+      <div class="plano-obs">✓ Acesso a um sistema completo<br>✓ Suporte técnico<br>✓ Atualizações gratuitas</div>
     </div>
     <div class="plano-card">
       <div class="plano-titulo"><i class="fas fa-award"></i> Plano Anual</div>
@@ -696,8 +915,50 @@
       <div class="plano-total">R$828</div>
       <div class="plano-mes">(R$69/mês)</div>
       <div class="plano-detalhe">Pagamento único para 12 meses.</div>
+      <div class="plano-obs">✓ Acesso a um sistema completo<br>✓ Suporte técnico<br>✓ Atualizações gratuitas</div>
+    </div>
+    </div>
+    
+    <!-- Informação sobre escolha do sistema -->
+    <div style="text-align: center; margin-top: 2rem; padding: 0 2rem;">
+      <p class="contato-msg">
+        <span style="position: relative; z-index: 2;">💬 Após a compra, entre em contato conosco para ativar o sistema desejado</span>
+      </p>
     </div>
   </section>
+  
+  <!-- Seção de Informações sobre Sistemas -->
+  <section style="max-width: 800px; margin: 3rem auto; padding: 0 2rem;">
+    <div class="info-section">
+      <h3>📋 Como Funciona</h3>
+      <p>
+        Cada plano dá acesso completo a <strong>um sistema específico</strong>. Após a compra, você escolhe entre o <strong>Sistema de Gestão</strong> ou o <strong>Sistema de Empréstimos</strong>. Para usar ambos os sistemas, é necessário adquirir planos separados.
+      </p>
+    </div>
+  </section>
+  
+  <!-- Seção de Benefícios -->
+  <section style="max-width: 1200px; margin: 3rem auto; padding: 0 2rem;">
+    <h2 style="text-align: center; font-size: 2rem; font-weight: 700; color: var(--primary-blue); margin-bottom: 2rem; transition: color 0.3s ease; cursor: default;" onmouseover="this.style.color='var(--accent-blue)'" onmouseout="this.style.color='var(--primary-blue)'">Por que escolher JP. Sistemas?</h2>
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem;">
+      <div class="beneficio-card">
+        <i class="fas fa-laptop-code"></i>
+        <h3>Sistemas Completos</h3>
+        <p>Sistema de Gestão ou Sistema de Empréstimos. Cada plano dá acesso completo a um sistema específico.</p>
+      </div>
+      <div class="beneficio-card">
+        <i class="fas fa-code"></i>
+        <h3>Sistemas Personalizados</h3>
+        <p>Desenvolvemos sistemas sob medida para necessidades específicas do seu negócio.</p>
+      </div>
+      <div class="beneficio-card">
+        <i class="fas fa-headset"></i>
+        <h3>Suporte Especializado</h3>
+        <p>Equipe técnica dedicada para ajudar no sucesso da sua empresa.</p>
+      </div>
+    </div>
+  </section>
+  
   <!-- Modal de Seleção de Sistema -->
   <div class="modal-bg" id="sistema-modal-bg">
     <div class="modal sistema-modal">
@@ -710,7 +971,7 @@
           </div>
           <div class="sistema-info">
             <h3>Sistema de Gestão</h3>
-            <p>Gerencie clientes, produtos, pedidos e relatórios</p>
+            <p>Gerencie clientes, produtos, pedidos, estoque e relatórios</p>
           </div>
           <div class="sistema-arrow">
             <i class="fas fa-arrow-right"></i>
@@ -718,11 +979,11 @@
         </div>
         <div class="sistema-opcao" onclick="window.location.href='jp.cobrancas/index.html'">
           <div class="sistema-icon">
-            <i class="fas fa-credit-card"></i>
+            <i class="fas fa-money-bill-wave"></i>
           </div>
           <div class="sistema-info">
-            <h3>Sistema de Cobrança</h3>
-            <p>Controle de cobranças, empréstimos e lista negra</p>
+            <h3>Sistema de Empréstimos</h3>
+            <p>Controle de empréstimos, cobranças e gestão financeira</p>
           </div>
           <div class="sistema-arrow">
             <i class="fas fa-arrow-right"></i>
@@ -879,6 +1140,79 @@
     }
     setInterval(updatePromoTimer, 1000);
     updatePromoTimer();
+    
+    // Configurar partículas de fundo
+    particlesJS('particles-js', {
+      "particles": {
+        "number": {
+          "value": 60,
+          "density": {
+            "enable": true,
+            "value_area": 800
+          }
+        },
+        "color": {
+          "value": "#00e6ff"
+        },
+        "shape": {
+          "type": "circle",
+          "stroke": {
+            "width": 0,
+            "color": "#000000"
+          }
+        },
+        "opacity": {
+          "value": 0.5,
+          "random": false
+        },
+        "size": {
+          "value": 3,
+          "random": true
+        },
+        "line_linked": {
+          "enable": true,
+          "distance": 150,
+          "color": "#00e6ff",
+          "opacity": 0.4,
+          "width": 1
+        },
+        "move": {
+          "enable": true,
+          "speed": 3,
+          "direction": "none",
+          "random": false,
+          "straight": false,
+          "out_mode": "out",
+          "bounce": false
+        }
+      },
+      "interactivity": {
+        "detect_on": "canvas",
+        "events": {
+          "onhover": {
+            "enable": true,
+            "mode": "grab"
+          },
+          "onclick": {
+            "enable": true,
+            "mode": "push"
+          },
+          "resize": true
+        },
+        "modes": {
+          "grab": {
+            "distance": 140,
+            "line_linked": {
+              "opacity": 1
+            }
+          },
+          "push": {
+            "particles_nb": 4
+          }
+        }
+      },
+      "retina_detect": true
+    });
 
     // Modal de Seleção de Sistema
     const sistemaModalBg = document.getElementById('sistema-modal-bg');
