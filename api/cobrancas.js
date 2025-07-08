@@ -243,11 +243,11 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
       [emprestimosStats] = await connection.execute(`
         SELECT 
           COUNT(*) as total_emprestimos,
-          COALESCE(SUM(COALESCE(valor_inicial, valor, 0)), 0) as valor_total_emprestimos,
+          COALESCE(SUM(valor), 0) as valor_total_emprestimos,
           COUNT(*) as emprestimos_ativos,
           0 as emprestimos_quitados
         FROM emprestimos
-        WHERE (valor_inicial > 0 OR valor > 0)
+        WHERE valor > 0
       `);
       console.log('Dashboard: Estatísticas simplificadas obtidas:', emprestimosStats[0]);
     } catch (error) {
