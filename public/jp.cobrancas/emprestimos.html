@@ -199,7 +199,7 @@
           allEmprestimos = emprestimosProcessados;
           filteredEmprestimos = [...allEmprestimos];
           
-          renderFilteredEmprestimos();
+          await renderFilteredEmprestimos();
           updateSearchResultsInfo();
           
         } catch (err) {
@@ -213,7 +213,7 @@
       }
       
       // Função para aplicar filtros
-      function applyFilters() {
+      async function applyFilters() {
         const searchTerm = searchInput.value.toLowerCase().trim();
         const statusFilter = filterStatus.value;
         
@@ -230,12 +230,12 @@
           return matchesSearch && matchesStatus;
         });
         
-        renderFilteredEmprestimos();
+        await renderFilteredEmprestimos();
         updateSearchResultsInfo();
       }
       
       // Função para renderizar empréstimos filtrados
-      function renderFilteredEmprestimos() {
+      async function renderFilteredEmprestimos() {
         if (!tbody) return;
         
         if (filteredEmprestimos.length === 0) {
@@ -244,21 +244,46 @@
         }
         
         tbody.innerHTML = '';
-        filteredEmprestimos.forEach(emp => {
+        
+        // Processar cada empréstimo para obter o vencimento correto
+        for (const emp of filteredEmprestimos) {
+          let proximoVencimento = emp.data_vencimento;
+          
+          try {
+            // Buscar parcelas do empréstimo
+            const parcelas = await apiService.getParcelasEmprestimo(emp.id);
+            
+            if (parcelas && parcelas.length > 0) {
+              // Encontrar a próxima parcela em aberto
+              const hoje = new Date();
+              hoje.setHours(0,0,0,0);
+              
+              const parcelasEmAberto = parcelas.filter(p => p.status !== 'Paga');
+              
+              if (parcelasEmAberto.length > 0) {
+                // Ordenar por data de vencimento e pegar a próxima
+                parcelasEmAberto.sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento));
+                proximoVencimento = parcelasEmAberto[0].data_vencimento;
+              }
+            }
+          } catch (error) {
+            console.error(`Erro ao buscar parcelas do empréstimo ${emp.id}:`, error);
+          }
+          
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${emp.cliente_nome || 'N/A'}</td>
             <td>R$ ${utils.formatCurrency(emp.valor || 0)}</td>
             <td>R$ ${utils.formatCurrency(emp.valor_final || emp.valor || 0)}</td>
             <td>${emp.data_emprestimo ? utils.formatDate(emp.data_emprestimo) : '-'}</td>
-            <td>${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</td>
+            <td>${proximoVencimento ? utils.formatDate(proximoVencimento) : '-'}</td>
             <td><span class="badge badge-${getStatusBadgeClass(emp.status)}">${emp.status || 'N/A'}</span></td>
             <td>
               <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
             </td>
           `;
           tbody.appendChild(row);
-        });
+        }
       }
       
       // Função para obter classe do badge baseado no status
@@ -286,11 +311,11 @@
       }
       
       // Função para limpar busca
-      function clearSearch() {
+      async function clearSearch() {
         searchInput.value = '';
         filterStatus.value = '';
         filteredEmprestimos = [...allEmprestimos];
-        renderFilteredEmprestimos();
+        await renderFilteredEmprestimos();
         updateSearchResultsInfo();
       }
       
