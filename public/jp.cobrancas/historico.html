@@ -461,9 +461,12 @@
         const matchTipo = !tipoFilter || emprestimo.tipo_emprestimo === tipoFilter;
 
         // Filtro por data
-        const dataEmprestimo = emprestimo.data_emprestimo;
-        const matchDataInicio = !dataInicio || dataEmprestimo >= dataInicio;
-        const matchDataFim = !dataFim || dataEmprestimo <= dataFim;
+        const dataEmprestimo = criarDataValida(emprestimo.data_emprestimo);
+        const dataInicioObj = dataInicio ? new Date(dataInicio) : null;
+        const dataFimObj = dataFim ? new Date(dataFim) : null;
+        
+        const matchDataInicio = !dataInicioObj || !dataEmprestimo || dataEmprestimo >= dataInicioObj;
+        const matchDataFim = !dataFimObj || !dataEmprestimo || dataEmprestimo <= dataFimObj;
 
         return matchSearch && matchStatus && matchTipo && matchDataInicio && matchDataFim;
       });
@@ -575,8 +578,16 @@
 
     // Função para calcular dias de atraso
     function calcularDiasAtraso(dataVencimento) {
+      if (!dataVencimento) return 0;
+      
       const hoje = new Date();
-      const vencimento = new Date(dataVencimento);
+      const vencimento = criarDataValida(dataVencimento);
+      
+      if (!vencimento) {
+        console.warn('Data de vencimento inválida:', dataVencimento);
+        return 0;
+      }
+      
       const diffTime = hoje - vencimento;
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       return diffDays > 0 ? diffDays : 0;
@@ -585,6 +596,53 @@
     // Função para fechar modal
     function fecharModal() {
       document.getElementById('modal-detalhes').style.display = 'none';
+    }
+
+    // Função utilitária para criar objeto Date válido
+    function criarDataValida(data) {
+      if (!data) return null;
+      
+      try {
+        // Se a data já é um objeto Date válido
+        if (data instanceof Date && !isNaN(data)) {
+          return data;
+        }
+        
+        // Se é uma string, tentar diferentes formatos
+        let dataObj;
+        
+        // Se a data vem no formato YYYY-MM-DD (MySQL DATE)
+        if (typeof data === 'string' && data.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          dataObj = new Date(data + 'T00:00:00');
+        }
+        // Se a data vem no formato YYYY-MM-DD HH:MM:SS (MySQL DATETIME)
+        else if (typeof data === 'string' && data.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+          dataObj = new Date(data.replace(' ', 'T'));
+        }
+        // Se a data vem no formato YYYY-MM-DDTHH:MM:SS (ISO)
+        else if (typeof data === 'string' && data.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)) {
+          dataObj = new Date(data);
+        }
+        // Se a data vem no formato DD/MM/YYYY
+        else if (typeof data === 'string' && data.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+          const [dia, mes, ano] = data.split('/');
+          dataObj = new Date(ano, mes - 1, dia);
+        }
+        // Tentar criar diretamente
+        else {
+          dataObj = new Date(data);
+        }
+        
+        // Verificar se a data é válida
+        if (isNaN(dataObj.getTime())) {
+          return null;
+        }
+        
+        return dataObj;
+      } catch (error) {
+        console.error('Erro ao criar data válida:', data, error);
+        return null;
+      }
     }
 
     // Funções auxiliares
@@ -616,7 +674,15 @@
 
     function formatarData(data) {
       if (!data) return 'N/A';
-      return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
+      
+      const dataObj = criarDataValida(data);
+      
+      if (!dataObj) {
+        console.warn('Data inválida:', data);
+        return 'Data inválida';
+      }
+      
+      return dataObj.toLocaleDateString('pt-BR');
     }
 
     function mostrarNotificacao(mensagem, tipo) {
