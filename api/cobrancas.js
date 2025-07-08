@@ -348,10 +348,10 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
       
       // Primeiro tentar com parcelas (sistema parcelado)
       try {
-        [clientesEmAtraso] = await connection.execute(`
-          SELECT COUNT(DISTINCT c.id) as total
-          FROM clientes_cobrancas c
-          JOIN emprestimos e ON e.cliente_id = c.id
+      [clientesEmAtraso] = await connection.execute(`
+        SELECT COUNT(DISTINCT c.id) as total
+        FROM clientes_cobrancas c
+        JOIN emprestimos e ON e.cliente_id = c.id
           JOIN parcelas p ON p.emprestimo_id = e.id
           WHERE TRIM(UPPER(p.status)) = 'PENDENTE'
             AND p.data_vencimento < CURDATE()
@@ -368,7 +368,7 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
           WHERE TRIM(UPPER(cb.status)) = 'PENDENTE'
             AND cb.data_vencimento < CURDATE()
             AND cb.dias_atraso > 0
-        `);
+      `);
         console.log('Dashboard: Clientes em atraso (baseado em cobranças):', clientesEmAtraso[0]);
       }
     } catch (error) {
@@ -706,6 +706,15 @@ router.get('/emprestimos', ensureDatabase, async (req, res) => {
   try {
     const username = req.session.cobrancasUser;
     const connection = await createCobrancasConnection(username);
+    
+    // Atualizar status das parcelas atrasadas
+    await connection.execute(`
+      UPDATE parcelas 
+      SET status = 'Atrasada' 
+      WHERE status = 'Pendente' 
+        AND data_vencimento < CURDATE()
+    `);
+    
     const [emprestimos] = await connection.execute(`
       SELECT DISTINCT e.*, c.nome as cliente_nome, c.telefone as telefone,
              CASE 
@@ -757,12 +766,109 @@ router.get('/emprestimos/:id', ensureDatabase, async (req, res) => {
   }
 });
 
+// Informações do usuário autenticado
+router.get('/usuario-info', async (req, res) => {
+  try {
+    const username = req.session.cobrancasUser;
+    
+    if (!username) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+
+    res.json({
+      username: username,
+      authenticated: true
+    });
+  } catch (error) {
+    console.error('Erro ao buscar informações do usuário:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Estatísticas do histórico de empréstimos
+router.get('/historico-emprestimos/estatisticas', ensureDatabase, async (req, res) => {
+  try {
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
+    
+    // Atualizar status das parcelas atrasadas
+    await connection.execute(`
+      UPDATE parcelas 
+      SET status = 'Atrasada' 
+      WHERE status = 'Pendente' 
+        AND data_vencimento < CURDATE()
+    `);
+    
+    // Buscar estatísticas gerais
+    const [stats] = await connection.execute(`
+      SELECT 
+        COUNT(e.id) as total_emprestimos,
+        COALESCE(SUM(e.valor), 0) as valor_total_inicial,
+        COALESCE(SUM(CASE 
+          WHEN e.tipo_emprestimo = 'in_installments' THEN (e.valor_parcela * e.numero_parcelas)
+          ELSE e.valor * (1 + (e.juros_mensal / 100))
+        END), 0) as valor_total_final
+      FROM emprestimos e
+    `);
+    
+    // Contar empréstimos por status baseado nas parcelas
+    const [statusStats] = await connection.execute(`
+      SELECT 
+        -- Empréstimos ativos (com parcelas pendentes mas não atrasadas)
+        COUNT(DISTINCT CASE 
+          WHEN EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id AND p.status = 'Pendente')
+            AND NOT EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id AND p.status = 'Atrasada')
+          THEN e.id 
+        END) as emprestimos_ativos,
+        
+        -- Empréstimos quitados (todas as parcelas pagas)
+        COUNT(DISTINCT CASE 
+          WHEN NOT EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id AND p.status IN ('Pendente', 'Atrasada'))
+            AND EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id AND p.status = 'Paga')
+          THEN e.id 
+        END) as emprestimos_quitados,
+        
+        -- Empréstimos em atraso (com pelo menos uma parcela atrasada)
+        COUNT(DISTINCT CASE 
+          WHEN EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id AND p.status = 'Atrasada')
+          THEN e.id 
+        END) as emprestimos_atraso,
+        
+        -- Empréstimos sem parcelas (valor fixo)
+        COUNT(CASE 
+          WHEN e.tipo_emprestimo = 'fixed' OR e.numero_parcelas = 1
+          THEN e.id 
+        END) as emprestimos_valor_fixo
+      FROM emprestimos e
+    `);
+    
+    await connection.end();
+    
+    res.json({
+      geral: stats[0],
+      status: statusStats[0]
+    });
+  } catch (error) {
+    console.error('Erro ao buscar estatísticas do histórico:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Parcelas de um empréstimo
 router.get('/emprestimos/:id/parcelas', ensureDatabase, async (req, res) => {
   try {
     const { id } = req.params;
     const username = req.session.cobrancasUser;
     const connection = await createCobrancasConnection(username);
+    
+    // Primeiro, atualizar status das parcelas atrasadas
+    await connection.execute(`
+      UPDATE parcelas 
+      SET status = 'Atrasada' 
+      WHERE emprestimo_id = ? 
+        AND status = 'Pendente' 
+        AND data_vencimento < CURDATE()
+    `, [id]);
     
     const [parcelas] = await connection.execute(`
       SELECT p.*, e.valor as valor_total_emprestimo, e.juros_mensal, e.multa_atraso

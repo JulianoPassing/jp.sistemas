@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JP-Cobranças - Histórico de Empréstimos</title>
+  <link rel="icon" type="image/png" href="https://i.imgur.com/6N82fk2.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="app-layout">
+  <header>
+    <div class="header-content">
+      <a href="index.html" class="logo" style="display: flex; align-items: center;">
+        <img src="https://i.imgur.com/EQ1tjZX.png" alt="JP-Cobranças" style="height: 5rem; width: auto; object-fit: contain;">
+      </a>
+      <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Abrir menu"><span class="menu-icon"></span></button>
+      <div class="nav-wrapper">
+        <nav>
+          <a href="dashboard.html" class="nav-link">Dashboard</a>
+          <a href="clientes.html" class="nav-link">Clientes</a>
+          <a href="adicionar-cliente.html" class="nav-link">Adicionar Cliente</a>
+          <a href="cobrancas.html" class="nav-link">Cobranças</a>
+          <a href="atrasados.html" class="nav-link">Atrasados</a>
+          <a href="lista-negra.html" class="nav-link">Lista Negra</a>
+          <a href="emprestimos.html" class="nav-link">Empréstimos</a>
+          <a href="historico.html" class="nav-link active">Histórico</a>
+          <a href="#" class="nav-link" onclick="sair()">Sair</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <div class="dashboard-header">
+        <div class="welcome-message" id="welcomeMessage">Bem-vindo(a)!</div>
+        <div class="dashboard-title">Histórico de Empréstimos</div>
+        <div class="dashboard-subtitle">
+          Visualize todo o histórico detalhado de empréstimos, parcelas e status de pagamento.
+        </div>
+      </div>
+
+      <!-- Resumo Estatístico -->
+      <div class="cards">
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Total de Empréstimos</div>
+          </div>
+          <div class="card-value" id="total-emprestimos">0</div>
+          <div class="card-change positive">+0% este mês</div>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Empréstimos Quitados</div>
+          </div>
+          <div class="card-value" id="emprestimos-quitados">0</div>
+          <div class="card-change positive">+0% este mês</div>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Empréstimos Ativos</div>
+          </div>
+          <div class="card-value" id="emprestimos-ativos">0</div>
+          <div class="card-change positive">+0% este mês</div>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Empréstimos em Atraso</div>
+          </div>
+          <div class="card-value" id="emprestimos-atraso">0</div>
+          <div class="card-change negative">-0% este mês</div>
+        </div>
+      </div>
+
+      <!-- Filtros de Busca -->
+      <div class="section">
+        <div class="search-container">
+          <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 250px;">
+              <input 
+                type="text" 
+                id="search-input" 
+                class="form-input" 
+                placeholder="Buscar por cliente, valor, observações..."
+                style="width: 100%;"
+              >
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <select id="filter-status" class="form-input" style="min-width: 120px;">
+                <option value="">Todos os Status</option>
+                <option value="Ativo">Ativo</option>
+                <option value="Quitado">Quitado</option>
+                <option value="Em Atraso">Em Atraso</option>
+                <option value="Cancelado">Cancelado</option>
+              </select>
+              <select id="filter-tipo" class="form-input" style="min-width: 120px;">
+                <option value="">Todos os Tipos</option>
+                <option value="fixed">Valor Fixo</option>
+                <option value="in_installments">Parcelado</option>
+              </select>
+              <input 
+                type="date" 
+                id="filter-data-inicio" 
+                class="form-input" 
+                style="min-width: 140px;"
+                title="Data de início"
+              >
+              <input 
+                type="date" 
+                id="filter-data-fim" 
+                class="form-input" 
+                style="min-width: 140px;"
+                title="Data de fim"
+              >
+              <button id="clear-filters" class="btn btn-secondary" style="white-space: nowrap;">Limpar</button>
+            </div>
+          </div>
+          <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">
+            <span id="results-info">Mostrando todos os empréstimos</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabela de Empréstimos -->
+      <div class="section">
+        <div class="section-header">
+          <h3 class="section-title">Empréstimos</h3>
+        </div>
+        
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Valor Inicial</th>
+                <th>Valor Final</th>
+                <th>Data Empréstimo</th>
+                <th>Vencimento</th>
+                <th>Status</th>
+                <th>Parcelas</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="emprestimos-tbody">
+              <tr>
+                <td colspan="8" class="text-center text-gray-500">Carregando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal de Detalhes do Empréstimo -->
+  <div id="modal-detalhes" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="fecharModal()"></div>
+    <div class="modal-content" style="max-width: 900px; width: 90vw;">
+      <div class="modal-header">
+        <h3>Detalhes do Empréstimo</h3>
+        <button class="modal-close" onclick="fecharModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Informações do Empréstimo -->
+        <div class="section">
+          <h4 class="section-title">Informações Gerais</h4>
+          <div class="grid grid-cols-2" style="gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+              <label class="form-label">Cliente:</label>
+              <p id="modal-cliente" class="font-semibold"></p>
+            </div>
+            <div>
+              <label class="form-label">Telefone:</label>
+              <p id="modal-telefone"></p>
+            </div>
+            <div>
+              <label class="form-label">Valor Inicial:</label>
+              <p id="modal-valor-inicial" class="font-semibold text-green-600"></p>
+            </div>
+            <div>
+              <label class="form-label">Valor Final:</label>
+              <p id="modal-valor-final" class="font-semibold text-terciary"></p>
+            </div>
+            <div>
+              <label class="form-label">Data do Empréstimo:</label>
+              <p id="modal-data-emprestimo"></p>
+            </div>
+            <div>
+              <label class="form-label">Vencimento:</label>
+              <p id="modal-vencimento"></p>
+            </div>
+            <div>
+              <label class="form-label">Juros Mensal:</label>
+              <p id="modal-juros"></p>
+            </div>
+            <div>
+              <label class="form-label">Status:</label>
+              <p id="modal-status"></p>
+            </div>
+          </div>
+          <div>
+            <label class="form-label">Observações:</label>
+            <p id="modal-observacoes" style="background: #f9f9f9; padding: 0.5rem; border-radius: 4px; margin-top: 0.25rem;"></p>
+          </div>
+        </div>
+
+        <!-- Parcelas -->
+        <div class="section">
+          <h4 class="section-title">Parcelas</h4>
+          <div id="parcelas-container" class="parcelas-detalhadas">
+            <!-- Parcelas serão inseridas aqui -->
+          </div>
+        </div>
+
+        <!-- Resumo de Pagamentos -->
+        <div class="section">
+          <h4 class="section-title">Resumo de Pagamentos</h4>
+          <div class="grid grid-cols-3" style="gap: 1rem;">
+            <div style="background: #f0f9ff; padding: 1rem; border-radius: 8px; text-align: center;">
+              <div class="text-sm text-gray-600">Parcelas Pagas</div>
+              <div id="resumo-pagas" class="text-lg font-semibold text-green-600">0</div>
+            </div>
+            <div style="background: #fef3c7; padding: 1rem; border-radius: 8px; text-align: center;">
+              <div class="text-sm text-gray-600">Parcelas Pendentes</div>
+              <div id="resumo-pendentes" class="text-lg font-semibold text-yellow-500">0</div>
+            </div>
+            <div style="background: #fee2e2; padding: 1rem; border-radius: 8px; text-align: center;">
+              <div class="text-sm text-gray-600">Parcelas Atrasadas</div>
+              <div id="resumo-atrasadas" class="text-lg font-semibold text-red-600">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-center p-4 mt-8">
+    © 2024 JP-Cobranças. Todos os direitos reservados.
+  </footer>
+
+  <script src="./js/main.js"></script>
+  <script>
+    // Variáveis globais
+    let todosEmprestimos = [];
+    let emprestimosFiltrados = [];
+
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', function() {
+      // Menu mobile
+      const menuBtn = document.getElementById('mobile-menu-toggle');
+      const navWrapper = document.querySelector('.nav-wrapper');
+      if (menuBtn && navWrapper) {
+        menuBtn.addEventListener('click', function() {
+          navWrapper.classList.toggle('open');
+        });
+      }
+
+      // Carregar dados iniciais
+      carregarEmprestimos();
+      carregarEstatisticas();
+      
+      // Configurar mensagem de boas-vindas
+      carregarMensagemBoasVindas();
+
+      // Event listeners para filtros
+      document.getElementById('search-input').addEventListener('input', aplicarFiltros);
+      document.getElementById('filter-status').addEventListener('change', aplicarFiltros);
+      document.getElementById('filter-tipo').addEventListener('change', aplicarFiltros);
+      document.getElementById('filter-data-inicio').addEventListener('change', aplicarFiltros);
+      document.getElementById('filter-data-fim').addEventListener('change', aplicarFiltros);
+      document.getElementById('clear-filters').addEventListener('click', limparFiltros);
+    });
+
+    // Função para carregar mensagem de boas-vindas
+    async function carregarMensagemBoasVindas() {
+      try {
+        const response = await fetch('/api/cobrancas/usuario-info', {
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const username = data.username || 'Usuário';
+          const welcomeMessage = `Bem-vindo(a), ${username.charAt(0).toUpperCase() + username.slice(1)}!`;
+          document.getElementById('welcomeMessage').textContent = welcomeMessage;
+        }
+      } catch (error) {
+        console.error('Erro ao carregar informações do usuário:', error);
+        // Manter mensagem padrão se falhar
+      }
+    }
+
+    // Função para carregar empréstimos
+    async function carregarEmprestimos() {
+      try {
+        const response = await fetch('/api/cobrancas/emprestimos', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          throw new Error('Erro ao carregar empréstimos');
+        }
+
+        todosEmprestimos = await response.json();
+        emprestimosFiltrados = [...todosEmprestimos];
+        
+        // Buscar parcelas para cada empréstimo
+        await Promise.all(todosEmprestimos.map(async (emprestimo) => {
+          try {
+            const parcelasResponse = await fetch(`/api/cobrancas/emprestimos/${emprestimo.id}/parcelas`, {
+              credentials: 'include'
+            });
+            if (parcelasResponse.ok) {
+              emprestimo.parcelas = await parcelasResponse.json();
+            } else {
+              emprestimo.parcelas = [];
+            }
+          } catch (error) {
+            console.error(`Erro ao carregar parcelas do empréstimo ${emprestimo.id}:`, error);
+            emprestimo.parcelas = [];
+          }
+        }));
+
+        renderizarEmprestimos();
+        atualizarInfoResultados();
+      } catch (error) {
+        console.error('Erro ao carregar empréstimos:', error);
+        mostrarNotificacao('Erro ao carregar empréstimos', 'error');
+      }
+    }
+
+    // Função para carregar estatísticas
+    async function carregarEstatisticas() {
+      try {
+        const response = await fetch('/api/cobrancas/historico-emprestimos/estatisticas', {
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          document.getElementById('total-emprestimos').textContent = data.geral?.total_emprestimos || 0;
+          document.getElementById('emprestimos-quitados').textContent = data.status?.emprestimos_quitados || 0;
+          document.getElementById('emprestimos-ativos').textContent = data.status?.emprestimos_ativos || 0;
+          document.getElementById('emprestimos-atraso').textContent = data.status?.emprestimos_atraso || 0;
+        }
+      } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+        // Fallback para o endpoint do dashboard
+        try {
+          const fallbackResponse = await fetch('/api/cobrancas/dashboard', {
+            credentials: 'include'
+          });
+
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+            document.getElementById('total-emprestimos').textContent = fallbackData.emprestimos?.total_emprestimos || 0;
+            document.getElementById('emprestimos-quitados').textContent = fallbackData.emprestimos?.emprestimos_quitados || 0;
+            document.getElementById('emprestimos-ativos').textContent = fallbackData.emprestimosAtivos || 0;
+            document.getElementById('emprestimos-atraso').textContent = fallbackData.emprestimosEmAtraso || 0;
+          }
+        } catch (fallbackError) {
+          console.error('Erro ao carregar estatísticas do fallback:', fallbackError);
+        }
+      }
+    }
+
+    // Função para renderizar empréstimos
+    function renderizarEmprestimos() {
+      const tbody = document.getElementById('emprestimos-tbody');
+      
+      if (emprestimosFiltrados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = '';
+      emprestimosFiltrados.forEach(emprestimo => {
+        const status = determinarStatus(emprestimo);
+        const statusClass = getStatusClass(status);
+        const resumoParcelas = calcularResumoParcelas(emprestimo.parcelas || []);
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>
+            <div class="font-semibold">${emprestimo.cliente_nome || 'N/A'}</div>
+            <div class="text-sm text-gray-500">${emprestimo.telefone || ''}</div>
+          </td>
+          <td class="font-semibold text-green-600">R$ ${formatarMoeda(emprestimo.valor || 0)}</td>
+          <td class="font-semibold text-terciary">R$ ${formatarMoeda(emprestimo.valor_final || emprestimo.valor || 0)}</td>
+          <td>${formatarData(emprestimo.data_emprestimo)}</td>
+          <td>${formatarData(emprestimo.data_vencimento)}</td>
+          <td><span class="badge ${statusClass}">${status}</span></td>
+          <td>
+            <div class="text-sm">
+              <div class="text-green-600">${resumoParcelas.pagas} pagas</div>
+              <div class="text-yellow-500">${resumoParcelas.pendentes} pendentes</div>
+              <div class="text-red-600">${resumoParcelas.atrasadas} atrasadas</div>
+            </div>
+          </td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="abrirDetalhes(${emprestimo.id})">
+              Ver Detalhes
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // Função para determinar status do empréstimo
+    function determinarStatus(emprestimo) {
+      if (!emprestimo.parcelas || emprestimo.parcelas.length === 0) {
+        return emprestimo.status || 'Ativo';
+      }
+
+      const parcelas = emprestimo.parcelas;
+      const todasPagas = parcelas.every(p => p.status === 'Paga');
+      const temAtrasada = parcelas.some(p => p.status === 'Atrasada');
+
+      if (todasPagas) return 'Quitado';
+      if (temAtrasada) return 'Em Atraso';
+      return 'Ativo';
+    }
+
+    // Função para calcular resumo das parcelas
+    function calcularResumoParcelas(parcelas) {
+      const pagas = parcelas.filter(p => p.status === 'Paga').length;
+      const pendentes = parcelas.filter(p => p.status === 'Pendente').length;
+      const atrasadas = parcelas.filter(p => p.status === 'Atrasada').length;
+      
+      return { pagas, pendentes, atrasadas };
+    }
+
+    // Função para aplicar filtros
+    function aplicarFiltros() {
+      const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+      const statusFilter = document.getElementById('filter-status').value;
+      const tipoFilter = document.getElementById('filter-tipo').value;
+      const dataInicio = document.getElementById('filter-data-inicio').value;
+      const dataFim = document.getElementById('filter-data-fim').value;
+
+      emprestimosFiltrados = todosEmprestimos.filter(emprestimo => {
+        // Filtro por termo de busca
+        const matchSearch = !searchTerm || 
+          (emprestimo.cliente_nome && emprestimo.cliente_nome.toLowerCase().includes(searchTerm)) ||
+          (emprestimo.valor && emprestimo.valor.toString().includes(searchTerm)) ||
+          (emprestimo.observacoes && emprestimo.observacoes.toLowerCase().includes(searchTerm));
+
+        // Filtro por status
+        const statusEmprestimo = determinarStatus(emprestimo);
+        const matchStatus = !statusFilter || statusEmprestimo === statusFilter;
+
+        // Filtro por tipo
+        const matchTipo = !tipoFilter || emprestimo.tipo_emprestimo === tipoFilter;
+
+        // Filtro por data
+        const dataEmprestimo = emprestimo.data_emprestimo;
+        const matchDataInicio = !dataInicio || dataEmprestimo >= dataInicio;
+        const matchDataFim = !dataFim || dataEmprestimo <= dataFim;
+
+        return matchSearch && matchStatus && matchTipo && matchDataInicio && matchDataFim;
+      });
+
+      renderizarEmprestimos();
+      atualizarInfoResultados();
+    }
+
+    // Função para limpar filtros
+    function limparFiltros() {
+      document.getElementById('search-input').value = '';
+      document.getElementById('filter-status').value = '';
+      document.getElementById('filter-tipo').value = '';
+      document.getElementById('filter-data-inicio').value = '';
+      document.getElementById('filter-data-fim').value = '';
+      emprestimosFiltrados = [...todosEmprestimos];
+      renderizarEmprestimos();
+      atualizarInfoResultados();
+    }
+
+    // Função para atualizar informações de resultados
+    function atualizarInfoResultados() {
+      const total = todosEmprestimos.length;
+      const filtrado = emprestimosFiltrados.length;
+      const infoElement = document.getElementById('results-info');
+      
+      if (filtrado === total) {
+        infoElement.textContent = `Mostrando todos os ${total} empréstimos`;
+      } else {
+        infoElement.textContent = `Mostrando ${filtrado} de ${total} empréstimos`;
+      }
+    }
+
+    // Função para abrir detalhes do empréstimo
+    function abrirDetalhes(emprestimoId) {
+      const emprestimo = todosEmprestimos.find(e => e.id === emprestimoId);
+      if (!emprestimo) return;
+
+      // Preencher informações gerais
+      document.getElementById('modal-cliente').textContent = emprestimo.cliente_nome || 'N/A';
+      document.getElementById('modal-telefone').textContent = emprestimo.telefone || 'N/A';
+      document.getElementById('modal-valor-inicial').textContent = 'R$ ' + formatarMoeda(emprestimo.valor || 0);
+      document.getElementById('modal-valor-final').textContent = 'R$ ' + formatarMoeda(emprestimo.valor_final || emprestimo.valor || 0);
+      document.getElementById('modal-data-emprestimo').textContent = formatarData(emprestimo.data_emprestimo);
+      document.getElementById('modal-vencimento').textContent = formatarData(emprestimo.data_vencimento);
+      document.getElementById('modal-juros').textContent = (emprestimo.juros_mensal || 0) + '%';
+      
+      const status = determinarStatus(emprestimo);
+      const statusClass = getStatusClass(status);
+      document.getElementById('modal-status').innerHTML = `<span class="badge ${statusClass}">${status}</span>`;
+      document.getElementById('modal-observacoes').textContent = emprestimo.observacoes || 'Nenhuma observação';
+
+      // Renderizar parcelas
+      renderizarParcelas(emprestimo.parcelas || []);
+      
+      // Calcular resumo
+      const resumo = calcularResumoParcelas(emprestimo.parcelas || []);
+      document.getElementById('resumo-pagas').textContent = resumo.pagas;
+      document.getElementById('resumo-pendentes').textContent = resumo.pendentes;
+      document.getElementById('resumo-atrasadas').textContent = resumo.atrasadas;
+
+      // Mostrar modal
+      document.getElementById('modal-detalhes').style.display = 'block';
+    }
+
+    // Função para renderizar parcelas
+    function renderizarParcelas(parcelas) {
+      const container = document.getElementById('parcelas-container');
+      
+      if (parcelas.length === 0) {
+        container.innerHTML = '<p class="text-gray-500">Nenhuma parcela encontrada</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      parcelas.forEach((parcela, index) => {
+        const statusClass = getParcelaStatusClass(parcela.status);
+        const diasAtraso = calcularDiasAtraso(parcela.data_vencimento);
+        const isAtrasada = parcela.status === 'Pendente' && diasAtraso > 0;
+
+        const parcelaDiv = document.createElement('div');
+        parcelaDiv.className = `parcela-item ${parcela.status.toLowerCase()}`;
+        parcelaDiv.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div class="font-semibold">Parcela ${parcela.numero_parcela}</div>
+              <div class="text-sm text-gray-600">
+                Vencimento: ${formatarData(parcela.data_vencimento)}
+                ${isAtrasada ? `<span class="text-red-600">(${diasAtraso} dias de atraso)</span>` : ''}
+              </div>
+              ${parcela.data_pagamento ? `<div class="text-sm text-green-600">Pago em: ${formatarData(parcela.data_pagamento)}</div>` : ''}
+            </div>
+            <div style="text-align: right;">
+              <div class="font-semibold">R$ ${formatarMoeda(parcela.valor_parcela)}</div>
+              ${parcela.valor_pago > 0 ? `<div class="text-sm text-green-600">Pago: R$ ${formatarMoeda(parcela.valor_pago)}</div>` : ''}
+              <span class="badge ${statusClass}">${parcela.status}</span>
+            </div>
+          </div>
+          ${parcela.juros_aplicados > 0 || parcela.multa_aplicada > 0 ? `
+            <div class="text-sm text-gray-600" style="margin-top: 0.5rem;">
+              ${parcela.juros_aplicados > 0 ? `Juros: R$ ${formatarMoeda(parcela.juros_aplicados)}` : ''}
+              ${parcela.multa_aplicada > 0 ? `Multa: R$ ${formatarMoeda(parcela.multa_aplicada)}` : ''}
+            </div>
+          ` : ''}
+        `;
+        container.appendChild(parcelaDiv);
+      });
+    }
+
+    // Função para calcular dias de atraso
+    function calcularDiasAtraso(dataVencimento) {
+      const hoje = new Date();
+      const vencimento = new Date(dataVencimento);
+      const diffTime = hoje - vencimento;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays > 0 ? diffDays : 0;
+    }
+
+    // Função para fechar modal
+    function fecharModal() {
+      document.getElementById('modal-detalhes').style.display = 'none';
+    }
+
+    // Funções auxiliares
+    function getStatusClass(status) {
+      switch(status) {
+        case 'Ativo': return 'badge-success';
+        case 'Quitado': return 'badge-info';
+        case 'Em Atraso': return 'badge-danger';
+        case 'Cancelado': return 'badge-secondary';
+        default: return 'badge-secondary';
+      }
+    }
+
+    function getParcelaStatusClass(status) {
+      switch(status) {
+        case 'Paga': return 'badge-success';
+        case 'Pendente': return 'badge-warning';
+        case 'Atrasada': return 'badge-danger';
+        default: return 'badge-secondary';
+      }
+    }
+
+    function formatarMoeda(valor) {
+      return new Intl.NumberFormat('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(valor);
+    }
+
+    function formatarData(data) {
+      if (!data) return 'N/A';
+      return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
+    }
+
+    function mostrarNotificacao(mensagem, tipo) {
+      // Implementar notificação se necessário
+      console.log(mensagem);
+    }
+
+    // Fechar modal com ESC
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        fecharModal();
+      }
+    });
+  </script>
+</body>
+</html>
