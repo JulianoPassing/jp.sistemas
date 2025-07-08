@@ -1865,20 +1865,54 @@ async function renderClientesLista() {
       return;
     }
     tbody.innerHTML = '';
-    clientes.forEach(cliente => {
-      // Verifica se o cliente tem empréstimo vencido
+    
+    // Processar cada cliente
+    for (const cliente of clientes) {
+      // Verifica se o cliente tem empréstimo vencido considerando parcelas
       const emprestimosCliente = (emprestimos || []).filter(e => e.cliente_id === cliente.id);
       const hoje = new Date();
       hoje.setHours(0,0,0,0);
       let status = cliente.status || 'Ativo';
+      
       if (status === 'Ativo') {
-        const temVencido = emprestimosCliente.some(e => {
-          if (!e.data_vencimento) return false;
-          const dataVenc = new Date(e.data_vencimento);
-          return dataVenc < hoje && (e.status || '').toLowerCase() !== 'quitado';
-        });
+        let temVencido = false;
+        
+        // Verificar cada empréstimo do cliente
+        for (const emprestimo of emprestimosCliente) {
+          if ((emprestimo.status || '').toLowerCase() === 'quitado') {
+            continue; // Pular empréstimos quitados
+          }
+          
+          // Verificar se é empréstimo parcelado
+          if (emprestimo.tipo_emprestimo === 'in_installments' && emprestimo.numero_parcelas > 1) {
+            try {
+              const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
+              const parcelasAtrasadas = parcelas.filter(p => {
+                const dataVencParcela = new Date(p.data_vencimento);
+                return dataVencParcela < hoje && (p.status !== 'Paga');
+              });
+              
+              if (parcelasAtrasadas.length > 0) {
+                temVencido = true;
+                break;
+              }
+            } catch (error) {
+              console.error('Erro ao buscar parcelas para empréstimo', emprestimo.id, error);
+            }
+          } else {
+            // Para empréstimos de parcela única
+            if (!emprestimo.data_vencimento) continue;
+            const dataVenc = new Date(emprestimo.data_vencimento);
+            if (dataVenc < hoje) {
+              temVencido = true;
+              break;
+            }
+          }
+        }
+        
         if (temVencido) status = 'Em Atraso';
       }
+      
       const badgeClass = status === 'Lista Negra' ? 'danger' : (status === 'Em Atraso' ? 'warning' : 'success');
       const row = document.createElement('tr');
       row.innerHTML = `
@@ -1896,7 +1930,7 @@ async function renderClientesLista() {
         </td>
       `;
       tbody.appendChild(row);
-    });
+    }
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-red-500">Erro ao carregar clientes</td></tr>';
   }

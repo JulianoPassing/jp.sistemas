@@ -78,6 +78,11 @@ if (parcelas.length > 0) {
 - ✅ Processamento assíncrono para múltiplas cobranças
 - ✅ Status correto para empréstimos parcelados
 
+#### `renderClientesLista()` - Lista de Clientes
+- ✅ Verificação de status baseada em parcelas dos empréstimos
+- ✅ Processamento individual de cada empréstimo do cliente
+- ✅ Clientes com empréstimos parcelados em dia não aparecem como "Em Atraso"
+
 ## Casos de Teste
 
 ### ✅ Caso 1: Empréstimo Parcelado em Dia
@@ -126,6 +131,9 @@ Status: ATRASADO ✅
 
 ### `scripts/test-status-correcao-completa.js`
 - **Teste completo**: Validação de todas as funções corrigidas
+
+### `scripts/test-lista-clientes-fix.js`
+- **Teste da lista de clientes**: Validação do status de clientes baseado em parcelas
 
 ## Benefícios da Correção
 
