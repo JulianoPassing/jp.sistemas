@@ -327,6 +327,17 @@ main {
   transform: translateY(-1px);
 }
 
+.btn-info {
+  background-color: #0ea5e9;
+  color: var(--white);
+  border: 1px solid #0ea5e9;
+}
+
+.btn-info:hover {
+  background-color: #0284c7;
+  transform: translateY(-1px);
+}
+
 /* Tabelas */
 .table-container {
   overflow-x: auto;
@@ -972,6 +983,21 @@ footer {
 .resumo-atrasadas {
   background: #fee2e2;
   border-color: #fecaca;
+}
+
+/* Seção de ações do modal */
+.modal-content .section .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.modal-content .section .btn i {
+  font-size: 1rem;
 }
 
 @media (max-width: 1024px) {
