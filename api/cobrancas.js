@@ -707,7 +707,11 @@ router.get('/emprestimos', ensureDatabase, async (req, res) => {
     const username = req.session.cobrancasUser;
     const connection = await createCobrancasConnection(username);
     const [emprestimos] = await connection.execute(`
-      SELECT DISTINCT e.*, c.nome as cliente_nome, c.telefone as telefone
+      SELECT DISTINCT e.*, c.nome as cliente_nome, c.telefone as telefone,
+             CASE 
+               WHEN e.tipo_emprestimo = 'in_installments' THEN (e.valor_parcela * e.numero_parcelas)
+               ELSE e.valor * (1 + (e.juros_mensal / 100))
+             END as valor_final
       FROM emprestimos e
       LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
       ORDER BY e.created_at DESC
