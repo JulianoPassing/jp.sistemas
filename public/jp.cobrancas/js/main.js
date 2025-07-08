@@ -996,7 +996,7 @@ const emprestimoController = {
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
                   <span style="color: #6b7280;">Valor:</span>
-                  <span style="font-weight: 600;">R$ ${utils.formatCurrency(valorParcela)}</span>
+                  <span style="font-weight: 600;">${utils.formatCurrency(valorParcela)}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                   <span style="color: #6b7280;">Vencimento:</span>
@@ -1033,7 +1033,7 @@ const emprestimoController = {
         </div>
         <div style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
           <div style="font-size: 1.2rem; font-weight: bold; color: #002f4b;">
-            Total do Empréstimo: <span style="color: #10b981;">R$ ${utils.formatCurrency(parcelas.reduce((total, p) => total + Number(p.valor_parcela || 0), 0))}</span>
+                            Total do Empréstimo: <span style="color: #10b981;">${utils.formatCurrency(parcelas.reduce((total, p) => total + Number(p.valor_parcela || 0), 0))}</span>
           </div>
         </div>
       </div>
@@ -1075,7 +1075,7 @@ const emprestimoController = {
             <div class="grid grid-cols-2" style="gap: 1rem;">
                              <div class="form-group">
                  <label>Valor do Empréstimo (R$) *</label>
-                 <input type="text" id="edit-valor" class="form-input" value="R$ ${utils.formatCurrency(emp.valor || 0)}" required>
+                 <input type="text" id="edit-valor" class="form-input" value="${utils.formatCurrency(emp.valor || 0)}" required>
                </div>
               
               <div class="form-group">
@@ -1333,7 +1333,7 @@ const emprestimoController = {
         // Calcular valor total dos juros (juros total + juros aplicado por atraso)
         const valorTotalJuros = jurosTotal + jurosAplicado;
         const msgWhatsapp = encodeURIComponent(
-          `Olá ${nome}, seu empréstimo está vencendo hoje. O valor total é de R$ ${utils.formatCurrency(valorAtualizado)}. Caso venha enviar somente o juros o valor é R$ ${utils.formatCurrency(valorTotalJuros)}.`
+                        `Olá ${nome}, seu empréstimo está vencendo hoje. O valor total é de ${utils.formatCurrency(valorAtualizado)}. Caso venha enviar somente o juros o valor é ${utils.formatCurrency(valorTotalJuros)}.`
         );
         const linkWhatsapp = telefone ? `https://wa.me/55${telefone.replace(/\D/g,'')}?text=${msgWhatsapp}` : '#';
         const detalhes = `
@@ -1346,15 +1346,15 @@ const emprestimoController = {
               <h2 style="font-size: 1.4rem; font-weight: bold; margin-bottom: 0.2em; color: #002f4b;">${emp.cliente_nome || 'N/A'}</h2>
               <div style="font-size: 1.1rem; font-weight: 600; color: #222; margin-bottom: 0.2em;">PCL-Nº #${emp.id} ${emp.parcelas ? `(${emp.parcelas}ª parcela)` : ''}</div>
               <div style="font-size: 1rem; color: #444; margin-bottom: 0.2em;">Deve ser pago em <b>${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</b></div>
-              <div style="font-size: 1rem; color: #444;">Valor Investido <b>R$ ${utils.formatCurrency(valorInvestido)}</b></div>
-              <div style="font-size: 1rem; color: #444;">Juros <b>${jurosPercent}%</b> (R$ ${utils.formatCurrency(jurosTotal)})</div>
+              <div style="font-size: 1rem; color: #444;">Valor Investido <b>${utils.formatCurrency(valorInvestido)}</b></div>
+              <div style="font-size: 1rem; color: #444;">Juros <b>${jurosPercent}%</b> (${utils.formatCurrency(jurosTotal)})</div>
               ${infoJuros}
             </div>
             <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid #eee;">
             ${parcelas.length > 1 ? this.renderParcelasDetalhadas(parcelas) : `
               <div style="margin-bottom: 1.2rem; text-align: center;">
                 <div style="font-size: 1.1rem; font-weight: 700; color: #222; margin-bottom: 0.2em;">PARCELA ÚNICA</div>
-                <div style="font-size: 1.3rem; font-weight: bold; color: #002f4b;">Total a Receber: <span style="color: #10b981;">R$ ${utils.formatCurrency(valorAtualizado)}</span></div>
+                <div style="font-size: 1.3rem; font-weight: bold; color: #002f4b;">Total a Receber: <span style="color: #10b981;">${utils.formatCurrency(valorAtualizado)}</span></div>
               </div>
             `}
             <div style="display: flex; flex-direction: column; gap: 0.7rem; margin-top: 1.5rem;">
@@ -1416,16 +1416,16 @@ const emprestimoController = {
               <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
                 <h4 style="margin-bottom: 0.5rem; color: #002f4b;">Resumo do Empréstimo</h4>
                 <p><strong>Cliente:</strong> ${emp.cliente_nome || 'N/A'}</p>
-                <p><strong>Valor Inicial do Empréstimo:</strong> R$ ${utils.formatCurrency(valorInicial)}</p>
+                <p><strong>Valor Inicial do Empréstimo:</strong> ${utils.formatCurrency(valorInicial)}</p>
                 <p><strong>Juros Mensal:</strong> ${jurosPercent}%</p>
-                <p><strong>Juros Acumulados a Pagar:</strong> R$ ${utils.formatCurrency(jurosAcumulados)}</p>
+                                  <p><strong>Juros Acumulados a Pagar:</strong> ${utils.formatCurrency(jurosAcumulados)}</p>
                 <p><strong>Vencimento Atual:</strong> ${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</p>
                 <p><strong>Novo Vencimento:</strong> ${(() => {
                   const dataVenc = new Date(emp.data_vencimento);
                   dataVenc.setDate(dataVenc.getDate() + 30);
                   return utils.formatDate(dataVenc.toISOString().split('T')[0]);
                 })()}</p>
-                <p><strong>Novo Valor da Dívida:</strong> R$ ${utils.formatCurrency(valorInicial)} <em>(volta ao valor inicial)</em></p>
+                                  <p><strong>Novo Valor da Dívida:</strong> ${utils.formatCurrency(valorInicial)} <em>(volta ao valor inicial)</em></p>
                 <div style="background: #e3f2fd; padding: 0.75rem; border-radius: 6px; margin-top: 0.75rem; border-left: 4px solid #2196f3;">
                   <p style="margin: 0; font-size: 0.9rem; color: #1565c0;">
                     <strong>Como funciona:</strong> Ao pagar apenas os juros, o valor da dívida volta ao valor inicial do empréstimo e o prazo é estendido em 30 dias.
@@ -1437,7 +1437,7 @@ const emprestimoController = {
                 <div class="form-group">
                   <label>Valor dos Juros a Pagar (R$) *</label>
                   <input type="number" id="valor-juros" class="form-input" step="0.01" min="${jurosAcumulados}" value="${jurosAcumulados}" required>
-                  <small class="text-gray-500">Mínimo: R$ ${utils.formatCurrency(jurosAcumulados)}</small>
+                  <small class="text-gray-500">Mínimo: ${utils.formatCurrency(jurosAcumulados)}</small>
                 </div>
                 
                 <div class="form-group">
@@ -1483,7 +1483,7 @@ const emprestimoController = {
             const observacoes = document.getElementById('observacoes-juros').value;
             
             if (valorJuros < jurosAcumulados) {
-              alert(`Valor insuficiente. O mínimo é R$ ${utils.formatCurrency(jurosAcumulados)}`);
+                                alert(`Valor insuficiente. O mínimo é ${utils.formatCurrency(jurosAcumulados)}`);
               return;
             }
             
