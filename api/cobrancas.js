@@ -1367,5 +1367,4 @@ router.get('/clientes/:id', ensureDatabase, async (req, res) => {
   }
 });
 
-module.exports = router;
-module.exports.createCobrancasConnection = createCobrancasConnection; 
+module.exports = router; 
