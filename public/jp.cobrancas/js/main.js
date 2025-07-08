@@ -2159,8 +2159,21 @@ async function renderCobrancasEmAbertoLista() {
     }
     tbody.innerHTML = '';
     
+    // Criar um Map para garantir que cada empréstimo apareça apenas uma vez
+    const emprestimosUnicos = new Map();
+    emAberto.forEach(emp => {
+      if (!emprestimosUnicos.has(emp.id)) {
+        emprestimosUnicos.set(emp.id, emp);
+      }
+    });
+    
+    console.log(`📊 Empréstimos únicos encontrados: ${emprestimosUnicos.size}`);
+    
+    // Array para armazenar as linhas da tabela
+    const linhasTabela = [];
+    
     // Verificar status de cada empréstimo com base nas parcelas
-    for (const emp of emAberto) {
+    for (const emp of emprestimosUnicos.values()) {
       const valor = utils.formatCurrency(emp.valor || 0);
       const vencimento = emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-';
       let badge = '';
@@ -2228,7 +2241,8 @@ async function renderCobrancasEmAbertoLista() {
         badge = `<span class="badge" style="background:#888;color:#fff;">${emp.status || '-'}</span>`;
       }
       
-      tbody.innerHTML += `
+      // Adicionar linha à array
+      linhasTabela.push(`
         <tr>
           <td>${emp.cliente_nome || 'N/A'}</td>
           <td>${valor}</td>
@@ -2239,8 +2253,12 @@ async function renderCobrancasEmAbertoLista() {
             <button class="btn btn-warning btn-sm" onclick="cobrar(${emp.id})">Cobrar</button>
           </td>
         </tr>
-      `;
+      `);
     }
+    
+    // Inserir todas as linhas de uma vez
+    tbody.innerHTML = linhasTabela.join('');
+    console.log(`✅ Renderizadas ${linhasTabela.length} linhas na tabela de cobranças`);
   } catch (err) {
     console.error('Erro ao carregar cobranças:', err);
     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-red-500">Erro ao carregar cobranças</td></tr>';
