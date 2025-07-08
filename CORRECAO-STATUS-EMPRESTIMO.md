@@ -58,10 +58,25 @@ if (parcelas.length > 0) {
 - ✅ Usa data da parcela mais atrasada para cálculos
 - ✅ Mostra status correto no modal
 
+#### `renderEmprestimosLista()` - Lista de Empréstimos
+- ✅ Processa empréstimos com lógica baseada em parcelas
+- ✅ Usa `for...of` para processamento assíncrono
+- ✅ Calcula juros apenas para empréstimos realmente atrasados
+
 #### `renderAtrasadosLista()` - Lista de Atrasados
 - ✅ Busca parcelas de cada empréstimo
 - ✅ Filtra apenas empréstimos com parcelas realmente atrasadas
 - ✅ Remove falsos positivos da lista
+
+#### `updateRecentEmprestimos()` - Dashboard Empréstimos Recentes
+- ✅ Processamento paralelo com `Promise.all()`
+- ✅ Lógica de status baseada em parcelas
+- ✅ Otimizado para performance no dashboard
+
+#### `updateCobrancasPendentes()` - Dashboard Cobranças Pendentes
+- ✅ Filtragem baseada em parcelas reais
+- ✅ Processamento assíncrono para múltiplas cobranças
+- ✅ Status correto para empréstimos parcelados
 
 ## Casos de Teste
 
@@ -108,6 +123,9 @@ Status: ATRASADO ✅
 
 ### `scripts/test-status-emprestimo.js`
 - **Teste da lógica**: Validação dos casos de uso
+
+### `scripts/test-status-correcao-completa.js`
+- **Teste completo**: Validação de todas as funções corrigidas
 
 ## Benefícios da Correção
 
