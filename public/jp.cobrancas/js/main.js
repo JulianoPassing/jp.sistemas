@@ -377,7 +377,7 @@ const dashboardController = {
       appState.data.dashboard = data;
       this.updateDashboardCards(data);
       await this.updateRecentEmprestimos(data.emprestimosRecentes || []);
-      await this.updateCobrancasPendentes(data.cobrancasPendentes || []);
+      await this.updateCobrancasPendentes();
       
       // Usar o valor calculado pela API que já considera parcelas corretamente
       // Não sobrescrever o valor da API com cálculo local incorreto
@@ -500,90 +500,143 @@ const dashboardController = {
     });
   },
 
-  async updateCobrancasPendentes(cobrancas) {
+  async updateCobrancasPendentes() {
     const tbody = document.getElementById('cobrancas-pendentes');
     if (!tbody) return;
 
     tbody.innerHTML = '';
 
-    // Filtrar apenas cobranças atrasadas considerando parcelas
-    const atrasadas = [];
-    for (const cobranca of cobrancas) {
+    try {
+      // ✅ MODIFICAÇÃO: Buscar todos os empréstimos em vez de usar parâmetro cobranças
+      const emprestimos = await apiService.getEmprestimos();
       const hoje = new Date();
       hoje.setHours(0,0,0,0);
-      let status = (cobranca.status || '').toUpperCase();
-      let isAtrasado = false;
+
+      // Filtrar empréstimos atrasados, ativos ou com parcelas pendentes/atrasadas
+      const emprestimosParaExibir = [];
       
-      // Verificar se é empréstimo parcelado
-      if (cobranca.tipo_emprestimo === 'in_installments' && cobranca.numero_parcelas > 1) {
-        try {
-          const parcelas = await apiService.getParcelasEmprestimo(cobranca.id);
-          const parcelasAtrasadas = parcelas.filter(p => {
-            const dataVencParcela = new Date(p.data_vencimento);
-            return dataVencParcela < hoje && (p.status !== 'Paga');
-          });
+      for (const emprestimo of emprestimos) {
+        const status = (emprestimo.status || '').toUpperCase();
+        let incluir = false;
+        let dataVencimentoReferencia = null;
+        let tipoVencimento = 'emprestimo'; // 'emprestimo' ou 'parcela'
+        
+        // Incluir se status for ATRASADO ou ATIVO (não incluir QUITADO)
+        if (status === 'ATRASADO' || status === 'ATIVO') {
+          incluir = true;
+          dataVencimentoReferencia = emprestimo.data_vencimento;
           
-          if (parcelasAtrasadas.length > 0) {
-            isAtrasado = true;
+          // Para empréstimos parcelados, verificar se há parcelas pendentes/atrasadas
+          if (emprestimo.tipo_emprestimo === 'in_installments' && emprestimo.numero_parcelas > 1) {
+            try {
+              const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
+              
+              // Buscar a próxima parcela pendente ou a mais atrasada
+              const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
+              
+              if (parcelasNaoPagas.length > 0) {
+                // Ordenar por data de vencimento para pegar a mais urgente
+                parcelasNaoPagas.sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento));
+                const parcelaMaisUrgente = parcelasNaoPagas[0];
+                
+                dataVencimentoReferencia = parcelaMaisUrgente.data_vencimento;
+                tipoVencimento = 'parcela';
+                
+                // Adicionar informação da parcela ao empréstimo para exibição
+                emprestimo.parcela_numero = parcelaMaisUrgente.numero_parcela;
+                emprestimo.parcela_status = parcelaMaisUrgente.status;
+              }
+            } catch (error) {
+              console.error('Erro ao buscar parcelas para empréstimo', emprestimo.id, error);
+            }
           }
-        } catch (error) {
-          console.error('Erro ao buscar parcelas para cobrança', cobranca.id, error);
-        }
-      } else {
-        // Para empréstimos de parcela única
-        const dataVencimento = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
-        if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
-          isAtrasado = true;
+          
+          // Adicionar informações para ordenação e exibição
+          emprestimo.data_vencimento_referencia = dataVencimentoReferencia;
+          emprestimo.tipo_vencimento = tipoVencimento;
+          emprestimosParaExibir.push(emprestimo);
         }
       }
-      
-      if (isAtrasado) {
-        atrasadas.push(cobranca);
-      }
-    }
 
-    if (atrasadas.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhuma cobrança pendente</td></tr>';
-      return;
-    }
+      // ✅ ORDENAR POR DATA DE VENCIMENTO (mais urgentes primeiro)
+      emprestimosParaExibir.sort((a, b) => {
+        const dataA = new Date(a.data_vencimento_referencia || a.data_vencimento);
+        const dataB = new Date(b.data_vencimento_referencia || b.data_vencimento);
+        return dataA - dataB;
+      });
 
-    atrasadas.forEach(cobranca => {
-      // ✅ CORREÇÃO: Usar valores padronizados
-      const valorAtualizado = Number(cobranca.valor_atualizado || cobranca.valor_original || cobranca.valor || 0);
-      const dataVencimento = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
-      const hoje = new Date();
-      hoje.setHours(0,0,0,0);
-      let status = (cobranca.status || '').toUpperCase();
-      let diasAtraso = 0;
-      
-      // Calcular dias de atraso apenas para exibição
-      if (dataVencimento && dataVencimento < hoje) {
-        const diffTime = hoje.getTime() - dataVencimento.getTime();
-        diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        if (status !== 'QUITADO') {
-          status = 'ATRASADO';
-        }
+      if (emprestimosParaExibir.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhuma cobrança pendente</td></tr>';
+        return;
       }
+
+      emprestimosParaExibir.forEach(emprestimo => {
+        // ✅ USAR VALORES PADRONIZADOS DA API
+        const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
+        const dataVencimento = emprestimo.data_vencimento_referencia ? 
+          new Date(emprestimo.data_vencimento_referencia) : 
+          (emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null);
+        
+        let status = (emprestimo.status || '').toUpperCase();
+        let diasAtraso = 0;
+        let textoVencimento = '';
+        
+        // Calcular dias de atraso e texto do vencimento
+        if (dataVencimento) {
+          const diffTime = dataVencimento.getTime() - hoje.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          if (diffDays < 0) {
+            diasAtraso = Math.abs(diffDays);
+            status = 'ATRASADO';
+          } else if (diffDays === 0) {
+            textoVencimento = 'Vence hoje';
+          } else if (diffDays <= 3) {
+            textoVencimento = `Vence em ${diffDays} dia(s)`;
+          } else {
+            textoVencimento = `Vence em ${diffDays} dia(s)`;
+          }
+          
+          // Se é parcela, adicionar informação
+          if (emprestimo.tipo_vencimento === 'parcela') {
+            const numeroParc = emprestimo.parcela_numero || '?';
+            textoVencimento += ` (Parcela ${numeroParc})`;
+          }
+        }
+        
+        const valor = new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        }).format(valorFinal);
+        
+        const vencimento = dataVencimento ? 
+          dataVencimento.toLocaleDateString('pt-BR') : '-';
+        
+        const statusClass = status === 'ATRASADO' ? 'danger' : 
+          (status === 'ATIVO' ? 'warning' : 'info');
+        
+        const statusTexto = diasAtraso > 0 ? 
+          `ATRASADO (${diasAtraso}d)` : 
+          (textoVencimento || status);
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${emprestimo.cliente_nome || 'N/A'}</td>
+          <td>${valor}</td>
+          <td>${vencimento}</td>
+          <td>${statusTexto}</td>
+          <td><span class="badge badge-${statusClass}">${status}</span></td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
       
-      const valor = new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(valorAtualizado);
-      const vencimento = cobranca.data_vencimento ? new Date(cobranca.data_vencimento).toLocaleDateString('pt-BR') : '-';
-      const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : 'info'));
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${cobranca.cliente_nome || 'N/A'}</td>
-        <td>${valor}</td>
-        <td>${vencimento}</td>
-        <td>${diasAtraso > 0 ? `${diasAtraso} dias` : 'No prazo'}</td>
-        <td><span class="badge badge-${statusClass}">${status}</span></td>
-        <td>
-          <button class="btn btn-secondary btn-sm" onclick="cobrancaController.cobrar(${cobranca.id})">Cobrar</button>
-        </td>
-      `;
-      tbody.appendChild(row);
-    });
+    } catch (error) {
+      console.error('Erro ao carregar cobranças pendentes:', error);
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar cobranças</td></tr>';
+    }
   }
 };
 
