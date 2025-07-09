@@ -113,6 +113,14 @@
       // Carregar lista de clientes
       renderClientesLista();
       
+      // Verificar se carregou corretamente após um breve delay
+      setTimeout(() => {
+        if (!allClientes || allClientes.length === 0) {
+          console.log('🔄 Tentando recarregar clientes...');
+          renderClientesLista();
+        }
+      }, 1000);
+      
       // Funcionalidade de busca
       const searchInput = document.getElementById('search-clientes');
       const filterStatus = document.getElementById('filter-status-clientes');
@@ -124,6 +132,11 @@
       
       // Função para aplicar filtros
       function applyFilters() {
+        if (!searchInput || !filterStatus || !allClientes || allClientes.length === 0) {
+          console.log('⚠️ Filtros não aplicados - dados não disponíveis');
+          return;
+        }
+        
         const searchTerm = searchInput.value.toLowerCase().trim();
         const statusFilter = filterStatus.value;
         
@@ -143,6 +156,8 @@
           return matchesSearch && matchesStatus;
         });
         
+        console.log(`🔍 Filtros aplicados: ${filteredClientes.length} de ${allClientes.length}`);
+        
         // Atualizar tabela
         renderFilteredClientes();
         
@@ -155,7 +170,7 @@
         const tbody = document.getElementById('lista-clientes');
         if (!tbody) return;
         
-        if (filteredClientes.length === 0) {
+        if (!filteredClientes || filteredClientes.length === 0) {
           tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhum cliente encontrado</td></tr>';
           return;
         }
@@ -193,8 +208,10 @@
       
       // Função para atualizar informação de resultados
       function updateSearchResultsInfo() {
-        const total = allClientes.length;
-        const filtered = filteredClientes.length;
+        if (!searchResultsInfo) return;
+        
+        const total = allClientes ? allClientes.length : 0;
+        const filtered = filteredClientes ? filteredClientes.length : 0;
         
         if (filtered === total) {
           searchResultsInfo.textContent = `Mostrando todos os ${total} clientes`;
@@ -205,17 +222,23 @@
       
       // Função para limpar busca
       function clearSearch() {
-        searchInput.value = '';
-        filterStatus.value = '';
+        if (searchInput) searchInput.value = '';
+        if (filterStatus) filterStatus.value = '';
         filteredClientes = [...allClientes];
         renderFilteredClientes();
         updateSearchResultsInfo();
       }
       
       // Event listeners
-      searchInput.addEventListener('input', applyFilters);
-      filterStatus.addEventListener('change', applyFilters);
-      clearSearchBtn.addEventListener('click', clearSearch);
+      if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+      }
+      if (filterStatus) {
+        filterStatus.addEventListener('change', applyFilters);
+      }
+      if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', clearSearch);
+      }
       
       // Sobrescrever a função renderClientesLista para incluir busca
       const originalRenderClientesLista = window.renderClientesLista;
@@ -224,6 +247,8 @@
           const clientes = await apiService.getClientes();
           allClientes = clientes || [];
           filteredClientes = [...allClientes];
+          
+          console.log(`🔍 Carregados ${allClientes.length} clientes para filtros`);
           
           renderFilteredClientes();
           updateSearchResultsInfo();
@@ -235,6 +260,11 @@
           }
         }
       };
+      
+      // Inicializar filtros após carregar a página
+      setTimeout(() => {
+        window.renderClientesLista();
+      }, 100);
     });
   </script>
 </body>
