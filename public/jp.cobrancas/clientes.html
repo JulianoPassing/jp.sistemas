@@ -64,6 +64,7 @@
               <select id="filter-status-clientes" class="form-input" style="min-width: 120px;">
                 <option value="">Todos os Status</option>
                 <option value="Ativo">Ativo</option>
+                <option value="Em Atraso">Em Atraso</option>
                 <option value="Lista Negra">Lista Negra</option>
                 <option value="Inativo">Inativo</option>
               </select>
@@ -200,6 +201,7 @@
       function getStatusBadgeClass(status) {
         switch(status) {
           case 'Ativo': return 'success';
+          case 'Em Atraso': return 'warning';
           case 'Lista Negra': return 'danger';
           case 'Inativo': return 'secondary';
           default: return 'success';

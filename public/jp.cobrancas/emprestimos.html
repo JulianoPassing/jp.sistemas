@@ -106,6 +106,20 @@
   <script src="./js/main.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      // Verificar se utils está disponível
+      if (typeof utils === 'undefined') {
+        console.error('❌ ERRO: utils não está definido!');
+      } else {
+        console.log('✅ utils está disponível:', Object.keys(utils));
+      }
+      
+      // Verificar se apiService está disponível  
+      if (typeof apiService === 'undefined') {
+        console.error('❌ ERRO: apiService não está definido!');
+      } else {
+        console.log('✅ apiService está disponível');
+      }
+      
       const menuBtn = document.getElementById('mobile-menu-toggle');
       const navWrapper = document.querySelector('.nav-wrapper');
       if (menuBtn && navWrapper) {
@@ -149,14 +163,30 @@
           const emprestimosProcessados = [];
           
           for (const emprestimo of emprestimos || []) {
-            console.log(`✅ Processando empréstimo ID ${emprestimo.id} - ${emprestimo.cliente_nome}`);
+            console.log(`✅ Processando empréstimo ID ${emprestimo.id} - ${emprestimo.cliente_nome} (status original: '${emprestimo.status}')`);
             
             // Verificar status baseado em parcelas
             try {
               const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
               const hoje = new Date();
               hoje.setHours(0,0,0,0);
-              let status = (emprestimo.status || '').toUpperCase();
+              
+              // Padronizar status inicial da API
+              let status = emprestimo.status || 'Ativo';
+              if (typeof status === 'string') {
+                const statusLower = status.toLowerCase();
+                if (statusLower === 'ativo' || statusLower === 'active') {
+                  status = 'Ativo';
+                } else if (statusLower === 'quitado' || statusLower === 'paid') {
+                  status = 'Quitado';
+                } else if (statusLower === 'atrasado' || statusLower === 'em atraso' || statusLower === 'overdue') {
+                  status = 'Em Atraso';
+                } else if (statusLower === 'pendente' || statusLower === 'pending') {
+                  status = 'Pendente';
+                } else if (statusLower === 'cancelado' || statusLower === 'cancelled') {
+                  status = 'Cancelado';
+                }
+              }
               
               if (parcelas && parcelas.length > 0) {
                 console.log(`  📅 Empréstimo ${emprestimo.id} tem ${parcelas.length} parcelas`);
@@ -169,23 +199,24 @@
                 const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
                 
                 if (parcelasPagas.length === parcelas.length) {
-                  status = 'QUITADO';
+                  status = 'Quitado';
                 } else if (parcelasAtrasadas.length > 0) {
-                  status = 'ATRASADO';
+                  status = 'Em Atraso';
                 } else {
-                  status = 'ATIVO';
+                  status = 'Ativo';
                 }
                 
                 console.log(`  🔄 Status atualizado para: ${status} (${parcelasPagas.length}/${parcelas.length} pagas, ${parcelasAtrasadas.length} atrasadas)`);
               } else {
                 console.log(`  📄 Empréstimo ${emprestimo.id} sem parcelas, usando data de vencimento`);
                 const dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
-                if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
-                  status = 'ATRASADO';
+                if (dataVencimento && dataVencimento < hoje && status !== 'Quitado') {
+                  status = 'Em Atraso';
                 }
               }
               
               emprestimo.status = status;
+              console.log(`  📝 Status final definido: '${status}'`);
               
             } catch (error) {
               console.error(`❌ Erro ao verificar parcelas do empréstimo ${emprestimo.id}:`, error);
@@ -200,6 +231,18 @@
           filteredEmprestimos = [...allEmprestimos];
           
           console.log(`📊 allEmprestimos: ${allEmprestimos.length}, filteredEmprestimos: ${filteredEmprestimos.length}`);
+          
+          // Debug: Mostrar todos os status únicos encontrados
+          const statusUnicos = [...new Set(allEmprestimos.map(e => e.status))];
+          console.log('📋 Status únicos encontrados:', statusUnicos);
+          
+          // Debug: Mostrar alguns empréstimos de exemplo
+          if (allEmprestimos.length > 0) {
+            console.log('📄 Exemplos de empréstimos carregados:');
+            allEmprestimos.slice(0, 3).forEach(emp => {
+              console.log(`  - ID ${emp.id}: ${emp.cliente_nome} - Status: '${emp.status}'`);
+            });
+          }
           
           await renderFilteredEmprestimos();
           updateSearchResultsInfo();
@@ -224,7 +267,12 @@
         const searchTerm = searchInput.value.toLowerCase().trim();
         const statusFilter = filterStatus.value;
         
+        console.log(`🔍 Aplicando filtros - Busca: '${searchTerm}', Status: '${statusFilter}'`);
+        console.log(`📊 Total de empréstimos disponíveis: ${allEmprestimos.length}`);
+        
+        // Filtrar empréstimos
         filteredEmprestimos = allEmprestimos.filter(emp => {
+          // Primeiro verificar se tem busca por texto
           const matchesSearch = !searchTerm || 
             (emp.cliente_nome && emp.cliente_nome.toLowerCase().includes(searchTerm)) ||
             (emp.valor && emp.valor.toString().includes(searchTerm)) ||
@@ -232,12 +280,29 @@
             (emp.data_emprestimo && emp.data_emprestimo.includes(searchTerm)) ||
             (emp.data_vencimento && emp.data_vencimento.includes(searchTerm));
           
+          // Depois verificar status
           const matchesStatus = !statusFilter || emp.status === statusFilter;
+          
+          // Debug apenas para os primeiros 3 empréstimos que não passam no filtro
+          if (!matchesStatus && statusFilter && filteredEmprestimos.length < 3) {
+            console.log(`❌ Não passou no filtro - Empréstimo ${emp.id}: status='${emp.status}' ≠ filtro='${statusFilter}'`);
+          }
           
           return matchesSearch && matchesStatus;
         });
         
         console.log(`🔍 Filtros aplicados: ${filteredEmprestimos.length} de ${allEmprestimos.length}`);
+        
+        // Se não encontrou nenhum resultado mas deveria encontrar, fazer debug
+        if (filteredEmprestimos.length === 0 && allEmprestimos.length > 0) {
+          console.log('🚨 PROBLEMA: Nenhum empréstimo passou nos filtros!');
+          if (!statusFilter && !searchTerm) {
+            console.log('🔍 Filtros vazios mas nenhum resultado - problema na lógica!');
+            // Forçar mostrar todos se não há filtros
+            filteredEmprestimos = [...allEmprestimos];
+            console.log(`🔧 Forçando mostrar todos: ${filteredEmprestimos.length} empréstimos`);
+          }
+        }
         
         await renderFilteredEmprestimos();
         updateSearchResultsInfo();
@@ -245,84 +310,66 @@
       
       // Função para renderizar empréstimos filtrados
       async function renderFilteredEmprestimos() {
-        if (!tbody) return;
+        console.log(`🎨 Iniciando renderização de ${filteredEmprestimos ? filteredEmprestimos.length : 0} empréstimos`);
+        
+        if (!tbody) {
+          console.log('❌ Elemento tbody não encontrado!');
+          return;
+        }
         
         if (!filteredEmprestimos || filteredEmprestimos.length === 0) {
+          console.log('📭 Nenhum empréstimo filtrado para exibir');
           tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
           return;
         }
         
         tbody.innerHTML = '';
         
-        // Processar cada empréstimo para obter o vencimento correto
-        for (const emp of filteredEmprestimos) {
-          let proximoVencimento = null;
-          
-          try {
-            // Buscar parcelas do empréstimo
-            const parcelas = await apiService.getParcelasEmprestimo(emp.id);
-            
-            if (parcelas && parcelas.length > 0) {
-              // Encontrar a próxima parcela em aberto
-              const hoje = new Date();
-              hoje.setHours(0,0,0,0);
-              
-              const parcelasEmAberto = parcelas.filter(p => p.status !== 'Paga');
-              
-              if (parcelasEmAberto.length > 0) {
-                // Ordenar por data de vencimento e pegar a próxima
-                parcelasEmAberto.sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento));
-                proximoVencimento = parcelasEmAberto[0].data_vencimento;
-              } else {
-                // Se todas as parcelas estão pagas, mostrar a data da última parcela
-                const ultimaParcela = parcelas.sort((a, b) => new Date(b.data_vencimento) - new Date(a.data_vencimento))[0];
-                proximoVencimento = ultimaParcela.data_vencimento;
-              }
-            } else {
-              // Se não há parcelas, usar data de vencimento original apenas se diferente da data do empréstimo
-              if (emp.data_vencimento && emp.data_vencimento !== emp.data_emprestimo) {
-                proximoVencimento = emp.data_vencimento;
-              }
-            }
-          } catch (error) {
-            console.error(`Erro ao buscar parcelas do empréstimo ${emp.id}:`, error);
-            // Em caso de erro, usar data de vencimento original se diferente da data do empréstimo
-            if (emp.data_vencimento && emp.data_vencimento !== emp.data_emprestimo) {
-              proximoVencimento = emp.data_vencimento;
-            }
+        console.log(`📋 Renderizando ${filteredEmprestimos.length} empréstimos na tabela`);
+        
+        // Renderização simplificada para teste
+        filteredEmprestimos.forEach((emp, index) => {
+          // Log apenas dos primeiros 3 empréstimos para não poluir o console
+          if (index < 3) {
+            console.log(`📄 Renderizando empréstimo ${index + 1}/${filteredEmprestimos.length}: ID ${emp.id} - ${emp.cliente_nome} - Status: ${emp.status}`);
           }
           
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${emp.cliente_nome || 'N/A'}</td>
-            <td>${utils.formatCurrency(emp.valor || 0)}</td>
-            <td>${utils.formatCurrency(emp.valor_final || emp.valor || 0)}</td>
-            <td>${emp.data_emprestimo ? utils.formatDate(emp.data_emprestimo) : '-'}</td>
-            <td>${proximoVencimento ? utils.formatDate(proximoVencimento) : '-'}</td>
+            <td>${emp.valor ? `R$ ${Number(emp.valor).toFixed(2)}` : 'R$ 0,00'}</td>
+            <td>${emp.valor_final ? `R$ ${Number(emp.valor_final).toFixed(2)}` : (emp.valor ? `R$ ${Number(emp.valor).toFixed(2)}` : 'R$ 0,00')}</td>
+            <td>${emp.data_emprestimo ? new Date(emp.data_emprestimo).toLocaleDateString('pt-BR') : '-'}</td>
+            <td>${emp.data_vencimento ? new Date(emp.data_vencimento).toLocaleDateString('pt-BR') : '-'}</td>
             <td><span class="badge badge-${getStatusBadgeClass(emp.status)}">${emp.status || 'N/A'}</span></td>
             <td>
               <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
             </td>
           `;
           tbody.appendChild(row);
-        }
+        });
+        
+        console.log(`✅ Renderização concluída: ${tbody.children.length} linhas na tabela`);
       }
       
       // Função para obter classe do badge baseado no status
       function getStatusBadgeClass(status) {
         switch(status) {
-          case 'ATIVO': return 'success';
-          case 'PENDENTE': return 'warning';
-          case 'ATRASADO': return 'danger';
-          case 'QUITADO': return 'info';
-          case 'CANCELADO': return 'secondary';
+          case 'Ativo': return 'success';
+          case 'Pendente': return 'warning';
+          case 'Em Atraso': return 'danger';
+          case 'Quitado': return 'info';
+          case 'Cancelado': return 'secondary';
           default: return 'secondary';
         }
       }
       
       // Função para atualizar informação de resultados
       function updateSearchResultsInfo() {
-        if (!searchResultsInfo) return;
+        if (!searchResultsInfo) {
+          console.log('⚠️ Elemento searchResultsInfo não encontrado');
+          return;
+        }
         
         const total = allEmprestimos ? allEmprestimos.length : 0;
         const filtered = filteredEmprestimos ? filteredEmprestimos.length : 0;
@@ -332,6 +379,8 @@
         } else {
           searchResultsInfo.textContent = `Mostrando ${filtered} de ${total} empréstimos`;
         }
+        
+        console.log(`📊 Info atualizada: ${filtered} de ${total} empréstimos`);
       }
       
       // Função para limpar busca
@@ -354,15 +403,33 @@
         clearSearchBtn.addEventListener('click', clearSearch);
       }
       
+      // Função de teste simples
+      async function testeCarregamentoSimples() {
+        console.log('🧪 TESTE: Carregamento simples de empréstimos');
+        try {
+          const emprestimos = await apiService.getEmprestimos();
+          console.log(`✅ TESTE: API retornou ${emprestimos ? emprestimos.length : 0} empréstimos`);
+          if (emprestimos && emprestimos.length > 0) {
+            console.log(`📄 TESTE: Primeiro empréstimo:`, emprestimos[0]);
+          }
+        } catch (error) {
+          console.error('❌ TESTE: Erro na API:', error);
+        }
+      }
+      
+      // Executar teste primeiro
+      testeCarregamentoSimples();
+      
       // Carregar empréstimos apenas uma vez
       carregarEmprestimos();
       
       // Recarregar se necessário após um breve delay
       setTimeout(() => {
         if (allEmprestimos.length === 0) {
+          console.log('🔄 Recarregando empréstimos após delay...');
           carregarEmprestimos();
         }
-      }, 500);
+      }, 2000);
     });
   </script>
 </body>

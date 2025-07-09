@@ -485,7 +485,7 @@ const dashboardController = {
         new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : 
         '-';
       
-      const statusClass = emprestimo.status === 'ATRASADO' ? 'danger' : (emprestimo.status === 'PENDENTE' ? 'warning' : (emprestimo.status === 'ATIVO' ? 'success' : 'info'));
+      const statusClass = emprestimo.status === 'Em Atraso' ? 'danger' : (emprestimo.status === 'PENDENTE' ? 'warning' : (emprestimo.status === 'ATIVO' ? 'success' : 'info'));
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${emprestimo.cliente_nome || 'N/A'}</td>
@@ -521,8 +521,8 @@ const dashboardController = {
         let dataVencimentoReferencia = null;
         let tipoVencimento = 'emprestimo'; // 'emprestimo' ou 'parcela'
         
-        // Incluir se status for ATRASADO ou ATIVO (não incluir QUITADO)
-        if (status === 'ATRASADO' || status === 'ATIVO') {
+              // Incluir se status for Em Atraso ou ATIVO (não incluir QUITADO)
+      if (status === 'Em Atraso' || status === 'ATIVO') {
           incluir = true;
           dataVencimentoReferencia = emprestimo.data_vencimento;
           
@@ -588,7 +588,7 @@ const dashboardController = {
           
           if (diffDays < 0) {
             diasAtraso = Math.abs(diffDays);
-            status = 'ATRASADO';
+            status = 'Em Atraso';
           } else if (diffDays === 0) {
             textoVencimento = 'Vence hoje';
           } else if (diffDays <= 3) {
@@ -612,11 +612,11 @@ const dashboardController = {
         const vencimento = dataVencimento ? 
           dataVencimento.toLocaleDateString('pt-BR') : '-';
         
-        const statusClass = status === 'ATRASADO' ? 'danger' : 
+        const statusClass = status === 'Em Atraso' ? 'danger' : 
           (status === 'ATIVO' ? 'warning' : 'info');
         
         const statusTexto = diasAtraso > 0 ? 
-          `ATRASADO (${diasAtraso}d)` : 
+          `Em Atraso (${diasAtraso}d)` : 
           (textoVencimento || status);
         
         const row = document.createElement('tr');
@@ -1288,7 +1288,7 @@ const emprestimoController = {
           if (parcelasPagas.length === parcelas.length) {
             status = 'QUITADO';
           } else if (parcelasAtrasadas.length > 0) {
-            status = 'ATRASADO';
+            status = 'Em Atraso';
             // Usar a data de vencimento da parcela mais atrasada
             const parcelaMaisAtrasada = parcelasAtrasadas.sort((a, b) => 
               new Date(a.data_vencimento) - new Date(b.data_vencimento)
@@ -1300,7 +1300,7 @@ const emprestimoController = {
         } else {
           // Para empréstimos de parcela única, usar lógica original
           if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
-            status = 'ATRASADO';
+            status = 'Em Atraso';
           }
         }
         let valorAtualizado = valorInvestido + jurosTotal;
@@ -1308,7 +1308,7 @@ const emprestimoController = {
         let diasAtraso = 0;
         let jurosDiario = 0;
         let jurosAplicado = 0;
-        if (status === 'ATRASADO') {
+        if (status === 'Em Atraso') {
           // Calcular dias de atraso
           const diffTime = hoje.getTime() - dataVencimento.getTime();
           diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -1338,7 +1338,7 @@ const emprestimoController = {
         const detalhes = `
           <div class="emprestimo-modal-box" style="padding: 1.5rem; max-width: 420px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 2px 16px #002f4b22;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-              <span class="badge" style="background: ${status === 'ATRASADO' ? '#fbbf24' : status === 'QUITADO' ? '#10b981' : status === 'SÓ JUROS' ? '#6366f1' : '#002f4b'}; color: #fff; font-weight: 600; font-size: 1rem; padding: 0.4em 1em; border-radius: 8px; letter-spacing: 1px;">${status || '-'}</span>
+              <span class="badge" style="background: ${status === 'Em Atraso' ? '#fbbf24' : status === 'QUITADO' ? '#10b981' : status === 'SÓ JUROS' ? '#6366f1' : '#002f4b'}; color: #fff; font-weight: 600; font-size: 1rem; padding: 0.4em 1em; border-radius: 8px; letter-spacing: 1px;">${status || '-'}</span>
               <button class="btn" style="background: #10b981; color: #fff; font-weight: 600; border-radius: 8px; padding: 0.4em 1.2em; font-size: 1rem;" id="modal-btn-editar">Editar</button>
             </div>
             <div style="margin-bottom: 1.2rem;">
@@ -1677,7 +1677,7 @@ const clienteController = {
             if (parcelasPagas.length === parcelas.length) {
               statusAtual = 'QUITADO';
             } else if (parcelasAtrasadas.length > 0) {
-              statusAtual = 'ATRASADO';
+              statusAtual = 'Em Atraso';
             } else {
               statusAtual = 'ATIVO';
             }
@@ -1685,7 +1685,7 @@ const clienteController = {
             // Para empréstimos de parcela única
             const dataVenc = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
             if (dataVenc && dataVenc < hoje && statusAtual !== 'QUITADO') {
-              statusAtual = 'ATRASADO';
+              statusAtual = 'Em Atraso';
             }
           }
           
@@ -1727,7 +1727,7 @@ const clienteController = {
                 <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin: 1rem 0; background: #fff;">
                   <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 1rem;">
                     <h5 style="margin: 0; color: #002f4b;">Empréstimo #${emp.id}</h5>
-                    <span class="badge badge-${emp.statusAtual === 'ATIVO' ? 'success' : (emp.statusAtual === 'ATRASADO' ? 'danger' : 'info')}" style="font-size: 0.9rem;">${emp.statusAtual}</span>
+                    <span class="badge badge-${emp.statusAtual === 'ATIVO' ? 'success' : (emp.statusAtual === 'Em Atraso' ? 'danger' : 'info')}" style="font-size: 0.9rem;">${emp.statusAtual}</span>
                   </div>
                   
                   <!-- Informações Principais -->
@@ -1866,7 +1866,7 @@ async function renderHistoricoEmprestimos() {
       }).format(valorAtualizado);
       const data = emprestimo.data_emprestimo ? new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR') : '-';
       const vencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-';
-      const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : (status === 'QUITADO' ? 'info' : 'secondary')));
+      const statusClass = status === 'Em Atraso' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : (status === 'QUITADO' ? 'info' : 'secondary')));
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${emprestimo.cliente_nome || 'N/A'}</td>
@@ -1912,7 +1912,7 @@ async function renderEmprestimosLista() {
         currency: 'BRL'
       }).format(valorAtualizado);
       const data = new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR');
-      const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : 'info'));
+      const statusClass = status === 'Em Atraso' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : 'info'));
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${emprestimo.cliente_nome || 'N/A'}</td>
@@ -2825,7 +2825,7 @@ async function renderAtrasadosLista() {
     // ✅ CORREÇÃO: Usar status padronizado da API
     const atrasados = emprestimos.filter(e => {
       const status = (e.status || '').toUpperCase();
-      return status === 'ATRASADO';
+      return status === 'Em Atraso';
     });
     if (atrasados.length === 0) {
       tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum empréstimo atrasado</td></tr>';
