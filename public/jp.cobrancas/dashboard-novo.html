@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JP-Cobranças - Dashboard</title>
+    <link rel="icon" type="image/png" href="https://i.imgur.com/6N82fk2.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/easier-style.css">
+</head>
+<body class="app-layout">
+    <!-- Mobile Navigation -->
+    <nav class="mobile-nav">
+        <div class="mobile-nav-content">
+            <button class="notification-btn">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5.365V3m0 2.365a5.338 5.338 0 0 1 5.133 5.368v1.8c0 2.386 1.867 2.982 1.867 4.175 0 .593 0 1.292-.538 1.292H5.538C5 18 5 17.301 5 16.708c0-1.193 1.867-1.789 1.867-4.175v-1.8A5.338 5.338 0 0 1 12 5.365ZM8.733 18c.094.852.306 1.54.944 2.112a3.48 3.48 0 0 0 4.646 0c.638-.572 1.236-1.26 1.33-2.112h-6.92Z"/>
+                </svg>
+                <div class="notification-badge">6</div>
+            </button>
+            <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 6H6m12 4H6m12 4H6m12 4H6"/>
+                </svg>
+                <span>Menu</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="dashboard-novo.html" class="logo">
+                <img src="https://i.imgur.com/EQ1tjZX.png" alt="JP-Cobranças">
+            </a>
+            <div class="mobile-user-info">
+                <p class="user-name">Olá, Juliano</p>
+                <div class="user-actions">
+                    <a href="#" class="user-action">Editar Perfil</a>
+                    <a href="#" class="user-action">Trocar Senha</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sidebar-nav">
+            <div class="nav-section">
+                <h5>Menu</h5>
+                <div class="nav-item">
+                    <a href="dashboard-novo.html" class="active">
+                        <svg class="menu-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M11.293 3.293a1 1 0 0 1 1.414 0l6 6 2 2a1 1 0 0 1-1.414 1.414L19 12.414V19a2 2 0 0 1-2 2h-3a1 1 0 0 1-1-1v-3h-2v3a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2v-6.586l-.293.293a1 1 0 0 1-1.414-1.414l2-2 6-6Z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="historico-novo.html">
+                        <svg class="menu-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M15 4H9v16h6V4Zm2 16h3a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3v16ZM4 4h3v16H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Histórico</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="adicionar-cliente-novo.html">
+                        <svg class="menu-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M9 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4H7Zm8-1a1 1 0 0 1 1-1h1v-1a1 1 0 1 1 2 0v1h1a1 1 0 1 1 0 2h-1v1a1 1 0 1 1-2 0v-1h-1a1 1 0 0 1-1-1Z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Adicionar Cliente</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="clientes-novo.html">
+                        <svg class="menu-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4H6Zm7.25-2.095c.478-.86.75-1.85.75-2.905a5.973 5.973 0 0 0-.75-2.906 4 4 0 1 1 0 5.811ZM15.466 20c.34-.588.535-1.271.535-2v-1a5.978 5.978 0 0 0-1.528-4H18a4 4 0 0 1 4 4v1a2 2 0 0 1-2 2h-4.535Z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Lista de Clientes</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="cobrancas-novo.html">
+                        <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17.345a4.76 4.76 0 0 0 2.558 1.618c2.274.589 4.512-.446 4.999-2.31.487-1.866-1.273-3.9-3.546-4.49-2.273-.59-4.034-2.623-3.547-4.488.486-1.865 2.724-2.899 4.998-2.31.982.236 1.87.793 2.538 1.592m-3.879 12.171V21m0-18v2.2"/>
+                        </svg>
+                        <span>Cobrança</span>
+                        <span class="menu-badge menu-badge-warning">2</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="atrasados-novo.html">
+                        <svg class="menu-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M6 5V4a1 1 0 1 1 2 0v1h3V4a1 1 0 1 1 2 0v1h3V4a1 1 0 1 1 2 0v1h1a2 2 0 0 1 2 2v2H3V7a2 2 0 0 1 2-2h1ZM3 19v-8h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm5-6a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2H8Z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Atrasados</span>
+                        <span class="menu-badge menu-badge-danger">41</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="lista-negra-novo.html">
+                        <svg class="menu-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm5.757-1a1 1 0 1 0 0 2h8.486a1 1 0 1 0 0-2H7.757Z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Lista Negra</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="afiliados-novo.html">
+                        <svg class="menu-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M12 6a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm-1.5 8a4 4 0 0 0-4 4 2 2 0 0 0 2 2h7a2 2 0 0 0 2-2 4 4 0 0 0-4-4h-3Zm6.82-3.096a5.51 5.51 0 0 0-2.797-6.293 3.5 3.5 0 1 1 2.796 6.292ZM19.5 18h.5a2 2 0 0 0 2-2 4 4 0 0 0-4-4h-1.1a5.503 5.503 0 0 1-.471.762A5.998 5.998 0 0 1 19.5 18ZM4 7.5a3.5 3.5 0 0 1 5.477-2.889 5.5 5.5 0 0 0-2.796 6.293A3.501 3.501 0 0 1 4 7.5ZM7.1 12H6a4 4 0 0 0-4 4 2 2 0 0 0 2 2h.5a5.998 5.998 0 0 1 3.071-5.238A5.505 5.505 0 0 1 7.1 12Z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Lista de Afiliados</span>
+                    </a>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <div class="nav-item">
+                <a href="dados-plataforma-novo.html">
+                    <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13v-2a1 1 0 0 0-1-1h-.757l-.707-1.707.535-.536a1 1 0 0 0 0-1.414l-1.414-1.414a1 1 0 0 0-1.414 0l-.536.535L14 4.757V4a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v.757l-1.707.707-.536-.535a1 1 0 0 0-1.414 0L4.929 6.343a1 1 0 0 0 0 1.414l.536.536L4.757 10H4a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h.757l.707 1.707-.535.536a1 1 0 0 0 0 1.414l1.414 1.414a1 1 0 0 0 1.414 0l.536-.535 1.707.707V20a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-.757l1.707-.708.536.536a1 1 0 0 0 1.414 0l1.414-1.414a1 1 0 0 0 0-1.414l-.535-.536.707-1.707H20a1 1 0 0 0 1-1Z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
+                    </svg>
+                    <span>Configurações</span>
+                </a>
+            </div>
+            
+            <div class="nav-item">
+                <a href="#" onclick="sair()">
+                    <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2"/>
+                    </svg>
+                    <span>Sair</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <button class="notification-btn">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5.365V3m0 2.365a5.338 5.338 0 0 1 5.133 5.368v1.8c0 2.386 1.867 2.982 1.867 4.175 0 .593 0 1.292-.538 1.292H5.538C5 18 5 17.301 5 16.708c0-1.193 1.867-1.789 1.867-4.175v-1.8A5.338 5.338 0 0 1 12 5.365ZM8.733 18c.094.852.306 1.54.944 2.112a3.48 3.48 0 0 0 4.646 0c.638-.572 1.236-1.26 1.33-2.112h-6.92Z"/>
+                </svg>
+                <div class="notification-badge">6</div>
+            </button>
+            
+            <div class="user-menu">
+                <button class="user-menu-btn" onclick="toggleUserMenu()">
+                    <span>Juliano</span>
+                </button>
+                <div id="userMenu" class="user-menu-dropdown" style="display: none;">
+                    <div class="user-menu-header">
+                        <p>Juliano</p>
+                        <p>jp.cobrancas.com</p>
+                    </div>
+                    <div class="user-menu-items">
+                        <a href="#" class="user-menu-item">Editar Perfil</a>
+                        <a href="#" class="user-menu-item">Trocar Senha</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div class="page-content">
+            <!-- Welcome Message -->
+            <div class="welcome-message">
+                <h2 id="greetingMessage">Bom Dia, Juliano!</h2>
+                <p>
+                    <span id="currentDate"></span>
+                    <small>(mês atual)</small>
+                </p>
+            </div>
+
+            <!-- Dashboard Cards -->
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Total Investido</div>
+                    </div>
+                    <div class="card-value" id="total-investido">R$ 0,00</div>
+                    <div class="card-change positive">+0% este mês</div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Empréstimos Ativos</div>
+                    </div>
+                    <div class="card-value" id="total-emprestimos">0</div>
+                    <div class="card-change positive">+8% este mês</div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Valor a Receber</div>
+                    </div>
+                    <div class="card-value" id="valor-receber">R$ 0,00</div>
+                    <div class="card-change positive">+15% este mês</div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Clientes em Atraso</div>
+                    </div>
+                    <div class="card-value" id="clientes-atraso">0</div>
+                    <div class="card-change negative">-5% este mês</div>
+                </div>
+            </div>
+
+            <!-- Empréstimos Recentes -->
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title">Empréstimos Recentes</h3>
+                    <a href="emprestimos-novo.html" class="btn btn-primary">Novo Empréstimo</a>
+                </div>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Valor</th>
+                                <th>Vencimento</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="emprestimos-recentes">
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: #6b7280;">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Cobranças Pendentes -->
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title">Cobranças Pendentes</h3>
+                </div>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Valor</th>
+                                <th>Vencimento</th>
+                                <th>Dias Atraso</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cobrancas-pendentes">
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #6b7280;">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./js/main.js"></script>
+    <script>
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.style.transform = sidebar.style.transform === 'translateX(0px)' ? 'translateX(-100%)' : 'translateX(0px)';
+        }
+
+        // Toggle user menu
+        function toggleUserMenu() {
+            const userMenu = document.getElementById('userMenu');
+            userMenu.style.display = userMenu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Close user menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const userMenu = document.getElementById('userMenu');
+            const userMenuBtn = document.querySelector('.user-menu-btn');
+            
+            if (!userMenuBtn.contains(event.target) && !userMenu.contains(event.target)) {
+                userMenu.style.display = 'none';
+            }
+        });
+
+        // Greeting message based on time
+        function updateGreeting() {
+            const now = new Date();
+            const hour = now.getHours();
+            const greetingElement = document.getElementById('greetingMessage');
+            
+            let greeting;
+            if (hour < 12) {
+                greeting = 'Bom Dia';
+            } else if (hour < 18) {
+                greeting = 'Boa Tarde';
+            } else {
+                greeting = 'Boa Noite';
+            }
+            
+            greetingElement.textContent = `${greeting}, Juliano!`;
+        }
+
+        // Update current date
+        function updateDate() {
+            const now = new Date();
+            const options = { month: 'long', year: 'numeric' };
+            const dateString = now.toLocaleDateString('pt-BR', options);
+            document.getElementById('currentDate').textContent = dateString;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateGreeting();
+            updateDate();
+        });
+
+        // Logout function
+        function sair() {
+            if (confirm('Tem certeza que deseja sair?')) {
+                localStorage.removeItem('auth_token');
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+</html> 
