@@ -1835,4 +1835,345 @@ router.get('/clientes/:id', ensureDatabase, async (req, res) => {
   }
 });
 
+// Rota para obter notificações
+router.get('/api/notifications', (req, res) => {
+  try {
+    // Mock data de notificações
+    const mockNotifications = [
+      {
+        id: 1,
+        type: 'payment_due',
+        title: 'Cobrança Vencendo',
+        description: 'Cliente João Silva tem parcela vencendo em 2 dias',
+        time: new Date(Date.now() - 1000 * 60 * 30),
+        read: false,
+        clientId: 123,
+        actions: [
+          { text: 'Cobrar', action: 'cobrar', id: 123 },
+          { text: 'Ver Detalhes', action: 'view', id: 123 }
+        ]
+      },
+      {
+        id: 2,
+        type: 'payment_overdue',
+        title: 'Pagamento em Atraso',
+        description: 'Cliente Maria Santos está com 5 dias de atraso',
+        time: new Date(Date.now() - 1000 * 60 * 60 * 2),
+        read: false,
+        clientId: 456,
+        actions: [
+          { text: 'Cobrar', action: 'cobrar', id: 456 },
+          { text: 'Lista Negra', action: 'blacklist', id: 456 }
+        ]
+      },
+      {
+        id: 3,
+        type: 'payment_received',
+        title: 'Pagamento Recebido',
+        description: 'Cliente Pedro Oliveira quitou empréstimo',
+        time: new Date(Date.now() - 1000 * 60 * 60 * 24),
+        read: true,
+        clientId: 789,
+        actions: []
+      }
+    ];
+
+    const unreadCount = mockNotifications.filter(n => !n.read).length;
+    
+    res.json({
+      notifications: mockNotifications,
+      unreadCount: unreadCount
+    });
+  } catch (error) {
+    console.error('Erro ao buscar notificações:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para marcar notificação como lida
+router.put('/api/notifications/:id/read', (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(`Marcando notificação ${id} como lida`);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao marcar notificação como lida:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para marcar todas as notificações como lidas
+router.put('/api/notifications/read-all', (req, res) => {
+  try {
+    console.log('Marcando todas as notificações como lidas');
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao marcar todas as notificações como lidas:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para obter alertas de pagamento
+router.get('/api/alerts/payments', (req, res) => {
+  try {
+    // Mock data de alertas
+    const mockAlerts = [
+      {
+        type: 'payment_due',
+        title: 'Vencimento Próximo',
+        description: 'Cliente José Santos tem parcela vencendo amanhã',
+        clientId: 111,
+        actions: [
+          { text: 'Cobrar', action: 'cobrar', id: 111 }
+        ]
+      }
+    ];
+    
+    res.json(mockAlerts);
+  } catch (error) {
+    console.error('Erro ao buscar alertas:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para obter contadores dos menus
+router.get('/api/counters/menu', (req, res) => {
+  try {
+    // Mock data de contadores
+    const mockCounters = {
+      cobrancas: 8,
+      atrasados: 23,
+      emprestimos: 156,
+      clientes: 89
+    };
+    
+    res.json(mockCounters);
+  } catch (error) {
+    console.error('Erro ao buscar contadores:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para cobrança em lote
+router.post('/api/cobrancas/bulk-cobrar', (req, res) => {
+  try {
+    const { ids } = req.body;
+    console.log(`Enviando cobranças para ${ids.length} itens:`, ids);
+    
+    // Simular envio de cobranças
+    res.json({ 
+      success: true, 
+      message: `Cobranças enviadas para ${ids.length} itens`,
+      processed: ids.length
+    });
+  } catch (error) {
+    console.error('Erro ao enviar cobranças em lote:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para marcar como pago em lote
+router.post('/api/cobrancas/bulk-mark-paid', (req, res) => {
+  try {
+    const { ids } = req.body;
+    console.log(`Marcando como pago ${ids.length} itens:`, ids);
+    
+    res.json({ 
+      success: true, 
+      message: `${ids.length} itens marcados como pagos`,
+      processed: ids.length
+    });
+  } catch (error) {
+    console.error('Erro ao marcar como pago em lote:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para adicionar à lista negra em lote
+router.post('/api/cobrancas/bulk-blacklist', (req, res) => {
+  try {
+    const { ids } = req.body;
+    console.log(`Adicionando à lista negra ${ids.length} itens:`, ids);
+    
+    res.json({ 
+      success: true, 
+      message: `${ids.length} itens adicionados à lista negra`,
+      processed: ids.length
+    });
+  } catch (error) {
+    console.error('Erro ao adicionar à lista negra em lote:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para exportação em lote
+router.post('/api/export/bulk', (req, res) => {
+  try {
+    const { ids } = req.body;
+    console.log(`Exportando ${ids.length} itens:`, ids);
+    
+    // Simular dados CSV
+    const csvData = [
+      'ID,Cliente,Valor,Vencimento,Status',
+      ...ids.map(id => `${id},Cliente ${id},R$ 1.000,00,2024-01-15,Ativo`)
+    ].join('\n');
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=export.csv');
+    res.send(csvData);
+  } catch (error) {
+    console.error('Erro ao exportar dados em lote:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para exclusão em lote
+router.post('/api/bulk-delete', (req, res) => {
+  try {
+    const { ids } = req.body;
+    console.log(`Excluindo ${ids.length} itens:`, ids);
+    
+    res.json({ 
+      success: true, 
+      message: `${ids.length} itens excluídos`,
+      processed: ids.length
+    });
+  } catch (error) {
+    console.error('Erro ao excluir itens em lote:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para dados de analytics
+router.get('/api/analytics/data', (req, res) => {
+  try {
+    const mockAnalyticsData = {
+      revenue: {
+        labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+        data: [15000, 18000, 22000, 19000, 25000, 28000]
+      },
+      loansStatus: {
+        labels: ['Ativos', 'Atrasados', 'Quitados', 'Cancelados'],
+        data: [45, 12, 78, 5]
+      },
+      clientsEvolution: {
+        labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+        data: [120, 135, 142, 148, 153, 156]
+      },
+      collectionPerformance: {
+        labels: ['Primeira Tentativa', 'Segunda Tentativa', 'Terceira Tentativa', 'Mais Tentativas'],
+        data: [65, 25, 8, 2]
+      },
+      metrics: {
+        recoveryRate: 85,
+        avgCollectionTime: 12,
+        activeClients: 156,
+        growthRate: 8.5
+      }
+    };
+    
+    res.json(mockAnalyticsData);
+  } catch (error) {
+    console.error('Erro ao buscar dados de analytics:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para exportação de dados
+router.get('/api/export/data', (req, res) => {
+  try {
+    const { dateFrom, dateTo } = req.query;
+    console.log(`Exportando dados de ${dateFrom} até ${dateTo}`);
+    
+    // Mock data para exportação
+    const mockData = [
+      {
+        id: 1,
+        cliente: 'João Silva',
+        valor: 5000,
+        vencimento: '2024-01-15',
+        status: 'Ativo'
+      },
+      {
+        id: 2,
+        cliente: 'Maria Santos',
+        valor: 3000,
+        vencimento: '2024-01-20',
+        status: 'Pendente'
+      },
+      {
+        id: 3,
+        cliente: 'Pedro Oliveira',
+        valor: 2500,
+        vencimento: '2024-01-25',
+        status: 'Quitado'
+      }
+    ];
+    
+    res.json(mockData);
+  } catch (error) {
+    console.error('Erro ao exportar dados:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para relatório completo
+router.get('/api/reports/full', (req, res) => {
+  try {
+    const { dateFrom, dateTo } = req.query;
+    console.log(`Gerando relatório completo de ${dateFrom} até ${dateTo}`);
+    
+    // Mock data para relatório
+    const mockReportData = {
+      metrics: {
+        recoveryRate: 85,
+        avgCollectionTime: 12,
+        activeClients: 156,
+        growthRate: 8.5
+      },
+      loans: [
+        {
+          cliente: 'João Silva',
+          valor: 5000,
+          status: 'Ativo',
+          vencimento: '2024-01-15'
+        },
+        {
+          cliente: 'Maria Santos',
+          valor: 3000,
+          status: 'Pendente',
+          vencimento: '2024-01-20'
+        }
+      ],
+      summary: {
+        totalLoans: 45,
+        totalValue: 125000,
+        paidLoans: 78,
+        overdueLoans: 12
+      }
+    };
+    
+    res.json(mockReportData);
+  } catch (error) {
+    console.error('Erro ao gerar relatório:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para cobrar cliente específico
+router.post('/api/cobrancas/:id/cobrar', (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(`Enviando cobrança para cliente/empréstimo ${id}`);
+    
+    res.json({ 
+      success: true, 
+      message: 'Cobrança enviada com sucesso'
+    });
+  } catch (error) {
+    console.error('Erro ao enviar cobrança:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 module.exports = router; 

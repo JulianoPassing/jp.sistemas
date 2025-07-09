@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JP-Cobranças - Lista de Clientes</title>
+  <title>JP-Cobranças - Clientes</title>
   <link rel="icon" type="image/png" href="https://i.imgur.com/6N82fk2.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="app-layout">
   <header>
@@ -20,58 +21,47 @@
       <div class="nav-wrapper">
         <nav>
           <a href="dashboard.html" class="nav-link">Dashboard</a>
-          <a href="clientes.html" class="nav-link active">Clientes</a>
+          <a href="clientes.html" class="nav-link active menu-counter">Clientes</a>
           <a href="adicionar-cliente.html" class="nav-link">Adicionar Cliente</a>
-          <a href="cobrancas.html" class="nav-link">Cobranças</a>
-          <a href="atrasados.html" class="nav-link">Atrasados</a>
+          <a href="cobrancas.html" class="nav-link menu-counter">Cobranças</a>
+          <a href="atrasados.html" class="nav-link menu-counter">Atrasados</a>
           <a href="lista-negra.html" class="nav-link">Lista Negra</a>
-          <a href="emprestimos.html" class="nav-link">Empréstimos</a>
+          <a href="emprestimos.html" class="nav-link menu-counter">Empréstimos</a>
           <a href="historico.html" class="nav-link">Histórico</a>
           <a href="#" class="nav-link" onclick="sair()">Sair</a>
         </nav>
       </div>
     </div>
   </header>
+  
   <main>
     <div class="container">
       <div class="dashboard-header">
         <div class="welcome-message" id="welcomeMessage">Bem-vindo(a)!</div>
-        <div class="dashboard-title">Lista de Clientes</div>
+        <div class="dashboard-title">Clientes</div>
         <div class="dashboard-subtitle">
-          Gerencie todos os clientes cadastrados no sistema.
+          <span id="currentDate"></span>
+          <small>(lista de clientes)</small>
         </div>
       </div>
-      <!-- Tabela de Clientes -->
+
+      <!-- Container para filtros -->
+      <div id="filter-container"></div>
+      
+      <!-- Container para ações em lote -->
+      <div id="bulk-action-container"></div>
+      
+      <!-- Seção de Clientes -->
       <div class="section">
         <div class="section-header">
-          <h3 class="section-title">Clientes</h3>
-          <a href="adicionar-cliente.html" class="btn btn-primary">Novo Cliente</a>
-        </div>
-        
-        <!-- Caixa de Busca -->
-        <div class="search-container" style="margin-bottom: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-          <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 250px;">
-              <input 
-                type="text" 
-                id="search-clientes" 
-                class="form-input" 
-                placeholder="Buscar por nome, CPF, telefone, email..."
-                style="width: 100%;"
-              >
-            </div>
-            <div style="display: flex; gap: 0.5rem;">
-              <select id="filter-status-clientes" class="form-input" style="min-width: 120px;">
-                <option value="">Todos os Status</option>
-                <option value="Ativo">Ativo</option>
-                <option value="Lista Negra">Lista Negra</option>
-                <option value="Inativo">Inativo</option>
-              </select>
-              <button id="clear-search-clientes" class="btn btn-secondary" style="white-space: nowrap;">Limpar</button>
-            </div>
-          </div>
-          <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">
-            <span id="search-results-info-clientes">Mostrando todos os clientes</span>
+          <h3 class="section-title">Lista de Clientes</h3>
+          <div style="display: flex; gap: 0.5rem;">
+            <a href="adicionar-cliente.html" class="btn btn-primary">
+              <i class="fas fa-plus"></i> Adicionar Cliente
+            </a>
+            <button class="btn btn-secondary" onclick="recarregarDadosPagina()">
+              <i class="fas fa-sync-alt"></i> Atualizar
+            </button>
           </div>
         </div>
         
@@ -79,26 +69,35 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Nome</th>
-                <th>CPF</th>
+                <th>
+                  <input type="checkbox" class="select-all-checkbox" title="Selecionar todos">
+                </th>
+                <th>Nome/CPF-CNPJ</th>
                 <th>Telefone</th>
+                <th>Email</th>
                 <th>Status</th>
                 <th>Ações</th>
               </tr>
             </thead>
-            <tbody id="lista-clientes">
+            <tbody id="clientes-lista">
               <tr>
-                <td colspan="5" class="text-center text-gray-500">Carregando...</td>
+                <td colspan="6" class="text-center text-gray-500">Carregando...</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
+
+      <!-- Container para paginação -->
+      <div id="pagination-container"></div>
+      
     </div>
   </main>
+  
   <footer class="text-center p-4 mt-8">
     © 2024 JP-Cobranças. Todos os direitos reservados.
   </footer>
+  
   <script src="./js/main.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -109,132 +108,9 @@
           navWrapper.classList.toggle('open');
         });
       }
-
-      // Carregar lista de clientes
-      renderClientesLista();
       
-      // Funcionalidade de busca
-      const searchInput = document.getElementById('search-clientes');
-      const filterStatus = document.getElementById('filter-status-clientes');
-      const clearSearchBtn = document.getElementById('clear-search-clientes');
-      const searchResultsInfo = document.getElementById('search-results-info-clientes');
-      
-      let allClientes = []; // Armazenar todos os clientes
-      let filteredClientes = []; // Clientes filtrados
-      
-      // Função para aplicar filtros
-      function applyFilters() {
-        const searchTerm = searchInput.value.toLowerCase().trim();
-        const statusFilter = filterStatus.value;
-        
-        filteredClientes = allClientes.filter(cliente => {
-          // Filtro por termo de busca
-          const matchesSearch = !searchTerm || 
-            (cliente.nome && cliente.nome.toLowerCase().includes(searchTerm)) ||
-            (cliente.cpf_cnpj && cliente.cpf_cnpj.toLowerCase().includes(searchTerm)) ||
-            (cliente.telefone && cliente.telefone.includes(searchTerm)) ||
-            (cliente.email && cliente.email.toLowerCase().includes(searchTerm)) ||
-            (cliente.cidade && cliente.cidade.toLowerCase().includes(searchTerm)) ||
-            (cliente.estado && cliente.estado.toLowerCase().includes(searchTerm));
-          
-          // Filtro por status
-          const matchesStatus = !statusFilter || cliente.status === statusFilter;
-          
-          return matchesSearch && matchesStatus;
-        });
-        
-        // Atualizar tabela
-        renderFilteredClientes();
-        
-        // Atualizar informação de resultados
-        updateSearchResultsInfo();
-      }
-      
-      // Função para renderizar clientes filtrados
-      function renderFilteredClientes() {
-        const tbody = document.getElementById('lista-clientes');
-        if (!tbody) return;
-        
-        if (filteredClientes.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhum cliente encontrado</td></tr>';
-          return;
-        }
-        
-        tbody.innerHTML = '';
-        filteredClientes.forEach(cliente => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${cliente.nome || 'N/A'}</td>
-            <td>${cliente.cpf_cnpj || '-'}</td>
-            <td>${cliente.telefone || '-'}</td>
-            <td><span class="badge badge-${getStatusBadgeClass(cliente.status)}">${cliente.status || 'Ativo'}</span></td>
-            <td>
-              <button class="btn btn-primary btn-sm" onclick="viewCliente(${cliente.id})">Ver</button>
-              ${cliente.status === 'Lista Negra' 
-                ? '<button class="btn btn-success btn-sm" onclick="removerListaNegra(' + cliente.id + ')">Remover da Lista</button>'
-                : '<button class="btn btn-warning btn-sm" onclick="adicionarListaNegra(' + cliente.id + ')">Lista Negra</button>'
-              }
-              <button class="btn btn-danger btn-sm" onclick="deleteCliente(${cliente.id})">Remover</button>
-            </td>
-          `;
-          tbody.appendChild(row);
-        });
-      }
-      
-      // Função para obter classe do badge baseado no status
-      function getStatusBadgeClass(status) {
-        switch(status) {
-          case 'Ativo': return 'success';
-          case 'Lista Negra': return 'danger';
-          case 'Inativo': return 'secondary';
-          default: return 'success';
-        }
-      }
-      
-      // Função para atualizar informação de resultados
-      function updateSearchResultsInfo() {
-        const total = allClientes.length;
-        const filtered = filteredClientes.length;
-        
-        if (filtered === total) {
-          searchResultsInfo.textContent = `Mostrando todos os ${total} clientes`;
-        } else {
-          searchResultsInfo.textContent = `Mostrando ${filtered} de ${total} clientes`;
-        }
-      }
-      
-      // Função para limpar busca
-      function clearSearch() {
-        searchInput.value = '';
-        filterStatus.value = '';
-        filteredClientes = [...allClientes];
-        renderFilteredClientes();
-        updateSearchResultsInfo();
-      }
-      
-      // Event listeners
-      searchInput.addEventListener('input', applyFilters);
-      filterStatus.addEventListener('change', applyFilters);
-      clearSearchBtn.addEventListener('click', clearSearch);
-      
-      // Sobrescrever a função renderClientesLista para incluir busca
-      const originalRenderClientesLista = window.renderClientesLista;
-      window.renderClientesLista = async function() {
-        try {
-          const clientes = await apiService.getClientes();
-          allClientes = clientes || [];
-          filteredClientes = [...allClientes];
-          
-          renderFilteredClientes();
-          updateSearchResultsInfo();
-        } catch (err) {
-          console.error('Erro ao carregar clientes:', err);
-          const tbody = document.getElementById('lista-clientes');
-          if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-red-500">Erro ao carregar clientes</td></tr>';
-          }
-        }
-      };
+      // Inicializar aplicação
+      app.init();
     });
   </script>
 </body>
