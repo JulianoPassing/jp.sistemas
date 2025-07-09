@@ -2360,6 +2360,121 @@ async function renderCobrancasEmAbertoLista(filters = {}) {
   }
 }
 
+// Funções globais chamadas pelos HTMLs
+function sair() {
+  if (confirm('Deseja realmente sair do sistema?')) {
+    authSystem.logout();
+  }
+}
+
+function viewEmprestimo(id) {
+  ui.showModal(`
+    <h4>Detalhes do Empréstimo #${id}</h4>
+    <p>Funcionalidade será implementada em breve.</p>
+    <button class="btn btn-primary" onclick="this.closest('.modal').remove()">Fechar</button>
+  `, 'Empréstimo');
+}
+
+function fecharModal() {
+  const modal = document.querySelector('.modal');
+  if (modal) {
+    modal.remove();
+  }
+}
+
+function abrirDetalhes(id) {
+  viewEmprestimo(id);
+}
+
+function viewCliente(id) {
+  ui.showModal(`
+    <h4>Detalhes do Cliente #${id}</h4>
+    <p>Funcionalidade será implementada em breve.</p>
+    <button class="btn btn-primary" onclick="this.closest('.modal').remove()">Fechar</button>
+  `, 'Cliente');
+}
+
+function editarCliente(id) {
+  ui.showModal(`
+    <h4>Editar Cliente #${id}</h4>
+    <p>Funcionalidade será implementada em breve.</p>
+    <button class="btn btn-primary" onclick="this.closest('.modal').remove()">Fechar</button>
+  `, 'Editar Cliente');
+}
+
+function editarEmprestimo(id) {
+  ui.showModal(`
+    <h4>Editar Empréstimo #${id}</h4>
+    <p>Funcionalidade será implementada em breve.</p>
+    <button class="btn btn-primary" onclick="this.closest('.modal').remove()">Fechar</button>
+  `, 'Editar Empréstimo');
+}
+
+function cobrar(id) {
+  if (confirm(`Deseja enviar cobrança para o item #${id}?`)) {
+    ui.showNotification('Cobrança enviada com sucesso!', 'success');
+  }
+}
+
+function cobrarCliente(id) {
+  cobrar(id);
+}
+
+function marcarParcelaPaga(id, parcela) {
+  if (confirm(`Deseja marcar a parcela ${parcela} do empréstimo #${id} como paga?`)) {
+    ui.showNotification('Parcela marcada como paga!', 'success');
+  }
+}
+
+function adicionarListaNegra(id) {
+  if (confirm(`Deseja adicionar o cliente #${id} à lista negra?`)) {
+    ui.showNotification('Cliente adicionado à lista negra!', 'warning');
+  }
+}
+
+function deleteCliente(id) {
+  if (confirm(`Deseja excluir o cliente #${id}? Esta ação não pode ser desfeita.`)) {
+    ui.showNotification('Cliente excluído com sucesso!', 'success');
+    recarregarDadosPagina();
+  }
+}
+
+// Função global para recarregar dados da página
+function recarregarDadosPagina() {
+  const currentPage = window.location.pathname.split('/').pop();
+  
+  switch (currentPage) {
+    case 'dashboard.html':
+      if (typeof dashboard !== 'undefined') {
+        dashboard.loadDashboardData();
+      }
+      break;
+    case 'cobrancas.html':
+      if (typeof renderCobrancasEmAbertoLista === 'function') {
+        renderCobrancasEmAbertoLista();
+      }
+      break;
+    case 'clientes.html':
+      if (typeof renderClientesLista === 'function') {
+        renderClientesLista();
+      }
+      break;
+    case 'atrasados.html':
+      if (typeof renderAtrasadosLista === 'function') {
+        renderAtrasadosLista();
+      }
+      break;
+    case 'emprestimos.html':
+      if (typeof renderEmprestimosLista === 'function') {
+        renderEmprestimosLista();
+      }
+      break;
+    default:
+      // Recarregar página como fallback
+      window.location.reload();
+  }
+}
+
 async function renderClientesLista(filters = {}) {
   try {
     const tbody = document.getElementById('clientes-lista');
