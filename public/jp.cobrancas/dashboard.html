@@ -9,6 +9,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <!-- Chart.js para gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Bibliotecas para exportação -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body class="app-layout">
   <header>
@@ -20,12 +27,12 @@
       <div class="nav-wrapper">
         <nav>
           <a href="dashboard.html" class="nav-link active">Dashboard</a>
-          <a href="clientes.html" class="nav-link">Clientes</a>
+          <a href="clientes.html" class="nav-link menu-counter">Clientes</a>
           <a href="adicionar-cliente.html" class="nav-link">Adicionar Cliente</a>
-          <a href="cobrancas.html" class="nav-link">Cobranças</a>
-          <a href="atrasados.html" class="nav-link">Atrasados</a>
+          <a href="cobrancas.html" class="nav-link menu-counter">Cobranças</a>
+          <a href="atrasados.html" class="nav-link menu-counter">Atrasados</a>
           <a href="lista-negra.html" class="nav-link">Lista Negra</a>
-          <a href="emprestimos.html" class="nav-link">Empréstimos</a>
+          <a href="emprestimos.html" class="nav-link menu-counter">Empréstimos</a>
           <a href="historico.html" class="nav-link">Histórico</a>
           <a href="#" class="nav-link" onclick="sair()">Sair</a>
         </nav>
@@ -126,7 +133,7 @@
     </div>
   </main>
   <footer class="text-center p-4 mt-8">
-    © 2025 JP. Sistemas. Todos os direitos reservados. | jp-sistemas.com
+    © 2024 JP-Cobranças. Todos os direitos reservados.
   </footer>
   <script src="./js/main.js"></script>
   <script>
@@ -138,6 +145,9 @@
           navWrapper.classList.toggle('open');
         });
       }
+      
+      // Inicializar aplicação
+      app.init();
     });
   </script>
 </body>
