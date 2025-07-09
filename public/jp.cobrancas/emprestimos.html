@@ -199,6 +199,8 @@
           allEmprestimos = emprestimosProcessados;
           filteredEmprestimos = [...allEmprestimos];
           
+          console.log(`📊 allEmprestimos: ${allEmprestimos.length}, filteredEmprestimos: ${filteredEmprestimos.length}`);
+          
           await renderFilteredEmprestimos();
           updateSearchResultsInfo();
           
@@ -214,6 +216,11 @@
       
       // Função para aplicar filtros
       async function applyFilters() {
+        if (!searchInput || !filterStatus || !allEmprestimos || allEmprestimos.length === 0) {
+          console.log('⚠️ Filtros não aplicados - dados não disponíveis');
+          return;
+        }
+        
         const searchTerm = searchInput.value.toLowerCase().trim();
         const statusFilter = filterStatus.value;
         
@@ -230,6 +237,8 @@
           return matchesSearch && matchesStatus;
         });
         
+        console.log(`🔍 Filtros aplicados: ${filteredEmprestimos.length} de ${allEmprestimos.length}`);
+        
         await renderFilteredEmprestimos();
         updateSearchResultsInfo();
       }
@@ -238,7 +247,7 @@
       async function renderFilteredEmprestimos() {
         if (!tbody) return;
         
-        if (filteredEmprestimos.length === 0) {
+        if (!filteredEmprestimos || filteredEmprestimos.length === 0) {
           tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
           return;
         }
@@ -313,8 +322,10 @@
       
       // Função para atualizar informação de resultados
       function updateSearchResultsInfo() {
-        const total = allEmprestimos.length;
-        const filtered = filteredEmprestimos.length;
+        if (!searchResultsInfo) return;
+        
+        const total = allEmprestimos ? allEmprestimos.length : 0;
+        const filtered = filteredEmprestimos ? filteredEmprestimos.length : 0;
         
         if (filtered === total) {
           searchResultsInfo.textContent = `Mostrando todos os ${total} empréstimos`;
@@ -325,20 +336,33 @@
       
       // Função para limpar busca
       async function clearSearch() {
-        searchInput.value = '';
-        filterStatus.value = '';
+        if (searchInput) searchInput.value = '';
+        if (filterStatus) filterStatus.value = '';
         filteredEmprestimos = [...allEmprestimos];
         await renderFilteredEmprestimos();
         updateSearchResultsInfo();
       }
       
       // Event listeners
-      searchInput.addEventListener('input', applyFilters);
-      filterStatus.addEventListener('change', applyFilters);
-      clearSearchBtn.addEventListener('click', clearSearch);
+      if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+      }
+      if (filterStatus) {
+        filterStatus.addEventListener('change', applyFilters);
+      }
+      if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', clearSearch);
+      }
       
       // Carregar empréstimos apenas uma vez
       carregarEmprestimos();
+      
+      // Recarregar se necessário após um breve delay
+      setTimeout(() => {
+        if (allEmprestimos.length === 0) {
+          carregarEmprestimos();
+        }
+      }, 500);
     });
   </script>
 </body>
