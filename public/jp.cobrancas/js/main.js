@@ -4,994 +4,10 @@ const API_BASE_URL = '/api';
 // Estado global da aplicação
 const appState = {
   isLoading: false,
-  notifications: [],
-  unreadCount: 0,
   data: {
     dashboard: null,
     emprestimos: [],
-    cobrancas: [],
-    metrics: {}
-  },
-  filters: {
-    dateFrom: null,
-    dateTo: null,
-    status: 'all',
-    search: ''
-  },
-  pagination: {
-    currentPage: 1,
-    itemsPerPage: 10,
-    totalItems: 0
-  },
-  selectedItems: new Set(),
-  charts: {}
-};
-
-// Sistema de Notificações
-const notificationSystem = {
-  notifications: [],
-  unreadCount: 0,
-  
-  init() {
-    this.createNotificationElements();
-    this.bindEvents();
-    this.startRealTimeUpdates();
-    this.loadNotifications();
-  },
-
-  createNotificationElements() {
-    // Adicionar botão de notificação no header se não existir
-    const header = document.querySelector('.header-content');
-    if (header && !document.getElementById('notification-btn')) {
-      const notificationBtn = document.createElement('button');
-      notificationBtn.id = 'notification-btn';
-      notificationBtn.className = 'notification-icon';
-      notificationBtn.innerHTML = `
-        <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
-          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5.365V3m0 2.365a5.338 5.338 0 0 1 5.133 5.368v1.8c0 2.386 1.867 2.982 1.867 4.175 0 .593 0 1.292-.538 1.292H5.538C5 18 5 17.301 5 16.708c0-1.193 1.867-1.789 1.867-4.175v-1.8A5.338 5.338 0 0 1 12 5.365ZM8.733 18c.094.852.306 1.54.944 2.112a3.48 3.48 0 0 0 4.646 0c.638-.572 1.236-1.26 1.33-2.112h-6.92Z"/>
-        </svg>
-        <span id="notification-badge" class="notification-badge" style="display: none;">0</span>
-      `;
-      
-      // Inserir antes do menu mobile toggle
-      const mobileToggle = header.querySelector('#mobile-menu-toggle');
-      if (mobileToggle) {
-        header.insertBefore(notificationBtn, mobileToggle);
-      } else {
-        // Inserir no final do header
-        header.appendChild(notificationBtn);
-      }
-    }
-
-    // Criar painel lateral de notificações
-    if (!document.getElementById('notification-sidebar')) {
-      const sidebar = document.createElement('div');
-      sidebar.id = 'notification-sidebar';
-      sidebar.className = 'notification-sidebar';
-      sidebar.innerHTML = `
-        <div class="notification-sidebar-header">
-          <h3 class="notification-sidebar-title">Notificações</h3>
-          <button id="notification-close" class="notification-sidebar-close">×</button>
-        </div>
-        <div class="notification-sidebar-content">
-          <div id="notification-list"></div>
-          <div id="notification-loading" style="display: none; text-align: center; padding: 2rem;">
-            <div class="loading-spinner">Carregando...</div>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(sidebar);
-
-      // Criar overlay
-      const overlay = document.createElement('div');
-      overlay.id = 'notification-overlay';
-      overlay.className = 'sidebar-overlay';
-      document.body.appendChild(overlay);
-    }
-  },
-
-  bindEvents() {
-    // Botão de notificação
-    const notificationBtn = document.getElementById('notification-btn');
-    if (notificationBtn) {
-      notificationBtn.addEventListener('click', () => this.toggleSidebar());
-    }
-
-    // Botão de fechar
-    const closeBtn = document.getElementById('notification-close');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => this.closeSidebar());
-    }
-
-    // Overlay
-    const overlay = document.getElementById('notification-overlay');
-    if (overlay) {
-      overlay.addEventListener('click', () => this.closeSidebar());
-    }
-
-    // ESC key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        this.closeSidebar();
-      }
-    });
-  },
-
-  toggleSidebar() {
-    const sidebar = document.getElementById('notification-sidebar');
-    const overlay = document.getElementById('notification-overlay');
-    
-    if (sidebar.classList.contains('active')) {
-      this.closeSidebar();
-    } else {
-      this.openSidebar();
-    }
-  },
-
-  openSidebar() {
-    const sidebar = document.getElementById('notification-sidebar');
-    const overlay = document.getElementById('notification-overlay');
-    
-    sidebar.classList.add('active');
-    overlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // Marcar notificações como lidas
-    setTimeout(() => {
-      this.markAllAsRead();
-    }, 1000);
-  },
-
-  closeSidebar() {
-    const sidebar = document.getElementById('notification-sidebar');
-    const overlay = document.getElementById('notification-overlay');
-    
-    sidebar.classList.remove('active');
-    overlay.classList.remove('active');
-    document.body.style.overflow = '';
-  },
-
-  async loadNotifications() {
-    try {
-      const response = await apiService.getNotifications();
-      this.notifications = response.notifications || [];
-      this.unreadCount = response.unreadCount || 0;
-      this.updateBadge();
-      this.renderNotifications();
-    } catch (error) {
-      // Usar dados mock se a API falhar (incluindo 404)
-      this.loadMockNotifications();
-    }
-  },
-
-  loadMockNotifications() {
-    const mockNotifications = [
-      {
-        id: 1,
-        type: 'payment_due',
-        title: 'Cobrança Vencendo',
-        description: 'Cliente João Silva tem parcela vencendo em 2 dias',
-        time: new Date(Date.now() - 1000 * 60 * 30),
-        read: false,
-        actions: [
-          { text: 'Cobrar', action: 'cobrar', id: 123 },
-          { text: 'Ver Detalhes', action: 'view', id: 123 }
-        ]
-      },
-      {
-        id: 2,
-        type: 'payment_overdue',
-        title: 'Pagamento em Atraso',
-        description: 'Cliente Maria Santos está com 5 dias de atraso',
-        time: new Date(Date.now() - 1000 * 60 * 60 * 2),
-        read: false,
-        actions: [
-          { text: 'Cobrar', action: 'cobrar', id: 456 },
-          { text: 'Lista Negra', action: 'blacklist', id: 456 }
-        ]
-      },
-      {
-        id: 3,
-        type: 'payment_received',
-        title: 'Pagamento Recebido',
-        description: 'Cliente Pedro Oliveira quitou empréstimo',
-        time: new Date(Date.now() - 1000 * 60 * 60 * 24),
-        read: true,
-        actions: []
-      }
-    ];
-
-    this.notifications = mockNotifications;
-    this.unreadCount = mockNotifications.filter(n => !n.read).length;
-    this.updateBadge();
-    this.renderNotifications();
-  },
-
-  updateBadge() {
-    const badge = document.getElementById('notification-badge');
-    if (badge) {
-      if (this.unreadCount > 0) {
-        badge.textContent = this.unreadCount > 99 ? '99+' : this.unreadCount;
-        badge.style.display = 'flex';
-        badge.className = 'notification-badge';
-      } else {
-        badge.style.display = 'none';
-      }
-    }
-  },
-
-  renderNotifications() {
-    const container = document.getElementById('notification-list');
-    if (!container) return;
-
-    if (this.notifications.length === 0) {
-      container.innerHTML = `
-        <div style="text-align: center; padding: 2rem; color: var(--gray-500);">
-          <p>Nenhuma notificação</p>
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = this.notifications.map(notification => {
-      const timeAgo = this.formatTimeAgo(notification.time);
-      const typeClass = this.getTypeClass(notification.type);
-      
-      return `
-        <div class="notification-item ${notification.read ? '' : 'unread'}" data-id="${notification.id}">
-          <div class="notification-item-header">
-            <div>
-              <div class="notification-item-title">${notification.title}</div>
-              <div class="notification-item-time">${timeAgo}</div>
-            </div>
-          </div>
-          <div class="notification-item-description">${notification.description}</div>
-          ${notification.actions.length > 0 ? `
-            <div class="notification-item-actions">
-              ${notification.actions.map(action => `
-                <button class="notification-item-action ${action.action === 'cobrar' ? 'primary' : ''}" 
-                        data-action="${action.action}" 
-                        data-id="${action.id}">
-                  ${action.text}
-                </button>
-              `).join('')}
-            </div>
-          ` : ''}
-        </div>
-      `;
-    }).join('');
-
-    // Bind action events
-    container.querySelectorAll('.notification-item-action').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const action = e.target.dataset.action;
-        const id = e.target.dataset.id;
-        this.handleNotificationAction(action, id);
-      });
-    });
-
-    // Bind item click events
-    container.querySelectorAll('.notification-item').forEach(item => {
-      item.addEventListener('click', (e) => {
-        if (!e.target.classList.contains('notification-item-action')) {
-          const id = parseInt(item.dataset.id);
-          this.markAsRead(id);
-        }
-      });
-    });
-  },
-
-  formatTimeAgo(date) {
-    const now = new Date();
-    const diffMs = now - new Date(date);
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) return 'Agora';
-    if (diffMins < 60) return `${diffMins}m atrás`;
-    if (diffHours < 24) return `${diffHours}h atrás`;
-    if (diffDays < 7) return `${diffDays}d atrás`;
-    return utils.formatDate(date);
-  },
-
-  getTypeClass(type) {
-    const types = {
-      payment_due: 'warning',
-      payment_overdue: 'danger',
-      payment_received: 'success',
-      new_client: 'info'
-    };
-    return types[type] || 'info';
-  },
-
-  async handleNotificationAction(action, id) {
-    switch (action) {
-      case 'cobrar':
-        await this.cobrarCliente(id);
-        break;
-      case 'view':
-        await this.viewEmprestimo(id);
-        break;
-      case 'blacklist':
-        await this.adicionarListaNegra(id);
-        break;
-    }
-  },
-
-  async cobrarCliente(id) {
-    try {
-      await apiService.cobrarCliente(id);
-      ui.showNotification('Cobrança enviada com sucesso!', 'success');
-      this.removeNotification(id);
-    } catch (error) {
-      ui.showNotification('Erro ao enviar cobrança', 'error');
-    }
-  },
-
-  async markAsRead(id) {
-    const notification = this.notifications.find(n => n.id === id);
-    if (notification && !notification.read) {
-      notification.read = true;
-      this.unreadCount--;
-      this.updateBadge();
-      
-      // Atualizar visualmente
-      const element = document.querySelector(`[data-id="${id}"]`);
-      if (element) {
-        element.classList.remove('unread');
-      }
-      
-      // Notificar servidor
-      try {
-        await apiService.markNotificationAsRead(id);
-      } catch (error) {
-        console.error('Erro ao marcar notificação como lida:', error);
-      }
-    }
-  },
-
-  async markAllAsRead() {
-    const unreadNotifications = this.notifications.filter(n => !n.read);
-    unreadNotifications.forEach(n => n.read = true);
-    this.unreadCount = 0;
-    this.updateBadge();
-    
-    // Atualizar visualmente
-    document.querySelectorAll('.notification-item.unread').forEach(item => {
-      item.classList.remove('unread');
-    });
-    
-    // Notificar servidor
-    try {
-      await apiService.markAllNotificationsAsRead();
-    } catch (error) {
-      console.error('Erro ao marcar todas as notificações como lidas:', error);
-    }
-  },
-
-  addNotification(notification) {
-    this.notifications.unshift(notification);
-    if (!notification.read) {
-      this.unreadCount++;
-    }
-    this.updateBadge();
-    this.renderNotifications();
-  },
-
-  removeNotification(id) {
-    const index = this.notifications.findIndex(n => n.id === id);
-    if (index > -1) {
-      const notification = this.notifications[index];
-      if (!notification.read) {
-        this.unreadCount--;
-      }
-      this.notifications.splice(index, 1);
-      this.updateBadge();
-      this.renderNotifications();
-    }
-  },
-
-  startRealTimeUpdates() {
-    // Atualizar notificações a cada 30 segundos
-    setInterval(() => {
-      this.loadNotifications();
-    }, 30000);
-
-    // Verificar alertas de vencimento a cada minuto
-    setInterval(() => {
-      this.checkPaymentAlerts();
-    }, 60000);
-  },
-
-  async checkPaymentAlerts() {
-    try {
-      const alerts = await apiService.getPaymentAlerts();
-      alerts.forEach(alert => {
-        if (!this.notifications.find(n => n.clientId === alert.clientId)) {
-          this.addNotification({
-            id: Date.now() + Math.random(),
-            type: alert.type,
-            title: alert.title,
-            description: alert.description,
-            time: new Date(),
-            read: false,
-            clientId: alert.clientId,
-            actions: alert.actions || []
-          });
-        }
-      });
-    } catch (error) {
-      console.error('Erro ao verificar alertas:', error);
-    }
-  }
-};
-
-// Sistema de Contadores em Tempo Real
-const counterSystem = {
-  counters: {},
-  
-  init() {
-    this.updateMenuCounters();
-    this.startRealTimeUpdates();
-  },
-
-  async updateMenuCounters() {
-    try {
-      const data = await apiService.getMenuCounters();
-      this.counters = data;
-      this.renderCounters();
-    } catch (error) {
-      // Usar dados mock em caso de erro (incluindo 404)
-      this.counters = {
-        cobrancas: 8,
-        atrasados: 23,
-        emprestimos: 156,
-        clientes: 89
-      };
-      this.renderCounters();
-    }
-  },
-
-  renderCounters() {
-    const menuItems = {
-      'cobrancas.html': this.counters.cobrancas,
-      'atrasados.html': this.counters.atrasados,
-      'emprestimos.html': this.counters.emprestimos,
-      'clientes.html': this.counters.clientes
-    };
-
-    Object.entries(menuItems).forEach(([page, count]) => {
-      const link = document.querySelector(`a[href="${page}"]`);
-      if (link && count > 0) {
-        if (!link.querySelector('.menu-counter-badge')) {
-          const counter = document.createElement('span');
-          counter.className = 'menu-counter-badge';
-          counter.textContent = count > 99 ? '99+' : count;
-          
-          // Adicionar classe especial baseada no tipo
-          if (page.includes('atrasados')) {
-            counter.classList.add('danger');
-          } else if (page.includes('cobrancas')) {
-            counter.classList.add('warning');
-          }
-          
-          link.style.position = 'relative';
-          link.appendChild(counter);
-        } else {
-          link.querySelector('.menu-counter-badge').textContent = count > 99 ? '99+' : count;
-        }
-      }
-    });
-  },
-
-  startRealTimeUpdates() {
-    setInterval(() => {
-      this.updateMenuCounters();
-    }, 30000);
-  }
-};
-
-// Sistema de Filtros Avançados
-const filterSystem = {
-  init() {
-    this.createFilterUI();
-    this.bindFilterEvents();
-  },
-
-  createFilterUI() {
-    const targetPages = ['cobrancas.html', 'atrasados.html', 'emprestimos.html', 'clientes.html'];
-    const currentPage = window.location.pathname.split('/').pop();
-    
-    if (!targetPages.includes(currentPage)) return;
-
-    const filterContainer = document.getElementById('filter-container');
-    if (!filterContainer) return;
-
-    const filtersHTML = `
-      <div class="filters-container">
-        <div class="filters-header">
-          <h3 class="filters-title">Filtros</h3>
-          <button class="filters-toggle" onclick="this.parentElement.parentElement.querySelector('.filters-content').style.display = this.parentElement.parentElement.querySelector('.filters-content').style.display === 'none' ? 'grid' : 'none'">
-            <i class="fas fa-filter"></i> Filtros
-          </button>
-        </div>
-        <div class="filters-content">
-          <div class="filter-group">
-            <label class="filter-label">Data Inicial</label>
-            <input type="date" class="filter-input" id="filter-date-from">
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">Data Final</label>
-            <input type="date" class="filter-input" id="filter-date-to">
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">Status</label>
-            <select class="filter-input" id="filter-status">
-              <option value="">Todos</option>
-              <option value="ativo">Ativo</option>
-              <option value="pendente">Pendente</option>
-              <option value="atrasado">Atrasado</option>
-              <option value="quitado">Quitado</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">Buscar</label>
-            <input type="text" class="filter-input" id="filter-search" placeholder="Nome do cliente...">
-          </div>
-        </div>
-        <div class="filter-actions">
-          <button class="filter-btn secondary" onclick="filterSystem.clearFilters()">Limpar</button>
-          <button class="filter-btn primary" onclick="filterSystem.applyFilters()">Aplicar Filtros</button>
-        </div>
-      </div>
-    `;
-
-    filterContainer.innerHTML = filtersHTML;
-    this.bindFilterEvents();
-  },
-
-  bindFilterEvents() {
-    // Aplicar filtros em tempo real na busca
-    const searchInput = document.getElementById('filter-search');
-    if (searchInput) {
-      searchInput.addEventListener('input', utils.debounce(() => {
-        this.applyFilters();
-      }, 300));
-    }
-  },
-
-  applyFilters() {
-    const filters = {
-      dateFrom: document.getElementById('filter-date-from')?.value || null,
-      dateTo: document.getElementById('filter-date-to')?.value || null,
-      status: document.getElementById('filter-status')?.value || null,
-      search: document.getElementById('filter-search')?.value || null
-    };
-
-    appState.filters = filters;
-    
-    // Aplicar filtros baseado na página atual
-    const currentPage = window.location.pathname.split('/').pop();
-    
-    switch (currentPage) {
-      case 'cobrancas.html':
-        this.filterCobrancas(filters);
-        break;
-      case 'atrasados.html':
-        this.filterAtrasados(filters);
-        break;
-      case 'emprestimos.html':
-        this.filterEmprestimos(filters);
-        break;
-      case 'clientes.html':
-        this.filterClientes(filters);
-        break;
-    }
-  },
-
-  clearFilters() {
-    document.getElementById('filter-date-from').value = '';
-    document.getElementById('filter-date-to').value = '';
-    document.getElementById('filter-status').value = '';
-    document.getElementById('filter-search').value = '';
-    
-    appState.filters = {};
-    this.applyFilters();
-  },
-
-  filterCobrancas(filters) {
-    // Implementar filtro específico para cobranças
-    if (typeof renderCobrancasEmAbertoLista === 'function') {
-      renderCobrancasEmAbertoLista(filters);
-    }
-  },
-
-  filterAtrasados(filters) {
-    // Implementar filtro específico para atrasados
-    if (typeof renderAtrasadosLista === 'function') {
-      renderAtrasadosLista(filters);
-    }
-  },
-
-  filterEmprestimos(filters) {
-    // Implementar filtro específico para empréstimos
-    if (typeof renderEmprestimosLista === 'function') {
-      renderEmprestimosLista(filters);
-    }
-  },
-
-  filterClientes(filters) {
-    // Implementar filtro específico para clientes
-    if (typeof renderClientesLista === 'function') {
-      renderClientesLista(filters);
-    }
-  }
-};
-
-// Sistema de Paginação Melhorada
-const paginationSystem = {
-  init() {
-    this.createPaginationUI();
-  },
-
-  createPaginationUI() {
-    const targetPages = ['cobrancas.html', 'atrasados.html', 'emprestimos.html', 'clientes.html'];
-    const currentPage = window.location.pathname.split('/').pop();
-    
-    if (!targetPages.includes(currentPage)) return;
-
-    const paginationContainer = document.getElementById('pagination-container');
-    if (!paginationContainer) return;
-
-    this.updatePagination();
-  },
-
-  updatePagination() {
-    const container = document.getElementById('pagination-container');
-    if (!container) return;
-
-    const { currentPage, itemsPerPage, totalItems } = appState.pagination;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const startItem = (currentPage - 1) * itemsPerPage + 1;
-    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
-
-    container.innerHTML = `
-      <div class="pagination-info">
-        Exibindo ${startItem} a ${endItem} de ${totalItems} itens
-      </div>
-      <div class="pagination-controls">
-        <button class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="paginationSystem.goToPage(1)">
-          <i class="fas fa-angle-double-left"></i>
-        </button>
-        <button class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="paginationSystem.goToPage(${currentPage - 1})">
-          <i class="fas fa-angle-left"></i>
-        </button>
-        
-        ${this.generatePageButtons(currentPage, totalPages)}
-        
-        <button class="pagination-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="paginationSystem.goToPage(${currentPage + 1})">
-          <i class="fas fa-angle-right"></i>
-        </button>
-        <button class="pagination-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="paginationSystem.goToPage(${totalPages})">
-          <i class="fas fa-angle-double-right"></i>
-        </button>
-      </div>
-      <div class="pagination-size-selector">
-        <label for="page-size">Itens por página:</label>
-        <select id="page-size" onchange="paginationSystem.changePageSize(this.value)">
-          <option value="10" ${itemsPerPage === 10 ? 'selected' : ''}>10</option>
-          <option value="25" ${itemsPerPage === 25 ? 'selected' : ''}>25</option>
-          <option value="50" ${itemsPerPage === 50 ? 'selected' : ''}>50</option>
-          <option value="100" ${itemsPerPage === 100 ? 'selected' : ''}>100</option>
-        </select>
-      </div>
-    `;
-  },
-
-  generatePageButtons(currentPage, totalPages) {
-    let buttons = '';
-    let startPage = Math.max(1, currentPage - 2);
-    let endPage = Math.min(totalPages, currentPage + 2);
-
-    if (startPage > 1) {
-      buttons += `<button class="pagination-btn" onclick="paginationSystem.goToPage(1)">1</button>`;
-      if (startPage > 2) {
-        buttons += `<span class="pagination-ellipsis">...</span>`;
-      }
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      buttons += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="paginationSystem.goToPage(${i})">${i}</button>`;
-    }
-
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) {
-        buttons += `<span class="pagination-ellipsis">...</span>`;
-      }
-      buttons += `<button class="pagination-btn" onclick="paginationSystem.goToPage(${totalPages})">${totalPages}</button>`;
-    }
-
-    return buttons;
-  },
-
-  goToPage(page) {
-    appState.pagination.currentPage = page;
-    this.updatePagination();
-    this.reloadCurrentPageData();
-  },
-
-  changePageSize(size) {
-    appState.pagination.itemsPerPage = parseInt(size);
-    appState.pagination.currentPage = 1;
-    this.updatePagination();
-    this.reloadCurrentPageData();
-  },
-
-  reloadCurrentPageData() {
-    const currentPage = window.location.pathname.split('/').pop();
-    
-    switch (currentPage) {
-      case 'cobrancas.html':
-        if (typeof renderCobrancasEmAbertoLista === 'function') {
-          renderCobrancasEmAbertoLista(appState.filters);
-        }
-        break;
-      case 'atrasados.html':
-        if (typeof renderAtrasadosLista === 'function') {
-          renderAtrasadosLista(appState.filters);
-        }
-        break;
-      case 'emprestimos.html':
-        if (typeof renderEmprestimosLista === 'function') {
-          renderEmprestimosLista(appState.filters);
-        }
-        break;
-      case 'clientes.html':
-        if (typeof renderClientesLista === 'function') {
-          renderClientesLista(appState.filters);
-        }
-        break;
-    }
-  }
-};
-
-// Sistema de Ações em Lote
-const bulkActionSystem = {
-  init() {
-    this.createBulkActionUI();
-    this.bindEvents();
-  },
-
-  createBulkActionUI() {
-    const targetPages = ['cobrancas.html', 'atrasados.html', 'emprestimos.html', 'clientes.html'];
-    const currentPage = window.location.pathname.split('/').pop();
-    
-    if (!targetPages.includes(currentPage)) return;
-
-    const bulkContainer = document.getElementById('bulk-action-container');
-    if (!bulkContainer) return;
-
-    const bulkHTML = `
-      <div class="bulk-actions-container">
-        <div class="bulk-actions-header">
-          <div class="bulk-actions-title">Ações em Lote</div>
-          <div class="bulk-actions-count">
-            <span id="selected-count">0</span> item(s) selecionado(s)
-          </div>
-        </div>
-        <div class="bulk-actions-buttons" id="bulk-actions-buttons">
-          ${this.getBulkActionsForPage(currentPage)}
-        </div>
-      </div>
-    `;
-
-    bulkContainer.innerHTML = bulkHTML;
-    this.bindEvents();
-  },
-
-  getBulkActionsForPage(page) {
-    const actions = {
-      'cobrancas.html': `
-        <button class="bulk-action-btn success" onclick="bulkActionSystem.bulkCobrar()">
-          <i class="fas fa-paper-plane"></i> Cobrar Selecionados
-        </button>
-        <button class="bulk-action-btn" onclick="bulkActionSystem.bulkMarkAsPaid()">
-          <i class="fas fa-check"></i> Marcar como Pago
-        </button>
-        <button class="bulk-action-btn danger" onclick="bulkActionSystem.bulkAddToBlacklist()">
-          <i class="fas fa-ban"></i> Adicionar à Lista Negra
-        </button>
-      `,
-      'atrasados.html': `
-        <button class="bulk-action-btn success" onclick="bulkActionSystem.bulkCobrar()">
-          <i class="fas fa-paper-plane"></i> Cobrar Selecionados
-        </button>
-        <button class="bulk-action-btn" onclick="bulkActionSystem.bulkMarkAsPaid()">
-          <i class="fas fa-check"></i> Marcar como Pago
-        </button>
-        <button class="bulk-action-btn danger" onclick="bulkActionSystem.bulkAddToBlacklist()">
-          <i class="fas fa-ban"></i> Adicionar à Lista Negra
-        </button>
-      `,
-      'emprestimos.html': `
-        <button class="bulk-action-btn" onclick="bulkActionSystem.bulkExport()">
-          <i class="fas fa-download"></i> Exportar Selecionados
-        </button>
-        <button class="bulk-action-btn danger" onclick="bulkActionSystem.bulkDelete()">
-          <i class="fas fa-trash"></i> Excluir Selecionados
-        </button>
-      `,
-      'clientes.html': `
-        <button class="bulk-action-btn" onclick="bulkActionSystem.bulkExport()">
-          <i class="fas fa-download"></i> Exportar Selecionados
-        </button>
-        <button class="bulk-action-btn danger" onclick="bulkActionSystem.bulkDelete()">
-          <i class="fas fa-trash"></i> Excluir Selecionados
-        </button>
-      `
-    };
-
-    return actions[page] || '';
-  },
-
-  bindEvents() {
-    document.addEventListener('change', (e) => {
-      if (e.target.classList.contains('select-checkbox')) {
-        this.handleItemSelection(e.target);
-      } else if (e.target.classList.contains('select-all-checkbox')) {
-        this.handleSelectAll(e.target);
-      }
-    });
-  },
-
-  handleItemSelection(checkbox) {
-    const itemId = checkbox.dataset.id;
-    
-    if (checkbox.checked) {
-      appState.selectedItems.add(itemId);
-    } else {
-      appState.selectedItems.delete(itemId);
-    }
-    
-    this.updateBulkActions();
-  },
-
-  handleSelectAll(checkbox) {
-    const itemCheckboxes = document.querySelectorAll('.select-checkbox');
-    
-    itemCheckboxes.forEach(cb => {
-      cb.checked = checkbox.checked;
-      const itemId = cb.dataset.id;
-      
-      if (checkbox.checked) {
-        appState.selectedItems.add(itemId);
-      } else {
-        appState.selectedItems.delete(itemId);
-      }
-    });
-    
-    this.updateBulkActions();
-  },
-
-  updateBulkActions() {
-    const container = document.getElementById('bulk-actions-container');
-    const countElement = document.getElementById('selected-count');
-    
-    if (appState.selectedItems.size > 0) {
-      container.classList.add('active');
-      countElement.textContent = appState.selectedItems.size;
-    } else {
-      container.classList.remove('active');
-      countElement.textContent = '0';
-    }
-  },
-
-  async bulkCobrar() {
-    if (appState.selectedItems.size === 0) return;
-    
-    const confirmed = confirm(`Deseja cobrar ${appState.selectedItems.size} item(s) selecionado(s)?`);
-    if (!confirmed) return;
-
-    try {
-      const ids = Array.from(appState.selectedItems);
-      await apiService.bulkCobrar(ids);
-      ui.showNotification('Cobranças enviadas com sucesso!', 'success');
-      this.clearSelection();
-      this.reloadData();
-    } catch (error) {
-      ui.showNotification('Erro ao enviar cobranças', 'error');
-    }
-  },
-
-  async bulkMarkAsPaid() {
-    if (appState.selectedItems.size === 0) return;
-    
-    const confirmed = confirm(`Deseja marcar ${appState.selectedItems.size} item(s) como pago?`);
-    if (!confirmed) return;
-
-    try {
-      const ids = Array.from(appState.selectedItems);
-      await apiService.bulkMarkAsPaid(ids);
-      ui.showNotification('Itens marcados como pagos!', 'success');
-      this.clearSelection();
-      this.reloadData();
-    } catch (error) {
-      ui.showNotification('Erro ao marcar como pagos', 'error');
-    }
-  },
-
-  async bulkAddToBlacklist() {
-    if (appState.selectedItems.size === 0) return;
-    
-    const confirmed = confirm(`Deseja adicionar ${appState.selectedItems.size} item(s) à lista negra?`);
-    if (!confirmed) return;
-
-    try {
-      const ids = Array.from(appState.selectedItems);
-      await apiService.bulkAddToBlacklist(ids);
-      ui.showNotification('Itens adicionados à lista negra!', 'success');
-      this.clearSelection();
-      this.reloadData();
-    } catch (error) {
-      ui.showNotification('Erro ao adicionar à lista negra', 'error');
-    }
-  },
-
-  async bulkExport() {
-    if (appState.selectedItems.size === 0) return;
-    
-    try {
-      const ids = Array.from(appState.selectedItems);
-      const data = await apiService.bulkExport(ids);
-      this.downloadFile(data, 'export.csv');
-      ui.showNotification('Dados exportados com sucesso!', 'success');
-    } catch (error) {
-      ui.showNotification('Erro ao exportar dados', 'error');
-    }
-  },
-
-  async bulkDelete() {
-    if (appState.selectedItems.size === 0) return;
-    
-    const confirmed = confirm(`Deseja excluir ${appState.selectedItems.size} item(s) selecionado(s)? Esta ação não pode ser desfeita.`);
-    if (!confirmed) return;
-
-    try {
-      const ids = Array.from(appState.selectedItems);
-      await apiService.bulkDelete(ids);
-      ui.showNotification('Itens excluídos com sucesso!', 'success');
-      this.clearSelection();
-      this.reloadData();
-    } catch (error) {
-      ui.showNotification('Erro ao excluir itens', 'error');
-    }
-  },
-
-  clearSelection() {
-    appState.selectedItems.clear();
-    document.querySelectorAll('.select-checkbox, .select-all-checkbox').forEach(cb => {
-      cb.checked = false;
-    });
-    this.updateBulkActions();
-  },
-
-  downloadFile(data, filename) {
-    const blob = new Blob([data], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-  },
-
-  reloadData() {
-    const currentPage = window.location.pathname.split('/').pop();
-    paginationSystem.reloadCurrentPageData();
+    cobrancas: []
   }
 };
 
@@ -1164,556 +180,6 @@ const utils = {
       console.error('Erro ao formatar data para input:', error);
       return '';
     }
-  },
-
-  // Gerar cores para gráficos
-  generateColors: (count) => {
-    const colors = [
-      '#43A047', '#2196F3', '#FF9800', '#E91E63', '#9C27B0',
-      '#607D8B', '#FF5722', '#795548', '#009688', '#FFC107'
-    ];
-    return colors.slice(0, count);
-  },
-
-  // Exportar dados para CSV
-  exportToCSV: (data, filename) => {
-    const headers = Object.keys(data[0]);
-    const csvContent = [
-      headers.join(','),
-      ...data.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
-    ].join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(link.href);
-  },
-
-  // Exportar dados para Excel
-  exportToExcel: (data, filename) => {
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Dados');
-    XLSX.writeFile(workbook, filename);
-  },
-
-  // Exportar dados para PDF
-  exportToPDF: (data, filename) => {
-    const doc = new jsPDF();
-    
-    // Título
-    doc.setFontSize(16);
-    doc.text('Relatório de Dados', 20, 20);
-    
-    // Dados em formato de tabela
-    const headers = Object.keys(data[0]);
-    const rows = data.map(row => headers.map(header => row[header] || ''));
-    
-    doc.autoTable({
-      head: [headers],
-      body: rows,
-      startY: 30,
-      theme: 'striped',
-      headStyles: { fillColor: [67, 160, 71] }
-    });
-    
-    doc.save(filename);
-  }
-};
-
-// Sistema de Analytics e Gráficos
-const analyticsSystem = {
-  charts: {},
-  
-  init() {
-    this.createAnalyticsUI();
-    this.loadAnalyticsData();
-    this.createCharts();
-  },
-
-  createAnalyticsUI() {
-    const currentPage = window.location.pathname.split('/').pop();
-    
-    if (currentPage !== 'dashboard.html') return;
-
-    const mainContainer = document.querySelector('.container');
-    if (!mainContainer) return;
-
-    // Criar container de analytics
-    const analyticsContainer = document.createElement('div');
-    analyticsContainer.className = 'analytics-container';
-    analyticsContainer.id = 'analytics-container';
-    analyticsContainer.innerHTML = `
-      <div class="chart-container">
-        <div class="chart-header">
-          <h3 class="chart-title">Faturamento Mensal</h3>
-          <div class="chart-period-selector">
-            <button class="chart-period-btn active" data-period="month">Mês</button>
-            <button class="chart-period-btn" data-period="year">Ano</button>
-          </div>
-        </div>
-        <canvas id="revenue-chart" class="chart-canvas"></canvas>
-      </div>
-      
-      <div class="chart-container">
-        <div class="chart-header">
-          <h3 class="chart-title">Status dos Empréstimos</h3>
-        </div>
-        <canvas id="loans-status-chart" class="chart-canvas"></canvas>
-      </div>
-      
-      <div class="chart-container">
-        <div class="chart-header">
-          <h3 class="chart-title">Evolução de Clientes</h3>
-          <div class="chart-period-selector">
-            <button class="chart-period-btn active" data-period="6months">6 Meses</button>
-            <button class="chart-period-btn" data-period="year">1 Ano</button>
-          </div>
-        </div>
-        <canvas id="clients-evolution-chart" class="chart-canvas"></canvas>
-      </div>
-      
-      <div class="chart-container">
-        <div class="chart-header">
-          <h3 class="chart-title">Performance de Cobrança</h3>
-        </div>
-        <canvas id="collection-performance-chart" class="chart-canvas"></canvas>
-      </div>
-    `;
-
-    // Inserir após os cards do dashboard
-    const cardsSection = document.querySelector('.cards');
-    if (cardsSection) {
-      cardsSection.insertAdjacentElement('afterend', analyticsContainer);
-    } else {
-      mainContainer.appendChild(analyticsContainer);
-    }
-
-    // Criar seção de métricas de performance
-    this.createPerformanceMetrics();
-    
-    // Criar seção de exportação
-    this.createExportSection();
-  },
-
-  createPerformanceMetrics() {
-    const mainContainer = document.querySelector('.container');
-    if (!mainContainer) return;
-
-    const metricsContainer = document.createElement('div');
-    metricsContainer.className = 'performance-metrics';
-    metricsContainer.id = 'performance-metrics';
-    metricsContainer.innerHTML = `
-      <div class="metric-card">
-        <div class="metric-icon">
-          <i class="fas fa-percentage"></i>
-        </div>
-        <div class="metric-value" id="recovery-rate">85%</div>
-        <div class="metric-label">Taxa de Recuperação</div>
-        <div class="metric-change positive">
-          <i class="fas fa-arrow-up"></i> +5% este mês
-        </div>
-      </div>
-      
-      <div class="metric-card">
-        <div class="metric-icon">
-          <i class="fas fa-clock"></i>
-        </div>
-        <div class="metric-value" id="avg-collection-time">12</div>
-        <div class="metric-label">Tempo Médio de Cobrança (dias)</div>
-        <div class="metric-change negative">
-          <i class="fas fa-arrow-down"></i> -2 dias este mês
-        </div>
-      </div>
-      
-      <div class="metric-card">
-        <div class="metric-icon">
-          <i class="fas fa-users"></i>
-        </div>
-        <div class="metric-value" id="active-clients">156</div>
-        <div class="metric-label">Clientes Ativos</div>
-        <div class="metric-change positive">
-          <i class="fas fa-arrow-up"></i> +12 este mês
-        </div>
-      </div>
-      
-      <div class="metric-card">
-        <div class="metric-icon">
-          <i class="fas fa-chart-line"></i>
-        </div>
-        <div class="metric-value" id="growth-rate">8.5%</div>
-        <div class="metric-label">Taxa de Crescimento</div>
-        <div class="metric-change positive">
-          <i class="fas fa-arrow-up"></i> +1.2% este mês
-        </div>
-      </div>
-    `;
-
-    const analyticsContainer = document.getElementById('analytics-container');
-    if (analyticsContainer) {
-      analyticsContainer.insertAdjacentElement('afterend', metricsContainer);
-    }
-  },
-
-  createExportSection() {
-    const mainContainer = document.querySelector('.container');
-    if (!mainContainer) return;
-
-    const exportContainer = document.createElement('div');
-    exportContainer.className = 'export-container';
-    exportContainer.id = 'export-container';
-    exportContainer.innerHTML = `
-      <div class="export-header">
-        <h3 class="export-title">Exportar Dados</h3>
-      </div>
-      
-      <div class="export-buttons">
-        <button class="export-btn" onclick="analyticsSystem.exportData('csv')">
-          <i class="fas fa-file-csv"></i> Exportar CSV
-        </button>
-        <button class="export-btn" onclick="analyticsSystem.exportData('excel')">
-          <i class="fas fa-file-excel"></i> Exportar Excel
-        </button>
-        <button class="export-btn" onclick="analyticsSystem.exportData('pdf')">
-          <i class="fas fa-file-pdf"></i> Exportar PDF
-        </button>
-        <button class="export-btn primary" onclick="analyticsSystem.generateReport()">
-          <i class="fas fa-chart-bar"></i> Gerar Relatório Completo
-        </button>
-      </div>
-      
-      <div class="export-options" style="margin-top: 1rem;">
-        <h4 style="margin-bottom: 0.5rem;">Período:</h4>
-        <div style="display: flex; gap: 1rem; align-items: center;">
-          <input type="date" id="export-date-from" class="filter-input" style="width: auto;">
-          <span>até</span>
-          <input type="date" id="export-date-to" class="filter-input" style="width: auto;">
-        </div>
-      </div>
-    `;
-
-    const metricsContainer = document.getElementById('performance-metrics');
-    if (metricsContainer) {
-      metricsContainer.insertAdjacentElement('afterend', exportContainer);
-    }
-  },
-
-  async loadAnalyticsData() {
-    try {
-      const data = await apiService.getAnalyticsData();
-      this.updateCharts(data);
-      this.updateMetrics(data.metrics);
-    } catch (error) {
-      // Usar dados mock em caso de erro (incluindo 404)
-      this.loadMockAnalyticsData();
-    }
-  },
-
-  loadMockAnalyticsData() {
-    const mockData = {
-      revenue: {
-        labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
-        data: [15000, 18000, 22000, 19000, 25000, 28000]
-      },
-      loansStatus: {
-        labels: ['Ativos', 'Atrasados', 'Quitados', 'Cancelados'],
-        data: [45, 12, 78, 5]
-      },
-      clientsEvolution: {
-        labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
-        data: [120, 135, 142, 148, 153, 156]
-      },
-      collectionPerformance: {
-        labels: ['Primeira Tentativa', 'Segunda Tentativa', 'Terceira Tentativa', 'Mais Tentativas'],
-        data: [65, 25, 8, 2]
-      },
-      metrics: {
-        recoveryRate: 85,
-        avgCollectionTime: 12,
-        activeClients: 156,
-        growthRate: 8.5
-      }
-    };
-
-    this.updateCharts(mockData);
-    this.updateMetrics(mockData.metrics);
-  },
-
-  createCharts() {
-    // Verificar se Chart.js está disponível
-    if (typeof Chart === 'undefined') {
-      this.loadChartJS(() => {
-        this.initializeCharts();
-      });
-      return;
-    }
-
-    this.initializeCharts();
-  },
-
-  loadChartJS(callback) {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
-    script.onload = callback;
-    document.head.appendChild(script);
-  },
-
-  initializeCharts() {
-    // Gráfico de Faturamento
-    const revenueCtx = document.getElementById('revenue-chart');
-    if (revenueCtx) {
-      this.charts.revenue = new Chart(revenueCtx, {
-        type: 'line',
-        data: {
-          labels: [],
-          datasets: [{
-            label: 'Faturamento',
-            data: [],
-            borderColor: '#43A047',
-            backgroundColor: 'rgba(67, 160, 71, 0.1)',
-            tension: 0.4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                callback: function(value) {
-                  return utils.formatCurrency(value);
-                }
-              }
-            }
-          },
-          plugins: {
-            legend: {
-              display: false
-            }
-          }
-        }
-      });
-    }
-
-    // Gráfico de Status dos Empréstimos
-    const loansStatusCtx = document.getElementById('loans-status-chart');
-    if (loansStatusCtx) {
-      this.charts.loansStatus = new Chart(loansStatusCtx, {
-        type: 'doughnut',
-        data: {
-          labels: [],
-          datasets: [{
-            data: [],
-            backgroundColor: ['#43A047', '#FF9800', '#2196F3', '#E91E63']
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom'
-            }
-          }
-        }
-      });
-    }
-
-    // Gráfico de Evolução de Clientes
-    const clientsEvolutionCtx = document.getElementById('clients-evolution-chart');
-    if (clientsEvolutionCtx) {
-      this.charts.clientsEvolution = new Chart(clientsEvolutionCtx, {
-        type: 'bar',
-        data: {
-          labels: [],
-          datasets: [{
-            label: 'Clientes',
-            data: [],
-            backgroundColor: 'rgba(67, 160, 71, 0.8)'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          },
-          plugins: {
-            legend: {
-              display: false
-            }
-          }
-        }
-      });
-    }
-
-    // Gráfico de Performance de Cobrança
-    const collectionPerformanceCtx = document.getElementById('collection-performance-chart');
-    if (collectionPerformanceCtx) {
-      this.charts.collectionPerformance = new Chart(collectionPerformanceCtx, {
-        type: 'pie',
-        data: {
-          labels: [],
-          datasets: [{
-            data: [],
-            backgroundColor: ['#43A047', '#2196F3', '#FF9800', '#E91E63']
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom'
-            }
-          }
-        }
-      });
-    }
-  },
-
-  updateCharts(data) {
-    if (this.charts.revenue) {
-      this.charts.revenue.data.labels = data.revenue.labels;
-      this.charts.revenue.data.datasets[0].data = data.revenue.data;
-      this.charts.revenue.update();
-    }
-
-    if (this.charts.loansStatus) {
-      this.charts.loansStatus.data.labels = data.loansStatus.labels;
-      this.charts.loansStatus.data.datasets[0].data = data.loansStatus.data;
-      this.charts.loansStatus.update();
-    }
-
-    if (this.charts.clientsEvolution) {
-      this.charts.clientsEvolution.data.labels = data.clientsEvolution.labels;
-      this.charts.clientsEvolution.data.datasets[0].data = data.clientsEvolution.data;
-      this.charts.clientsEvolution.update();
-    }
-
-    if (this.charts.collectionPerformance) {
-      this.charts.collectionPerformance.data.labels = data.collectionPerformance.labels;
-      this.charts.collectionPerformance.data.datasets[0].data = data.collectionPerformance.data;
-      this.charts.collectionPerformance.update();
-    }
-  },
-
-  updateMetrics(metrics) {
-    // Atualizar métricas de performance
-    const recoveryRate = document.getElementById('recovery-rate');
-    if (recoveryRate) {
-      recoveryRate.textContent = `${metrics.recoveryRate}%`;
-    }
-
-    const avgCollectionTime = document.getElementById('avg-collection-time');
-    if (avgCollectionTime) {
-      avgCollectionTime.textContent = metrics.avgCollectionTime;
-    }
-
-    const activeClients = document.getElementById('active-clients');
-    if (activeClients) {
-      activeClients.textContent = metrics.activeClients;
-    }
-
-    const growthRate = document.getElementById('growth-rate');
-    if (growthRate) {
-      growthRate.textContent = `${metrics.growthRate}%`;
-    }
-  },
-
-  async exportData(format) {
-    try {
-      const dateFrom = document.getElementById('export-date-from')?.value || null;
-      const dateTo = document.getElementById('export-date-to')?.value || null;
-      
-      const data = await apiService.getExportData({ dateFrom, dateTo });
-      const filename = `relatorio_${new Date().toISOString().split('T')[0]}.${format}`;
-      
-      switch (format) {
-        case 'csv':
-          utils.exportToCSV(data, filename);
-          break;
-        case 'excel':
-          utils.exportToExcel(data, filename);
-          break;
-        case 'pdf':
-          utils.exportToPDF(data, filename);
-          break;
-      }
-      
-      ui.showNotification('Dados exportados com sucesso!', 'success');
-    } catch (error) {
-      console.error('Erro ao exportar dados:', error);
-      ui.showNotification('Erro ao exportar dados', 'error');
-    }
-  },
-
-  async generateReport() {
-    try {
-      const dateFrom = document.getElementById('export-date-from')?.value || null;
-      const dateTo = document.getElementById('export-date-to')?.value || null;
-      
-      const reportData = await apiService.generateFullReport({ dateFrom, dateTo });
-      
-      // Criar PDF completo com gráficos
-      const doc = new jsPDF();
-      
-      // Título
-      doc.setFontSize(20);
-      doc.text('Relatório Completo - JP Cobranças', 20, 20);
-      
-      // Data do relatório
-      doc.setFontSize(12);
-      doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, 30);
-      
-      if (dateFrom && dateTo) {
-        doc.text(`Período: ${dateFrom} até ${dateTo}`, 20, 40);
-      }
-      
-      // Métricas principais
-      doc.setFontSize(16);
-      doc.text('Métricas Principais', 20, 60);
-      
-      doc.setFontSize(12);
-      doc.text(`Taxa de Recuperação: ${reportData.metrics.recoveryRate}%`, 20, 75);
-      doc.text(`Tempo Médio de Cobrança: ${reportData.metrics.avgCollectionTime} dias`, 20, 85);
-      doc.text(`Clientes Ativos: ${reportData.metrics.activeClients}`, 20, 95);
-      doc.text(`Taxa de Crescimento: ${reportData.metrics.growthRate}%`, 20, 105);
-      
-      // Adicionar mais páginas com tabelas de dados
-      doc.addPage();
-      
-      // Dados de empréstimos
-      doc.setFontSize(16);
-      doc.text('Empréstimos', 20, 20);
-      
-      if (reportData.loans && reportData.loans.length > 0) {
-        doc.autoTable({
-          head: [['Cliente', 'Valor', 'Status', 'Vencimento']],
-          body: reportData.loans.map(loan => [
-            loan.cliente,
-            utils.formatCurrency(loan.valor),
-            loan.status,
-            utils.formatDate(loan.vencimento)
-          ]),
-          startY: 30,
-          theme: 'striped',
-          headStyles: { fillColor: [67, 160, 71] }
-        });
-      }
-      
-      doc.save(`relatorio_completo_${new Date().toISOString().split('T')[0]}.pdf`);
-      
-      ui.showNotification('Relatório gerado com sucesso!', 'success');
-    } catch (error) {
-      console.error('Erro ao gerar relatório:', error);
-      ui.showNotification('Erro ao gerar relatório', 'error');
-    }
   }
 };
 
@@ -1734,218 +200,140 @@ const apiService = {
       const response = await fetch(url, config);
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          console.error('Error data:', errorData);
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (parseError) {
+          console.error('Erro ao fazer parse da resposta de erro:', parseError);
+          const errorText = await response.text();
+          console.error('Texto da resposta de erro:', errorText);
+        }
+        throw new Error(errorMessage);
       }
       
       return await response.json();
     } catch (error) {
-      // Silenciar erros 404 que são esperados (APIs não implementadas)
-      if (!error.message.includes('404')) {
-        console.error('API request failed:', error);
-      }
+      console.error('API Error:', error);
       throw error;
     }
   },
 
-  // Métodos existentes
+  // Dashboard
   async getDashboardData() {
-    return await this.request('/cobrancas/dashboard');
+    return this.request('/cobrancas/dashboard');
   },
 
+  // Clientes
   async getClientes() {
-    return await this.request('/clientes');
+    return this.request('/cobrancas/clientes');
   },
 
   async createCliente(clienteData) {
-    return await this.request('/clientes', {
+    return this.request('/cobrancas/clientes', {
       method: 'POST',
       body: JSON.stringify(clienteData)
     });
   },
 
+  // Empréstimos
   async getEmprestimos() {
-    return await this.request('/emprestimos');
+    return this.request('/cobrancas/emprestimos');
   },
 
   async createEmprestimo(emprestimoData) {
-    return await this.request('/emprestimos', {
+    return this.request('/cobrancas/emprestimos', {
       method: 'POST',
       body: JSON.stringify(emprestimoData)
     });
   },
 
   async getParcelasEmprestimo(emprestimoId) {
-    return await this.request(`/emprestimos/${emprestimoId}/parcelas`);
+    return this.request(`/cobrancas/emprestimos/${emprestimoId}/parcelas`);
   },
 
+  // Cobranças
   async getCobrancas() {
-    return await this.request('/cobrancas');
-  },
-
-  // Novos métodos para notificações
-  async getNotifications() {
-    return await this.request('/notifications');
-  },
-
-  async markNotificationAsRead(id) {
-    return await this.request(`/notifications/${id}/read`, {
-      method: 'PUT'
-    });
-  },
-
-  async markAllNotificationsAsRead() {
-    return await this.request('/notifications/read-all', {
-      method: 'PUT'
-    });
-  },
-
-  async getPaymentAlerts() {
-    return await this.request('/alerts/payments');
-  },
-
-  async cobrarCliente(id) {
-    return await this.request(`/cobrancas/${id}/cobrar`, {
-      method: 'POST'
-    });
-  },
-
-  // Métodos para contadores
-  async getMenuCounters() {
-    return await this.request('/counters/menu');
-  },
-
-  // Métodos para ações em lote
-  async bulkCobrar(ids) {
-    return await this.request('/cobrancas/bulk-cobrar', {
-      method: 'POST',
-      body: JSON.stringify({ ids })
-    });
-  },
-
-  async bulkMarkAsPaid(ids) {
-    return await this.request('/cobrancas/bulk-mark-paid', {
-      method: 'POST',
-      body: JSON.stringify({ ids })
-    });
-  },
-
-  async bulkAddToBlacklist(ids) {
-    return await this.request('/cobrancas/bulk-blacklist', {
-      method: 'POST',
-      body: JSON.stringify({ ids })
-    });
-  },
-
-  async bulkExport(ids) {
-    return await this.request('/export/bulk', {
-      method: 'POST',
-      body: JSON.stringify({ ids })
-    });
-  },
-
-  async bulkDelete(ids) {
-    return await this.request('/bulk-delete', {
-      method: 'POST',
-      body: JSON.stringify({ ids })
-    });
-  },
-
-  // Métodos para analytics
-  async getAnalyticsData() {
-    return await this.request('/analytics/data');
-  },
-
-  async getExportData(filters = {}) {
-    const params = new URLSearchParams(filters);
-    return await this.request(`/export/data?${params}`);
-  },
-
-  async generateFullReport(filters = {}) {
-    const params = new URLSearchParams(filters);
-    return await this.request(`/reports/full?${params}`);
+    return this.request('/cobrancas');
   }
 };
 
-// UI utilities
+// UI Components
 const ui = {
+  // Loading states
   showLoading(element) {
-    if (element) {
-      element.innerHTML = '<div class="loading">Carregando...</div>';
+    if (element && element.classList) {
+      element.classList.add('loading');
     }
   },
 
   hideLoading(element) {
-    if (element) {
-      element.innerHTML = '';
+    if (element && element.classList) {
+      element.classList.remove('loading');
     }
   },
 
+  // Notificações
   showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.innerHTML = `
       <div class="notification-content">
         <span>${message}</span>
-        <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+        <button class="notification-close">&times;</button>
       </div>
     `;
-    
+
     document.body.appendChild(notification);
-    
+
+    // Auto remove após 5 segundos
     setTimeout(() => {
       notification.remove();
     }, 5000);
+
+    // Close button
+    notification.querySelector('.notification-close').addEventListener('click', () => {
+      notification.remove();
+    });
   },
 
+  // Modal
   showModal(content, title = '') {
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.innerHTML = `
-      <div class="modal-overlay" onclick="this.parentElement.remove()"></div>
+      <div class="modal-overlay"></div>
       <div class="modal-content">
         <div class="modal-header">
           <h3>${title}</h3>
-          <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+          <button class="modal-close">&times;</button>
         </div>
         <div class="modal-body">
           ${content}
         </div>
       </div>
     `;
-    
+
     document.body.appendChild(modal);
-    
+
+    // Close handlers
     const closeModal = () => modal.remove();
-    
-    modal.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        closeModal();
-      }
-    });
-    
+    modal.querySelector('.modal-close').addEventListener('click', closeModal);
+    modal.querySelector('.modal-overlay').addEventListener('click', closeModal);
+
     return modal;
   },
 
+  // Table helpers (mantido para compatibilidade)
   createTableRow(data, actions = []) {
     const row = document.createElement('tr');
+    row.innerHTML = Object.values(data).map(value => `<td>${value}</td>`).join('');
     
-    // Adicionar checkbox de seleção
-    const checkboxCell = document.createElement('td');
-    checkboxCell.innerHTML = `<input type="checkbox" class="select-checkbox" data-id="${data.id}">`;
-    row.appendChild(checkboxCell);
-    
-    // Adicionar dados
-    Object.values(data).forEach(value => {
-      const cell = document.createElement('td');
-      cell.textContent = value;
-      row.appendChild(cell);
-    });
-    
-    // Adicionar ações
     if (actions.length > 0) {
       const actionsCell = document.createElement('td');
       actionsCell.innerHTML = actions.map(action => 
-        `<button class="btn btn-sm ${action.class}" onclick="${action.onclick}">${action.text}</button>`
+        `<button class="btn btn-${action.type} btn-sm" onclick="${action.onclick}">${action.text}</button>`
       ).join(' ');
       row.appendChild(actionsCell);
     }
@@ -1954,641 +342,2824 @@ const ui = {
   }
 };
 
-// Sistema principal
-const dashboard = {
+// Dashboard Controller
+const dashboardController = {
   async loadDashboardData() {
-    if (window.location.pathname.includes('dashboard.html')) {
-      try {
-        const data = await apiService.getDashboardData();
-        appState.data.dashboard = data;
-        this.updateDashboardCards(data);
-        this.updateRecentEmprestimos(data.emprestimos || []);
-        this.updateCobrancasPendentes(data.cobrancas || []);
-        
-        // Atualizar paginação
-        appState.pagination.totalItems = data.totalItems || 0;
-        paginationSystem.updatePagination();
-        
-      } catch (error) {
-        console.error('Erro ao carregar dados do dashboard:', error);
-        this.loadMockDashboardData();
+    try {
+      const dashboardElement = document.querySelector('.dashboard') || document.querySelector('main');
+      if (dashboardElement) {
+        ui.showLoading(dashboardElement);
+      }
+      
+      const data = await apiService.getDashboardData();
+      // Buscar todos os empréstimos para calcular o valor total a receber com juros em aberto
+      const emprestimos = await apiService.getEmprestimos();
+      let valorTotalReceber = 0;
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      emprestimos.forEach(emprestimo => {
+        // Validação e fallback seguro para campos numéricos
+        const valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
+        const jurosPercent = Number(emprestimo.juros_mensal || 0);
+        const jurosTotal = valorInvestido * (jurosPercent / 100);
+        const dataVencimento = new Date(emprestimo.data_vencimento);
+        let valorAtualizado = valorInvestido + jurosTotal;
+        if (dataVencimento < hoje && (emprestimo.status || '').toUpperCase() !== 'QUITADO') {
+          const diffTime = hoje.getTime() - dataVencimento.getTime();
+          const diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          const jurosDiario = Math.ceil(jurosTotal / 30);
+          const jurosAplicado = jurosDiario * diasAtraso;
+          valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
+        }
+        if ((emprestimo.status || '').toUpperCase() !== 'QUITADO') {
+          valorTotalReceber += valorAtualizado;
+        }
+      });
+      // Substituir o valor do card por esse valor calculado
+      data.cobrancas = data.cobrancas || {};
+      data.cobrancas.valor_total_cobrancas = valorTotalReceber;
+      appState.data.dashboard = data;
+      this.updateDashboardCards(data);
+      await this.updateRecentEmprestimos(data.emprestimosRecentes || []);
+      await this.updateCobrancasPendentes(data.cobrancasPendentes || []);
+      
+      // Usar o valor calculado pela API que já considera parcelas corretamente
+      // Não sobrescrever o valor da API com cálculo local incorreto
+      // data.cobrancas.clientes_em_atraso já vem correto da API
+      
+    } catch (error) {
+      console.error('Erro ao carregar dashboard:', error);
+      ui.showNotification('Erro ao carregar dados do dashboard', 'error');
+    } finally {
+      const dashboardElement = document.querySelector('.dashboard') || document.querySelector('main');
+      if (dashboardElement) {
+        ui.hideLoading(dashboardElement);
       }
     }
   },
 
-  loadMockDashboardData() {
-    const mockData = {
-      totalInvestido: 125000,
-      totalEmprestimos: 45,
-      valorReceber: 189000,
-      clientesAtraso: 8,
-      emprestimos: [
-        {
-          id: 1,
-          cliente: 'João Silva',
-          valor: 5000,
-          vencimento: '2024-01-15',
-          status: 'Ativo'
-        },
-        {
-          id: 2,
-          cliente: 'Maria Santos',
-          valor: 3000,
-          vencimento: '2024-01-20',
-          status: 'Pendente'
-        }
-      ],
-      cobrancas: [
-        {
-          id: 1,
-          cliente: 'Pedro Oliveira',
-          valor: 2500,
-          vencimento: '2024-01-10',
-          diasAtraso: 5,
-          status: 'Atrasado'
-        }
-      ]
+  updateDashboardCards(data) {
+    // Atualizar cards com animação baseado no formato da API
+    console.log('📊 Dados recebidos do dashboard:', data);
+    
+    const cards = {
+      'total-clientes': data.clientes?.total_clientes || 0,
+      'total-emprestimos': data.emprestimos?.total_emprestimos || 0,
+      'valor-receber': data.cobrancas?.valor_total_cobrancas || 0,
+      'clientes-atraso': (data.clientesEmAtraso ?? data.cobrancas?.clientes_em_atraso) || 0,
+      'emprestimos-atraso': data.emprestimosEmAtraso || 0,
+      'clientes-ativos': data.clientesAtivos || 0,
+      'emprestimos-ativos': data.emprestimosAtivos || 0,
+      'total-investido': data.emprestimos?.valor_total_emprestimos || 0
     };
     
-    this.updateDashboardCards(mockData);
-    this.updateRecentEmprestimos(mockData.emprestimos);
-    this.updateCobrancasPendentes(mockData.cobrancas);
-  },
+    console.log('📊 Valores mapeados para os cards:', cards);
 
-  updateDashboardCards(data) {
-    const cards = [
-      { id: 'total-investido', value: data.totalInvestido || 0, format: 'currency' },
-      { id: 'total-emprestimos', value: data.totalEmprestimos || 0, format: 'number' },
-      { id: 'valor-receber', value: data.valorReceber || 0, format: 'currency' },
-      { id: 'clientes-atraso', value: data.clientesAtraso || 0, format: 'number' }
-    ];
-
-    cards.forEach(card => {
-      const element = document.getElementById(card.id);
+    Object.entries(cards).forEach(([id, value]) => {
+      const element = document.getElementById(id);
       if (element) {
-        const currentValue = parseFloat(element.textContent.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
-        const targetValue = card.value;
-        
-        if (card.format === 'currency') {
-          if (currentValue !== targetValue) {
-            const startTime = performance.now();
-            const duration = 1000; // 1 segundo
-            
-            function animateNumber(currentTime) {
-              const elapsed = currentTime - startTime;
-              const progress = Math.min(elapsed / duration, 1);
-              
-              const currentAnimatedValue = currentValue + (targetValue - currentValue) * progress;
-              element.textContent = utils.formatCurrency(currentAnimatedValue);
-              
-              if (progress < 1) {
-                requestAnimationFrame(animateNumber);
-              }
-            }
-            
-            requestAnimationFrame(animateNumber);
-          }
+        if (id === 'valor-receber' || id === 'total-investido') {
+          // Formatar como moeda
+          const formattedValue = new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+          }).format(value || 0);
+          element.textContent = formattedValue;
         } else {
-          element.textContent = targetValue;
+          // Animar números
+          const startValue = parseInt(element.textContent) || 0;
+          const duration = 1000;
+          const startTime = performance.now();
+          
+          function animateNumber(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            const currentValue = Math.floor(startValue + (value - startValue) * progress);
+            element.textContent = currentValue;
+            
+            if (progress < 1) {
+              requestAnimationFrame(animateNumber);
+            }
+          }
+          
+          requestAnimationFrame(animateNumber);
         }
       }
     });
   },
 
+  // Atualizar tabela de empréstimos recentes (corrigido para 5 colunas)
   async updateRecentEmprestimos(emprestimos) {
     const tbody = document.getElementById('emprestimos-recentes');
     if (!tbody) return;
 
-    // Garantir que emprestimos seja um array
-    const emprestimosList = Array.isArray(emprestimos) ? emprestimos : [];
+    tbody.innerHTML = '';
 
-    if (emprestimosList.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+    if (emprestimos.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhum empréstimo recente</td></tr>';
       return;
     }
 
-    tbody.innerHTML = emprestimosList.slice(0, 5).map(emprestimo => `
-      <tr>
-        <td>${emprestimo.cliente}</td>
-        <td>${utils.formatCurrency(emprestimo.valor)}</td>
-        <td>${utils.formatDate(emprestimo.vencimento)}</td>
+    // Processar empréstimos em paralelo para melhor performance
+    const emprestimosProcessados = await Promise.all(
+      emprestimos.map(async (emprestimo) => {
+        // Validação e fallback seguro para campos numéricos
+        const valorInvestido = Number(emprestimo.valor || 0);
+        const jurosPercent = Number(emprestimo.juros_mensal || 0);
+        const jurosTotal = valorInvestido * (jurosPercent / 100);
+        const hoje = new Date();
+        hoje.setHours(0,0,0,0);
+        let status = (emprestimo.status || '').toUpperCase();
+        let dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
+        let valorAtualizado = valorInvestido + jurosTotal;
+        let infoJuros = '';
+        let diasAtraso = 0;
+        let jurosDiario = 0;
+        let jurosAplicado = 0;
+        
+        // Verificar status baseado em parcelas para empréstimos parcelados
+        if (emprestimo.tipo_emprestimo === 'in_installments' && emprestimo.numero_parcelas > 1) {
+          try {
+            const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
+            const parcelasAtrasadas = parcelas.filter(p => {
+              const dataVencParcela = new Date(p.data_vencimento);
+              return dataVencParcela < hoje && (p.status !== 'Paga');
+            });
+            
+            const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
+            
+            if (parcelasPagas.length === parcelas.length) {
+              status = 'QUITADO';
+            } else if (parcelasAtrasadas.length > 0) {
+              status = 'ATRASADO';
+              // Usar a data de vencimento da parcela mais atrasada
+              const parcelaMaisAtrasada = parcelasAtrasadas.sort((a, b) => 
+                new Date(a.data_vencimento) - new Date(b.data_vencimento)
+              )[0];
+              dataVencimento = new Date(parcelaMaisAtrasada.data_vencimento);
+            } else {
+              status = 'ATIVO';
+            }
+          } catch (error) {
+            console.error('Erro ao buscar parcelas para empréstimo', emprestimo.id, error);
+          }
+        } else {
+          // Para empréstimos de parcela única, usar lógica original
+          if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+            status = 'ATRASADO';
+          }
+        }
+        
+        // Calcular juros de atraso se necessário
+        if (status === 'ATRASADO' && dataVencimento) {
+          const diffTime = hoje.getTime() - dataVencimento.getTime();
+          diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          jurosDiario = Math.ceil(jurosTotal / 30);
+          jurosAplicado = jurosDiario * diasAtraso;
+          valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
+          infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
+        }
+        
+        return { ...emprestimo, status, valorAtualizado, infoJuros };
+      })
+    );
+
+        emprestimosProcessados.forEach(emprestimo => {
+      const valor = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(emprestimo.valorAtualizado);
+      
+      // Usar data de vencimento se disponível, senão mostrar "-"
+      const dataExibida = emprestimo.data_vencimento ? 
+        new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : 
+        '-';
+      
+      const statusClass = emprestimo.status === 'ATRASADO' ? 'danger' : (emprestimo.status === 'PENDENTE' ? 'warning' : (emprestimo.status === 'ATIVO' ? 'success' : 'info'));
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${emprestimo.cliente_nome || 'N/A'}</td>
+        <td>${valor}${emprestimo.infoJuros}</td>
+        <td>${dataExibida}</td>
+        <td><span class="badge badge-${statusClass}">${emprestimo.status}</span></td>
         <td>
-          <span class="badge ${this.getStatusClass(emprestimo.status)}">${emprestimo.status}</span>
+          <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
         </td>
-        <td>
-          <button class="btn btn-sm btn-primary" onclick="viewEmprestimo(${emprestimo.id})">
-            <i class="fas fa-eye"></i> Ver
-          </button>
-          <button class="btn btn-sm btn-secondary" onclick="editarEmprestimo(${emprestimo.id})">
-            <i class="fas fa-edit"></i> Editar
-          </button>
-        </td>
-      </tr>
-    `).join('');
+      `;
+      tbody.appendChild(row);
+    });
   },
 
   async updateCobrancasPendentes(cobrancas) {
     const tbody = document.getElementById('cobrancas-pendentes');
     if (!tbody) return;
 
-    // Garantir que cobrancas seja um array
-    const cobrancasList = Array.isArray(cobrancas) ? cobrancas : [];
+    tbody.innerHTML = '';
 
-    if (cobrancasList.length === 0) {
+    // Filtrar apenas cobranças atrasadas considerando parcelas
+    const atrasadas = [];
+    for (const cobranca of cobrancas) {
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      let status = (cobranca.status || '').toUpperCase();
+      let isAtrasado = false;
+      
+      // Verificar se é empréstimo parcelado
+      if (cobranca.tipo_emprestimo === 'in_installments' && cobranca.numero_parcelas > 1) {
+        try {
+          const parcelas = await apiService.getParcelasEmprestimo(cobranca.id);
+          const parcelasAtrasadas = parcelas.filter(p => {
+            const dataVencParcela = new Date(p.data_vencimento);
+            return dataVencParcela < hoje && (p.status !== 'Paga');
+          });
+          
+          if (parcelasAtrasadas.length > 0) {
+            isAtrasado = true;
+          }
+        } catch (error) {
+          console.error('Erro ao buscar parcelas para cobrança', cobranca.id, error);
+        }
+      } else {
+        // Para empréstimos de parcela única
+        const dataVencimento = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
+        if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+          isAtrasado = true;
+        }
+      }
+      
+      if (isAtrasado) {
+        atrasadas.push(cobranca);
+      }
+    }
+
+    if (atrasadas.length === 0) {
       tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhuma cobrança pendente</td></tr>';
       return;
     }
 
-    tbody.innerHTML = cobrancasList.slice(0, 5).map(cobranca => `
-      <tr>
-        <td>${cobranca.cliente}</td>
-        <td>${utils.formatCurrency(cobranca.valor)}</td>
-        <td>${utils.formatDate(cobranca.vencimento)}</td>
+    atrasadas.forEach(cobranca => {
+      // Cálculo de atraso e juros diário para cobranças
+      const valorInvestido = Number(cobranca.valor_inicial || cobranca.valor_original || cobranca.valor || 0);
+      const jurosPercent = Number(cobranca.juros_mensal || cobranca.juros || cobranca.juros_percentual || 0);
+      const jurosTotal = valorInvestido * (jurosPercent / 100);
+      const dataVencimento = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      let status = (cobranca.status || '').toUpperCase();
+      let valorAtualizado = valorInvestido + jurosTotal;
+      let diasAtraso = 0;
+      let jurosDiario = 0;
+      let jurosAplicado = 0;
+      if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+        status = 'ATRASADO';
+        const diffTime = hoje.getTime() - dataVencimento.getTime();
+        diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        jurosDiario = Math.ceil(jurosTotal / 30);
+        jurosAplicado = jurosDiario * diasAtraso;
+        valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
+      }
+      const valor = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(valorAtualizado);
+      const vencimento = cobranca.data_vencimento ? new Date(cobranca.data_vencimento).toLocaleDateString('pt-BR') : '-';
+      const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : 'info'));
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${cobranca.cliente_nome || 'N/A'}</td>
+        <td>${valor}</td>
+        <td>${vencimento}</td>
+        <td>${diasAtraso > 0 ? `${diasAtraso} dias` : 'No prazo'}</td>
+        <td><span class="badge badge-${statusClass}">${status}</span></td>
         <td>
-          <span class="badge ${cobranca.diasAtraso > 0 ? 'badge-danger' : 'badge-warning'}">
-            ${cobranca.diasAtraso || 0} dias
-          </span>
+          <button class="btn btn-secondary btn-sm" onclick="cobrancaController.cobrar(${cobranca.id})">Cobrar</button>
         </td>
-        <td>
-          <span class="badge ${this.getStatusClass(cobranca.status)}">${cobranca.status}</span>
-        </td>
-        <td>
-          <button class="btn btn-sm btn-warning" onclick="cobrar(${cobranca.id})">
-            <i class="fas fa-paper-plane"></i> Cobrar
-          </button>
-          <button class="btn btn-sm btn-info" onclick="viewCliente(${cobranca.clienteId})">
-            <i class="fas fa-user"></i> Ver Cliente
-          </button>
-        </td>
-      </tr>
-    `).join('');
-  },
-
-  getStatusClass(status) {
-    const statusClasses = {
-      'Ativo': 'badge-success',
-      'Pendente': 'badge-warning',
-      'Atrasado': 'badge-danger',
-      'Quitado': 'badge-info',
-      'Cancelado': 'badge-secondary'
-    };
-    return statusClasses[status] || 'badge-secondary';
-  },
-
-  init() {
-    this.loadDashboardData();
+      `;
+      tbody.appendChild(row);
+    });
   }
 };
 
-// Inicialização dos sistemas
+// Mobile Menu Controller
+const mobileMenuController = {
+  init() {
+    const menuToggle = document.getElementById('menuToggle');
+    const nav = document.querySelector('nav');
+    
+    if (menuToggle && nav) {
+      menuToggle.addEventListener('click', () => {
+        nav.classList.toggle('nav-open');
+        menuToggle.classList.toggle('active');
+      });
+
+      // Fechar menu ao clicar em um link
+      nav.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+          nav.classList.remove('nav-open');
+          menuToggle.classList.remove('active');
+        });
+      });
+
+      // Fechar menu ao redimensionar para desktop
+      window.addEventListener('resize', utils.debounce(() => {
+        if (window.innerWidth > 768) {
+          nav.classList.remove('nav-open');
+          menuToggle.classList.remove('active');
+        }
+      }, 250));
+    }
+  }
+};
+
+// Inicialização da aplicação
 const app = {
   async init() {
-    // Verificar autenticação
-    if (!authSystem.checkAuth()) {
-      window.location.href = 'login.html';
-      return;
-    }
-
-    // Inicializar sistemas
-    authSystem.setupAutoLogout();
-    authSystem.showWelcomeMessage();
-    
-    // Inicializar novos sistemas
-    notificationSystem.init();
-    counterSystem.init();
-    filterSystem.init();
-    paginationSystem.init();
-    bulkActionSystem.init();
-    
-    // Inicializar analytics apenas no dashboard
-    if (window.location.pathname.includes('dashboard.html')) {
-      analyticsSystem.init();
-    }
-    
-    // Carregar dados específicos da página
-    await this.loadPageSpecificData();
-    
-    // Inicializar dashboard se estivermos na página do dashboard
-    if (window.location.pathname.includes('dashboard.html')) {
-      dashboard.init();
+    try {
+      const path = window.location.pathname;
+      
+      // Se estiver na página de login, não verificar autenticação
+      if (path.includes('login.html')) {
+        this.setCurrentDate();
+        this.addNotificationStyles();
+        return;
+      }
+      
+      // Verificar autenticação usando sessionStorage (mesmo padrão do sistema principal)
+      const isAuthenticated = authSystem.checkAuth();
+      if (!isAuthenticated) {
+        console.log('Usuário não autenticado, redirecionando...');
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Configurar sistema de logout automático apenas se autenticado
+      authSystem.setupAutoLogout();
+      
+      // Exibir mensagem de boas-vindas
+      authSystem.showWelcomeMessage();
+      
+      // Configurar data atual
+      this.setCurrentDate();
+      
+      // Inicializar menu mobile
+      mobileMenuController.init();
+      
+      // Carregar dados do dashboard apenas se estivermos na página do dashboard
+      if (path.includes('dashboard.html') || path.endsWith('/') || path.includes('index.html')) {
+        await dashboardController.loadDashboardData();
+        
+        // Configurar auto-refresh a cada 5 minutos
+        setInterval(() => {
+          dashboardController.loadDashboardData();
+        }, 5 * 60 * 1000);
+      }
+      
+      // Adicionar estilos para notificações
+      this.addNotificationStyles();
+      
+      // Carregar dados específicos de cada página
+      this.loadPageSpecificData();
+      
+    } catch (error) {
+      console.error('Erro na inicialização:', error);
+      ui.showNotification('Erro ao inicializar a aplicação', 'error');
     }
   },
 
   async loadPageSpecificData() {
-    const currentPage = window.location.pathname.split('/').pop();
+    const path = window.location.pathname;
     
-    switch (currentPage) {
-      case 'dashboard.html':
-        await dashboard.loadDashboardData();
-        break;
-      case 'cobrancas.html':
-        if (typeof renderCobrancasEmAbertoLista === 'function') {
-          await renderCobrancasEmAbertoLista();
+    // Página de cobranças
+    if (path.includes('cobrancas.html')) {
+      try {
+        await renderCobrancasEmAbertoLista();
+      } catch (error) {
+        console.error('Erro ao carregar cobranças:', error);
+      }
+    }
+    
+    // Página de empréstimos
+    if (path.includes('emprestimos.html')) {
+      if (document.getElementById('historico-emprestimos')) {
+        await renderHistoricoEmprestimos();
+      }
+    }
+    
+    // Página de clientes
+    if (path.includes('clientes.html')) {
+      if (document.getElementById('lista-clientes')) {
+        await renderClientesLista();
+      }
+    }
+    
+    // Página de atrasados
+    if (path.includes('atrasados.html')) {
+      if (document.getElementById('atrasados-lista')) {
+        await renderAtrasadosLista();
+      }
+    }
+    
+    // Atualizar cards de estatísticas nas páginas específicas
+    await this.updateStatisticsCards();
+  },
+
+  async updateStatisticsCards() {
+    try {
+      const data = await apiService.getDashboardData();
+      
+      // Cards de atraso
+      if (document.getElementById('total-atraso')) {
+        document.getElementById('total-atraso').textContent = data.emprestimosEmAtraso || 0;
+      }
+      if (document.getElementById('valor-atraso')) {
+        document.getElementById('valor-atraso').textContent = utils.formatCurrency(data.cobrancas?.valor_atrasado || 0);
+      }
+      
+      // Cards de clientes
+      if (document.getElementById('clientes-ativos')) {
+        document.getElementById('clientes-ativos').textContent = data.clientesAtivos || 0;
+      }
+      if (document.getElementById('clientes-atraso')) {
+        document.getElementById('clientes-atraso').textContent = data.clientesEmAtraso || 0;
+      }
+      
+      // Cards de empréstimos
+      if (document.getElementById('emprestimos-ativos')) {
+        document.getElementById('emprestimos-ativos').textContent = data.emprestimosAtivos || 0;
+      }
+      if (document.getElementById('emprestimos-atraso')) {
+        document.getElementById('emprestimos-atraso').textContent = data.emprestimosEmAtraso || 0;
+      }
+      
+      // Card de valor total
+      if (document.getElementById('valor-total')) {
+        const emprestimos = await apiService.getEmprestimos();
+        const total = (emprestimos || []).reduce((acc, emp) => {
+          const status = (emp.status || '').toLowerCase();
+          if ((status === 'ativo' || status === 'pendente') && status !== 'quitado') {
+            const valor = Number(emp.valor || 0);
+            const juros = Number(emp.juros_mensal || 0);
+            acc += valor + (valor * (juros / 100));
+          }
+          return acc;
+        }, 0);
+        document.getElementById('valor-total').textContent = utils.formatCurrency(total);
+      }
+      
+    } catch (error) {
+      console.error('Erro ao atualizar cards de estatísticas:', error);
+    }
+  },
+
+  setCurrentDate() {
+    const currentDateElement = document.getElementById('currentDate');
+    if (currentDateElement) {
+      const now = new Date();
+      const month = now.toLocaleDateString('pt-BR', { month: 'long' });
+      const year = now.getFullYear();
+      currentDateElement.textContent = `${month}/${year}`;
+    }
+  },
+
+  addNotificationStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 1000;
+        max-width: 400px;
+        animation: slideIn 0.3s ease-out;
+      }
+      
+      .notification-content {
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .notification-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #666;
+      }
+      
+      .notification-success {
+        border-left: 4px solid #10b981;
+      }
+      
+      .notification-error {
+        border-left: 4px solid #ef4444;
+      }
+      
+      .notification-warning {
+        border-left: 4px solid #f59e0b;
+      }
+      
+      .notification-info {
+        border-left: 4px solid #3b82f6;
+      }
+      
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
         }
-        break;
-      case 'atrasados.html':
-        if (typeof renderAtrasadosLista === 'function') {
-          await renderAtrasadosLista();
+        to {
+          transform: translateX(0);
+          opacity: 1;
         }
-        break;
-      case 'emprestimos.html':
-        if (typeof renderEmprestimosLista === 'function') {
-          await renderEmprestimosLista();
+      }
+      
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .modal-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+      }
+      
+      .modal-content {
+        background: white;
+        border-radius: 8px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+        z-index: 1;
+      }
+      
+      .modal-header {
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .modal-body {
+        padding: 1rem;
+      }
+      
+      .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #666;
+      }
+      
+      .nav-open {
+        display: flex !important;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--terciary);
+        padding: 1rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+      
+      @media (max-width: 768px) {
+        nav {
+          display: none;
         }
-        break;
-      case 'clientes.html':
-        if (typeof renderClientesLista === 'function') {
-          await renderClientesLista();
+        
+        .menu-toggle {
+          display: block;
         }
-        break;
-      case 'historico.html':
-        if (typeof renderHistoricoEmprestimos === 'function') {
-          await renderHistoricoEmprestimos();
+      }
+    `;
+    document.head.appendChild(style);
+  }
+};
+
+// Controllers para ações específicas
+const emprestimoController = {
+  renderParcelasDetalhadas(parcelas) {
+    const hoje = new Date();
+    hoje.setHours(0,0,0,0);
+    
+    return `
+      <div style="margin-bottom: 1.2rem;">
+        <div style="font-size: 1.1rem; font-weight: 700; color: #222; margin-bottom: 1em; text-align: center;">
+          EMPRÉSTIMO PARCELADO - ${parcelas.length} PARCELAS
+        </div>
+        <div style="max-height: 400px; overflow-y: auto;">
+          ${parcelas.map(parcela => {
+            const dataVencimento = new Date(parcela.data_vencimento);
+            const isAtrasado = dataVencimento < hoje;
+            const status = parcela.status || parcela.cobranca_status || 'Pendente';
+            const valorParcela = Number(parcela.valor_parcela || 0);
+            
+            let statusColor = '#6b7280'; // cinza para pendente
+            let statusText = 'Pendente';
+            
+            if (status === 'Paga') {
+              statusColor = '#10b981'; // verde
+              statusText = 'Paga';
+            } else if (status === 'Atrasada' || isAtrasado) {
+              statusColor = '#ef4444'; // vermelho
+              statusText = 'Atrasada';
+            }
+            
+            return `
+              <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem; background: ${status === 'Paga' ? '#f0fdf4' : isAtrasado ? '#fef2f2' : '#fff'};" data-emprestimo-id="${parcela.emprestimo_id}" data-numero-parcela="${parcela.numero_parcela}">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                  <span style="font-weight: 600; color: #374151;">Parcela ${parcela.numero_parcela}</span>
+                  <span style="background: ${statusColor}; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.875rem; font-weight: 500;">
+                    ${statusText}
+                  </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                  <span style="color: #6b7280;">Valor:</span>
+                  <span style="font-weight: 600;">${utils.formatCurrency(valorParcela)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                  <span style="color: #6b7280;">Vencimento:</span>
+                  <span style="font-weight: 500; color: ${isAtrasado ? '#ef4444' : '#374151'};">
+                    ${utils.formatDate(parcela.data_vencimento)}
+                    ${isAtrasado && status !== 'Paga' ? ` (${Math.floor((hoje - dataVencimento) / (1000 * 60 * 60 * 24))} dias)` : ''}
+                  </span>
+                </div>
+                ${parcela.data_pagamento ? `
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="color: #6b7280;">Pago em:</span>
+                    <span style="font-weight: 500; color: #10b981;">
+                      ${utils.formatDate(parcela.data_pagamento)}
+                    </span>
+                  </div>
+                ` : ''}
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
+                  ${status !== 'Paga' ? `
+                    <button class="btn" style="background: #10b981; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1; min-width: 80px;" onclick="marcarParcelaPaga(${parcela.emprestimo_id}, ${parcela.numero_parcela})">
+                      Pagar
+                    </button>
+                    <button class="btn" style="background: #ef4444; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1; min-width: 80px;" onclick="marcarParcelaAtrasada(${parcela.emprestimo_id}, ${parcela.numero_parcela})">
+                      Atraso
+                    </button>
+                  ` : `
+                    <button class="btn" style="background: #6b7280; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1;" onclick="marcarParcelaPendente(${parcela.emprestimo_id}, ${parcela.numero_parcela})">
+                      Desfazer
+                    </button>
+                  `}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+          <div style="font-size: 1.2rem; font-weight: bold; color: #002f4b;">
+                            Total do Empréstimo: <span style="color: #10b981;">${utils.formatCurrency(parcelas.reduce((total, p) => total + Number(p.valor_parcela || 0), 0))}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  async editarEmprestimo(id) {
+    try {
+      // Buscar dados do empréstimo
+      const emprestimos = await apiService.getEmprestimos();
+      const emp = emprestimos.find(e => String(e.id) === String(id));
+      
+      if (!emp) {
+        ui.showNotification('Empréstimo não encontrado', 'error');
+        return;
+      }
+
+      // Buscar lista de clientes para o select
+      const clientes = await apiService.getClientes();
+      
+      // Criar modal de edição
+      const modalEdicao = `
+        <div style="padding: 1.5rem; max-width: 600px; margin: 0 auto;">
+          <h3 style="margin-bottom: 1.5rem; color: #002f4b; text-align: center;">Editar Empréstimo #${emp.id}</h3>
+          
+          <form id="form-editar-emprestimo">
+            <div class="form-group">
+              <label>Cliente *</label>
+              <select id="edit-cliente" class="form-input" required>
+                <option value="">Selecione um cliente</option>
+                ${clientes.map(cliente => `
+                  <option value="${cliente.id}" ${cliente.id == emp.cliente_id ? 'selected' : ''}>
+                    ${cliente.nome} - ${cliente.telefone || cliente.celular || 'Sem telefone'}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+            
+            <div class="grid grid-cols-2" style="gap: 1rem;">
+                             <div class="form-group">
+                 <label>Valor do Empréstimo (R$) *</label>
+                 <input type="text" id="edit-valor" class="form-input" value="${utils.formatCurrency(emp.valor || 0)}" required>
+               </div>
+              
+              <div class="form-group">
+                <label>Juros Mensal (%) *</label>
+                <input type="number" id="edit-juros" class="form-input" step="0.01" min="0" value="${emp.juros_mensal || ''}" required>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-2" style="gap: 1rem;">
+                             <div class="form-group">
+                 <label>Data de Vencimento *</label>
+                 <input type="date" id="edit-data-vencimento" class="form-input" value="${utils.formatDateForInput(emp.data_vencimento)}" required>
+               </div>
+              
+              <div class="form-group">
+                <label>Frequência de Pagamento *</label>
+                <select id="edit-frequencia" class="form-input" required>
+                  <option value="monthly" ${emp.frequencia_pagamento === 'monthly' ? 'selected' : ''}>Mensal</option>
+                  <option value="weekly" ${emp.frequencia_pagamento === 'weekly' ? 'selected' : ''}>Semanal</option>
+                  <option value="daily" ${emp.frequencia_pagamento === 'daily' ? 'selected' : ''}>Diário</option>
+                  <option value="biweekly" ${emp.frequencia_pagamento === 'biweekly' ? 'selected' : ''}>Quinzenal</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-2" style="gap: 1rem;">
+              <div class="form-group">
+                <label>Número de Parcelas *</label>
+                <input type="number" id="edit-parcelas" class="form-input" min="1" value="${emp.numero_parcelas || 1}" required>
+              </div>
+              
+              <div class="form-group">
+                <label>Status</label>
+                <select id="edit-status" class="form-input">
+                  <option value="Ativo" ${emp.status === 'Ativo' ? 'selected' : ''}>Ativo</option>
+                  <option value="Quitado" ${emp.status === 'Quitado' ? 'selected' : ''}>Quitado</option>
+                  <option value="Em Atraso" ${emp.status === 'Em Atraso' ? 'selected' : ''}>Em Atraso</option>
+                  <option value="Cancelado" ${emp.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Observações</label>
+              <textarea id="edit-observacoes" class="form-input" rows="3" placeholder="Observações sobre o empréstimo">${emp.observacoes || ''}</textarea>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+              <button type="submit" class="btn btn-primary" style="flex: 1;">Salvar Alterações</button>
+              <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      `;
+      
+      const modal = ui.showModal(modalEdicao, 'Editar Empréstimo');
+      
+      // Aplicar máscara de moeda no campo valor
+      const valorInput = modal.querySelector('#edit-valor');
+      this.aplicarMascaraMoeda(valorInput);
+      
+      // Processar formulário de edição
+      const form = modal.querySelector('#form-editar-emprestimo');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = {
+          cliente_id: document.getElementById('edit-cliente').value,
+          valor: this.parseMoeda(document.getElementById('edit-valor').value),
+          juros_mensal: parseFloat(document.getElementById('edit-juros').value),
+          data_vencimento: document.getElementById('edit-data-vencimento').value,
+          frequencia_pagamento: document.getElementById('edit-frequencia').value,
+          numero_parcelas: parseInt(document.getElementById('edit-parcelas').value),
+          status: document.getElementById('edit-status').value,
+          observacoes: document.getElementById('edit-observacoes').value
+        };
+        
+        // Validações
+        if (!formData.cliente_id) {
+          ui.showNotification('Selecione um cliente', 'error');
+          return;
         }
-        break;
-      case 'lista-negra.html':
-        if (typeof renderListaNegra === 'function') {
-          await renderListaNegra();
+        
+        if (!formData.valor || formData.valor <= 0) {
+          ui.showNotification('Valor do empréstimo deve ser maior que zero', 'error');
+          return;
         }
-        break;
+        
+        if (!formData.juros_mensal || formData.juros_mensal < 0) {
+          ui.showNotification('Juros deve ser maior ou igual a zero', 'error');
+          return;
+        }
+        
+        if (!formData.data_vencimento) {
+          ui.showNotification('Data de vencimento é obrigatória', 'error');
+          return;
+        }
+        
+        if (!formData.numero_parcelas || formData.numero_parcelas < 1) {
+          ui.showNotification('Número de parcelas deve ser maior que zero', 'error');
+          return;
+        }
+        
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn ? submitBtn.textContent : 'Salvar Alterações';
+        
+        try {
+          if (submitBtn) {
+            submitBtn.textContent = 'Salvando...';
+            submitBtn.disabled = true;
+          }
+          
+          // Enviar dados para a API
+          const response = await fetch(`/api/cobrancas/emprestimos/${id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(formData)
+          });
+          
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Erro ao atualizar empréstimo');
+          }
+          
+          // Sucesso
+          modal.remove();
+          ui.showNotification('Empréstimo atualizado com sucesso!', 'success');
+          
+          // Recarregar dados
+          setTimeout(async () => {
+            await recarregarDadosPagina();
+          }, 1000);
+          
+        } catch (error) {
+          console.error('Erro ao atualizar empréstimo:', error);
+          ui.showNotification('Erro ao atualizar empréstimo: ' + error.message, 'error');
+        } finally {
+          if (submitBtn) {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+          }
+        }
+      });
+      
+    } catch (error) {
+      console.error('Erro ao carregar dados para edição:', error);
+      ui.showNotification('Erro ao carregar dados para edição', 'error');
+    }
+  },
+
+  aplicarMascaraMoeda(input) {
+    input.addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\D/g, '');
+      value = (value / 100).toFixed(2) + '';
+      value = value.replace(".", ",");
+      value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+      e.target.value = 'R$ ' + value;
+    });
+  },
+
+  parseMoeda(valor) {
+    if (!valor) return 0;
+    return parseFloat(valor.replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
+  },
+
+
+
+  async viewEmprestimo(id) {
+    try {
+      const emprestimos = await apiService.getEmprestimos();
+      const emp = emprestimos.find(e => String(e.id) === String(id));
+      console.log('DEBUG EMPRESTIMO:', emp);
+      if (!emp) {
+        ui.showNotification('Empréstimo não encontrado', 'error');
+        return;
+      }
+
+      // Buscar parcelas se for empréstimo parcelado
+      let parcelas = [];
+      if (emp.tipo_emprestimo === 'in_installments' && emp.numero_parcelas > 1) {
+        try {
+          parcelas = await apiService.getParcelasEmprestimo(id);
+          console.log('PARCELAS ENCONTRADAS:', parcelas);
+        } catch (error) {
+          console.error('Erro ao buscar parcelas:', error);
+        }
+      }
+      try {
+        // Validação e fallback seguro para campos numéricos
+        const valorInvestido = Number(emp.valor || 0);
+        const jurosPercent = Number(emp.juros_mensal || 0);
+        const multaAtraso = Number(emp.multa_atraso || 0);
+        const jurosTotal = valorInvestido * (jurosPercent / 100);
+        const hoje = new Date();
+        hoje.setHours(0,0,0,0);
+        let status = (emp.status || '').toUpperCase();
+        let dataVencimento = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
+        
+        // Para empréstimos parcelados, verificar status baseado nas parcelas
+        if (parcelas.length > 0) {
+          const parcelasAtrasadas = parcelas.filter(p => {
+            const dataVencParcela = new Date(p.data_vencimento);
+            return dataVencParcela < hoje && (p.status !== 'Paga');
+          });
+          
+          const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
+          
+          if (parcelasPagas.length === parcelas.length) {
+            status = 'QUITADO';
+          } else if (parcelasAtrasadas.length > 0) {
+            status = 'ATRASADO';
+            // Usar a data de vencimento da parcela mais atrasada
+            const parcelaMaisAtrasada = parcelasAtrasadas.sort((a, b) => 
+              new Date(a.data_vencimento) - new Date(b.data_vencimento)
+            )[0];
+            dataVencimento = new Date(parcelaMaisAtrasada.data_vencimento);
+          } else {
+            status = 'ATIVO';
+          }
+        } else {
+          // Para empréstimos de parcela única, usar lógica original
+          if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+            status = 'ATRASADO';
+          }
+        }
+        let valorAtualizado = valorInvestido + jurosTotal;
+        let infoJuros = '';
+        let diasAtraso = 0;
+        let jurosDiario = 0;
+        let jurosAplicado = 0;
+        if (status === 'ATRASADO') {
+          // Calcular dias de atraso
+          const diffTime = hoje.getTime() - dataVencimento.getTime();
+          diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          // Juros diário: juros total dividido por 30 dias, arredondado para cima
+          jurosDiario = Math.ceil(jurosTotal / 30);
+          jurosAplicado = jurosDiario * diasAtraso;
+          valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
+          infoJuros = `
+            <div style='margin-top:1em; color:#ef4444; font-size:1rem;'>
+              <b>Em atraso:</b> ${diasAtraso} dia(s)<br>
+              Juros total previsto: <b>R$ ${jurosTotal.toFixed(2)}</b><br>
+              Juros diário: <b>R$ ${jurosDiario.toFixed(2)}</b><br>
+              Juros aplicado (atraso): <b>R$ ${jurosAplicado.toFixed(2)}</b><br>
+              <span style='font-size:1.1em;'>Valor atualizado: <b>R$ ${valorAtualizado.toFixed(2)}</b></span>
+            </div>
+          `;
+        }
+        // Modal HTML
+        const telefone = emp.telefone || emp.celular || emp.whatsapp || '';
+        const nome = emp.cliente_nome || '';
+        // Calcular valor total dos juros (juros total + juros aplicado por atraso)
+        const valorTotalJuros = jurosTotal + jurosAplicado;
+        const msgWhatsapp = encodeURIComponent(
+                        `Olá ${nome}, seu empréstimo está vencendo hoje. O valor total é de ${utils.formatCurrency(valorAtualizado)}. Caso venha enviar somente o juros o valor é ${utils.formatCurrency(valorTotalJuros)}.`
+        );
+        const linkWhatsapp = telefone ? `https://wa.me/55${telefone.replace(/\D/g,'')}?text=${msgWhatsapp}` : '#';
+        const detalhes = `
+          <div class="emprestimo-modal-box" style="padding: 1.5rem; max-width: 420px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 2px 16px #002f4b22;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+              <span class="badge" style="background: ${status === 'ATRASADO' ? '#fbbf24' : status === 'QUITADO' ? '#10b981' : status === 'SÓ JUROS' ? '#6366f1' : '#002f4b'}; color: #fff; font-weight: 600; font-size: 1rem; padding: 0.4em 1em; border-radius: 8px; letter-spacing: 1px;">${status || '-'}</span>
+              <button class="btn" style="background: #10b981; color: #fff; font-weight: 600; border-radius: 8px; padding: 0.4em 1.2em; font-size: 1rem;" id="modal-btn-editar">Editar</button>
+            </div>
+            <div style="margin-bottom: 1.2rem;">
+              <h2 style="font-size: 1.4rem; font-weight: bold; margin-bottom: 0.2em; color: #002f4b;">${emp.cliente_nome || 'N/A'}</h2>
+              <div style="font-size: 1.1rem; font-weight: 600; color: #222; margin-bottom: 0.2em;">PCL-Nº #${emp.id} ${emp.parcelas ? `(${emp.parcelas}ª parcela)` : ''}</div>
+              <div style="font-size: 1rem; color: #444; margin-bottom: 0.2em;">Deve ser pago em <b>${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</b></div>
+              <div style="font-size: 1rem; color: #444;">Valor Investido <b>${utils.formatCurrency(valorInvestido)}</b></div>
+              <div style="font-size: 1rem; color: #444;">Juros <b>${jurosPercent}%</b> (${utils.formatCurrency(jurosTotal)})</div>
+              ${infoJuros}
+            </div>
+            <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid #eee;">
+            ${parcelas.length > 1 ? this.renderParcelasDetalhadas(parcelas) : `
+              <div style="margin-bottom: 1.2rem; text-align: center;">
+                <div style="font-size: 1.1rem; font-weight: 700; color: #222; margin-bottom: 0.2em;">PARCELA ÚNICA</div>
+                <div style="font-size: 1.3rem; font-weight: bold; color: #002f4b;">Total a Receber: <span style="color: #10b981;">${utils.formatCurrency(valorAtualizado)}</span></div>
+              </div>
+            `}
+            <div style="display: flex; flex-direction: column; gap: 0.7rem; margin-top: 1.5rem;">
+              <a class="btn" style="background: #25d366; color: #fff; font-weight: 600; font-size: 1.1rem; border-radius: 8px;" id="modal-notificar" href="${linkWhatsapp}" target="_blank" rel="noopener noreferrer">Notificar <b>WhatsApp</b></a>
+              <div style="display: flex; gap: 0.7rem; flex-wrap: wrap;">
+                <button class="btn" style="background: #10b981; color: #fff; flex:1; font-weight: 600; border-radius: 8px;" id="modal-btn-quitado" type="button">Quitado</button>
+                <button class="btn" style="background: #6366f1; color: #fff; flex:1; font-weight: 600; border-radius: 8px;" id="modal-btn-sojuros" type="button">Só Juros</button>
+              </div>
+              <button class="btn" style="background: #ef4444; color: #fff; font-weight: 600; border-radius: 8px; font-size: 1.1rem;" id="modal-btn-naopagou" type="button">Não Pagou</button>
+              <button class="btn" style="background: #ff2222; color: #fff; font-weight: 600; border-radius: 8px; font-size: 1.1rem;" id="modal-btn-remover" type="button">REMOVER</button>
+            </div>
+          </div>
+        `;
+        const modal = ui.showModal(detalhes, 'Detalhes do Empréstimo');
+        // Corrigir comportamento do botão WhatsApp para nunca recarregar
+        const btnWhats = modal.querySelector('#modal-notificar');
+        btnWhats.addEventListener('click', (e) => {
+          e.stopPropagation();
+          // Não faz nada além de abrir o link
+        });
+        
+        // Botão Editar
+        modal.querySelector('#modal-btn-editar').onclick = async (e) => {
+          e.preventDefault();
+          modal.remove();
+          await this.editarEmprestimo(emp.id);
+        };
+        // Botão Quitado
+        modal.querySelector('#modal-btn-quitado').onclick = async (e) => {
+          e.preventDefault();
+          try {
+            await fetch(`/api/cobrancas/emprestimos/${emp.id}/status`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ status: 'Quitado' })
+            });
+            ui.showNotification('Empréstimo marcado como quitado!', 'success');
+            modal.remove();
+            if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
+          } catch (err) {
+            ui.showNotification('Erro ao atualizar status', 'error');
+          }
+        };
+        // Botão Só Juros
+        modal.querySelector('#modal-btn-sojuros').onclick = async (e) => {
+          e.preventDefault();
+          
+          // Calcular juros acumulados
+          const valorInicial = Number(emp.valor || 0);
+          const jurosPercent = Number(emp.juros_mensal || 0);
+          const jurosAcumulados = valorInicial * (jurosPercent / 100);
+          
+          // Criar modal de pagamento de juros
+          const modalPagamento = `
+            <div style="padding: 1.5rem; max-width: 500px; margin: 0 auto;">
+              <h3 style="margin-bottom: 1rem; color: #002f4b;">Pagamento de Juros com Extensão</h3>
+              
+              <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <h4 style="margin-bottom: 0.5rem; color: #002f4b;">Resumo do Empréstimo</h4>
+                <p><strong>Cliente:</strong> ${emp.cliente_nome || 'N/A'}</p>
+                <p><strong>Valor Inicial do Empréstimo:</strong> ${utils.formatCurrency(valorInicial)}</p>
+                <p><strong>Juros Mensal:</strong> ${jurosPercent}%</p>
+                                  <p><strong>Juros Acumulados a Pagar:</strong> ${utils.formatCurrency(jurosAcumulados)}</p>
+                <p><strong>Vencimento Atual:</strong> ${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</p>
+                <p><strong>Novo Vencimento:</strong> ${(() => {
+                  const dataVenc = new Date(emp.data_vencimento);
+                  dataVenc.setDate(dataVenc.getDate() + 30);
+                  return utils.formatDate(dataVenc.toISOString().split('T')[0]);
+                })()}</p>
+                                  <p><strong>Novo Valor da Dívida:</strong> ${utils.formatCurrency(valorInicial)} <em>(volta ao valor inicial)</em></p>
+                <div style="background: #e3f2fd; padding: 0.75rem; border-radius: 6px; margin-top: 0.75rem; border-left: 4px solid #2196f3;">
+                  <p style="margin: 0; font-size: 0.9rem; color: #1565c0;">
+                    <strong>Como funciona:</strong> Ao pagar apenas os juros, o valor da dívida volta ao valor inicial do empréstimo e o prazo é estendido em 30 dias.
+                  </p>
+                </div>
+              </div>
+              
+              <form id="form-pagamento-juros">
+                <div class="form-group">
+                  <label>Valor dos Juros a Pagar (R$) *</label>
+                  <input type="number" id="valor-juros" class="form-input" step="0.01" min="${jurosAcumulados}" value="${jurosAcumulados}" required>
+                  <small class="text-gray-500">Mínimo: ${utils.formatCurrency(jurosAcumulados)}</small>
+                </div>
+                
+                <div class="form-group">
+                  <label>Data do Pagamento *</label>
+                  <input type="date" id="data-pagamento" class="form-input" value="${new Date().toISOString().split('T')[0]}" required>
+                </div>
+                
+                <div class="form-group">
+                  <label>Forma de Pagamento</label>
+                  <select id="forma-pagamento" class="form-input">
+                    <option value="Dinheiro">Dinheiro</option>
+                    <option value="PIX">PIX</option>
+                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                    <option value="Cartão de Débito">Cartão de Débito</option>
+                    <option value="Transferência">Transferência</option>
+                    <option value="Outro">Outro</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label>Observações</label>
+                  <textarea id="observacoes-juros" class="form-input" rows="3" placeholder="Observações sobre o pagamento"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                  <button type="submit" class="btn btn-primary" style="flex: 1;">Confirmar Pagamento</button>
+                  <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                </div>
+              </form>
+            </div>
+          `;
+          
+          const modalJuros = ui.showModal(modalPagamento, 'Pagamento de Juros');
+          const formJuros = modalJuros.querySelector('#form-pagamento-juros');
+          
+          // Processar pagamento de juros
+          formJuros.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const valorJuros = parseFloat(document.getElementById('valor-juros').value);
+            const dataPagamento = document.getElementById('data-pagamento').value;
+            const formaPagamento = document.getElementById('forma-pagamento').value;
+            const observacoes = document.getElementById('observacoes-juros').value;
+            
+            if (valorJuros < jurosAcumulados) {
+                                alert(`Valor insuficiente. O mínimo é ${utils.formatCurrency(jurosAcumulados)}`);
+              return;
+            }
+            
+            try {
+              const submitBtn = formJuros.querySelector('button[type="submit"]');
+              const originalText = submitBtn.textContent;
+              submitBtn.textContent = 'Processando...';
+              submitBtn.disabled = true;
+              
+              const response = await fetch(`/api/cobrancas/emprestimos/${emp.id}/pagamento-juros`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                  valor_juros_pago: valorJuros,
+                  data_pagamento: dataPagamento,
+                  forma_pagamento: formaPagamento,
+                  observacoes: observacoes
+                })
+              });
+              
+              if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Erro ao processar pagamento');
+              }
+              
+              const result = await response.json();
+              
+              // Fechar modais
+              modalJuros.remove();
+              modal.remove();
+              
+              // Mostrar sucesso
+              ui.showNotification(`Pagamento de juros registrado! Novo vencimento: ${utils.formatDate(result.nova_data_vencimento)}`, 'success');
+              
+              // Recarregar dados
+              setTimeout(async () => {
+                await recarregarDadosPagina();
+              }, 1000);
+              
+            } catch (error) {
+              console.error('Erro ao processar pagamento de juros:', error);
+              alert('Erro ao processar pagamento: ' + error.message);
+            } finally {
+              const submitBtn = formJuros.querySelector('button[type="submit"]');
+              submitBtn.textContent = originalText;
+              submitBtn.disabled = false;
+            }
+          });
+        };
+        // Botão Não Pagou
+        modal.querySelector('#modal-btn-naopagou').onclick = async (e) => {
+          e.preventDefault();
+          try {
+            await fetch(`/api/cobrancas/emprestimos/${emp.id}/status`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ status: 'Em Atraso' })
+            });
+            ui.showNotification('Status alterado para Em Atraso!', 'success');
+            modal.remove();
+            if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
+          } catch (err) {
+            ui.showNotification('Erro ao atualizar status', 'error');
+          }
+        };
+        // Botão Remover
+        modal.querySelector('#modal-btn-remover').onclick = async (e) => {
+          e.preventDefault();
+          if (!confirm('Tem certeza que deseja remover este empréstimo?')) return;
+          try {
+            await fetch(`/api/cobrancas/emprestimos/${emp.id}`, {
+              method: 'DELETE',
+              credentials: 'include'
+            });
+            ui.showNotification('Empréstimo removido!', 'success');
+            modal.remove();
+            if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
+          } catch (err) {
+            ui.showNotification('Erro ao remover empréstimo', 'error');
+          }
+        };
+      } catch (err) {
+        console.error('Erro real ao exibir modal:', err, emp);
+        ui.showNotification('Erro ao exibir detalhes do empréstimo. Veja o console para detalhes.', 'error');
+      }
+    } catch (err) {
+      ui.showNotification('Erro ao buscar ou exibir empréstimo. Verifique os dados do empréstimo.', 'error');
     }
   }
 };
 
-// ... existing code ...
+const cobrancaController = {
+  cobrar(id) {
+    // Redirecionar para página de cobranças
+    console.log(`Registrando cobrança #${id}`);
+    window.location.href = 'cobrancas.html';
+  }
+};
 
-async function renderCobrancasEmAbertoLista(filters = {}) {
+// Função para adicionar cliente à lista negra
+async function adicionarListaNegra(id) {
   try {
-    const tbody = document.getElementById('lista-cobrancas');
-    if (!tbody) return;
-
-    // Mostrar loading
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center">Carregando dados...</td></tr>';
-
-    // Preparar parâmetros de filtro e paginação
-    const params = new URLSearchParams({
-      page: appState.pagination.currentPage,
-      limit: appState.pagination.itemsPerPage,
-      ...filters
-    });
-
-    const response = await fetch(`/api/cobrancas?${params}`, {
-      method: 'GET',
-      credentials: 'include'
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    let lista = data.cobrancas || data || [];
-    
-    // Atualizar estado da paginação
-    appState.pagination.totalItems = data.total || lista.length;
-    if (typeof paginationSystem !== 'undefined') {
-      paginationSystem.updatePagination();
-    }
-
-    if (!Array.isArray(lista) || lista.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhuma cobrança encontrada</td></tr>';
+    if (!confirm('Tem certeza que deseja adicionar este cliente à lista negra?')) {
       return;
     }
-
-    // Aplicar filtros locais se necessário
-    if (filters.search) {
-      const searchTerm = filters.search.toLowerCase();
-      lista = lista.filter(item => 
-        (item.nome && item.nome.toLowerCase().includes(searchTerm)) ||
-        (item.cliente && item.cliente.toLowerCase().includes(searchTerm))
-      );
+    
+    const response = await fetch(`/api/cobrancas/clientes/${id}/lista-negra`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ 
+        status: 'Lista Negra',
+        motivo: 'Adicionado manualmente pelo usuário'
+      })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erro ao adicionar à lista negra');
     }
-
-    if (filters.status && filters.status !== '') {
-      lista = lista.filter(item => 
-        (item.status && item.status.toLowerCase() === filters.status.toLowerCase())
-      );
+    
+    ui.showNotification('Cliente adicionado à lista negra com sucesso!', 'success');
+    
+    // Recarregar lista de clientes
+    if (document.getElementById('lista-clientes')) {
+      await renderClientesLista();
     }
-
-    if (filters.dateFrom) {
-      lista = lista.filter(item => 
-        new Date(item.data_vencimento || item.vencimento) >= new Date(filters.dateFrom)
-      );
-    }
-
-    if (filters.dateTo) {
-      lista = lista.filter(item => 
-        new Date(item.data_vencimento || item.vencimento) <= new Date(filters.dateTo)
-      );
-    }
-
-    tbody.innerHTML = lista.map(item => {
-      const clienteNome = item.nome || item.cliente || 'Cliente não identificado';
-      const valor = parseFloat(item.valor) || 0;
-      const valorFormatado = utils.formatCurrency(valor);
-      const dataVencimento = item.data_vencimento || item.vencimento;
-      const dataFormatada = dataVencimento ? utils.formatDate(dataVencimento) : 'N/A';
-      
-      // Calcular dias de atraso
-      const diasAtraso = dataVencimento ? utils.calculateDaysLate(dataVencimento) : 0;
-      const statusAtraso = diasAtraso > 0 ? 'Atrasado' : 'Em Dia';
-      
-      const statusClass = diasAtraso > 0 ? 'badge-danger' : 'badge-success';
-      const statusText = item.status || statusAtraso;
-
-      return `
-        <tr>
-          <td>
-            <input type="checkbox" class="select-checkbox" data-id="${item.id || item.emprestimo_id}">
-          </td>
-          <td>
-            <div class="cobranca-nome">${clienteNome}</div>
-          </td>
-          <td>
-            <div class="cobranca-valor">${valorFormatado}</div>
-          </td>
-          <td>
-            <div class="cobranca-data">${dataFormatada}</div>
-          </td>
-          <td>
-            <span class="badge ${diasAtraso > 0 ? 'badge-danger' : 'badge-success'}">
-              ${diasAtraso} dias
-            </span>
-          </td>
-          <td>
-            <span class="badge ${statusClass}">${statusText}</span>
-          </td>
-          <td>
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-              <button class="btn btn-sm btn-warning" onclick="cobrar(${item.id || item.emprestimo_id})" title="Enviar Cobrança">
-                <i class="fas fa-paper-plane"></i>
-              </button>
-              <button class="btn btn-sm btn-info" onclick="viewEmprestimo(${item.id || item.emprestimo_id})" title="Ver Detalhes">
-                <i class="fas fa-eye"></i>
-              </button>
-              <button class="btn btn-sm btn-success" onclick="marcarParcelaPaga(${item.id || item.emprestimo_id}, 1)" title="Marcar como Pago">
-                <i class="fas fa-check"></i>
-              </button>
-              ${diasAtraso > 5 ? `
-                <button class="btn btn-sm btn-danger" onclick="adicionarListaNegra(${item.cliente_id || item.id})" title="Adicionar à Lista Negra">
-                  <i class="fas fa-ban"></i>
-                </button>
-              ` : ''}
-            </div>
-          </td>
-        </tr>
-      `;
-    }).join('');
-
-    // Atualizar data atual
-    const currentDateElement = document.getElementById('currentDate');
-    if (currentDateElement) {
-      currentDateElement.textContent = new Date().toLocaleDateString('pt-BR');
-    }
-
-    // Limpar seleções
-    if (typeof bulkActionSystem !== 'undefined') {
-      bulkActionSystem.clearSelection();
-    }
-
+    
   } catch (error) {
-    console.error('Erro ao carregar cobranças:', error);
-    const tbody = document.getElementById('lista-cobrancas');
-    if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-600">Erro ao carregar dados. Tente novamente.</td></tr>';
+    console.error('Erro ao adicionar à lista negra:', error);
+    ui.showNotification('Erro ao adicionar à lista negra: ' + error.message, 'error');
+  }
+}
+
+const clienteController = {
+  async viewCliente(id) {
+    try {
+      const response = await fetch(`/api/cobrancas/clientes/${id}`, {
+        credentials: 'include'
+      });
+      const cliente = await response.json();
+      
+      if (!response.ok) {
+        ui.showNotification('Cliente não encontrado', 'error');
+        return;
+      }
+      
+      // Buscar todos os empréstimos do cliente
+      const emprestimos = await apiService.getEmprestimos();
+      const emprestimosCliente = emprestimos.filter(e => e.cliente_id === parseInt(id));
+      
+      // Processar cada empréstimo para obter informações detalhadas
+      const emprestimosDetalhados = await Promise.all(
+        emprestimosCliente.map(async (emp) => {
+                   const valorInicial = Number(emp.valor || 0) || 0;
+         const jurosPercent = Number(emp.juros_mensal || 0) || 0;
+         const jurosTotal = valorInicial * (jurosPercent / 100);
+         const valorFinal = valorInicial + jurosTotal;
+         
+         // Determinar tipo de empréstimo
+         let tipoEmprestimo = 'Parcela Única';
+         let valorParcela = valorFinal;
+          let parcelas = [];
+          
+                     if (emp.tipo_emprestimo === 'in_installments' && emp.numero_parcelas > 1) {
+             tipoEmprestimo = `Parcelado (${emp.numero_parcelas}x)`;
+             valorParcela = Number(emp.valor_parcela || (valorFinal / emp.numero_parcelas)) || 0;
+            
+            // Buscar parcelas se for parcelado
+            try {
+              parcelas = await apiService.getParcelasEmprestimo(emp.id);
+            } catch (error) {
+              console.error('Erro ao buscar parcelas:', error);
+            }
+          }
+          
+          // Determinar status atual baseado em parcelas
+          const hoje = new Date();
+          hoje.setHours(0,0,0,0);
+          let statusAtual = (emp.status || '').toUpperCase();
+          
+          if (parcelas.length > 0) {
+            const parcelasAtrasadas = parcelas.filter(p => {
+              const dataVencParcela = new Date(p.data_vencimento);
+              return dataVencParcela < hoje && (p.status !== 'Paga');
+            });
+            
+            const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
+            
+            if (parcelasPagas.length === parcelas.length) {
+              statusAtual = 'QUITADO';
+            } else if (parcelasAtrasadas.length > 0) {
+              statusAtual = 'ATRASADO';
+            } else {
+              statusAtual = 'ATIVO';
+            }
+          } else {
+            // Para empréstimos de parcela única
+            const dataVenc = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
+            if (dataVenc && dataVenc < hoje && statusAtual !== 'QUITADO') {
+              statusAtual = 'ATRASADO';
+            }
+          }
+          
+          return {
+            ...emp,
+            valorInicial,
+            jurosTotal,
+            valorFinal,
+            valorParcela,
+            tipoEmprestimo,
+            statusAtual,
+            parcelas
+          };
+        })
+      );
+      
+      const modalContent = `
+        <div class="cliente-modal-box" style="padding: 1.5rem; max-width: 800px; margin: 0 auto; max-height: 80vh; overflow-y: auto;">
+          <h3 style="margin-bottom: 1rem; color: #002f4b;">${cliente.nome}</h3>
+          
+          <!-- Dados do Cliente -->
+          <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <h4 style="margin-bottom: 0.5rem; color: #002f4b;">Dados Pessoais</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+              <p><strong>CPF/CNPJ:</strong> ${cliente.cpf_cnpj || 'Não informado'}</p>
+              <p><strong>Telefone:</strong> ${cliente.telefone || 'Não informado'}</p>
+              <p><strong>Email:</strong> ${cliente.email || 'Não informado'}</p>
+              <p><strong>Cidade:</strong> ${cliente.cidade || 'Não informada'}</p>
+            </div>
+            <p><strong>Endereço:</strong> ${cliente.endereco || 'Não informado'}</p>
+          </div>
+          
+          <!-- Resumo dos Empréstimos -->
+          <div style="margin-bottom: 1.5rem;">
+            <h4 style="color: #002f4b;">Empréstimos (${emprestimosDetalhados.length})</h4>
+            ${emprestimosDetalhados.length === 0 ? 
+              '<p style="color: #666; font-style: italic;">Nenhum empréstimo encontrado</p>' :
+              emprestimosDetalhados.map((emp, index) => `
+                <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin: 1rem 0; background: #fff;">
+                  <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 1rem;">
+                    <h5 style="margin: 0; color: #002f4b;">Empréstimo #${emp.id}</h5>
+                    <span class="badge badge-${emp.statusAtual === 'ATIVO' ? 'success' : (emp.statusAtual === 'ATRASADO' ? 'danger' : 'info')}" style="font-size: 0.9rem;">${emp.statusAtual}</span>
+                  </div>
+                  
+                  <!-- Informações Principais -->
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                      <p style="margin: 0.3rem 0;"><strong>Tipo:</strong> ${emp.tipoEmprestimo}</p>
+                                             <p style="margin: 0.3rem 0;"><strong>Valor Inicial:</strong> <span style="color: #10b981; font-weight: bold;">${utils.formatCurrency(emp.valorInicial)}</span></p>
+                       <p style="margin: 0.3rem 0;"><strong>Juros (${emp.juros_mensal || 0}%):</strong> <span style="color: #f59e0b; font-weight: bold;">${utils.formatCurrency(emp.jurosTotal)}</span></p>
+                       <p style="margin: 0.3rem 0;"><strong>Valor Final:</strong> <span style="color: #ef4444; font-weight: bold;">${utils.formatCurrency(emp.valorFinal)}</span></p>
+                    </div>
+                    <div>
+                      <p style="margin: 0.3rem 0;"><strong>Data Empréstimo:</strong> ${emp.data_emprestimo ? utils.formatDate(emp.data_emprestimo) : 'N/A'}</p>
+                      <p style="margin: 0.3rem 0;"><strong>Data Vencimento:</strong> ${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : 'N/A'}</p>
+                                             <p style="margin: 0.3rem 0;"><strong>Valor da Parcela:</strong> <span style="color: #6366f1; font-weight: bold;">${utils.formatCurrency(emp.valorParcela)}</span></p>
+                      <p style="margin: 0.3rem 0;"><strong>Frequência:</strong> ${emp.frequencia === 'monthly' ? 'Mensal' : (emp.frequencia === 'weekly' ? 'Semanal' : 'N/A')}</p>
+                    </div>
+                  </div>
+                  
+                  <!-- Parcelas (se houver) -->
+                  ${emp.parcelas.length > 0 ? `
+                    <div style="margin-top: 1rem;">
+                      <h6 style="margin-bottom: 0.5rem; color: #002f4b;">Parcelas (${emp.parcelas.length})</h6>
+                      <div style="max-height: 200px; overflow-y: auto; border: 1px solid #eee; border-radius: 4px;">
+                        ${emp.parcelas.map(parcela => {
+                          const dataVenc = new Date(parcela.data_vencimento);
+                          const hoje = new Date();
+                          hoje.setHours(0,0,0,0);
+                          let statusParcela = parcela.status;
+                          let corStatus = '#6366f1'; // Pendente
+                          
+                          if (statusParcela === 'Paga') {
+                            corStatus = '#10b981'; // Verde
+                          } else if (dataVenc < hoje) {
+                            corStatus = '#ef4444'; // Vermelho (atrasada)
+                            statusParcela = 'Atrasada';
+                          }
+                          
+                          return `
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-bottom: 1px solid #f0f0f0;">
+                              <div>
+                                <strong>Parcela ${parcela.numero_parcela}</strong><br>
+                                <small>Venc: ${utils.formatDate(parcela.data_vencimento)}</small>
+                                ${parcela.data_pagamento ? `<br><small style="color: #10b981;">Pago em: ${utils.formatDate(parcela.data_pagamento)}</small>` : ''}
+                              </div>
+                              <div style="text-align: right;">
+                                <div style="color: ${corStatus}; font-weight: bold;">${utils.formatCurrency(Number(parcela.valor_parcela) || 0)}</div>
+                                <span style="background: ${corStatus}; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">${statusParcela}</span>
+                              </div>
+                            </div>
+                          `;
+                        }).join('')}
+                      </div>
+                    </div>
+                  ` : ''}
+                  
+                  <!-- Botões de Ação -->
+                  <div style="margin-top: 1rem; text-align: center;">
+                    <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})" style="margin-right: 0.5rem;">Ver Detalhes</button>
+                    <button class="btn btn-success btn-sm" onclick="cobrar(${emp.id})">Cobrar</button>
+                  </div>
+                </div>
+              `).join('')
+            }
+          </div>
+        </div>
+      `;
+      
+      ui.showModal(modalContent, 'Detalhes do Cliente');
+    } catch (error) {
+      console.error('Erro ao buscar cliente:', error);
+      ui.showNotification('Erro ao buscar dados do cliente', 'error');
     }
-  }
-}
+  },
 
-// Funções globais chamadas pelos HTMLs
-function sair() {
-  if (confirm('Deseja realmente sair do sistema?')) {
-    authSystem.logout();
-  }
-}
-
-function viewEmprestimo(id) {
-  ui.showModal(`
-    <h4>Detalhes do Empréstimo #${id}</h4>
-    <p>Funcionalidade será implementada em breve.</p>
-    <button class="btn btn-primary" onclick="this.closest('.modal').remove()">Fechar</button>
-  `, 'Empréstimo');
-}
-
-function fecharModal() {
-  const modal = document.querySelector('.modal');
-  if (modal) {
-    modal.remove();
-  }
-}
-
-function abrirDetalhes(id) {
-  viewEmprestimo(id);
-}
-
-function viewCliente(id) {
-  ui.showModal(`
-    <h4>Detalhes do Cliente #${id}</h4>
-    <p>Funcionalidade será implementada em breve.</p>
-    <button class="btn btn-primary" onclick="this.closest('.modal').remove()">Fechar</button>
-  `, 'Cliente');
-}
-
-function editarCliente(id) {
-  ui.showModal(`
-    <h4>Editar Cliente #${id}</h4>
-    <p>Funcionalidade será implementada em breve.</p>
-    <button class="btn btn-primary" onclick="this.closest('.modal').remove()">Fechar</button>
-  `, 'Editar Cliente');
-}
-
-function editarEmprestimo(id) {
-  ui.showModal(`
-    <h4>Editar Empréstimo #${id}</h4>
-    <p>Funcionalidade será implementada em breve.</p>
-    <button class="btn btn-primary" onclick="this.closest('.modal').remove()">Fechar</button>
-  `, 'Editar Empréstimo');
-}
-
-function cobrar(id) {
-  if (confirm(`Deseja enviar cobrança para o item #${id}?`)) {
-    ui.showNotification('Cobrança enviada com sucesso!', 'success');
-  }
-}
-
-function cobrarCliente(id) {
-  cobrar(id);
-}
-
-function marcarParcelaPaga(id, parcela) {
-  if (confirm(`Deseja marcar a parcela ${parcela} do empréstimo #${id} como paga?`)) {
-    ui.showNotification('Parcela marcada como paga!', 'success');
-  }
-}
-
-function adicionarListaNegra(id) {
-  if (confirm(`Deseja adicionar o cliente #${id} à lista negra?`)) {
-    ui.showNotification('Cliente adicionado à lista negra!', 'warning');
-  }
-}
-
-function deleteCliente(id) {
-  if (confirm(`Deseja excluir o cliente #${id}? Esta ação não pode ser desfeita.`)) {
-    ui.showNotification('Cliente excluído com sucesso!', 'success');
-    recarregarDadosPagina();
-  }
-}
-
-// Função global para recarregar dados da página
-function recarregarDadosPagina() {
-  const currentPage = window.location.pathname.split('/').pop();
-  
-  switch (currentPage) {
-    case 'dashboard.html':
-      if (typeof dashboard !== 'undefined') {
-        dashboard.loadDashboardData();
+  async deleteCliente(id) {
+    if (!confirm('Tem certeza que deseja remover este cliente?')) return;
+    
+    try {
+      const response = await fetch(`/api/cobrancas/clientes/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        ui.showNotification(error.error || 'Erro ao remover cliente', 'error');
+        return;
       }
-      break;
-    case 'cobrancas.html':
-      if (typeof renderCobrancasEmAbertoLista === 'function') {
-        renderCobrancasEmAbertoLista();
-      }
-      break;
-    case 'clientes.html':
-      if (typeof renderClientesLista === 'function') {
+      
+      ui.showNotification('Cliente removido com sucesso!', 'success');
+      if (document.getElementById('lista-clientes')) {
         renderClientesLista();
       }
-      break;
-    case 'atrasados.html':
-      if (typeof renderAtrasadosLista === 'function') {
-        renderAtrasadosLista();
+    } catch (error) {
+      console.error('Erro ao remover cliente:', error);
+      ui.showNotification('Erro ao remover cliente', 'error');
+    }
+  }
+};
+
+// Função para renderizar o histórico de empréstimos
+async function renderHistoricoEmprestimos() {
+  const tbody = document.getElementById('historico-emprestimos');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="6">Carregando...</td></tr>';
+  try {
+    const emprestimos = await apiService.getEmprestimos();
+    if (!emprestimos || emprestimos.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    
+    // Usar Map para eliminar duplicatas por ID
+    const emprestimosUnicos = new Map();
+    
+    // Processar cada empréstimo com verificação de parcelas
+    for (const emprestimo of emprestimos) {
+      // Verificar se já processamos este empréstimo
+      if (emprestimosUnicos.has(emprestimo.id)) {
+        console.log(`Empréstimo duplicado ignorado: ID ${emprestimo.id}`);
+        continue;
       }
-      break;
-    case 'emprestimos.html':
-      if (typeof renderEmprestimosLista === 'function') {
-        renderEmprestimosLista();
+      // Cálculo de atraso e juros diário
+      const valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
+      const jurosPercent = Number(emprestimo.juros_mensal || 0);
+      const jurosTotal = valorInvestido * (jurosPercent / 100);
+      let dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      let status = (emprestimo.status || '').toUpperCase();
+      let valorAtualizado = valorInvestido + jurosTotal;
+      let infoJuros = '';
+      let diasAtraso = 0;
+      let jurosDiario = 0;
+      let jurosAplicado = 0;
+      
+      // Verificar status baseado em parcelas para empréstimos parcelados
+      try {
+        const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
+        if (parcelas && parcelas.length > 0) {
+          // Tem parcelas - verificar status das parcelas individuais
+          const parcelasAtrasadas = parcelas.filter(p => {
+            const dataVencParcela = new Date(p.data_vencimento);
+            return dataVencParcela < hoje && (p.status !== 'Paga');
+          });
+          
+          const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
+          
+          // Determinar status real baseado nas parcelas
+          if (parcelasPagas.length === parcelas.length) {
+            status = 'QUITADO';
+          } else if (parcelasAtrasadas.length > 0) {
+            status = 'ATRASADO';
+            // Usar a data de vencimento da parcela mais atrasada para cálculo de juros
+            const parcelaMaisAtrasada = parcelasAtrasadas.sort((a, b) => 
+              new Date(a.data_vencimento) - new Date(b.data_vencimento)
+            )[0];
+            dataVencimento = new Date(parcelaMaisAtrasada.data_vencimento);
+          } else {
+            // Parcelas existem mas nenhuma está atrasada
+            status = status === 'QUITADO' ? 'QUITADO' : 'ATIVO';
+          }
+        } else {
+          // Sem parcelas - usar lógica original baseada na data de vencimento do empréstimo
+          if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+            status = 'ATRASADO';
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao verificar parcelas do empréstimo', emprestimo.id, error);
+        // Fallback para verificação pela data de vencimento
+        if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+          status = 'ATRASADO';
+        }
       }
-      break;
-    default:
-      // Recarregar página como fallback
-      window.location.reload();
+      
+      // Calcular juros de atraso se status for ATRASADO
+      if (status === 'ATRASADO' && dataVencimento) {
+        // Calcular dias de atraso
+        const diffTime = hoje.getTime() - dataVencimento.getTime();
+        diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        // Juros diário: juros total dividido por 30 dias, arredondado para cima
+        jurosDiario = Math.ceil(jurosTotal / 30);
+        jurosAplicado = jurosDiario * diasAtraso;
+        valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
+        infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
+      }
+      
+      // Marcar empréstimo como processado para evitar duplicatas
+      emprestimosUnicos.set(emprestimo.id, true);
+      
+      const valor = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(valorAtualizado);
+      const data = emprestimo.data_emprestimo ? new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR') : '-';
+      const vencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-';
+      const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : (status === 'QUITADO' ? 'info' : 'secondary')));
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${emprestimo.cliente_nome || 'N/A'}</td>
+        <td>${valor}${infoJuros}</td>
+        <td>${data}</td>
+        <td>${vencimento}</td>
+        <td><span class="badge badge-${statusClass}">${status}</span></td>
+        <td>
+          <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    }
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
   }
 }
 
-async function renderClientesLista(filters = {}) {
+// Função para renderizar a lista de empréstimos
+async function renderEmprestimosLista() {
+  const tbody = document.getElementById('emprestimos-lista');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7">Carregando...</td></tr>';
   try {
-    const tbody = document.getElementById('clientes-lista');
-    if (!tbody) return;
-
-    // Mostrar loading
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Carregando dados...</td></tr>';
-
-    // Preparar parâmetros de filtro e paginação
-    const params = new URLSearchParams({
-      page: appState.pagination.currentPage,
-      limit: appState.pagination.itemsPerPage,
-      ...filters
-    });
-
-    const response = await fetch(`/api/cobrancas/clientes?${params}`, {
-      method: 'GET',
-      credentials: 'include'
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    const emprestimos = await apiService.getEmprestimos();
+    // Filtrar apenas empréstimos ativos
+    const ativos = (emprestimos || []).filter(e => (e.status || '').toLowerCase() === 'ativo');
+    if (!ativos || ativos.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo ativo encontrado</td></tr>';
+      return;
     }
-
-    const data = await response.json();
-    let lista = data.clientes || data || [];
+    tbody.innerHTML = '';
     
-    // Atualizar estado da paginação
-    appState.pagination.totalItems = data.total || lista.length;
-    if (typeof paginationSystem !== 'undefined') {
-      paginationSystem.updatePagination();
+    // Processar cada empréstimo
+    for (const emprestimo of ativos) {
+      // Cálculo de atraso e juros diário
+      const valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
+      const jurosPercent = Number(emprestimo.juros_mensal || 0);
+      const jurosTotal = valorInvestido * (jurosPercent / 100);
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      let status = (emprestimo.status || '').toUpperCase();
+      let dataVencimento = new Date(emprestimo.data_vencimento);
+      let valorAtualizado = valorInvestido + jurosTotal;
+      let infoJuros = '';
+      let diasAtraso = 0;
+      let jurosDiario = 0;
+      let jurosAplicado = 0;
+      
+      // Verificar status baseado em parcelas para empréstimos parcelados
+      if (emprestimo.tipo_emprestimo === 'in_installments' && emprestimo.numero_parcelas > 1) {
+        try {
+          const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
+          const parcelasAtrasadas = parcelas.filter(p => {
+            const dataVencParcela = new Date(p.data_vencimento);
+            return dataVencParcela < hoje && (p.status !== 'Paga');
+          });
+          
+          const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
+          
+          if (parcelasPagas.length === parcelas.length) {
+            status = 'QUITADO';
+          } else if (parcelasAtrasadas.length > 0) {
+            status = 'ATRASADO';
+            // Usar a data de vencimento da parcela mais atrasada
+            const parcelaMaisAtrasada = parcelasAtrasadas.sort((a, b) => 
+              new Date(a.data_vencimento) - new Date(b.data_vencimento)
+            )[0];
+            dataVencimento = new Date(parcelaMaisAtrasada.data_vencimento);
+          } else {
+            status = 'ATIVO';
+          }
+        } catch (error) {
+          console.error('Erro ao buscar parcelas para empréstimo', emprestimo.id, error);
+        }
+      } else {
+        // Para empréstimos de parcela única, usar lógica original
+        if (dataVencimento < hoje && status !== 'QUITADO') {
+          status = 'ATRASADO';
+        }
+      }
+      
+      // Calcular juros de atraso se necessário
+      if (status === 'ATRASADO') {
+        const diffTime = hoje.getTime() - dataVencimento.getTime();
+        diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        jurosDiario = Math.ceil(jurosTotal / 30);
+        jurosAplicado = jurosDiario * diasAtraso;
+        valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
+        infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
+      }
+      const valor = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(valorAtualizado);
+      const data = new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR');
+      const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : 'info'));
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${emprestimo.cliente_nome || 'N/A'}</td>
+        <td>${valor}${infoJuros}</td>
+        <td>${emprestimo.parcelas || '-'}</td>
+        <td>${data}</td>
+        <td>${emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-'}</td>
+        <td><span class="badge badge-${statusClass}">${status}</span></td>
+        <td>
+          <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
+        </td>
+      `;
+      tbody.appendChild(row);
     }
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
+  }
+}
 
-    if (!Array.isArray(lista) || lista.length === 0) {
+// Função para renderizar a lista de clientes
+async function renderClientesLista() {
+  const tbody = document.getElementById('lista-clientes');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
+  try {
+    const clientes = await apiService.getClientes();
+    const emprestimos = await apiService.getEmprestimos();
+    if (!clientes || clientes.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhum cliente encontrado</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    
+    // Processar cada cliente
+    for (const cliente of clientes) {
+      // Verifica se o cliente tem empréstimo vencido considerando parcelas
+      const emprestimosCliente = (emprestimos || []).filter(e => e.cliente_id === cliente.id);
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      let status = cliente.status || 'Ativo';
+      
+      if (status === 'Ativo') {
+        let temVencido = false;
+        
+        // Verificar cada empréstimo do cliente
+        for (const emprestimo of emprestimosCliente) {
+          if ((emprestimo.status || '').toLowerCase() === 'quitado') {
+            continue; // Pular empréstimos quitados
+          }
+          
+          // Verificar se é empréstimo parcelado
+          if (emprestimo.tipo_emprestimo === 'in_installments' && emprestimo.numero_parcelas > 1) {
+            try {
+              const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
+              const parcelasAtrasadas = parcelas.filter(p => {
+                const dataVencParcela = new Date(p.data_vencimento);
+                return dataVencParcela < hoje && (p.status !== 'Paga');
+              });
+              
+              if (parcelasAtrasadas.length > 0) {
+                temVencido = true;
+                break;
+              }
+            } catch (error) {
+              console.error('Erro ao buscar parcelas para empréstimo', emprestimo.id, error);
+            }
+          } else {
+            // Para empréstimos de parcela única
+            if (!emprestimo.data_vencimento) continue;
+            const dataVenc = new Date(emprestimo.data_vencimento);
+            if (dataVenc < hoje) {
+              temVencido = true;
+              break;
+            }
+          }
+        }
+        
+        if (temVencido) status = 'Em Atraso';
+      }
+      
+      const badgeClass = status === 'Lista Negra' ? 'danger' : (status === 'Em Atraso' ? 'warning' : 'success');
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${cliente.nome || 'N/A'}</td>
+        <td>${cliente.cpf_cnpj || '-'}</td>
+        <td>${cliente.telefone || '-'}</td>
+        <td><span class="badge badge-${badgeClass}">${status}</span></td>
+        <td>
+          <button class="btn btn-primary btn-sm" onclick="viewCliente(${cliente.id})">Ver</button>
+          ${cliente.status === 'Lista Negra' 
+            ? '<button class="btn btn-success btn-sm" onclick="removerListaNegra(' + cliente.id + ')">Remover da Lista</button>'
+            : '<button class="btn btn-warning btn-sm" onclick="adicionarListaNegra(' + cliente.id + ')">Lista Negra</button>'
+          }
+          <button class="btn btn-danger btn-sm" onclick="deleteCliente(${cliente.id})">Remover</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    }
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-red-500">Erro ao carregar clientes</td></tr>';
+  }
+}
+
+// Função para renderizar a lista negra
+async function renderListaNegra() {
+  const tbody = document.getElementById('lista-negra-clientes');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="6">Carregando...</td></tr>';
+  try {
+    const clientes = await apiService.getClientes();
+    if (!clientes || clientes.length === 0) {
       tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum cliente encontrado</td></tr>';
       return;
     }
-
-    // Aplicar filtros locais se necessário
-    if (filters.search) {
-      const searchTerm = filters.search.toLowerCase();
-      lista = lista.filter(item => 
-        (item.nome && item.nome.toLowerCase().includes(searchTerm)) ||
-        (item.cpf_cnpj && item.cpf_cnpj.toLowerCase().includes(searchTerm)) ||
-        (item.telefone && item.telefone.toLowerCase().includes(searchTerm))
-      );
+    
+    // Filtrar apenas clientes na lista negra
+    const listaNegra = clientes.filter(cliente => cliente.status === 'Lista Negra');
+    
+    if (listaNegra.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum cliente na lista negra</td></tr>';
+      return;
     }
-
-    if (filters.status && filters.status !== '') {
-      lista = lista.filter(item => 
-        (item.status && item.status.toLowerCase() === filters.status.toLowerCase())
-      );
-    }
-
-    tbody.innerHTML = lista.map(cliente => {
-      const nome = cliente.nome || cliente.razao || 'Nome não informado';
-      const cpfCnpj = cliente.cpf_cnpj || 'N/A';
-      const telefone = cliente.telefone || 'N/A';
-      const email = cliente.email || 'N/A';
-      const status = cliente.status || 'Ativo';
-      const statusClass = status.toLowerCase() === 'ativo' ? 'badge-success' : 'badge-danger';
-
-      return `
-        <tr>
-          <td>
-            <input type="checkbox" class="select-checkbox" data-id="${cliente.id}">
-          </td>
-          <td>
-            <div style="font-weight: 500;">${nome}</div>
-            <small class="text-gray-500">${cpfCnpj}</small>
-          </td>
-          <td>${telefone}</td>
-          <td>${email}</td>
-          <td>
-            <span class="badge ${statusClass}">${status}</span>
-          </td>
-          <td>
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-              <button class="btn btn-sm btn-info" onclick="viewCliente(${cliente.id})" title="Ver Detalhes">
-                <i class="fas fa-eye"></i>
-              </button>
-              <button class="btn btn-sm btn-secondary" onclick="editarCliente(${cliente.id})" title="Editar">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-warning" onclick="cobrarCliente(${cliente.id})" title="Criar Cobrança">
-                <i class="fas fa-paper-plane"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" onclick="deleteCliente(${cliente.id})" title="Excluir">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
+    
+    tbody.innerHTML = '';
+    listaNegra.forEach(cliente => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${cliente.nome || 'N/A'}</td>
+        <td>${cliente.cpf_cnpj || '-'}</td>
+        <td>${cliente.observacoes || 'Adicionado manualmente'}</td>
+        <td>${cliente.updated_at ? utils.formatDate(cliente.updated_at) : '-'}</td>
+        <td><span class="badge badge-danger">Lista Negra</span></td>
+        <td>
+          <button class="btn btn-primary btn-sm" onclick="viewCliente(${cliente.id})">Ver</button>
+          <button class="btn btn-success btn-sm" onclick="removerListaNegra(${cliente.id})">Remover da Lista</button>
+        </td>
       `;
-    }).join('');
-
-    // Atualizar data atual
-    const currentDateElement = document.getElementById('currentDate');
-    if (currentDateElement) {
-      currentDateElement.textContent = new Date().toLocaleDateString('pt-BR');
-    }
-
-    // Limpar seleções
-    if (typeof bulkActionSystem !== 'undefined') {
-      bulkActionSystem.clearSelection();
-    }
-
-  } catch (error) {
-    console.error('Erro ao carregar clientes:', error);
-    const tbody = document.getElementById('clientes-lista');
-    if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-600">Erro ao carregar dados. Tente novamente.</td></tr>';
-    }
+      tbody.appendChild(row);
+    });
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar lista negra</td></tr>';
   }
 }
+
+// Função para remover cliente da lista negra
+async function removerListaNegra(id) {
+  try {
+    if (!confirm('Tem certeza que deseja remover este cliente da lista negra?')) {
+      return;
+    }
+    
+    const response = await fetch(`/api/cobrancas/clientes/${id}/lista-negra`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ 
+        status: 'Ativo',
+        motivo: 'Removido da lista negra'
+      })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erro ao remover da lista negra');
+    }
+    
+    ui.showNotification('Cliente removido da lista negra com sucesso!', 'success');
+    
+    // Recarregar lista negra
+    if (document.getElementById('lista-negra-clientes')) {
+      await renderListaNegra();
+    }
+    
+  } catch (error) {
+    console.error('Erro ao remover da lista negra:', error);
+    ui.showNotification('Erro ao remover da lista negra: ' + error.message, 'error');
+  }
+}
+
+// Função para renderizar cobranças (empréstimos em aberto)
+async function renderCobrancasEmAbertoLista() {
+  const tbody = document.getElementById('cobrancas-lista');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
+  try {
+    const emprestimos = await apiService.getEmprestimos();
+    // Filtrar apenas em aberto (status Ativo ou Pendente)
+    const emAberto = (emprestimos || []).filter(e => {
+      const status = (e.status || '').toLowerCase();
+      return status === 'ativo' || status === 'pendente';
+    });
+    if (emAberto.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhuma cobrança em aberto</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    
+    // Criar um Map para garantir que cada empréstimo apareça apenas uma vez
+    const emprestimosUnicos = new Map();
+    emAberto.forEach(emp => {
+      if (!emprestimosUnicos.has(emp.id)) {
+        emprestimosUnicos.set(emp.id, emp);
+      }
+    });
+    
+    console.log(`📊 Empréstimos únicos encontrados: ${emprestimosUnicos.size}`);
+    
+    // Array para armazenar as linhas da tabela
+    const linhasTabela = [];
+    
+    // Verificar status de cada empréstimo com base nas parcelas
+    for (const emp of emprestimosUnicos.values()) {
+      // Variáveis para vencimento e valor corretos
+      let valorACobrar = emp.valor || 0;
+      let vencimentoACobrar = emp.data_vencimento;
+      let badge = '';
+      let status = (emp.status || '').toLowerCase();
+      
+      // Verificar se tem parcelas e determinar status real
+      let statusReal = status;
+      let proximaParcela = null;
+      
+      try {
+        const parcelas = await apiService.getParcelasEmprestimo(emp.id);
+        if (parcelas && parcelas.length > 0) {
+          // Tem parcelas - verificar status das parcelas
+          const hoje = new Date();
+          hoje.setHours(0,0,0,0);
+          
+          let parcelasAtrasadas = 0;
+          let parcelasPagas = 0;
+          
+          // Encontrar próxima parcela não paga
+          const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
+          if (parcelasNaoPagas.length > 0) {
+            // Ordenar por data de vencimento e pegar a mais próxima
+            parcelasNaoPagas.sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento));
+            proximaParcela = parcelasNaoPagas[0];
+            
+            // Para empréstimos parcelados, usar dados da próxima parcela
+            valorACobrar = proximaParcela.valor_parcela || valorACobrar;
+            vencimentoACobrar = proximaParcela.data_vencimento || vencimentoACobrar;
+          }
+          
+          parcelas.forEach(parcela => {
+            const dataVencParcela = new Date(parcela.data_vencimento);
+            const atrasadaParcela = dataVencParcela < hoje && parcela.status !== 'Paga';
+            
+            if (parcela.status === 'Paga') {
+              parcelasPagas++;
+            } else if (atrasadaParcela) {
+              parcelasAtrasadas++;
+            }
+          });
+          
+          // Determinar status real baseado nas parcelas
+          if (parcelasPagas === parcelas.length) {
+            statusReal = 'quitado';
+          } else if (parcelasAtrasadas > 0) {
+            statusReal = 'atrasado';
+          } else {
+            statusReal = 'em_dia';
+          }
+        } else {
+          // Sem parcelas - usar data de vencimento do empréstimo
+          const hoje = new Date();
+          hoje.setHours(0,0,0,0);
+          const dataVenc = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
+          if (dataVenc && dataVenc < hoje) {
+            statusReal = 'atrasado';
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao verificar parcelas do empréstimo', emp.id, error);
+        // Fallback para verificação pela data de vencimento
+        const hoje = new Date();
+        hoje.setHours(0,0,0,0);
+        const dataVenc = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
+        if (dataVenc && dataVenc < hoje) {
+          statusReal = 'atrasado';
+        }
+      }
+      
+      // Formatar valores para exibição
+      const valor = utils.formatCurrency(valorACobrar);
+      const vencimento = vencimentoACobrar ? utils.formatDate(vencimentoACobrar) : '-';
+      
+      // Criar badge baseado no status real
+      if (statusReal === 'quitado') {
+        badge = '<span class="badge" style="background:#10b981;color:#fff;">Quitado</span>';
+      } else if (statusReal === 'atrasado' || statusReal === 'em atraso') {
+        badge = '<span class="badge" style="background:#ef4444;color:#fff;">Em Atraso</span>';
+      } else if (statusReal === 'em_dia' || statusReal === 'ativo' || statusReal === 'pendente') {
+        badge = '<span class="badge" style="background:#6366f1;color:#fff;">Em Dia</span>';
+      } else {
+        badge = `<span class="badge" style="background:#888;color:#fff;">${emp.status || '-'}</span>`;
+      }
+      
+      // Adicionar linha à array
+      linhasTabela.push(`
+        <tr>
+          <td>${emp.cliente_nome || 'N/A'}</td>
+          <td>${valor}</td>
+          <td>${vencimento}</td>
+          <td>${badge}</td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
+            <button class="btn btn-warning btn-sm" onclick="cobrar(${emp.id})">Cobrar</button>
+          </td>
+        </tr>
+      `);
+    }
+    
+    // Inserir todas as linhas de uma vez
+    tbody.innerHTML = linhasTabela.join('');
+    console.log(`✅ Renderizadas ${linhasTabela.length} linhas na tabela de cobranças`);
+  } catch (err) {
+    console.error('Erro ao carregar cobranças:', err);
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-red-500">Erro ao carregar cobranças</td></tr>';
+  }
+}
+
+// Função global para recarregar dados da página atual
+async function recarregarDadosPagina() {
+  try {
+    console.log('Recarregando dados da página...');
+    
+    // Recarregar lista de cobranças se estiver na página de cobranças
+    if (document.getElementById('cobrancas-lista')) {
+      await renderCobrancasEmAbertoLista();
+    }
+    
+    // Recarregar histórico de empréstimos se estiver na página de emprestimos
+    if (document.getElementById('historico-emprestimos')) {
+      await renderHistoricoEmprestimos();
+    }
+    
+    // Recarregar lista de clientes se estiver na página de clientes
+    if (document.getElementById('lista-clientes')) {
+      await renderClientesLista();
+    }
+    
+    // Recarregar dashboard se estiver na página principal
+    if (document.getElementById('dashboard-stats')) {
+      await app.loadDashboardData();
+    }
+    
+    // Recarregar atrasados se estiver na página de atrasados
+    if (document.getElementById('atrasados-lista')) {
+      await renderAtrasadosLista();
+    }
+    
+    // Recarregar lista negra se estiver na página de lista negra
+    if (document.getElementById('lista-negra-clientes')) {
+      await renderListaNegra();
+    }
+    
+    console.log('Dados recarregados com sucesso!');
+    return true;
+  } catch (error) {
+    console.error('Erro ao recarregar dados:', error);
+    return false;
+  }
+}
+
+// Função para logout (mesmo padrão do sistema principal)
+function sair() {
+  if (confirm('Tem certeza que deseja sair?')) {
+    // Limpar sessionStorage (mesmo padrão do sistema principal)
+    sessionStorage.removeItem('loggedIn');
+    sessionStorage.removeItem('username');
+    sessionStorage.removeItem('loginTime');
+    
+    // Redirecionar para login
+    window.location.href = 'login.html';
+  }
+}
+
+// Inicializar quando o DOM estiver pronto
+document.addEventListener('DOMContentLoaded', () => {
+  app.init();
+
+  // Modal de Novo Empréstimo
+  const novoEmprestimoBtn = document.getElementById('toggleForm');
+  if (novoEmprestimoBtn) {
+    novoEmprestimoBtn.addEventListener('click', async () => {
+      // Buscar clientes
+      let clientes = [];
+      try {
+        clientes = await apiService.getClientes();
+      } catch (e) {
+        ui.showNotification('Erro ao carregar clientes', 'error');
+      }
+      const clienteOptions = clientes.map(c => `<option value=\"${c.id}\">${c.nome || c.razao || c.name}</option>`).join('');
+      const modalContent = `
+        <form id="modal-emprestimo-form">
+          <div class="form-group">
+            <label>Cliente (selecione ou preencha manualmente)</label>
+            <select name="clienteId" id="modal-cliente-select" class="form-input">
+              <option value="">Novo cliente (preencher abaixo)</option>
+              ${clienteOptions}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Nome *</label>
+            <input type="text" name="nome" id="modal-nome" class="form-input" required placeholder="Nome do cliente">
+          </div>
+          <div class="form-group">
+            <label>CPF (Opcional)</label>
+            <input type="text" name="cpf" id="modal-cpf" class="form-input" placeholder="CPF do cliente">
+          </div>
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" name="telefone" id="modal-telefone" class="form-input" placeholder="Telefone do cliente">
+          </div>
+          <div class="form-group">
+            <label>Tipo de Empréstimo</label>
+            <select name="tipo" id="modal-tipo" class="form-input">
+              <option value="fixo">Fixo</option>
+              <option value="parcelado">Parcelado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tipo de Cálculo</label>
+            <select name="tipoCalculo" id="modal-tipo-calculo" class="form-input">
+              <option value="valor_inicial">Valor Inicial + Juros</option>
+              <option value="valor_final">Valor Final Fixo</option>
+              <option value="parcela_fixa">Valor da Parcela Fixo</option>
+            </select>
+          </div>
+          <div class="form-group" id="grupo-valor-inicial">
+            <label>Valor Inicial (R$)</label>
+            <input type="text" name="valor" id="modal-valor" class="form-input" required placeholder="ex.: 1000">
+          </div>
+          <div class="form-group" id="grupo-valor-final" style="display: none;">
+            <label>Valor Inicial (R$)</label>
+            <input type="text" name="valorInicialFinal" id="modal-valor-inicial-final" class="form-input" placeholder="ex.: 1000">
+            <label>Valor Final (R$)</label>
+            <input type="text" name="valorFinal" id="modal-valor-final" class="form-input" placeholder="ex.: 1500">
+          </div>
+          <div class="form-group" id="grupo-valor-parcela" style="display: none;">
+            <label>Valor Inicial (R$)</label>
+            <input type="text" name="valorInicialParcela" id="modal-valor-inicial-parcela" class="form-input" placeholder="ex.: 8000">
+            <label>Valor da Parcela (R$)</label>
+            <input type="text" name="valorParcela" id="modal-valor-parcela" class="form-input" placeholder="ex.: 1000">
+          </div>
+          <div class="form-group" id="grupo-porcentagem">
+            <label>Porcentagem de Juros (%)</label>
+            <input type="number" name="porcentagem" id="modal-porcentagem" class="form-input" step="0.01" min="0" placeholder="ex.: 20">
+          </div>
+          <div class="form-group">
+            <label>Multa por Atraso (%)</label>
+            <input type="number" name="multa" id="modal-multa" class="form-input" step="0.01" min="0" required placeholder="ex.: 2">
+          </div>
+          <div class="form-group">
+            <label>Data de Vencimento</label>
+            <input type="date" name="dataVencimento" id="modal-data-vencimento" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label>Frequência</label>
+            <select name="frequencia" id="modal-frequencia" class="form-input">
+              <option value="monthly">Mensal</option>
+              <option value="daily">Diário</option>
+              <option value="weekly">Semanal</option>
+              <option value="biweekly">Quinzenal</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Nº de Parcelas</label>
+            <input type="number" name="parcelas" id="modal-parcelas" class="form-input" min="1" value="1" required>
+          </div>
+          <div class="form-group">
+            <label>Observações (opcional)</label>
+            <textarea name="observacoes" class="form-input" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <button type="button" id="btn-simular" class="btn btn-secondary">Simular</button>
+          </div>
+          <div id="simulador-preview" class="form-group" style="display:none;"></div>
+          <div class="form-group">
+            <button type="submit" id="btn-adicionar-emprestimo" class="btn btn-primary">Adicionar Empréstimo</button>
+          </div>
+        </form>
+      `;
+      const modal = ui.showModal(modalContent, 'Adicionar Empréstimo');
+      const form = modal.querySelector('#modal-emprestimo-form');
+      // Preencher campos ao selecionar cliente
+      const select = modal.querySelector('#modal-cliente-select');
+      const nomeInput = modal.querySelector('#modal-nome');
+      const cpfInput = modal.querySelector('#modal-cpf');
+      const telefoneInput = modal.querySelector('#modal-telefone');
+      select.addEventListener('change', () => {
+        const selectedId = select.value;
+        if (!selectedId) {
+          nomeInput.value = '';
+          cpfInput.value = '';
+          telefoneInput.value = '';
+        } else {
+          const cliente = clientes.find(c => String(c.id) === String(selectedId));
+          nomeInput.value = cliente?.nome || cliente?.razao || cliente?.name || '';
+          cpfInput.value = cliente?.cpf || cliente?.cpf_cnpj || '';
+          telefoneInput.value = cliente?.telefone || cliente?.phone || '';
+        }
+      });
+      // Controle de exibição dos campos baseado no tipo de cálculo
+      const tipoCalculoSelect = modal.querySelector('#modal-tipo-calculo');
+      const grupoValorInicial = modal.querySelector('#grupo-valor-inicial');
+      const grupoValorFinal = modal.querySelector('#grupo-valor-final');
+      const grupoValorParcela = modal.querySelector('#grupo-valor-parcela');
+      const grupoPorcentagem = modal.querySelector('#grupo-porcentagem');
+      const porcentagemInput = modal.querySelector('#modal-porcentagem');
+      const valorInput = modal.querySelector('#modal-valor');
+      const valorFinalInput = modal.querySelector('#modal-valor-final');
+      const valorParcelaInput = modal.querySelector('#modal-valor-parcela');
+      const valorInicialFinalInput = modal.querySelector('#modal-valor-inicial-final');
+      const valorInicialParcelaInput = modal.querySelector('#modal-valor-inicial-parcela');
+
+      tipoCalculoSelect.addEventListener('change', () => {
+        const tipo = tipoCalculoSelect.value;
+
+        // Esconder todos os grupos
+        grupoValorInicial.style.display = 'none';
+        grupoValorFinal.style.display = 'none';
+        grupoValorParcela.style.display = 'none';
+        grupoPorcentagem.style.display = 'none';
+
+        // Remover required de todos os campos
+        valorInput.required = false;
+        valorFinalInput.required = false;
+        valorParcelaInput.required = false;
+        valorInicialFinalInput.required = false;
+        valorInicialParcelaInput.required = false;
+        porcentagemInput.required = false;
+
+        // Mostrar grupos baseado no tipo e definir required apenas nos visíveis
+        switch(tipo) {
+          case 'valor_inicial':
+            grupoValorInicial.style.display = 'block';
+            grupoPorcentagem.style.display = 'block';
+            valorInput.required = true;
+            porcentagemInput.required = true;
+            break;
+          case 'valor_final':
+            grupoValorFinal.style.display = 'block';
+            valorInicialFinalInput.required = true;
+            valorFinalInput.required = true;
+            break;
+          case 'parcela_fixa':
+            grupoValorParcela.style.display = 'block';
+            valorInicialParcelaInput.required = true;
+            valorParcelaInput.required = true;
+            break;
+        }
+      });
+      
+      // Máscara de moeda para todos os campos de valor
+      
+      function aplicarMascaraMoeda(input) {
+        input.addEventListener('input', (e) => {
+          let v = e.target.value.replace(/\D/g, '');
+          v = (parseInt(v, 10) / 100).toFixed(2);
+          e.target.value = v.replace('.', ',');
+        });
+      }
+      
+      aplicarMascaraMoeda(valorInput);
+      aplicarMascaraMoeda(valorFinalInput);
+      aplicarMascaraMoeda(valorParcelaInput);
+      aplicarMascaraMoeda(valorInicialFinalInput);
+      aplicarMascaraMoeda(valorInicialParcelaInput);
+      // Simulador de parcelas
+      const btnSimular = modal.querySelector('#btn-simular');
+      const previewDiv = modal.querySelector('#simulador-preview');
+      const btnAdicionar = modal.querySelector('#btn-adicionar-emprestimo');
+      btnSimular.addEventListener('click', () => {
+        // Pega valores do formulário
+        const tipoCalculo = tipoCalculoSelect.value;
+        const parcelas = parseInt(modal.querySelector('#modal-parcelas').value) || 1;
+        const tipo = modal.querySelector('#modal-tipo').value;
+        
+        let valorInicial = 0;
+        let valorFinal = 0;
+        let valorParcela = 0;
+        let juros = 0;
+        let jurosValor = 0;
+        
+        switch(tipoCalculo) {
+          case 'valor_inicial':
+            valorInicial = parseFloat(valorInput.value.replace(',', '.')) || 0;
+            juros = parseFloat(porcentagemInput.value) || 0;
+            jurosValor = valorInicial * (juros / 100);
+            valorFinal = valorInicial + jurosValor;
+            valorParcela = valorFinal / parcelas;
+            break;
+            
+          case 'valor_final':
+            valorInicial = parseFloat(valorInicialFinalInput.value.replace(',', '.')) || 0;
+            valorFinal = parseFloat(valorFinalInput.value.replace(',', '.')) || 0;
+            valorParcela = valorFinal / parcelas;
+            jurosValor = valorFinal - valorInicial;
+            juros = valorInicial > 0 ? (jurosValor / valorInicial) * 100 : 0;
+            break;
+            
+          case 'parcela_fixa':
+            valorInicial = parseFloat(valorInicialParcelaInput.value.replace(',', '.')) || 0;
+            valorParcela = parseFloat(valorParcelaInput.value.replace(',', '.')) || 0;
+            valorFinal = valorParcela * parcelas;
+            jurosValor = valorFinal - valorInicial;
+            juros = valorInicial > 0 ? (jurosValor / valorInicial) * 100 : 0;
+            break;
+        }
+        
+        previewDiv.style.display = 'block';
+        let simulacaoHTML = `
+          <div class="simulador-preview-box" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #007bff;">
+            <strong>Resumo da Simulação:</strong><br><br>
+        `;
+        
+        switch(tipoCalculo) {
+          case 'valor_inicial':
+            simulacaoHTML += `
+              Valor Inicial: <b>R$ ${valorInicial.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
+              Juros: <b>${juros}%</b> (R$ ${jurosValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})})<br>
+            `;
+            break;
+            
+          case 'valor_final':
+            simulacaoHTML += `
+              Valor Inicial: <b>R$ ${valorInicial.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
+              Valor Final Fixo: <b>R$ ${valorFinal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
+              Juros Implícitos: <b>${juros.toFixed(2)}%</b> (R$ ${jurosValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})})<br>
+            `;
+            break;
+            
+          case 'parcela_fixa':
+            simulacaoHTML += `
+              Valor Inicial: <b>R$ ${valorInicial.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
+              Valor da Parcela Fixo: <b>R$ ${valorParcela.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
+              Juros Implícitos: <b>${juros.toFixed(2)}%</b> (R$ ${jurosValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})})<br>
+            `;
+            break;
+        }
+        
+        simulacaoHTML += `
+            Total a pagar: <b>R$ ${valorFinal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
+            Nº de Parcelas: <b>${parcelas}</b><br>
+            Valor da Parcela: <b>R$ ${valorParcela.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b>
+          </div>
+        `;
+        
+        previewDiv.innerHTML = simulacaoHTML;
+      });
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = Object.fromEntries(new FormData(form).entries());
+        
+        // Validação baseada no tipo de cálculo
+        const tipoCalculo = formData.tipoCalculo;
+        let isValid = true;
+        let errorMessage = '';
+        
+        switch(tipoCalculo) {
+          case 'valor_inicial':
+            if (!formData.valor || parseFloat(formData.valor.replace(',', '.')) <= 0) {
+              isValid = false;
+              errorMessage = 'Preencha o valor inicial corretamente';
+            } else if (!formData.porcentagem || parseFloat(formData.porcentagem) < 0) {
+              isValid = false;
+              errorMessage = 'Preencha a porcentagem de juros corretamente';
+            }
+            break;
+            
+          case 'valor_final':
+            if (!formData.valorInicialFinal || parseFloat(formData.valorInicialFinal.replace(',', '.')) <= 0) {
+              isValid = false;
+              errorMessage = 'Preencha o valor inicial corretamente';
+            } else if (!formData.valorFinal || parseFloat(formData.valorFinal.replace(',', '.')) <= 0) {
+              isValid = false;
+              errorMessage = 'Preencha o valor final corretamente';
+            }
+            break;
+            
+          case 'parcela_fixa':
+            if (!formData.valorInicialParcela || parseFloat(formData.valorInicialParcela.replace(',', '.')) <= 0) {
+              isValid = false;
+              errorMessage = 'Preencha o valor inicial corretamente';
+            } else if (!formData.valorParcela || parseFloat(formData.valorParcela.replace(',', '.')) <= 0) {
+              isValid = false;
+              errorMessage = 'Preencha o valor da parcela corretamente';
+            }
+            break;
+        }
+        
+        if (!isValid) {
+          ui.showNotification(errorMessage, 'error');
+          return;
+        }
+        let cliente_id = formData.clienteId;
+        // Se não selecionou cliente, criar cliente
+        if (!cliente_id) {
+          // Validação do nome do cliente
+          if (!formData.nome || formData.nome.trim() === '' || formData.nome === 'undefined') {
+            ui.showNotification('Preencha o nome do cliente corretamente!', 'error');
+            return;
+          }
+          
+          try {
+            const clientePayload = {
+              nome: formData.nome,
+              cpf_cnpj: formData.cpf || '',
+              telefone: formData.telefone || '',
+              email: '',
+              endereco: '',
+              cidade: '',
+              estado: '',
+              cep: ''
+            };
+            const resp = await fetch('/api/cobrancas/clientes', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify(clientePayload)
+            });
+            const data = await resp.json();
+            if (!resp.ok || !data.id) throw new Error('Erro ao criar cliente');
+            cliente_id = data.id;
+            if (window.clientesApp && typeof window.clientesApp.loadClientes === 'function') {
+              window.clientesApp.loadClientes();
+            } else if (document.getElementById('clientes-lista')) {
+              location.reload();
+            }
+          } catch (err) {
+            ui.showNotification('Erro ao criar cliente', 'error');
+            return;
+          }
+        }
+        // Garantir que cliente_id seja inteiro
+        cliente_id = parseInt(cliente_id, 10);
+        // Calcular valores baseado no tipo de cálculo
+        const tipoCalculoCalculo = formData.tipoCalculo;
+        let valorInicial = 0;
+        let valorFinal = 0;
+        let valorParcela = 0;
+        let jurosMensal = 0;
+        
+        switch(tipoCalculoCalculo) {
+          case 'valor_inicial':
+            valorInicial = parseFloat(formData.valor.replace(',', '.')) || 0;
+            jurosMensal = parseFloat(formData.porcentagem) || 0;
+            valorFinal = valorInicial * (1 + jurosMensal / 100);
+            valorParcela = valorFinal / parseInt(formData.parcelas);
+            break;
+            
+          case 'valor_final':
+            valorInicial = parseFloat(formData.valorInicialFinal.replace(',', '.')) || 0;
+            valorFinal = parseFloat(formData.valorFinal.replace(',', '.')) || 0;
+            valorParcela = valorFinal / parseInt(formData.parcelas);
+            jurosMensal = valorInicial > 0 ? ((valorFinal - valorInicial) / valorInicial) * 100 : 0;
+            break;
+            
+          case 'parcela_fixa':
+            valorInicial = parseFloat(formData.valorInicialParcela.replace(',', '.')) || 0;
+            valorParcela = parseFloat(formData.valorParcela.replace(',', '.')) || 0;
+            valorFinal = valorParcela * parseInt(formData.parcelas);
+            jurosMensal = valorInicial > 0 ? ((valorFinal - valorInicial) / valorInicial) * 100 : 0;
+            break;
+        }
+        
+        // Montar payload do empréstimo
+        const payload = {
+          cliente_id,
+          valor: valorInicial,
+          valor_final: valorFinal,
+          valor_parcela: valorParcela,
+          data_emprestimo: formData.dataVencimento,
+          data_vencimento: formData.dataVencimento,
+          data_primeira_parcela: formData.dataVencimento,
+          juros_mensal: jurosMensal,
+          multa_atraso: formData.multa,
+          observacoes: formData.observacoes || '',
+          tipo_emprestimo: parseInt(formData.parcelas) > 1 ? 'in_installments' : 'fixed',
+          numero_parcelas: parseInt(formData.parcelas) || 1,
+          frequencia: formData.frequencia || 'monthly',
+          tipo_calculo: tipoCalculoCalculo
+        };
+        
+        console.log('Criando empréstimo:', payload);
+        try {
+          await apiService.createEmprestimo(payload);
+          ui.showNotification('Empréstimo adicionado com sucesso!', 'success');
+          modal.remove();
+          // Atualizar lista de empréstimos de forma robusta
+          setTimeout(() => {
+            if (document.getElementById('emprestimos-lista')) {
+              renderEmprestimosLista();
+            } else {
+              // Fallback: recarregar a página se a lista não estiver pronta
+              location.reload();
+            }
+          }, 300);
+        } catch (err) {
+          console.error('=== ERRO AO CRIAR EMPRÉSTIMO ===');
+          console.error('Erro completo:', err);
+          console.error('Mensagem:', err.message);
+          console.error('Stack:', err.stack);
+          
+          if (err.response) {
+            console.error('Response status:', err.response.status);
+            console.error('Response data:', err.response.data);
+            ui.showNotification(`Erro ao adicionar empréstimo: ${err.response.data?.error || err.message}`, 'error');
+          } else {
+            ui.showNotification(`Erro ao adicionar empréstimo: ${err.message}`, 'error');
+          }
+        }
+      });
+    });
+  }
+});
+
+// Exportar para uso global
+window.app = app;
+window.dashboardController = dashboardController;
+window.emprestimoController = emprestimoController;
+window.cobrancaController = cobrancaController;
+window.clienteController = clienteController;
+window.ui = ui;
+window.utils = utils;
+window.authSystem = authSystem;
+
+// Exportar funções globais
+window.viewEmprestimo = viewEmprestimo;
+window.viewCliente = viewCliente;
+window.deleteCliente = deleteCliente;
+window.cobrar = cobrar;
+window.sair = sair;
+window.renderHistoricoEmprestimos = renderHistoricoEmprestimos;
+window.renderClientesLista = renderClientesLista;
+window.renderCobrancasEmAbertoLista = renderCobrancasEmAbertoLista;
+window.renderAtrasadosLista = renderAtrasadosLista;
+window.renderListaNegra = renderListaNegra;
+window.recarregarDadosPagina = recarregarDadosPagina;
+window.adicionarListaNegra = adicionarListaNegra;
+window.removerListaNegra = removerListaNegra;
+
+// Adicionar função para renderizar cobranças pendentes e valor a receber de forma estruturada
+function renderCobrancasResumo(lista, targetId) {
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  if (!lista || lista.length === 0) {
+    target.innerHTML = '0';
+    return;
+  }
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+  
+  if (targetId === 'cobrancas-pendentes') {
+    const totalPendentes = lista.filter(cobranca => {
+      const dataVenc = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
+      const status = (cobranca.status || '').toUpperCase();
+      return dataVenc && dataVenc <= hoje && (status === 'PENDENTE' || status === 'EM ABERTO');
+    }).length;
+    target.innerHTML = String(totalPendentes);
+    return;
+  }
+  
+  if (targetId === 'valor-receber') {
+    const valorTotal = lista.reduce((acc, cobranca) => {
+      const valorInvestido = Number(cobranca.valor_inicial || cobranca.valor_original || cobranca.valor || 0);
+      const jurosPercent = Number(cobranca.juros_mensal || cobranca.juros || cobranca.juros_percentual || 0);
+      const jurosTotal = valorInvestido * (jurosPercent / 100);
+      const dataVencimento = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
+      let valorAtualizado = valorInvestido + jurosTotal;
+      
+      if (dataVencimento && dataVencimento < hoje) {
+        const diffTime = hoje.getTime() - dataVencimento.getTime();
+        const diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const jurosDiario = Math.ceil(jurosTotal / 30);
+        const jurosAplicado = jurosDiario * diasAtraso;
+        valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
+      }
+      
+      return acc + valorAtualizado;
+    }, 0);
+    
+    target.innerHTML = utils.formatCurrency(valorTotal);
+    return;
+  }
+  
+  // Para outros casos, mostrar lista detalhada
+  target.innerHTML = lista.map(cobranca => {
+    const valorInvestido = Number(cobranca.valor_inicial || cobranca.valor_original || cobranca.valor || 0);
+    const jurosPercent = Number(cobranca.juros_mensal || cobranca.juros || cobranca.juros_percentual || 0);
+    const jurosTotal = valorInvestido * (jurosPercent / 100);
+    const dataVencimento = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
+    let valorAtualizado = valorInvestido + jurosTotal;
+    let diasAtraso = 0;
+    
+    if (dataVencimento && dataVencimento < hoje) {
+      const diffTime = hoje.getTime() - dataVencimento.getTime();
+      diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const jurosDiario = Math.ceil(jurosTotal / 30);
+      const jurosAplicado = jurosDiario * diasAtraso;
+      valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
+    }
+    
+    return `
+      <div class="cobranca-item">
+        <span class="cobranca-nome">${cobranca.cliente_nome || 'N/A'}</span>
+        <span class="cobranca-valor">${utils.formatCurrency(valorAtualizado)}</span>
+        <span class="cobranca-data">${cobranca.data_vencimento ? utils.formatDate(cobranca.data_vencimento) : ''}</span>
+        <span class="cobranca-status">${diasAtraso > 0 ? diasAtraso + ' dias de atraso' : 'No prazo'}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+async function renderAtrasadosLista() {
+  const tbody = document.getElementById('atrasados-lista');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
+  try {
+    const emprestimos = await apiService.getEmprestimos();
+    const hoje = new Date();
+    hoje.setHours(0,0,0,0);
+    
+    // Verificar status de cada empréstimo considerando parcelas
+    const atrasados = [];
+    for (const e of emprestimos || []) {
+      let isAtrasado = false;
+      let status = (e.status || '').toUpperCase();
+      
+      // Se for empréstimo parcelado, verificar parcelas
+      if (e.tipo_emprestimo === 'in_installments' && e.numero_parcelas > 1) {
+        try {
+          const parcelas = await apiService.getParcelasEmprestimo(e.id);
+          const parcelasAtrasadas = parcelas.filter(p => {
+            const dataVencParcela = new Date(p.data_vencimento);
+            return dataVencParcela < hoje && (p.status !== 'Paga');
+          });
+          
+          if (parcelasAtrasadas.length > 0) {
+            isAtrasado = true;
+          }
+        } catch (error) {
+          console.error('Erro ao buscar parcelas para empréstimo', e.id, error);
+        }
+      } else {
+        // Para empréstimos de parcela única
+        const dataVenc = e.data_vencimento ? new Date(e.data_vencimento) : null;
+        if (dataVenc && dataVenc < hoje && status !== 'QUITADO') {
+          isAtrasado = true;
+        }
+      }
+      
+      if (isAtrasado) {
+        atrasados.push(e);
+      }
+    }
+    if (atrasados.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500">Nenhum empréstimo atrasado</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    atrasados.forEach(emp => {
+      const valorInvestido = Number(emp.valor || 0);
+      const jurosPercent = Number(emp.juros_mensal || 0);
+      const jurosTotal = valorInvestido * (jurosPercent / 100);
+      const dataVencimento = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
+      let valorAtualizado = valorInvestido + jurosTotal;
+      let diasAtraso = 0;
+      let jurosDiario = 0;
+      let jurosAplicado = 0;
+      if (dataVencimento && dataVencimento < hoje) {
+        const diffTime = hoje.getTime() - dataVencimento.getTime();
+        diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        jurosDiario = Math.ceil(jurosTotal / 30);
+        jurosAplicado = jurosDiario * diasAtraso;
+        valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
+      }
+      const valor = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(valorAtualizado);
+      const vencimento = emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-';
+      tbody.innerHTML += `
+        <tr>
+          <td>${emp.cliente_nome || 'N/A'}</td>
+          <td>${emp.id}</td>
+          <td>1</td>
+          <td>${valor}</td>
+          <td>${vencimento}</td>
+          <td>${diasAtraso > 0 ? diasAtraso : '-'}</td>
+          <td><span class="badge badge-danger">ATRASADO</span></td>
+          <td><button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button></td>
+        </tr>
+      `;
+    });
+  } catch (error) {
+    console.error('Erro ao carregar atrasados:', error);
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-red-500">Erro ao carregar atrasados</td></tr>';
+  }
+}
+
+// Funções globais para compatibilidade
+async function viewEmprestimo(id) {
+  if (typeof emprestimoController !== 'undefined' && emprestimoController.viewEmprestimo) {
+    return emprestimoController.viewEmprestimo(id);
+  } else {
+    console.error('emprestimoController não está disponível');
+  }
+}
+
+async function viewCliente(id) {
+  if (typeof clienteController !== 'undefined' && clienteController.viewCliente) {
+    return clienteController.viewCliente(id);
+  } else {
+    console.error('clienteController não está disponível');
+  }
+}
+
+async function deleteCliente(id) {
+  if (typeof clienteController !== 'undefined' && clienteController.deleteCliente) {
+    return clienteController.deleteCliente(id);
+  } else {
+    console.error('clienteController não está disponível');
+  }
+}
+
+function cobrar(id) {
+  if (typeof cobrancaController !== 'undefined' && cobrancaController.cobrar) {
+    return cobrancaController.cobrar(id);
+  } else {
+    console.error('cobrancaController não está disponível');
+  }
+}
+
+// Disponibilizar funções globalmente
+window.renderHistoricoEmprestimos = renderHistoricoEmprestimos;
+window.viewEmprestimo = viewEmprestimo;
+window.viewCliente = viewCliente;
+window.deleteCliente = deleteCliente;
+window.cobrar = cobrar;
+
+// Funções para controle de status das parcelas
+async function marcarParcelaPaga(emprestimoId, numeroParcela) {
+  try {
+    const hoje = new Date().toISOString().split('T')[0];
+    
+    const response = await fetch(`/api/cobrancas/emprestimos/${emprestimoId}/parcelas/${numeroParcela}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        status: 'Paga',
+        data_pagamento: hoje
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Erro ao atualizar parcela');
+    }
+    
+    ui.showNotification('Parcela marcada como paga!', 'success');
+    
+    // Recarregar os detalhes do empréstimo
+    await emprestimoController.viewEmprestimo(emprestimoId);
+    
+  } catch (error) {
+    console.error('Erro ao marcar parcela como paga:', error);
+    ui.showNotification('Erro ao marcar parcela como paga', 'error');
+  }
+}
+
+async function marcarParcelaAtrasada(emprestimoId, numeroParcela) {
+  try {
+    const response = await fetch(`/api/cobrancas/emprestimos/${emprestimoId}/parcelas/${numeroParcela}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        status: 'Atrasada'
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Erro ao atualizar parcela');
+    }
+    
+    ui.showNotification('Parcela marcada como atrasada!', 'success');
+    
+    // Recarregar os detalhes do empréstimo
+    await emprestimoController.viewEmprestimo(emprestimoId);
+    
+  } catch (error) {
+    console.error('Erro ao marcar parcela como atrasada:', error);
+    ui.showNotification('Erro ao marcar parcela como atrasada', 'error');
+  }
+}
+
+async function marcarParcelaPendente(emprestimoId, numeroParcela) {
+  try {
+    const response = await fetch(`/api/cobrancas/emprestimos/${emprestimoId}/parcelas/${numeroParcela}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        status: 'Pendente',
+        data_pagamento: null
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Erro ao atualizar parcela');
+    }
+    
+    ui.showNotification('Parcela marcada como pendente!', 'success');
+    
+    // Recarregar os detalhes do empréstimo
+    await emprestimoController.viewEmprestimo(emprestimoId);
+    
+  } catch (error) {
+    console.error('Erro ao marcar parcela como pendente:', error);
+    ui.showNotification('Erro ao marcar parcela como pendente', 'error');
+  }
+}
+
+// Disponibilizar funções de parcelas globalmente
+window.marcarParcelaPaga = marcarParcelaPaga;
+window.marcarParcelaAtrasada = marcarParcelaAtrasada;
+window.marcarParcelaPendente = marcarParcelaPendente;
 
  
