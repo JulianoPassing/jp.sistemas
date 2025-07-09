@@ -53,11 +53,12 @@ const notificationSystem = {
         <span id="notification-badge" class="notification-badge" style="display: none;">0</span>
       `;
       
-      // Inserir antes do logo ou no final
-      const nav = header.querySelector('nav');
-      if (nav) {
-        nav.insertBefore(notificationBtn, nav.firstChild);
+      // Inserir antes do menu mobile toggle
+      const mobileToggle = header.querySelector('#mobile-menu-toggle');
+      if (mobileToggle) {
+        header.insertBefore(notificationBtn, mobileToggle);
       } else {
+        // Inserir no final do header
         header.appendChild(notificationBtn);
       }
     }
@@ -506,50 +507,50 @@ const filterSystem = {
     
     if (!targetPages.includes(currentPage)) return;
 
-    const mainContainer = document.querySelector('.container');
-    if (!mainContainer) return;
+    const filterContainer = document.getElementById('filter-container');
+    if (!filterContainer) return;
 
-    const filtersContainer = document.createElement('div');
-    filtersContainer.className = 'filters-container';
-    filtersContainer.innerHTML = `
-      <div class="filters-header">
-        <h3 class="filters-title">Filtros</h3>
-        <button class="filters-toggle" onclick="this.parentElement.parentElement.querySelector('.filters-content').style.display = this.parentElement.parentElement.querySelector('.filters-content').style.display === 'none' ? 'grid' : 'none'">
-          <i class="fas fa-filter"></i> Filtros
-        </button>
-      </div>
-      <div class="filters-content">
-        <div class="filter-group">
-          <label class="filter-label">Data Inicial</label>
-          <input type="date" class="filter-input" id="filter-date-from">
+    const filtersHTML = `
+      <div class="filters-container">
+        <div class="filters-header">
+          <h3 class="filters-title">Filtros</h3>
+          <button class="filters-toggle" onclick="this.parentElement.parentElement.querySelector('.filters-content').style.display = this.parentElement.parentElement.querySelector('.filters-content').style.display === 'none' ? 'grid' : 'none'">
+            <i class="fas fa-filter"></i> Filtros
+          </button>
         </div>
-        <div class="filter-group">
-          <label class="filter-label">Data Final</label>
-          <input type="date" class="filter-input" id="filter-date-to">
+        <div class="filters-content">
+          <div class="filter-group">
+            <label class="filter-label">Data Inicial</label>
+            <input type="date" class="filter-input" id="filter-date-from">
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Data Final</label>
+            <input type="date" class="filter-input" id="filter-date-to">
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Status</label>
+            <select class="filter-input" id="filter-status">
+              <option value="">Todos</option>
+              <option value="ativo">Ativo</option>
+              <option value="pendente">Pendente</option>
+              <option value="atrasado">Atrasado</option>
+              <option value="quitado">Quitado</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Buscar</label>
+            <input type="text" class="filter-input" id="filter-search" placeholder="Nome do cliente...">
+          </div>
         </div>
-        <div class="filter-group">
-          <label class="filter-label">Status</label>
-          <select class="filter-input" id="filter-status">
-            <option value="">Todos</option>
-            <option value="ativo">Ativo</option>
-            <option value="pendente">Pendente</option>
-            <option value="atrasado">Atrasado</option>
-            <option value="quitado">Quitado</option>
-          </select>
+        <div class="filter-actions">
+          <button class="filter-btn secondary" onclick="filterSystem.clearFilters()">Limpar</button>
+          <button class="filter-btn primary" onclick="filterSystem.applyFilters()">Aplicar Filtros</button>
         </div>
-        <div class="filter-group">
-          <label class="filter-label">Buscar</label>
-          <input type="text" class="filter-input" id="filter-search" placeholder="Nome do cliente...">
-        </div>
-      </div>
-      <div class="filter-actions">
-        <button class="filter-btn secondary" onclick="filterSystem.clearFilters()">Limpar</button>
-        <button class="filter-btn primary" onclick="filterSystem.applyFilters()">Aplicar Filtros</button>
       </div>
     `;
 
-    // Inserir no início do container
-    mainContainer.insertBefore(filtersContainer, mainContainer.firstChild);
+    filterContainer.innerHTML = filtersHTML;
+    this.bindFilterEvents();
   },
 
   bindFilterEvents() {
@@ -642,14 +643,9 @@ const paginationSystem = {
     
     if (!targetPages.includes(currentPage)) return;
 
-    const mainContainer = document.querySelector('.container');
-    if (!mainContainer) return;
+    const paginationContainer = document.getElementById('pagination-container');
+    if (!paginationContainer) return;
 
-    const paginationContainer = document.createElement('div');
-    paginationContainer.className = 'pagination-container';
-    paginationContainer.id = 'pagination-container';
-    
-    mainContainer.appendChild(paginationContainer);
     this.updatePagination();
   },
 
@@ -775,31 +771,25 @@ const bulkActionSystem = {
     
     if (!targetPages.includes(currentPage)) return;
 
-    const mainContainer = document.querySelector('.container');
-    if (!mainContainer) return;
+    const bulkContainer = document.getElementById('bulk-action-container');
+    if (!bulkContainer) return;
 
-    const bulkContainer = document.createElement('div');
-    bulkContainer.className = 'bulk-actions-container';
-    bulkContainer.id = 'bulk-actions-container';
-    bulkContainer.innerHTML = `
-      <div class="bulk-actions-header">
-        <div class="bulk-actions-title">Ações em Lote</div>
-        <div class="bulk-actions-count">
-          <span id="selected-count">0</span> item(s) selecionado(s)
+    const bulkHTML = `
+      <div class="bulk-actions-container">
+        <div class="bulk-actions-header">
+          <div class="bulk-actions-title">Ações em Lote</div>
+          <div class="bulk-actions-count">
+            <span id="selected-count">0</span> item(s) selecionado(s)
+          </div>
         </div>
-      </div>
-      <div class="bulk-actions-buttons" id="bulk-actions-buttons">
-        ${this.getBulkActionsForPage(currentPage)}
+        <div class="bulk-actions-buttons" id="bulk-actions-buttons">
+          ${this.getBulkActionsForPage(currentPage)}
+        </div>
       </div>
     `;
 
-    // Inserir após os filtros
-    const filtersContainer = document.querySelector('.filters-container');
-    if (filtersContainer) {
-      filtersContainer.insertAdjacentElement('afterend', bulkContainer);
-    } else {
-      mainContainer.insertBefore(bulkContainer, mainContainer.firstChild);
-    }
+    bulkContainer.innerHTML = bulkHTML;
+    this.bindEvents();
   },
 
   getBulkActionsForPage(page) {
