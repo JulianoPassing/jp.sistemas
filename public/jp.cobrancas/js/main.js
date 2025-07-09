@@ -352,30 +352,26 @@ const dashboardController = {
       }
       
       const data = await apiService.getDashboardData();
-      // Buscar todos os empréstimos para calcular o valor total a receber com juros em aberto
+      // ✅ CORREÇÃO: Usar valores já padronizados pela API em vez de calcular localmente
+      // A API já calcula os valores consistentemente usando as funções padronizadas
+      // Não sobrescrever os valores da API com cálculos locais
+      
+      // Se precisar de valores específicos, usar os já calculados pela API
       const emprestimos = await apiService.getEmprestimos();
       let valorTotalReceber = 0;
-      const hoje = new Date();
-      hoje.setHours(0,0,0,0);
+      
       emprestimos.forEach(emprestimo => {
-        // Validação e fallback seguro para campos numéricos
-        const valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
-        const jurosPercent = Number(emprestimo.juros_mensal || 0);
-        const jurosTotal = valorInvestido * (jurosPercent / 100);
-        const dataVencimento = new Date(emprestimo.data_vencimento);
-        let valorAtualizado = valorInvestido + jurosTotal;
-        if (dataVencimento < hoje && (emprestimo.status || '').toUpperCase() !== 'QUITADO') {
-          const diffTime = hoje.getTime() - dataVencimento.getTime();
-          const diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          const jurosDiario = Math.ceil(jurosTotal / 30);
-          const jurosAplicado = jurosDiario * diasAtraso;
-          valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
-        }
-        if ((emprestimo.status || '').toUpperCase() !== 'QUITADO') {
-          valorTotalReceber += valorAtualizado;
+        // Usar valores já padronizados pela API
+        const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
+        const status = (emprestimo.status || '').toUpperCase();
+        
+        // Somar apenas empréstimos não quitados
+        if (status !== 'QUITADO') {
+          valorTotalReceber += valorFinal;
         }
       });
-      // Substituir o valor do card por esse valor calculado
+      
+      // Usar o valor calculado baseado nos valores padronizados da API
       data.cobrancas = data.cobrancas || {};
       data.cobrancas.valor_total_cobrancas = valorTotalReceber;
       appState.data.dashboard = data;
@@ -461,69 +457,22 @@ const dashboardController = {
       return;
     }
 
-    // Processar empréstimos em paralelo para melhor performance
-    const emprestimosProcessados = await Promise.all(
-      emprestimos.map(async (emprestimo) => {
-        // Validação e fallback seguro para campos numéricos
-        const valorInvestido = Number(emprestimo.valor || 0);
-        const jurosPercent = Number(emprestimo.juros_mensal || 0);
-        const jurosTotal = valorInvestido * (jurosPercent / 100);
-        const hoje = new Date();
-        hoje.setHours(0,0,0,0);
-        let status = (emprestimo.status || '').toUpperCase();
-        let dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
-        let valorAtualizado = valorInvestido + jurosTotal;
-        let infoJuros = '';
-        let diasAtraso = 0;
-        let jurosDiario = 0;
-        let jurosAplicado = 0;
-        
-        // Verificar status baseado em parcelas para empréstimos parcelados
-        if (emprestimo.tipo_emprestimo === 'in_installments' && emprestimo.numero_parcelas > 1) {
-          try {
-            const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
-            const parcelasAtrasadas = parcelas.filter(p => {
-              const dataVencParcela = new Date(p.data_vencimento);
-              return dataVencParcela < hoje && (p.status !== 'Paga');
-            });
-            
-            const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
-            
-            if (parcelasPagas.length === parcelas.length) {
-              status = 'QUITADO';
-            } else if (parcelasAtrasadas.length > 0) {
-              status = 'ATRASADO';
-              // Usar a data de vencimento da parcela mais atrasada
-              const parcelaMaisAtrasada = parcelasAtrasadas.sort((a, b) => 
-                new Date(a.data_vencimento) - new Date(b.data_vencimento)
-              )[0];
-              dataVencimento = new Date(parcelaMaisAtrasada.data_vencimento);
-            } else {
-              status = 'ATIVO';
-            }
-          } catch (error) {
-            console.error('Erro ao buscar parcelas para empréstimo', emprestimo.id, error);
-          }
-        } else {
-          // Para empréstimos de parcela única, usar lógica original
-          if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
-            status = 'ATRASADO';
-          }
-        }
-        
-        // Calcular juros de atraso se necessário
-        if (status === 'ATRASADO' && dataVencimento) {
-          const diffTime = hoje.getTime() - dataVencimento.getTime();
-          diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          jurosDiario = Math.ceil(jurosTotal / 30);
-          jurosAplicado = jurosDiario * diasAtraso;
-          valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
-          infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
-        }
-        
-        return { ...emprestimo, status, valorAtualizado, infoJuros };
-      })
-    );
+    // ✅ CORREÇÃO: Usar valores e status já padronizados pela API
+    // A API já calcula valores e status consistentemente
+    const emprestimosProcessados = emprestimos.map(emprestimo => {
+      // Usar valores já calculados pela API
+      const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
+      const status = (emprestimo.status || '').toUpperCase();
+      
+      // Informações adicionais podem ser adicionadas aqui se necessário
+      // mas os valores principais devem vir da API
+      return { 
+        ...emprestimo, 
+        status, 
+        valorAtualizado: valorFinal,
+        infoJuros: '' // Removido cálculo local de juros
+      };
+    });
 
         emprestimosProcessados.forEach(emprestimo => {
       const valor = new Intl.NumberFormat('pt-BR', {
@@ -1852,71 +1801,11 @@ async function renderHistoricoEmprestimos() {
         console.log(`Empréstimo duplicado ignorado: ID ${emprestimo.id}`);
         continue;
       }
-      // Cálculo de atraso e juros diário
-      const valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
-      const jurosPercent = Number(emprestimo.juros_mensal || 0);
-      const jurosTotal = valorInvestido * (jurosPercent / 100);
-      let dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
-      const hoje = new Date();
-      hoje.setHours(0,0,0,0);
-      let status = (emprestimo.status || '').toUpperCase();
-      let valorAtualizado = valorInvestido + jurosTotal;
-      let infoJuros = '';
-      let diasAtraso = 0;
-      let jurosDiario = 0;
-      let jurosAplicado = 0;
-      
-      // Verificar status baseado em parcelas para empréstimos parcelados
-      try {
-        const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
-        if (parcelas && parcelas.length > 0) {
-          // Tem parcelas - verificar status das parcelas individuais
-          const parcelasAtrasadas = parcelas.filter(p => {
-            const dataVencParcela = new Date(p.data_vencimento);
-            return dataVencParcela < hoje && (p.status !== 'Paga');
-          });
-          
-          const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
-          
-          // Determinar status real baseado nas parcelas
-          if (parcelasPagas.length === parcelas.length) {
-            status = 'QUITADO';
-          } else if (parcelasAtrasadas.length > 0) {
-            status = 'ATRASADO';
-            // Usar a data de vencimento da parcela mais atrasada para cálculo de juros
-            const parcelaMaisAtrasada = parcelasAtrasadas.sort((a, b) => 
-              new Date(a.data_vencimento) - new Date(b.data_vencimento)
-            )[0];
-            dataVencimento = new Date(parcelaMaisAtrasada.data_vencimento);
-          } else {
-            // Parcelas existem mas nenhuma está atrasada
-            status = status === 'QUITADO' ? 'QUITADO' : 'ATIVO';
-          }
-        } else {
-          // Sem parcelas - usar lógica original baseada na data de vencimento do empréstimo
-          if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
-            status = 'ATRASADO';
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao verificar parcelas do empréstimo', emprestimo.id, error);
-        // Fallback para verificação pela data de vencimento
-        if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
-          status = 'ATRASADO';
-        }
-      }
-      
-      // Calcular juros de atraso se status for ATRASADO
-      if (status === 'ATRASADO' && dataVencimento) {
-        // Calcular dias de atraso
-        const diffTime = hoje.getTime() - dataVencimento.getTime();
-        diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        // Juros diário: juros total dividido por 30 dias, arredondado para cima
-        jurosDiario = Math.ceil(jurosTotal / 30);
-        jurosAplicado = jurosDiario * diasAtraso;
-        valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
-        infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
-      }
+      // ✅ CORREÇÃO: Usar valores e status já padronizados pela API
+      const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
+      const status = (emprestimo.status || '').toUpperCase();
+      const valorAtualizado = valorFinal;
+      const infoJuros = ''; // Removido cálculo local de juros
       
       // Marcar empréstimo como processado para evitar duplicatas
       emprestimosUnicos.set(emprestimo.id, true);
@@ -1961,64 +1850,13 @@ async function renderEmprestimosLista() {
     }
     tbody.innerHTML = '';
     
-    // Processar cada empréstimo
+    // ✅ CORREÇÃO: Usar valores e status já padronizados pela API
     for (const emprestimo of ativos) {
-      // Cálculo de atraso e juros diário
-      const valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
-      const jurosPercent = Number(emprestimo.juros_mensal || 0);
-      const jurosTotal = valorInvestido * (jurosPercent / 100);
-      const hoje = new Date();
-      hoje.setHours(0,0,0,0);
-      let status = (emprestimo.status || '').toUpperCase();
-      let dataVencimento = new Date(emprestimo.data_vencimento);
-      let valorAtualizado = valorInvestido + jurosTotal;
-      let infoJuros = '';
-      let diasAtraso = 0;
-      let jurosDiario = 0;
-      let jurosAplicado = 0;
-      
-      // Verificar status baseado em parcelas para empréstimos parcelados
-      if (emprestimo.tipo_emprestimo === 'in_installments' && emprestimo.numero_parcelas > 1) {
-        try {
-          const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
-          const parcelasAtrasadas = parcelas.filter(p => {
-            const dataVencParcela = new Date(p.data_vencimento);
-            return dataVencParcela < hoje && (p.status !== 'Paga');
-          });
-          
-          const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
-          
-          if (parcelasPagas.length === parcelas.length) {
-            status = 'QUITADO';
-          } else if (parcelasAtrasadas.length > 0) {
-            status = 'ATRASADO';
-            // Usar a data de vencimento da parcela mais atrasada
-            const parcelaMaisAtrasada = parcelasAtrasadas.sort((a, b) => 
-              new Date(a.data_vencimento) - new Date(b.data_vencimento)
-            )[0];
-            dataVencimento = new Date(parcelaMaisAtrasada.data_vencimento);
-          } else {
-            status = 'ATIVO';
-          }
-        } catch (error) {
-          console.error('Erro ao buscar parcelas para empréstimo', emprestimo.id, error);
-        }
-      } else {
-        // Para empréstimos de parcela única, usar lógica original
-        if (dataVencimento < hoje && status !== 'QUITADO') {
-          status = 'ATRASADO';
-        }
-      }
-      
-      // Calcular juros de atraso se necessário
-      if (status === 'ATRASADO') {
-        const diffTime = hoje.getTime() - dataVencimento.getTime();
-        diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        jurosDiario = Math.ceil(jurosTotal / 30);
-        jurosAplicado = jurosDiario * diasAtraso;
-        valorAtualizado = valorInvestido + jurosTotal + jurosAplicado;
-        infoJuros = `<br><small style='color:#ef4444'>Juros diário: +R$ ${jurosDiario.toFixed(2)} (${diasAtraso} dias)</small>`;
-      }
+      // Usar valores já calculados pela API
+      const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
+      const status = (emprestimo.status || '').toUpperCase();
+      const valorAtualizado = valorFinal;
+      const infoJuros = ''; // Removido cálculo local de juros
       const valor = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'

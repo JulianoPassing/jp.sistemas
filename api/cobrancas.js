@@ -181,7 +181,94 @@ async function ensureDatabase(req, res, next) {
   }
 }
 
-// Dashboard - Versão Completa Restaurada
+// Função helper para cálculos padronizados de empréstimos
+function calcularValoresEmprestimo(emprestimo) {
+  const valorInicial = parseFloat(emprestimo.valor || 0);
+  const valorParcela = parseFloat(emprestimo.valor_parcela || 0);
+  const numeroParcelas = parseInt(emprestimo.numero_parcelas || 1);
+  const jurosMensal = parseFloat(emprestimo.juros_mensal || 0);
+  const tipoEmprestimo = emprestimo.tipo_emprestimo || 'fixed';
+  
+  let valorFinal = 0;
+  let valorAtualizado = 0;
+  
+  if (tipoEmprestimo === 'in_installments' && valorParcela > 0 && numeroParcelas > 0) {
+    // Empréstimo parcelado
+    valorFinal = valorParcela * numeroParcelas;
+    valorAtualizado = valorFinal;
+  } else if (valorInicial > 0 && jurosMensal > 0) {
+    // Empréstimo fixo com juros
+    valorFinal = valorInicial * (1 + (jurosMensal / 100));
+    valorAtualizado = valorFinal;
+  } else {
+    // Empréstimo sem juros ou dados incompletos
+    valorFinal = valorInicial;
+    valorAtualizado = valorInicial;
+  }
+  
+  return {
+    valor_inicial: valorInicial,
+    valor_final: valorFinal,
+    valor_atualizado: valorAtualizado,
+    valor_parcela: valorParcela,
+    numero_parcelas: numeroParcelas,
+    juros_mensal: jurosMensal,
+    tipo_emprestimo: tipoEmprestimo
+  };
+}
+
+// Função para determinar status padronizado de empréstimo
+async function determinarStatusEmprestimo(emprestimo, connection) {
+  const emprestimoId = emprestimo.id;
+  let status = (emprestimo.status || 'Ativo').toUpperCase();
+  
+  try {
+    // Verificar se tem parcelas
+    const [parcelas] = await connection.execute(
+      'SELECT * FROM parcelas WHERE emprestimo_id = ? ORDER BY numero_parcela',
+      [emprestimoId]
+    );
+    
+    if (parcelas.length > 0) {
+      // Empréstimo parcelado - verificar status das parcelas
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      
+      const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
+      const parcelasAtrasadas = parcelas.filter(p => {
+        const dataVenc = new Date(p.data_vencimento);
+        return dataVenc < hoje && p.status !== 'Paga';
+      });
+      
+      if (parcelasPagas.length === parcelas.length) {
+        status = 'QUITADO';
+      } else if (parcelasAtrasadas.length > 0) {
+        status = 'ATRASADO';
+      } else {
+        status = 'ATIVO';
+      }
+    } else {
+      // Empréstimo de valor único - verificar data de vencimento
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
+      
+      if (status === 'QUITADO') {
+        // Manter status quitado
+      } else if (dataVencimento && dataVencimento < hoje) {
+        status = 'ATRASADO';
+      } else {
+        status = 'ATIVO';
+      }
+    }
+  } catch (error) {
+    console.warn('Erro ao determinar status do empréstimo', emprestimoId, error.message);
+  }
+  
+  return status;
+}
+
+// Dashboard - Versão Corrigida com Cálculos Padronizados
 router.get('/dashboard', ensureDatabase, async (req, res) => {
   try {
     console.log('Dashboard: Iniciando busca de dados');
@@ -199,7 +286,8 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     // Valores padrão para evitar erros
     let emprestimosStats = [{ 
       total_emprestimos: 0, 
-      valor_total_emprestimos: 0, 
+      valor_total_inicial: 0,
+      valor_total_final: 0,
       emprestimos_ativos: 0, 
       emprestimos_quitados: 0 
     }];
@@ -235,22 +323,29 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Estatísticas de empréstimos - Query robusta com múltiplas tentativas
+      // Estatísticas de empréstimos - Query padronizada
       console.log('Dashboard: Buscando estatísticas de empréstimos');
       
-      // Query para somar o VALOR INICIAL de todos os empréstimos
-      console.log('Dashboard: Buscando VALOR INICIAL de todos os empréstimos');
       [emprestimosStats] = await connection.execute(`
         SELECT 
           COUNT(*) as total_emprestimos,
-          COALESCE(SUM(valor), 0) as valor_total_emprestimos,
-          COUNT(*) as emprestimos_ativos,
-          0 as emprestimos_quitados
-        FROM emprestimos
-        WHERE valor > 0
+          COALESCE(SUM(e.valor), 0) as valor_total_inicial,
+          COALESCE(SUM(
+            CASE 
+              WHEN e.tipo_emprestimo = 'in_installments' AND e.valor_parcela > 0 AND e.numero_parcelas > 0
+                THEN (e.valor_parcela * e.numero_parcelas)
+              WHEN e.valor > 0 AND e.juros_mensal > 0 
+                THEN e.valor * (1 + (e.juros_mensal / 100))
+              ELSE COALESCE(e.valor, 0)
+            END
+          ), 0) as valor_total_final,
+          COUNT(CASE WHEN TRIM(UPPER(e.status)) IN ('ATIVO', 'PENDENTE') THEN 1 END) as emprestimos_ativos,
+          COUNT(CASE WHEN TRIM(UPPER(e.status)) = 'QUITADO' THEN 1 END) as emprestimos_quitados
+        FROM emprestimos e
+        WHERE e.cliente_id IS NOT NULL AND e.valor > 0
       `);
-      console.log('Dashboard: Total investido (valor inicial):', emprestimosStats[0].valor_total_emprestimos);
-      console.log('Dashboard: Estatísticas completas:', emprestimosStats[0]);
+      
+      console.log('Dashboard: Estatísticas de empréstimos:', emprestimosStats[0]);
     } catch (error) {
       console.log('Dashboard: Erro ao buscar estatísticas de empréstimos:', error.message);
     }
@@ -423,7 +518,11 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     console.log('Dashboard: Conexão fechada');
 
     const response = {
-      emprestimos: emprestimosStats[0],
+      emprestimos: {
+        ...emprestimosStats[0],
+        // Para compatibilidade, mapear valor_total_inicial para valor_total_emprestimos
+        valor_total_emprestimos: emprestimosStats[0].valor_total_inicial
+      },
       cobrancas: cobrancasStats[0],
       clientes: clientesStats[0],
       emprestimosRecentes,
@@ -821,7 +920,7 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
   }
 });
 
-// Empréstimos
+// Empréstimos - Query padronizada
 router.get('/emprestimos', ensureDatabase, async (req, res) => {
   try {
     const username = req.session.cobrancasUser;
@@ -835,9 +934,9 @@ router.get('/emprestimos', ensureDatabase, async (req, res) => {
         AND data_vencimento < CURDATE()
     `);
     
-    // Query simplificada para evitar erros com valores NULL
+    // Query padronizada com cálculos consistentes
     const [emprestimos] = await connection.execute(`
-      SELECT e.*, 
+      SELECT DISTINCT e.*, 
              c.nome as cliente_nome, 
              c.telefone as telefone,
              COALESCE(e.valor, 0) as valor,
@@ -858,34 +957,36 @@ router.get('/emprestimos', ensureDatabase, async (req, res) => {
       ORDER BY e.created_at DESC
     `);
     
-    // Garantir que as datas estão no formato correto
-    emprestimos.forEach(emp => {
+    // Processar cada empréstimo para garantir consistência
+    const emprestimosProcessados = [];
+    
+    for (const emp of emprestimos) {
+      // Aplicar cálculos padronizados
+      const valores = calcularValoresEmprestimo(emp);
+      
+      // Determinar status padronizado
+      const status = await determinarStatusEmprestimo(emp, connection);
+      
+      // Garantir que as datas estão no formato correto
       if (emp.data_emprestimo_formatada) {
         emp.data_emprestimo = emp.data_emprestimo_formatada;
       }
       if (emp.data_vencimento_formatada) {
         emp.data_vencimento = emp.data_vencimento_formatada;
       }
-      // Garantir que valor_final nunca seja NULL
-      if (!emp.valor_final) {
-        emp.valor_final = emp.valor || 0;
-      }
-    });
-    
-    console.log(`API /emprestimos: Retornando ${emprestimos.length} empréstimos para usuário ${username}`);
-    if (emprestimos.length > 0) {
-      emprestimos.forEach(emp => {
-        console.log(`  - ID ${emp.id}: ${emp.cliente_nome} - R$ ${emp.valor} (${emp.status})`);
-      });
-    } else {
-      console.log('  - Nenhum empréstimo encontrado (tabela vazia)');
+      
+      // Aplicar valores padronizados
+      emp.valor_final = valores.valor_final;
+      emp.valor_inicial = valores.valor_inicial;
+      emp.status = status;
+      
+      emprestimosProcessados.push(emp);
     }
     
     await connection.end();
-    res.json(emprestimos);
+    res.json(emprestimosProcessados);
   } catch (error) {
-    console.error('Erro detalhado ao buscar empréstimos:', error);
-    console.error('Stack trace:', error.stack);
+    console.error('Erro ao buscar empréstimos:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
