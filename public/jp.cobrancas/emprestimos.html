@@ -165,62 +165,11 @@
           for (const emprestimo of emprestimos || []) {
             console.log(`✅ Processando empréstimo ID ${emprestimo.id} - ${emprestimo.cliente_nome} (status original: '${emprestimo.status}')`);
             
-            // Verificar status baseado em parcelas
-            try {
-              const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
-              const hoje = new Date();
-              hoje.setHours(0,0,0,0);
-              
-              // Padronizar status inicial da API
-              let status = emprestimo.status || 'Ativo';
-              if (typeof status === 'string') {
-                const statusLower = status.toLowerCase();
-                if (statusLower === 'ativo' || statusLower === 'active') {
-                  status = 'Ativo';
-                } else if (statusLower === 'quitado' || statusLower === 'paid') {
-                  status = 'Quitado';
-                } else if (statusLower === 'atrasado' || statusLower === 'em atraso' || statusLower === 'overdue') {
-                  status = 'Em Atraso';
-                } else if (statusLower === 'pendente' || statusLower === 'pending') {
-                  status = 'Pendente';
-                } else if (statusLower === 'cancelado' || statusLower === 'cancelled') {
-                  status = 'Cancelado';
-                }
-              }
-              
-              if (parcelas && parcelas.length > 0) {
-                console.log(`  📅 Empréstimo ${emprestimo.id} tem ${parcelas.length} parcelas`);
-                
-                const parcelasAtrasadas = parcelas.filter(p => {
-                  const dataVencParcela = new Date(p.data_vencimento);
-                  return dataVencParcela < hoje && (p.status !== 'Paga');
-                });
-                
-                const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
-                
-                if (parcelasPagas.length === parcelas.length) {
-                  status = 'Quitado';
-                } else if (parcelasAtrasadas.length > 0) {
-                  status = 'Em Atraso';
-                } else {
-                  status = 'Ativo';
-                }
-                
-                console.log(`  🔄 Status atualizado para: ${status} (${parcelasPagas.length}/${parcelas.length} pagas, ${parcelasAtrasadas.length} atrasadas)`);
-              } else {
-                console.log(`  📄 Empréstimo ${emprestimo.id} sem parcelas, usando data de vencimento`);
-                const hojeStr = new Date().toISOString().slice(0, 10);
-                if (emprestimo.data_vencimento && emprestimo.data_vencimento < hojeStr && status !== 'Quitado') {
-                  status = 'Em Atraso';
-                }
-              }
-              
-              emprestimo.status = status;
-              console.log(`  📝 Status final definido: '${status}'`);
-              
-            } catch (error) {
-              console.error(`❌ Erro ao verificar parcelas do empréstimo ${emprestimo.id}:`, error);
-            }
+            // Remover todo o bloco que recalcula o status baseado em data de vencimento ou parcelas.
+            // Usar apenas emp.status recebido da API para exibir na tabela.
+            
+            emprestimo.status = emprestimo.status || 'Ativo'; // Garantir que o status exista
+            console.log(`  📝 Status final definido: '${emprestimo.status}'`);
             
             emprestimosProcessados.push(emprestimo);
           }
