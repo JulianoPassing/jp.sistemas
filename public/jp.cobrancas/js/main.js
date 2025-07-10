@@ -1878,15 +1878,22 @@ async function renderEmprestimosLista() {
     for (const emprestimo of ativos) {
       // Usar valores já calculados pela API
       const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
-      const status = (emprestimo.status || '').toUpperCase();
+      let status = (emprestimo.status || '').toUpperCase();
+      // Forçar status ATRASADO se data_vencimento < hoje
+      if (emprestimo.data_vencimento) {
+        const hojeStr = new Date().toISOString().slice(0, 10);
+        if (emprestimo.data_vencimento < hojeStr && status !== 'QUITADO') {
+          status = 'ATRASADO';
+        }
+      }
       const valorAtualizado = valorFinal;
-      const infoJuros = ''; // Removido cálculo local de juros
+      const infoJuros = '';
       const valor = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
       }).format(valorAtualizado);
       const data = new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR');
-      const statusClass = status === 'Em Atraso' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : 'info'));
+      const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : 'info'));
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${emprestimo.cliente_nome || 'N/A'}</td>
@@ -1894,7 +1901,7 @@ async function renderEmprestimosLista() {
         <td>${emprestimo.parcelas || '-'}</td>
         <td>${data}</td>
         <td>${emprestimo.data_vencimento ? (typeof emprestimo.data_vencimento === 'string' ? emprestimo.data_vencimento.split('-').reverse().join('/') : '-') : '-'}</td>
-        <td><span class="badge badge-${statusClass}">${status}</span></td>
+        <td><span class="badge badge-${statusClass}">${status.charAt(0) + status.slice(1).toLowerCase()}</span></td>
         <td>
           <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
         </td>
