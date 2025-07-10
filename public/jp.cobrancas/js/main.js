@@ -1955,7 +1955,7 @@ async function renderEmprestimosLista() {
         <td>${valor}${infoJuros}</td>
         <td>${emprestimo.parcelas || '-'}</td>
         <td>${data}</td>
-        <td>${emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-'}</td>
+        <td>${emprestimo.data_vencimento ? (typeof emprestimo.data_vencimento === 'string' ? emprestimo.data_vencimento.split('-').reverse().join('/') : '-') : '-'}</td>
         <td><span class="badge badge-${statusClass}">${status}</span></td>
         <td>
           <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
