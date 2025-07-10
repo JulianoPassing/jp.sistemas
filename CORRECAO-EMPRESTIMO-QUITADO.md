@@ -8,7 +8,8 @@ Usuários relataram que após marcar um empréstimo como "Quitado", ele ainda ap
 
 1. **Inconsistência na lógica de atualização**: Quando um empréstimo parcelado era marcado como quitado, o sistema não atualizava o status das parcelas individuais
 2. **Lógica de verificação**: O sistema determina o status do empréstimo baseado no status das parcelas, não no status direto do empréstimo
-3. **Resultado**: Empréstimo marcado como "Quitado" na tabela, mas parcelas ainda "Pendentes" → interface mostra "Ativo"
+3. **Comparação case-sensitive**: O frontend comparava `status !== 'QUITADO'` mas a API retornava `'Quitado'`, causando incompatibilidade
+4. **Resultado**: Empréstimo marcado como "Quitado" na tabela, mas parcelas ainda "Pendentes" → interface mostra "Ativo"
 
 ### Fluxo Problemático (ANTES)
 
@@ -48,6 +49,44 @@ if (status === 'Quitado') {
   
   console.log(`Empréstimo ${id} marcado como quitado - todas as parcelas foram marcadas como pagas`);
 }
+```
+
+### Correção nas Comparações do Frontend
+
+**Arquivo:** `public/jp.cobrancas/js/main.js`
+
+**Problema:** Comparações case-sensitive não reconheciam `'Quitado'` como `'QUITADO'`
+
+**Correções realizadas:**
+
+1. **Linha 368** - Cálculo de valor total:
+```javascript
+// ANTES: if (status !== 'QUITADO')
+// DEPOIS: if (status.toUpperCase() !== 'QUITADO')
+```
+
+2. **Linha 1301** - Lógica de empréstimos de parcela única:
+```javascript  
+// ANTES: if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO')
+// DEPOIS: if (dataVencimento && dataVencimento < hoje && status.toUpperCase() !== 'QUITADO')
+```
+
+3. **Linha 1340** - Badge do modal:
+```javascript
+// ANTES: status === 'QUITADO' ? '#10b981'
+// DEPOIS: status.toUpperCase() === 'QUITADO' ? '#10b981'
+```
+
+4. **Linha 1686** - Status do cliente:
+```javascript
+// ANTES: if (dataVenc && dataVenc < hoje && statusAtual !== 'QUITADO')
+// DEPOIS: if (dataVenc && dataVenc < hoje && statusAtual.toUpperCase() !== 'QUITADO')
+```
+
+5. **Linha 1868** - Classes CSS:
+```javascript
+// ANTES: (status === 'QUITADO' ? 'info' : 'secondary')
+// DEPOIS: (status.toUpperCase() === 'QUITADO' ? 'info' : 'secondary')
 ```
 
 ### Fluxo Corrigido (DEPOIS)
