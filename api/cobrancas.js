@@ -943,10 +943,14 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
             WHERE id = ?
           `, [novoStatus, id]);
           
-          console.log(`✅ Status do empréstimo ${id} recalculado: ${status} → ${novoStatus}`);
+          console.log(`🔄 ATUALIZAÇÃO DE STATUS:`);
+          console.log(`   Empréstimo ID: ${id}`);
+          console.log(`   Status anterior: ${status}`);
+          console.log(`   Status novo: ${novoStatus}`);
+          console.log(`   ✅ Status recalculado com sucesso!`);
           status = novoStatus; // Atualizar variável para resposta
         } else {
-          console.log('✅ Status já está correto - nenhuma atualização necessária');
+          console.log(`✅ Status já está correto (${status}) - nenhuma atualização necessária`);
         }
       }
     } catch (statusError) {
