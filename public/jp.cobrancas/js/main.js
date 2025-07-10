@@ -1151,14 +1151,24 @@ const emprestimoController = {
         const dataInputValue = document.getElementById('edit-data-vencimento').value;
         console.log('🔍 Data capturada do input:', dataInputValue);
         
-        // Garantir que a data seja exatamente como digitada pelo usuário
+        // NOVA CORREÇÃO: Garantir que a data enviada para o backend seja sempre a string exata do input, sem criar objeto Date
         let dataVencimentoCorrigida = dataInputValue;
         if (dataInputValue) {
           // Se a data tem formato YYYY-MM-DD, manter exatamente assim
           const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
           if (dateRegex.test(dataInputValue)) {
             dataVencimentoCorrigida = dataInputValue;
-            console.log('✅ Data mantida como digitada:', dataVencimentoCorrigida);
+            console.log('✅ Data mantida como digitada (sem ajuste de timezone):', dataVencimentoCorrigida);
+          } else {
+            // Se vier em outro formato, tentar extrair a data local corretamente
+            const parts = dataInputValue.split(/[-T:Z ]/);
+            if (parts.length >= 3) {
+              const year = parts[0];
+              const month = parts[1].padStart(2, '0');
+              const day = parts[2].padStart(2, '0');
+              dataVencimentoCorrigida = `${year}-${month}-${day}`;
+              console.log('⚠️ Corrigido formato de data para:', dataVencimentoCorrigida);
+            }
           }
         }
 
