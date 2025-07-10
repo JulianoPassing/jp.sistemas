@@ -340,7 +340,7 @@
             <td>${emp.valor ? `R$ ${Number(emp.valor).toFixed(2)}` : 'R$ 0,00'}</td>
             <td>${emp.valor_final ? `R$ ${Number(emp.valor_final).toFixed(2)}` : (emp.valor ? `R$ ${Number(emp.valor).toFixed(2)}` : 'R$ 0,00')}</td>
             <td>${emp.data_emprestimo ? new Date(emp.data_emprestimo).toLocaleDateString('pt-BR') : '-'}</td>
-            <td>${emp.data_vencimento ? new Date(emp.data_vencimento).toLocaleDateString('pt-BR') : '-'}</td>
+            <td>${emp.data_vencimento ? emp.data_vencimento.split('-').reverse().join('/') : '-'}</td>
             <td><span class="badge badge-${getStatusBadgeClass(emp.status)}">${emp.status || 'N/A'}</span></td>
             <td>
               <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
