@@ -492,13 +492,16 @@ const dashboardController = {
         new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : 
         '-';
       
-      const statusClass = emprestimo.status === 'Em Atraso' ? 'danger' : (emprestimo.status === 'PENDENTE' ? 'warning' : (emprestimo.status === 'ATIVO' ? 'success' : 'info'));
+      // Exibir status exatamente como vem da API, formatando para exibição
+      const statusRaw = (emprestimo.status || '');
+      const status = statusRaw.charAt(0).toUpperCase() + statusRaw.slice(1).toLowerCase();
+      const statusClass = statusRaw.toUpperCase() === 'ATRASADO' || statusRaw.toUpperCase() === 'EM ATRASO' ? 'danger' : (statusRaw.toUpperCase() === 'ATIVO' ? 'warning' : 'info');
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${emprestimo.cliente_nome || 'N/A'}</td>
         <td>${valor}${emprestimo.infoJuros}</td>
         <td>${dataExibida}</td>
-        <td><span class="badge badge-${statusClass}">${emprestimo.status}</span></td>
+        <td><span class="badge badge-${statusClass}">${status}</span></td>
         <td>
           <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
         </td>
@@ -545,8 +548,10 @@ const dashboardController = {
           const venc = new Date(emprestimo.data_vencimento);
           diasAtraso = Math.ceil((hoje - venc) / (1000 * 60 * 60 * 24));
         }
-        const status = (emprestimo.status || '').toUpperCase();
-        const statusClass = status === 'ATRASADO' || status === 'EM ATRASO' ? 'danger' : (status === 'ATIVO' ? 'warning' : 'info');
+        // Exibir status exatamente como vem da API, formatando para exibição
+        const statusRaw = (emprestimo.status || '');
+        const status = statusRaw.charAt(0).toUpperCase() + statusRaw.slice(1).toLowerCase();
+        const statusClass = statusRaw.toUpperCase() === 'ATRASADO' || statusRaw.toUpperCase() === 'EM ATRASO' ? 'danger' : (statusRaw.toUpperCase() === 'ATIVO' ? 'warning' : 'info');
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${emprestimo.cliente_nome || 'N/A'}</td>
