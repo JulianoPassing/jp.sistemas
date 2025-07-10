@@ -1387,7 +1387,7 @@ const emprestimoController = {
             <div style="margin-bottom: 1.2rem;">
               <h2 style="font-size: 1.4rem; font-weight: bold; margin-bottom: 0.2em; color: #002f4b;">${emp.cliente_nome || 'N/A'}</h2>
               <div style="font-size: 1.1rem; font-weight: 600; color: #222; margin-bottom: 0.2em;">PCL-Nº #${emp.id} ${emp.parcelas ? `(${emp.parcelas}ª parcela)` : ''}</div>
-              <div style="font-size: 1rem; color: #444; margin-bottom: 0.2em;">Deve ser pago em <b>${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</b></div>
+              <div style="font-size: 1rem; color: #444; margin-bottom: 0.2em;">Deve ser pago em <b>${emp.data_vencimento ? emp.data_vencimento.split('-').reverse().join('/') : '-'}</b></div>
               <div style="font-size: 1rem; color: #444;">Valor Investido <b>${utils.formatCurrency(valorInvestido)}</b></div>
               <div style="font-size: 1rem; color: #444;">Juros <b>${jurosPercent}%</b> (${utils.formatCurrency(jurosTotal)})</div>
               ${infoJuros}
