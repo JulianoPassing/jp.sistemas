@@ -525,57 +525,15 @@ const dashboardController = {
       const hoje = new Date();
       hoje.setHours(0,0,0,0);
 
-      // Filtrar empréstimos atrasados, ativos ou com parcelas pendentes/atrasadas
-      const emprestimosParaExibir = [];
-      
-      for (const emprestimo of emprestimos) {
-        const status = (emprestimo.status || '').toUpperCase();
-        let incluir = false;
-        let dataVencimentoReferencia = null;
-        let tipoVencimento = 'emprestimo'; // 'emprestimo' ou 'parcela'
-        
-              // Incluir se status for Em Atraso ou ATIVO (não incluir QUITADO)
-      if (status === 'Em Atraso' || status === 'ATIVO') {
-          incluir = true;
-          dataVencimentoReferencia = emprestimo.data_vencimento;
-          
-          // Para empréstimos parcelados, verificar se há parcelas pendentes/atrasadas
-          if (emprestimo.tipo_emprestimo === 'in_installments' && emprestimo.numero_parcelas > 1) {
-            try {
-              const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
-              
-              // Buscar a próxima parcela pendente ou a mais atrasada
-              const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
-              
-              if (parcelasNaoPagas.length > 0) {
-                // Ordenar por data de vencimento para pegar a mais urgente
-                parcelasNaoPagas.sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento));
-                const parcelaMaisUrgente = parcelasNaoPagas[0];
-                
-                dataVencimentoReferencia = parcelaMaisUrgente.data_vencimento;
-                tipoVencimento = 'parcela';
-                
-                // Adicionar informação da parcela ao empréstimo para exibição
-                emprestimo.parcela_numero = parcelaMaisUrgente.numero_parcela;
-                emprestimo.parcela_status = parcelaMaisUrgente.status;
-              }
-            } catch (error) {
-              console.error('Erro ao buscar parcelas para empréstimo', emprestimo.id, error);
-            }
-          }
-          
-          // Adicionar informações para ordenação e exibição
-          emprestimo.data_vencimento_referencia = dataVencimentoReferencia;
-          emprestimo.tipo_vencimento = tipoVencimento;
-          emprestimosParaExibir.push(emprestimo);
-        }
-      }
+      // Filtrar empréstimos em aberto (ATIVO, PENDENTE, ATRASADO)
+      const emprestimosParaExibir = emprestimos.filter(e => {
+        const status = (e.status || '').toUpperCase();
+        return status === 'ATIVO' || status === 'PENDENTE' || status === 'ATRASADO' || status === 'EM ATRASO';
+      });
 
-      // ✅ ORDENAR POR DATA DE VENCIMENTO (mais urgentes primeiro)
+      // Ordenar por data de vencimento (mais antigo primeiro)
       emprestimosParaExibir.sort((a, b) => {
-        const dataA = new Date(a.data_vencimento_referencia || a.data_vencimento);
-        const dataB = new Date(b.data_vencimento_referencia || b.data_vencimento);
-        return dataA - dataB;
+        return (a.data_vencimento < b.data_vencimento) ? -1 : (a.data_vencimento > b.data_vencimento) ? 1 : 0;
       });
 
       if (emprestimosParaExibir.length === 0) {
@@ -584,60 +542,23 @@ const dashboardController = {
       }
 
       emprestimosParaExibir.forEach(emprestimo => {
-        // ✅ USAR VALORES PADRONIZADOS DA API
         const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
-        const dataVencimento = emprestimo.data_vencimento_referencia ? 
-          new Date(emprestimo.data_vencimento_referencia) : 
-          (emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null);
-        
-        let status = (emprestimo.status || '').toUpperCase();
+        const vencimento = emprestimo.data_vencimento ? emprestimo.data_vencimento.split('-').reverse().join('/') : '-';
+        const hojeStr = new Date().toISOString().slice(0, 10);
         let diasAtraso = 0;
-        let textoVencimento = '';
-        
-        // Calcular dias de atraso e texto do vencimento
-        if (dataVencimento) {
-          const diffTime = dataVencimento.getTime() - hoje.getTime();
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          
-          if (diffDays < 0) {
-            diasAtraso = Math.abs(diffDays);
-            status = 'Em Atraso';
-          } else if (diffDays === 0) {
-            textoVencimento = 'Vence hoje';
-          } else if (diffDays <= 3) {
-            textoVencimento = `Vence em ${diffDays} dia(s)`;
-          } else {
-            textoVencimento = `Vence em ${diffDays} dia(s)`;
-          }
-          
-          // Se é parcela, adicionar informação
-          if (emprestimo.tipo_vencimento === 'parcela') {
-            const numeroParc = emprestimo.parcela_numero || '?';
-            textoVencimento += ` (Parcela ${numeroParc})`;
-          }
+        if (emprestimo.data_vencimento && emprestimo.data_vencimento < hojeStr) {
+          const hoje = new Date();
+          const venc = new Date(emprestimo.data_vencimento);
+          diasAtraso = Math.ceil((hoje - venc) / (1000 * 60 * 60 * 24));
         }
-        
-        const valor = new Intl.NumberFormat('pt-BR', {
-          style: 'currency',
-          currency: 'BRL'
-        }).format(valorFinal);
-        
-        const vencimento = dataVencimento ? 
-          dataVencimento.toLocaleDateString('pt-BR') : '-';
-        
-        const statusClass = status === 'Em Atraso' ? 'danger' : 
-          (status === 'ATIVO' ? 'warning' : 'info');
-        
-        const statusTexto = diasAtraso > 0 ? 
-          `Em Atraso (${diasAtraso}d)` : 
-          (textoVencimento || status);
-        
+        const status = (emprestimo.status || '').toUpperCase();
+        const statusClass = status === 'ATRASADO' || status === 'EM ATRASO' ? 'danger' : (status === 'ATIVO' ? 'warning' : 'info');
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${emprestimo.cliente_nome || 'N/A'}</td>
-          <td>${valor}</td>
+          <td>${valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
           <td>${vencimento}</td>
-          <td>${statusTexto}</td>
+          <td>${diasAtraso > 0 ? diasAtraso : '-'}</td>
           <td><span class="badge badge-${statusClass}">${status}</span></td>
           <td>
             <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
