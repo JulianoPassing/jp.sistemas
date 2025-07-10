@@ -2037,4 +2037,23 @@ router.get('/clientes/:id', ensureDatabase, async (req, res) => {
   }
 });
 
+// Rota utilitária para corrigir status de todos os empréstimos vencidos
+router.post('/emprestimos/corrigir-status-vencidos', ensureDatabase, async (req, res) => {
+  try {
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
+    // Atualizar todos os empréstimos vencidos e não quitados para ATRASADO
+    const hojeStr = new Date().toISOString().slice(0, 10);
+    const [result] = await connection.execute(
+      `UPDATE emprestimos SET status = 'ATRASADO' WHERE status != 'QUITADO' AND data_vencimento < ?`,
+      [hojeStr]
+    );
+    await connection.end();
+    res.json({ success: true, updated: result.affectedRows });
+  } catch (error) {
+    console.error('Erro ao corrigir status dos empréstimos vencidos:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 module.exports = router; 
