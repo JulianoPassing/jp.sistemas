@@ -839,32 +839,32 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
         
         // Criar novas parcelas se for parcelado
         if (numeroParcelasNum > 1) {
-          const dataVencimento = new Date(data_vencimento);
-          
+          let dataVencimentoStr = data_vencimento; // Usar string recebida
+          let [ano, mes, dia] = dataVencimentoStr.split('-').map(Number);
           for (let i = 1; i <= numeroParcelasNum; i++) {
-            const dataParcelaVencimento = new Date(dataVencimento);
-            
+            let dataParcela = new Date(ano, mes - 1, dia);
             // Calcular data de vencimento baseada na frequência
             switch (frequencia) {
               case 'weekly':
-                dataParcelaVencimento.setDate(dataParcelaVencimento.getDate() + (i - 1) * 7);
+                dataParcela.setDate(dataParcela.getDate() + (i - 1) * 7);
                 break;
               case 'biweekly':
-                dataParcelaVencimento.setDate(dataParcelaVencimento.getDate() + (i - 1) * 14);
+                dataParcela.setDate(dataParcela.getDate() + (i - 1) * 14);
                 break;
               case 'daily':
-                dataParcelaVencimento.setDate(dataParcelaVencimento.getDate() + (i - 1));
+                dataParcela.setDate(dataParcela.getDate() + (i - 1));
                 break;
               case 'monthly':
               default:
-                dataParcelaVencimento.setMonth(dataParcelaVencimento.getMonth() + (i - 1));
+                dataParcela.setMonth(dataParcela.getMonth() + (i - 1));
                 break;
             }
-            
+            // Formatar para YYYY-MM-DD sem fuso
+            const dataParcelaStr = `${dataParcela.getFullYear()}-${String(dataParcela.getMonth() + 1).padStart(2, '0')}-${String(dataParcela.getDate()).padStart(2, '0')}`;
             await connection.execute(`
               INSERT INTO parcelas (emprestimo_id, numero_parcela, valor_parcela, data_vencimento, status)
               VALUES (?, ?, ?, ?, ?)
-            `, [id, i, valorParcela, dataParcelaVencimento.toISOString().split('T')[0], 'Pendente']);
+            `, [id, i, valorParcela, dataParcelaStr, 'Pendente']);
           }
         }
       }
@@ -924,7 +924,8 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
         } else {
           // Para empréstimos de parcela única, usar data de vencimento
           console.log('   📄 Empréstimo de parcela única - comparando datas');
-          if (dataVencimento < hoje) {
+          const hojeStr = new Date().toISOString().split('T')[0];
+          if (data_vencimento < hojeStr) {
             novoStatus = 'Em Atraso';
             console.log('   ⏰ Data vencida - Status: Em Atraso');
           } else {
