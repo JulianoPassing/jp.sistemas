@@ -1147,16 +1147,33 @@ const emprestimoController = {
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
+        // ✅ CORREÇÃO URGENTE: Capturar e corrigir data antes de enviar
+        const dataInputValue = document.getElementById('edit-data-vencimento').value;
+        console.log('🔍 Data capturada do input:', dataInputValue);
+        
+        // Garantir que a data seja exatamente como digitada pelo usuário
+        let dataVencimentoCorrigida = dataInputValue;
+        if (dataInputValue) {
+          // Se a data tem formato YYYY-MM-DD, manter exatamente assim
+          const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+          if (dateRegex.test(dataInputValue)) {
+            dataVencimentoCorrigida = dataInputValue;
+            console.log('✅ Data mantida como digitada:', dataVencimentoCorrigida);
+          }
+        }
+
         const formData = {
           cliente_id: document.getElementById('edit-cliente').value,
           valor: this.parseMoeda(document.getElementById('edit-valor').value),
           juros_mensal: parseFloat(document.getElementById('edit-juros').value),
-          data_vencimento: document.getElementById('edit-data-vencimento').value,
+          data_vencimento: dataVencimentoCorrigida,
           frequencia_pagamento: document.getElementById('edit-frequencia').value,
           numero_parcelas: parseInt(document.getElementById('edit-parcelas').value),
           status: document.getElementById('edit-status').value,
           observacoes: document.getElementById('edit-observacoes').value
         };
+        
+        console.log('📤 Enviando dados para API:', formData);
         
         // Validações
         if (!formData.cliente_id) {
@@ -1214,8 +1231,10 @@ const emprestimoController = {
           
           // ✅ CORREÇÃO: Recarregar página completamente para garantir atualização
           console.log('🔄 Recarregando página para garantir atualização dos dados...');
+          console.log('💡 Se o problema persistir, pressione Ctrl+F5 para limpar o cache');
           setTimeout(() => {
-            window.location.reload();
+            // Forçar limpeza de cache do navegador
+            window.location.href = window.location.href + '?v=' + new Date().getTime();
           }, 1500);
           
         } catch (error) {
