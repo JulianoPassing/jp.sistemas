@@ -231,13 +231,11 @@ async function determinarStatusEmprestimo(emprestimo, connection) {
     
     if (parcelas.length > 0) {
       // Empréstimo parcelado - verificar status das parcelas
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      
+      const hojeStr = new Date().toISOString().slice(0, 10);
       const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
       const parcelasAtrasadas = parcelas.filter(p => {
-        const dataVenc = new Date(p.data_vencimento);
-        return dataVenc < hoje && p.status !== 'Paga';
+        // Comparar datas como string
+        return p.data_vencimento < hojeStr && p.status !== 'Paga';
       });
       
       if (parcelasPagas.length === parcelas.length) {
@@ -249,13 +247,10 @@ async function determinarStatusEmprestimo(emprestimo, connection) {
       }
     } else {
       // Empréstimo de valor único - verificar data de vencimento
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      const dataVencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento) : null;
-      
+      const hojeStr = new Date().toISOString().slice(0, 10);
       if (status === 'QUITADO') {
         // Manter status quitado
-      } else if (dataVencimento && dataVencimento < hoje) {
+      } else if (emprestimo.data_vencimento && emprestimo.data_vencimento < hojeStr) {
         status = 'ATRASADO';
       } else {
         status = 'ATIVO';
@@ -933,7 +928,7 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
         } else {
           // Para empréstimos de parcela única, usar data de vencimento
           console.log('   📄 Empréstimo de parcela única - comparando datas');
-          const hojeStr = new Date().toISOString().split('T')[0];
+          const hojeStr = new Date().toISOString().slice(0, 10);
           if (data_vencimento < hojeStr) {
             novoStatus = 'Em Atraso';
             console.log('   ⏰ Data vencida - Status: Em Atraso');
