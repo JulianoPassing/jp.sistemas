@@ -2890,7 +2890,7 @@ async function renderAtrasadosLista() {
         const diffTime = hoje.getTime() - dataVencimento.getTime();
         diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
       }
-      const vencimento = emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-';
+      const vencimento = emp.data_vencimento ? emprestimo.data_vencimento.split('-').reverse().join('/') : '-';
       tbody.innerHTML += `
         <tr>
           <td>${emp.cliente_nome || 'N/A'}</td>
