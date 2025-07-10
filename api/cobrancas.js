@@ -1768,10 +1768,13 @@ router.put('/emprestimos/:id/status', ensureDatabase, async (req, res) => {
     const { status } = req.body;
     const username = req.session.cobrancasUser;
     const connection = await createCobrancasConnection(username);
+    
+    // Atualizar status do empréstimo
     await connection.execute(
       'UPDATE emprestimos SET status = ? WHERE id = ?',
       [status, id]
     );
+    
     // Se status for 'Em Atraso', atualiza o valor da dívida (valor = valor + juros)
     if (status === 'Em Atraso') {
       // Busca valor e juros atuais
@@ -1784,14 +1787,31 @@ router.put('/emprestimos/:id/status', ensureDatabase, async (req, res) => {
         await connection.execute('UPDATE emprestimos SET valor = ? WHERE id = ?', [novoValor, id]);
       }
     }
-    // Se status for 'Quitado', marcar cobranças como 'Paga'
+    
+    // Se status for 'Quitado', marcar cobranças como 'Paga' E parcelas como 'Paga'
     if (status === 'Quitado') {
+      // Marcar cobranças como pagas
       await connection.execute('UPDATE cobrancas SET status = ? WHERE emprestimo_id = ?', ['Paga', id]);
+      
+      // Marcar todas as parcelas como pagas (se existirem)
+      const hoje = new Date().toISOString().split('T')[0];
+      await connection.execute(`
+        UPDATE parcelas 
+        SET status = 'Paga', 
+            data_pagamento = ?, 
+            valor_pago = COALESCE(valor_pago, valor_parcela),
+            updated_at = CURRENT_TIMESTAMP
+        WHERE emprestimo_id = ? AND status != 'Paga'
+      `, [hoje, id]);
+      
+      console.log(`Empréstimo ${id} marcado como quitado - todas as parcelas foram marcadas como pagas`);
     }
+    
     // Se status for 'Cancelado', marcar cobranças como 'Cancelada'
     if (status === 'Cancelado') {
       await connection.execute('UPDATE cobrancas SET status = ? WHERE emprestimo_id = ?', ['Cancelada', id]);
     }
+    
     await connection.end();
     res.json({ success: true });
   } catch (error) {
