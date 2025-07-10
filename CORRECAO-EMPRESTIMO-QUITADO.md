@@ -130,6 +130,20 @@ node scripts/test-emprestimo-quitado-fix.js
 node scripts/fix-emprestimos-quitados-inconsistentes.js
 ```
 
+### 3. Script de Teste para Parcela Única
+
+**Arquivo:** `scripts/test-parcela-unica-quitado.js`
+
+- Testa especificamente empréstimos de parcela única
+- Compara lógica antiga vs nova
+- Simula o comportamento do frontend
+- Identifica quantos empréstimos são afetados pela correção
+
+**Execução:**
+```bash
+node scripts/test-parcela-unica-quitado.js
+```
+
 ## Tipos de Empréstimos Afetados
 
 ### 1. Empréstimos de Valor Fixo
