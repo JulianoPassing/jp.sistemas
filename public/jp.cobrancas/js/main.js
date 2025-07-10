@@ -364,6 +364,8 @@ const dashboardController = {
       
       // Se precisar de valores específicos, usar os já calculados pela API
       const emprestimos = await apiService.getEmprestimos();
+      // LOG EXTRA: Mostrar valor de data_vencimento recebido da API
+      emprestimos.forEach(e => console.log(`[LOG API] Empréstimo ID ${e.id} - data_vencimento recebido:`, e.data_vencimento));
       let valorTotalReceber = 0;
       
       emprestimos.forEach(emprestimo => {
