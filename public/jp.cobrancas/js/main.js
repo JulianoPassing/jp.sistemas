@@ -366,7 +366,7 @@ const dashboardController = {
         const status = (emprestimo.status || '').toUpperCase();
         
         // Somar apenas empréstimos não quitados
-        if (status !== 'QUITADO') {
+        if (status.toUpperCase() !== 'QUITADO') {
           valorTotalReceber += valorFinal;
         }
       });
@@ -1299,7 +1299,7 @@ const emprestimoController = {
           }
         } else {
           // Para empréstimos de parcela única, usar lógica original
-          if (dataVencimento && dataVencimento < hoje && status !== 'QUITADO') {
+          if (dataVencimento && dataVencimento < hoje && status.toUpperCase() !== 'QUITADO') {
             status = 'Em Atraso';
           }
         }
@@ -1338,7 +1338,7 @@ const emprestimoController = {
         const detalhes = `
           <div class="emprestimo-modal-box" style="padding: 1.5rem; max-width: 420px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 2px 16px #002f4b22;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-              <span class="badge" style="background: ${status === 'Em Atraso' ? '#fbbf24' : status === 'QUITADO' ? '#10b981' : status === 'SÓ JUROS' ? '#6366f1' : '#002f4b'}; color: #fff; font-weight: 600; font-size: 1rem; padding: 0.4em 1em; border-radius: 8px; letter-spacing: 1px;">${status || '-'}</span>
+              <span class="badge" style="background: ${status === 'Em Atraso' ? '#fbbf24' : status.toUpperCase() === 'QUITADO' ? '#10b981' : status === 'SÓ JUROS' ? '#6366f1' : '#002f4b'}; color: #fff; font-weight: 600; font-size: 1rem; padding: 0.4em 1em; border-radius: 8px; letter-spacing: 1px;">${status || '-'}</span>
               <button class="btn" style="background: #10b981; color: #fff; font-weight: 600; border-radius: 8px; padding: 0.4em 1.2em; font-size: 1rem;" id="modal-btn-editar">Editar</button>
             </div>
             <div style="margin-bottom: 1.2rem;">
@@ -1684,7 +1684,7 @@ const clienteController = {
           } else {
             // Para empréstimos de parcela única
             const dataVenc = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
-            if (dataVenc && dataVenc < hoje && statusAtual !== 'QUITADO') {
+            if (dataVenc && dataVenc < hoje && statusAtual.toUpperCase() !== 'QUITADO') {
               statusAtual = 'Em Atraso';
             }
           }
@@ -1866,7 +1866,7 @@ async function renderHistoricoEmprestimos() {
       }).format(valorAtualizado);
       const data = emprestimo.data_emprestimo ? new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR') : '-';
       const vencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-';
-      const statusClass = status === 'Em Atraso' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : (status === 'QUITADO' ? 'info' : 'secondary')));
+              const statusClass = status === 'Em Atraso' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : (status.toUpperCase() === 'QUITADO' ? 'info' : 'secondary')));
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${emprestimo.cliente_nome || 'N/A'}</td>
