@@ -1212,10 +1212,11 @@ const emprestimoController = {
           modal.remove();
           ui.showNotification('Empréstimo atualizado com sucesso!', 'success');
           
-          // Recarregar dados
-          setTimeout(async () => {
-            await recarregarDadosPagina();
-          }, 1000);
+          // ✅ CORREÇÃO: Recarregar página completamente para garantir atualização
+          console.log('🔄 Recarregando página para garantir atualização dos dados...');
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
           
         } catch (error) {
           console.error('Erro ao atualizar empréstimo:', error);

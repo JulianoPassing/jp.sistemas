@@ -705,6 +705,8 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
     console.log('=== ATUALIZAR EMPRÉSTIMO ===');
     console.log('ID:', id);
     console.log('Dados recebidos:', req.body);
+    console.log('🔍 DEBUG - Data de vencimento recebida:', data_vencimento);
+    console.log('🔍 DEBUG - Status recebido:', status);
     
     // Validação dos dados obrigatórios
     if (!cliente_id || !valor || !data_vencimento || !numero_parcelas) {
@@ -889,6 +891,12 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
       const dataVencimento = new Date(data_vencimento);
       dataVencimento.setHours(0, 0, 0, 0);
       
+      console.log('📅 DEBUG - Recálculo de status:');
+      console.log('   Data hoje:', hoje.toISOString().split('T')[0]);
+      console.log('   Data vencimento:', dataVencimento.toISOString().split('T')[0]);
+      console.log('   Status atual:', status);
+      console.log('   É empréstimo parcelado?', numeroParcelasNum > 1);
+      
       let novoStatus = status; // Manter o status fornecido pelo usuário
       
       // Só recalcular se o status não foi explicitamente definido como 'Quitado'
@@ -915,23 +923,30 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
           }
         } else {
           // Para empréstimos de parcela única, usar data de vencimento
+          console.log('   📄 Empréstimo de parcela única - comparando datas');
           if (dataVencimento < hoje) {
             novoStatus = 'Em Atraso';
+            console.log('   ⏰ Data vencida - Status: Em Atraso');
           } else {
             novoStatus = 'Ativo';
+            console.log('   ✅ Data no futuro - Status: Ativo');
           }
         }
         
         // Atualizar status se foi recalculado
+        console.log('🔄 Comparando status:', { statusAnterior: status, novoStatus });
         if (novoStatus !== status) {
+          console.log('📝 Atualizando status no banco de dados...');
           await connection.execute(`
             UPDATE emprestimos 
             SET status = ?, updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
           `, [novoStatus, id]);
           
-          console.log(`Status do empréstimo ${id} recalculado: ${status} → ${novoStatus}`);
+          console.log(`✅ Status do empréstimo ${id} recalculado: ${status} → ${novoStatus}`);
           status = novoStatus; // Atualizar variável para resposta
+        } else {
+          console.log('✅ Status já está correto - nenhuma atualização necessária');
         }
       }
     } catch (statusError) {
