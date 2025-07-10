@@ -175,7 +175,13 @@ const utils = {
       const date = new Date(dateString);
       // Verificar se a data é válida
       if (isNaN(date.getTime())) return '';
-      return date.toISOString().split('T')[0];
+      
+      // ✅ CORREÇÃO: Evitar problema de fuso horário
+      // Usar componentes locais em vez de toISOString()
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     } catch (error) {
       console.error('Erro ao formatar data para input:', error);
       return '';

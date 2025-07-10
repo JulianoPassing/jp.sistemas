@@ -882,6 +882,63 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
       // Não interromper o processo se a atualização das cobranças falhar
     }
     
+    // ✅ CORREÇÃO: Recalcular status automaticamente quando data é alterada
+    try {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const dataVencimento = new Date(data_vencimento);
+      dataVencimento.setHours(0, 0, 0, 0);
+      
+      let novoStatus = status; // Manter o status fornecido pelo usuário
+      
+      // Só recalcular se o status não foi explicitamente definido como 'Quitado'
+      if (status !== 'Quitado') {
+        // Verificar se é empréstimo parcelado
+        if (numeroParcelasNum > 1) {
+          // Para empréstimos parcelados, verificar status das parcelas
+          const [parcelas] = await connection.execute(`
+            SELECT COUNT(*) as total,
+                   SUM(CASE WHEN status = 'Paga' THEN 1 ELSE 0 END) as pagas,
+                   SUM(CASE WHEN data_vencimento < CURDATE() AND status != 'Paga' THEN 1 ELSE 0 END) as atrasadas
+            FROM parcelas
+            WHERE emprestimo_id = ?
+          `, [id]);
+          
+          if (parcelas[0].total > 0) {
+            if (parcelas[0].pagas === parcelas[0].total) {
+              novoStatus = 'Quitado';
+            } else if (parcelas[0].atrasadas > 0) {
+              novoStatus = 'Em Atraso';
+            } else {
+              novoStatus = 'Ativo';
+            }
+          }
+        } else {
+          // Para empréstimos de parcela única, usar data de vencimento
+          if (dataVencimento < hoje) {
+            novoStatus = 'Em Atraso';
+          } else {
+            novoStatus = 'Ativo';
+          }
+        }
+        
+        // Atualizar status se foi recalculado
+        if (novoStatus !== status) {
+          await connection.execute(`
+            UPDATE emprestimos 
+            SET status = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+          `, [novoStatus, id]);
+          
+          console.log(`Status do empréstimo ${id} recalculado: ${status} → ${novoStatus}`);
+          status = novoStatus; // Atualizar variável para resposta
+        }
+      }
+    } catch (statusError) {
+      console.warn('Erro ao recalcular status:', statusError);
+      // Não interromper o processo se o recálculo falhar
+    }
+    
     await connection.end();
     res.json({ 
       message: 'Empréstimo atualizado com sucesso',
