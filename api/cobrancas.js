@@ -708,6 +708,9 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
     console.log('🔍 DEBUG - Data de vencimento recebida:', data_vencimento);
     console.log('🔍 DEBUG - Status recebido:', status);
     
+    // LOG EXTRA: Mostrar valor antes do update
+    console.log('🟡 LOG EXTRA: Valor de data_vencimento ANTES do update:', data_vencimento);
+    
     // Validação dos dados obrigatórios
     if (!cliente_id || !valor || !data_vencimento || !numero_parcelas) {
       console.log('Erro: Dados obrigatórios não informados');
@@ -831,6 +834,12 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
     console.log('Valores:', updateValues);
     
     await connection.execute(updateQuery, updateValues);
+    
+    // LOG EXTRA: Buscar valor salvo no banco após update
+    const [emprestimoAposUpdate] = await connection.execute('SELECT data_vencimento FROM emprestimos WHERE id = ?', [id]);
+    if (emprestimoAposUpdate.length > 0) {
+      console.log('🟢 LOG EXTRA: Valor de data_vencimento APÓS update:', emprestimoAposUpdate[0].data_vencimento);
+    }
     
           // Se o número de parcelas mudou, atualizar as parcelas
       if (numeroParcelasNum !== emprestimoAtual.numero_parcelas) {
