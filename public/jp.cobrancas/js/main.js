@@ -722,7 +722,12 @@ const app = {
         document.getElementById('emprestimos-ativos').textContent = data.emprestimosAtivos || 0;
       }
       if (document.getElementById('emprestimos-atraso')) {
-        document.getElementById('emprestimos-atraso').textContent = data.emprestimosEmAtraso || 0;
+        const emprestimos = await apiService.getEmprestimos();
+        const emAtraso = (emprestimos || []).filter(e => {
+          const status = (e.status || '').toUpperCase();
+          return status === 'ATRASADO' || status === 'EM ATRASO';
+        }).length;
+        document.getElementById('emprestimos-atraso').textContent = emAtraso;
       }
       
       // Card de valor total
