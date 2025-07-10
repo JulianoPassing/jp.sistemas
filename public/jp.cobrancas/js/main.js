@@ -1878,13 +1878,7 @@ async function renderEmprestimosLista() {
     for (const emprestimo of ativos) {
       // Usar valores já calculados pela API
       const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
-      // Exibir status exatamente como vem da API, formatando igual ao emprestimos.html
-      const statusRaw = (emprestimo.status || '');
-      const status = statusRaw.charAt(0).toUpperCase() + statusRaw.slice(1).toLowerCase();
-      let statusClass = 'secondary';
-      if (statusRaw.toUpperCase() === 'ATRASADO' || statusRaw.toUpperCase() === 'EM ATRASO') statusClass = 'danger';
-      else if (statusRaw.toUpperCase() === 'PENDENTE' || statusRaw.toUpperCase() === 'ATIVO') statusClass = 'warning';
-      else if (statusRaw.toUpperCase() === 'QUITADO') statusClass = 'info';
+      const status = (emprestimo.status || '').toUpperCase();
       const valorAtualizado = valorFinal;
       const infoJuros = ''; // Removido cálculo local de juros
       const valor = new Intl.NumberFormat('pt-BR', {
@@ -1892,6 +1886,7 @@ async function renderEmprestimosLista() {
         currency: 'BRL'
       }).format(valorAtualizado);
       const data = new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR');
+      const statusClass = status === 'Em Atraso' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : 'info'));
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${emprestimo.cliente_nome || 'N/A'}</td>
@@ -2107,10 +2102,11 @@ async function renderCobrancasEmAbertoLista() {
       // Variáveis para vencimento e valor corretos
       let valorACobrar = emp.valor || 0;
       let vencimentoACobrar = emp.data_vencimento;
-      let statusOriginal = (emp.status || '').toLowerCase();
+      let badge = '';
+      let status = (emp.status || '').toLowerCase();
       
       // Verificar se tem parcelas e determinar status real
-      let statusReal = statusOriginal;
+      let statusReal = status;
       let proximaParcela = null;
       
       try {
@@ -2178,14 +2174,16 @@ async function renderCobrancasEmAbertoLista() {
       const valor = utils.formatCurrency(valorACobrar);
       const vencimento = vencimentoACobrar ? utils.formatDate(vencimentoACobrar) : '-';
       
-      // Exibir status exatamente como vem da API, formatando igual ao emprestimos.html
-      const statusRaw = (emp.status || '');
-      const status = statusRaw.charAt(0).toUpperCase() + statusRaw.slice(1).toLowerCase();
-      let statusClass = 'secondary';
-      if (statusRaw.toUpperCase() === 'ATRASADO' || statusRaw.toUpperCase() === 'EM ATRASO') statusClass = 'danger';
-      else if (statusRaw.toUpperCase() === 'PENDENTE' || statusRaw.toUpperCase() === 'ATIVO') statusClass = 'warning';
-      else if (statusRaw.toUpperCase() === 'QUITADO') statusClass = 'info';
-      const badge = `<span class="badge badge-${statusClass}">${status}</span>`;
+      // Criar badge baseado no status real
+      if (statusReal === 'quitado') {
+        badge = '<span class="badge" style="background:#10b981;color:#fff;">Quitado</span>';
+      } else if (statusReal === 'atrasado' || statusReal === 'em atraso') {
+        badge = '<span class="badge" style="background:#ef4444;color:#fff;">Em Atraso</span>';
+      } else if (statusReal === 'em_dia' || statusReal === 'ativo' || statusReal === 'pendente') {
+        badge = '<span class="badge" style="background:#6366f1;color:#fff;">Em Dia</span>';
+      } else {
+        badge = `<span class="badge" style="background:#888;color:#fff;">${emp.status || '-'}</span>`;
+      }
       
       // Adicionar linha à array
       linhasTabela.push(`
@@ -2823,17 +2821,14 @@ async function renderAtrasadosLista() {
         const diffTime = hoje.getTime() - dataVencimento.getTime();
         diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
       }
-      // Exibir status exatamente como vem da API, formatando igual ao emprestimos.html
-      const statusRaw = (emp.status || '');
-      const status = statusRaw.charAt(0).toUpperCase() + statusRaw.slice(1).toLowerCase();
-      const vencimento = emp.data_vencimento ? emp.data_vencimento.split('-').reverse().join('/') : '-';
+      const vencimento = emp.data_vencimento ? emprestimo.data_vencimento.split('-').reverse().join('/') : '-';
       tbody.innerHTML += `
         <tr>
           <td>${emp.cliente_nome || 'N/A'}</td>
           <td>${valor}</td>
           <td>${vencimento}</td>
           <td>${diasAtraso > 0 ? diasAtraso : '-'}</td>
-          <td><span class="badge badge-danger">${status}</span></td>
+          <td><span class="badge badge-danger">ATRASADO</span></td>
           <td><button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button></td>
         </tr>
       `;
