@@ -61,14 +61,7 @@
               >
             </div>
             <div style="display: flex; gap: 0.5rem;">
-              <select id="filter-status-clientes" class="form-input" style="min-width: 120px;">
-                <option value="">Todos os Status</option>
-                <option value="Ativo">Ativo</option>
-                <option value="Em Atraso">Em Atraso</option>
-                <option value="Lista Negra">Lista Negra</option>
-                <option value="Inativo">Inativo</option>
-              </select>
-              <button id="clear-search-clientes" class="btn btn-secondary" style="white-space: nowrap;">Limpar</button>
+              <!-- Filtro de status removido -->
             </div>
           </div>
           <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">
@@ -124,8 +117,6 @@
       
       // Funcionalidade de busca
       const searchInput = document.getElementById('search-clientes');
-      const filterStatus = document.getElementById('filter-status-clientes');
-      const clearSearchBtn = document.getElementById('clear-search-clientes');
       const searchResultsInfo = document.getElementById('search-results-info-clientes');
       
       let allClientes = []; // Armazenar todos os clientes
@@ -133,28 +124,22 @@
       
       // Função para aplicar filtros
       function applyFilters() {
-        if (!searchInput || !filterStatus || !allClientes || allClientes.length === 0) {
+        if (!searchInput || !allClientes || allClientes.length === 0) {
           console.log('⚠️ Filtros não aplicados - dados não disponíveis');
           return;
         }
         
         const searchTerm = searchInput.value.toLowerCase().trim();
-        const statusFilter = filterStatus.value;
         
         filteredClientes = allClientes.filter(cliente => {
           // Filtro por termo de busca
-          const matchesSearch = !searchTerm || 
+          return !searchTerm || 
             (cliente.nome && cliente.nome.toLowerCase().includes(searchTerm)) ||
             (cliente.cpf_cnpj && cliente.cpf_cnpj.toLowerCase().includes(searchTerm)) ||
             (cliente.telefone && cliente.telefone.includes(searchTerm)) ||
             (cliente.email && cliente.email.toLowerCase().includes(searchTerm)) ||
             (cliente.cidade && cliente.cidade.toLowerCase().includes(searchTerm)) ||
             (cliente.estado && cliente.estado.toLowerCase().includes(searchTerm));
-          
-          // Filtro por status
-          const matchesStatus = !statusFilter || cliente.status === statusFilter;
-          
-          return matchesSearch && matchesStatus;
         });
         
         console.log(`🔍 Filtros aplicados: ${filteredClientes.length} de ${allClientes.length}`);
@@ -225,7 +210,6 @@
       // Função para limpar busca
       function clearSearch() {
         if (searchInput) searchInput.value = '';
-        if (filterStatus) filterStatus.value = '';
         filteredClientes = [...allClientes];
         renderFilteredClientes();
         updateSearchResultsInfo();
@@ -234,12 +218,6 @@
       // Event listeners
       if (searchInput) {
         searchInput.addEventListener('input', applyFilters);
-      }
-      if (filterStatus) {
-        filterStatus.addEventListener('change', applyFilters);
-      }
-      if (clearSearchBtn) {
-        clearSearchBtn.addEventListener('click', clearSearch);
       }
       
       // Sobrescrever a função renderClientesLista para incluir busca
