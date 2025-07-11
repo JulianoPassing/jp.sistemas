@@ -582,7 +582,7 @@ const dashboardController = {
       console.error('Erro ao carregar cobranças pendentes:', error);
       tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
     }
-  }
+  },
 
 // Mobile Menu Controller
 const mobileMenuController = {
