@@ -2821,52 +2821,84 @@ function renderCobrancasResumo(lista, targetId) {
 async function renderAtrasadosLista() {
   const tbody = document.getElementById('atrasados-lista');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="6">Carregando...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7">Carregando...</td></tr>';
+  
   try {
     const emprestimos = await apiService.getEmprestimos();
     const hoje = new Date();
     hoje.setHours(0,0,0,0);
     
-    // ✅ CORREÇÃO: Usar status padronizado da API
-    const atrasados = emprestimos.filter(e => {
-      const status = (e.status || '').toUpperCase();
-      return status === 'Em Atraso';
+    // Filtrar todos os empréstimos atrasados (baseado na data de vencimento)
+    const atrasados = emprestimos.filter(emp => {
+      // Verificar se tem data de vencimento e se está vencida
+      if (!emp.data_vencimento) return false;
+      
+      const dataVencimento = new Date(emp.data_vencimento);
+      dataVencimento.setHours(0,0,0,0);
+      
+      // Considerar atrasado se a data de vencimento é anterior a hoje
+      return dataVencimento < hoje;
     });
+    
     if (atrasados.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum empréstimo atrasado</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo atrasado</td></tr>';
       return;
     }
+    
+    // Ordenar por data de vencimento (mais antigo primeiro)
+    atrasados.sort((a, b) => {
+      const dataA = new Date(a.data_vencimento);
+      const dataB = new Date(b.data_vencimento);
+      return dataA - dataB;
+    });
+    
     tbody.innerHTML = '';
+    
     atrasados.forEach(emp => {
-      // ✅ CORREÇÃO: Usar valores padronizados da API
       const valorFinal = Number(emp.valor_final || emp.valor || 0);
-      const valor = new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(valorFinal);
+      const dataEmprestimo = emp.data_emprestimo ? new Date(emp.data_emprestimo).toLocaleDateString('pt-BR') : '-';
+      const vencimento = emp.data_vencimento ? new Date(emp.data_vencimento).toLocaleDateString('pt-BR') : '-';
       
-      // Calcular dias de atraso apenas para exibição
-      const dataVencimento = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
+      // Calcular dias de atraso
       let diasAtraso = 0;
-      if (dataVencimento && dataVencimento < hoje) {
+      if (emp.data_vencimento) {
+        const dataVencimento = new Date(emp.data_vencimento);
+        dataVencimento.setHours(0,0,0,0);
         const diffTime = hoje.getTime() - dataVencimento.getTime();
         diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
       }
-      const vencimento = emp.data_vencimento ? emprestimo.data_vencimento.split('-').reverse().join('/') : '-';
-      tbody.innerHTML += `
-        <tr>
-          <td>${emp.cliente_nome || 'N/A'}</td>
-          <td>${valor}</td>
-          <td>${vencimento}</td>
-          <td>${diasAtraso > 0 ? diasAtraso : '-'}</td>
-          <td><span class="badge badge-danger">ATRASADO</span></td>
-          <td><button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button></td>
-        </tr>
+      
+      // Formatar status
+      let status = (emp.status || '').toUpperCase();
+      if (diasAtraso > 0) {
+        status = 'ATRASADO';
+      }
+      
+      let statusClass = 'danger';
+      if (status === 'ATRASADO') statusClass = 'danger';
+      else if (status === 'PENDENTE' || status === 'ATIVO') statusClass = 'warning';
+      else if (status === 'QUITADO') statusClass = 'info';
+      
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${emp.cliente_nome || 'N/A'}</td>
+        <td>${valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+        <td>${dataEmprestimo}</td>
+        <td>${vencimento}</td>
+        <td>${diasAtraso > 0 ? diasAtraso : '-'}</td>
+        <td><span class="badge badge-${statusClass}">${status.charAt(0) + status.slice(1).toLowerCase()}</span></td>
+        <td>
+          <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
+        </td>
       `;
+      tbody.appendChild(row);
     });
+    
+    console.log(`✅ Renderizados ${atrasados.length} empréstimos atrasados`);
+    
   } catch (error) {
     console.error('Erro ao carregar atrasados:', error);
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar atrasados</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-500">Erro ao carregar atrasados</td></tr>';
   }
 }
 
