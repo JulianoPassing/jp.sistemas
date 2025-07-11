@@ -535,8 +535,8 @@ const dashboardController = {
       if (isQuitadoA && !isQuitadoB) return 1;
       if (!isQuitadoA && isQuitadoB) return -1;
       // Ambos quitados ou ambos não quitados: ordenar por data de vencimento
-      const dataA = new Date(a.data_emprestimo || 0);
-      const dataB = new Date(b.data_emprestimo || 0);
+      const dataA = new Date(a.data_vencimento || 0);
+      const dataB = new Date(b.data_vencimento || 0);
       return dataA - dataB;
     });
 
