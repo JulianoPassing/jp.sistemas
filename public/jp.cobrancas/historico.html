@@ -402,11 +402,12 @@
             const element = document.getElementById(id);
             if (element) {
               if (id === 'valor-receber' || id === 'total-investido') {
-                // Formatar como moeda
+                // Garantir que o valor seja sempre um número válido
+                const safeValue = Number(value);
                 const formattedValue = new Intl.NumberFormat('pt-BR', {
                   style: 'currency',
                   currency: 'BRL'
-                }).format(value || 0);
+                }).format(isNaN(safeValue) ? 0 : safeValue);
                 element.textContent = formattedValue;
               } else {
                 // Animar números
@@ -455,10 +456,11 @@
               const element = document.getElementById(id);
               if (element) {
                 if (id === 'valor-receber' || id === 'total-investido') {
+                  const safeValue = Number(value);
                   const formattedValue = new Intl.NumberFormat('pt-BR', {
                     style: 'currency',
                     currency: 'BRL'
-                  }).format(value || 0);
+                  }).format(isNaN(safeValue) ? 0 : safeValue);
                   element.textContent = formattedValue;
                 } else {
                   element.textContent = value || 0;
