@@ -346,18 +346,77 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Estatísticas de cobranças - Query corrigida
+      // Estatísticas de cobranças - Query corrigida para calcular valor a receber
       console.log('Dashboard: Buscando estatísticas de cobranças');
-      [cobrancasStats] = await connection.execute(`
-        SELECT 
-          COUNT(*) as total_cobrancas,
-          COALESCE(SUM(valor_atualizado), 0) as valor_total_cobrancas,
-          COUNT(CASE WHEN TRIM(UPPER(status)) = 'PENDENTE' THEN 1 END) as cobrancas_pendentes,
-          COUNT(CASE WHEN TRIM(UPPER(status)) = 'PAGA' THEN 1 END) as cobrancas_pagas,
-          COALESCE(SUM(CASE WHEN dias_atraso > 0 THEN valor_atualizado ELSE 0 END), 0) as valor_atrasado
-        FROM cobrancas
-        WHERE cliente_id IS NOT NULL
-      `);
+      
+              // Primeiro, tentar calcular baseado em parcelas (sistema mais preciso)
+        try {
+          // Calcular valor a receber baseado em parcelas pendentes + empréstimos de valor fixo pendentes
+          const [parcelasStats] = await connection.execute(`
+            SELECT 
+              COALESCE(SUM(
+                CASE 
+                  WHEN p.status IN ('Pendente', 'Atrasada') THEN p.valor_parcela
+                  ELSE 0 
+                END
+              ), 0) as valor_parcelas_pendentes,
+              COUNT(CASE WHEN p.status IN ('Pendente', 'Atrasada') THEN 1 END) as parcelas_pendentes,
+              COUNT(CASE WHEN p.status = 'Paga' THEN 1 END) as parcelas_pagas
+            FROM parcelas p
+            JOIN emprestimos e ON p.emprestimo_id = e.id
+            WHERE e.status IN ('Ativo', 'Pendente')
+          `);
+          
+          // Calcular valor a receber de empréstimos de valor fixo (sem parcelas)
+          const [valorFixoStats] = await connection.execute(`
+            SELECT 
+              COALESCE(SUM(
+                CASE 
+                  WHEN e.status IN ('Ativo', 'Pendente') 
+                    AND NOT EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id)
+                    AND e.data_vencimento >= CURDATE()
+                  THEN 
+                    CASE 
+                      WHEN e.tipo_emprestimo = 'in_installments' AND e.valor_parcela > 0 AND e.numero_parcelas > 0
+                        THEN (e.valor_parcela * e.numero_parcelas)
+                      WHEN e.valor > 0 AND e.juros_mensal > 0 
+                        THEN e.valor * (1 + (e.juros_mensal / 100))
+                      ELSE COALESCE(e.valor, 0)
+                    END
+                  ELSE 0 
+                END
+              ), 0) as valor_fixo_pendente
+            FROM emprestimos e
+            WHERE e.status IN ('Ativo', 'Pendente')
+          `);
+          
+          // Combinar os resultados
+          cobrancasStats = [{
+            total_cobrancas: parcelasStats[0].parcelas_pendentes + parcelasStats[0].parcelas_pagas,
+            valor_total_cobrancas: parcelasStats[0].valor_parcelas_pendentes + valorFixoStats[0].valor_fixo_pendente,
+            cobrancas_pendentes: parcelasStats[0].parcelas_pendentes,
+            cobrancas_pagas: parcelasStats[0].parcelas_pagas,
+            valor_atrasado: 0 // Será calculado separadamente se necessário
+          }];
+          
+          console.log('Dashboard: Estatísticas baseadas em parcelas + valor fixo:', cobrancasStats[0]);
+          console.log('Dashboard: Valor parcelas pendentes:', parcelasStats[0].valor_parcelas_pendentes);
+          console.log('Dashboard: Valor fixo pendente:', valorFixoStats[0].valor_fixo_pendente);
+          console.log('Dashboard: Total valor a receber:', cobrancasStats[0].valor_total_cobrancas);
+        } catch (parcelasError) {
+        // Fallback para cobranças se não há parcelas
+        console.log('Dashboard: Usando fallback para cobranças:', parcelasError.message);
+        [cobrancasStats] = await connection.execute(`
+          SELECT 
+            COUNT(*) as total_cobrancas,
+            COALESCE(SUM(valor_atualizado), 0) as valor_total_cobrancas,
+            COUNT(CASE WHEN TRIM(UPPER(status)) = 'PENDENTE' THEN 1 END) as cobrancas_pendentes,
+            COUNT(CASE WHEN TRIM(UPPER(status)) = 'PAGA' THEN 1 END) as cobrancas_pagas,
+            COALESCE(SUM(CASE WHEN dias_atraso > 0 THEN valor_atualizado ELSE 0 END), 0) as valor_atrasado
+          FROM cobrancas
+          WHERE cliente_id IS NOT NULL
+        `);
+      }
       console.log('Dashboard: Estatísticas de cobranças obtidas:', cobrancasStats[0]);
     } catch (error) {
       console.log('Dashboard: Erro ao buscar estatísticas de cobranças:', error.message);
