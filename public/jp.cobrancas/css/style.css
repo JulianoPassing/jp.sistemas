@@ -271,6 +271,12 @@ main {
   color: var(--terciary);
 }
 
+.section-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 /* Botões */
 .btn {
   display: inline-flex;
@@ -757,6 +763,16 @@ footer {
     flex-direction: column;
     gap: 1rem;
     align-items: flex-start;
+  }
+  
+  .section-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
+  }
+  
+  .section-actions .btn {
+    width: 100%;
   }
   
   .table-container {
