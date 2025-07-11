@@ -1874,17 +1874,18 @@ async function renderEmprestimosLista() {
     }
     tbody.innerHTML = '';
     
-    // ✅ CORREÇÃO: Usar valores e status já padronizados pela API
+    // Eliminar duplicatas por ID
+    const emprestimosUnicos = new Map();
     for (const emprestimo of ativos) {
+      if (emprestimosUnicos.has(emprestimo.id)) continue;
+      emprestimosUnicos.set(emprestimo.id, true);
       // Usar valores já calculados pela API
       const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
       let status = (emprestimo.status || '').toUpperCase();
       // Forçar status ATRASADO se data_vencimento < hoje (corrigido para comparar formato ISO)
       if (emprestimo.data_vencimento) {
-        // Converter data_vencimento para YYYY-MM-DD se vier em outro formato
         let vencISO = emprestimo.data_vencimento;
         if (/\d{2}\/\d{2}\/\d{4}/.test(vencISO)) {
-          // Se vier como DD/MM/YYYY, converter para YYYY-MM-DD
           const [dia, mes, ano] = vencISO.split('/');
           vencISO = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
         }
