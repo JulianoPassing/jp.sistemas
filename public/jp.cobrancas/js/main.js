@@ -528,12 +528,17 @@ const dashboardController = {
         return;
       }
 
-      // Ordenar por data de empréstimo (mais antigo primeiro)
+      // Ordenar por status (quitados no final) e data de vencimento (mais antigo primeiro)
       emprestimos.sort((a, b) => {
-        const dataA = new Date(a.data_vencimento || 0);
-        const dataB = new Date(b.data_vencimento || 0);
-        return dataA - dataB;
-      });
+      const isQuitadoA = (a.status || '').toUpperCase() === 'QUITADO';
+      const isQuitadoB = (b.status || '').toUpperCase() === 'QUITADO';
+      if (isQuitadoA && !isQuitadoB) return 1;
+      if (!isQuitadoA && isQuitadoB) return -1;
+      // Ambos quitados ou ambos não quitados: ordenar por data de vencimento
+      const dataA = new Date(a.data_emprestimo || 0);
+      const dataB = new Date(b.data_emprestimo || 0);
+      return dataA - dataB;
+    });
 
       emprestimos.forEach(emprestimo => {
         const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
