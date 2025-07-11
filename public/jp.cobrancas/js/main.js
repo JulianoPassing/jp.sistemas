@@ -687,7 +687,7 @@ const app = {
     // Página de cobranças
     if (path.includes('cobrancas.html')) {
       try {
-        await renderCobrancasEmAbertoLista();
+        await dashboardController.updateCobrancasPendentes();
       } catch (error) {
         console.error('Erro ao carregar cobranças:', error);
       }
@@ -2246,8 +2246,8 @@ async function recarregarDadosPagina() {
     console.log('Recarregando dados da página...');
     
     // Recarregar lista de cobranças se estiver na página de cobranças
-    if (document.getElementById('cobrancas-lista')) {
-      await renderCobrancasEmAbertoLista();
+    if (document.getElementById('cobrancas-pendentes')) {
+      await dashboardController.updateCobrancasPendentes();
     }
     
     // Recarregar histórico de empréstimos se estiver na página de emprestimos
