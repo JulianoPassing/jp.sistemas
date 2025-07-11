@@ -530,8 +530,8 @@ const dashboardController = {
 
       // Ordenar por data de empréstimo (mais antigo primeiro)
       emprestimos.sort((a, b) => {
-        const dataA = new Date(a.data_emprestimo || 0);
-        const dataB = new Date(b.data_emprestimo || 0);
+        const dataA = new Date(a.data_vencimento || 0);
+        const dataB = new Date(b.data_vencimento || 0);
         return dataA - dataB;
       });
 
