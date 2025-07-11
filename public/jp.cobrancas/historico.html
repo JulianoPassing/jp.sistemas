@@ -44,31 +44,31 @@
         </div>
       </div>
 
-      <!-- Resumo Estatístico -->
+      <!-- Cards de Estatísticas -->
       <div class="cards">
         <div class="card fade-in">
           <div class="card-header">
-            <div class="card-title">Total de Empréstimos</div>
+            <div class="card-title">Total Investido</div>
           </div>
-          <div class="card-value" id="total-emprestimos">0</div>
-        </div>
-        <div class="card fade-in">
-          <div class="card-header">
-            <div class="card-title">Empréstimos Quitados</div>
-          </div>
-          <div class="card-value" id="emprestimos-quitados">0</div>
+          <div class="card-value" id="total-investido">R$ 0,00</div>
         </div>
         <div class="card fade-in">
           <div class="card-header">
             <div class="card-title">Empréstimos Ativos</div>
           </div>
-          <div class="card-value" id="emprestimos-ativos">0</div>
+          <div class="card-value" id="total-emprestimos">0</div>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Valor a Receber</div>
+          </div>
+          <div class="card-value" id="valor-receber">R$ 0,00</div>
         </div>
         <div class="card fade-in">
           <div class="card-header">
             <div class="card-title">Empréstimos em Atraso</div>
           </div>
-          <div class="card-value"   id="emprestimos-atraso">0</div>
+          <div class="card-value" id="emprestimos-atraso">0</div>
         </div>
       </div>
 
@@ -371,7 +371,7 @@
       }
     }
 
-    // Função para carregar estatísticas
+    // Função para carregar estatísticas do dashboard
     async function carregarEstatisticas() {
       try {
         // Primeiro, tentar corrigir inconsistências no backend
@@ -382,16 +382,54 @@
           // Se falhar, não bloquear o carregamento das estatísticas
         });
 
-        const response = await fetch('/api/cobrancas/historico-emprestimos/estatisticas', {
+        const response = await fetch('/api/cobrancas/dashboard', {
           credentials: 'include'
         });
 
         if (response.ok) {
           const data = await response.json();
-          document.getElementById('total-emprestimos').textContent = data.geral?.total_emprestimos || 0;
-          document.getElementById('emprestimos-quitados').textContent = data.status?.emprestimos_quitados || 0;
-          document.getElementById('emprestimos-ativos').textContent = data.status?.emprestimos_ativos || 0;
-          document.getElementById('emprestimos-atraso').textContent = data.status?.emprestimos_atraso || 0;
+          console.log('📊 Dados do dashboard recebidos:', data);
+          
+          // Atualizar cards com os mesmos dados do dashboard
+          const cards = {
+            'total-investido': data.emprestimos?.valor_total_emprestimos || 0,
+            'total-emprestimos': data.emprestimosAtivos || 0,
+            'valor-receber': data.cobrancas?.valor_total_cobrancas || 0,
+            'emprestimos-atraso': data.emprestimosEmAtraso || 0
+          };
+
+          Object.entries(cards).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) {
+              if (id === 'valor-receber' || id === 'total-investido') {
+                // Formatar como moeda
+                const formattedValue = new Intl.NumberFormat('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL'
+                }).format(value || 0);
+                element.textContent = formattedValue;
+              } else {
+                // Animar números
+                const startValue = parseInt(element.textContent) || 0;
+                const duration = 1000;
+                const startTime = performance.now();
+                
+                function animateNumber(currentTime) {
+                  const elapsed = currentTime - startTime;
+                  const progress = Math.min(elapsed / duration, 1);
+                  
+                  const currentValue = Math.floor(startValue + (value - startValue) * progress);
+                  element.textContent = currentValue;
+                  
+                  if (progress < 1) {
+                    requestAnimationFrame(animateNumber);
+                  }
+                }
+                
+                requestAnimationFrame(animateNumber);
+              }
+            }
+          });
         }
       } catch (error) {
         console.error('Erro ao carregar estatísticas:', error);
@@ -403,10 +441,30 @@
 
           if (fallbackResponse.ok) {
             const fallbackData = await fallbackResponse.json();
-            document.getElementById('total-emprestimos').textContent = fallbackData.emprestimos?.total_emprestimos || 0;
-            document.getElementById('emprestimos-quitados').textContent = fallbackData.emprestimos?.emprestimos_quitados || 0;
-            document.getElementById('emprestimos-ativos').textContent = fallbackData.emprestimosAtivos || 0;
-            document.getElementById('emprestimos-atraso').textContent = fallbackData.emprestimosEmAtraso || 0;
+            console.log('📊 Dados do dashboard (fallback):', fallbackData);
+            
+            // Atualizar cards com os mesmos dados do dashboard (fallback)
+            const cards = {
+              'total-investido': fallbackData.emprestimos?.valor_total_emprestimos || 0,
+              'total-emprestimos': fallbackData.emprestimosAtivos || 0,
+              'valor-receber': fallbackData.cobrancas?.valor_total_cobrancas || 0,
+              'emprestimos-atraso': fallbackData.emprestimosEmAtraso || 0
+            };
+
+            Object.entries(cards).forEach(([id, value]) => {
+              const element = document.getElementById(id);
+              if (element) {
+                if (id === 'valor-receber' || id === 'total-investido') {
+                  const formattedValue = new Intl.NumberFormat('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                  }).format(value || 0);
+                  element.textContent = formattedValue;
+                } else {
+                  element.textContent = value || 0;
+                }
+              }
+            });
           }
         } catch (fallbackError) {
           console.error('Erro ao carregar estatísticas do fallback:', fallbackError);
