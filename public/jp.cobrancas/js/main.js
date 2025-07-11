@@ -516,68 +516,73 @@ const dashboardController = {
   async updateCobrancasPendentes() {
     const tbody = document.getElementById('cobrancas-pendentes');
     if (!tbody) return;
-
     tbody.innerHTML = '';
-
     try {
-      // ✅ MODIFICAÇÃO: Buscar todos os empréstimos em vez de usar parâmetro cobranças
       const emprestimos = await apiService.getEmprestimos();
-      const hoje = new Date();
-      hoje.setHours(0,0,0,0);
-
-      // Filtrar empréstimos em aberto (ATIVO, PENDENTE, ATRASADO)
-      const emprestimosParaExibir = emprestimos.filter(e => {
-        const status = (e.status || '').toUpperCase();
-        return status === 'ATIVO' || status === 'PENDENTE' || status === 'ATRASADO' || status === 'EM ATRASO';
+      // Eliminar duplicatas por ID
+      const emprestimosUnicos = new Map();
+      for (const emp of emprestimos) {
+        if (emprestimosUnicos.has(emp.id)) continue;
+        emprestimosUnicos.set(emp.id, true);
+      }
+      // Aplicar lógica de status ATRASADO e padronizar campos
+      const lista = Array.from(emprestimosUnicos.keys()).map(id => {
+        const e = emprestimos.find(x => x.id === id);
+        const valorFinal = Number(e.valor_final || e.valor || 0);
+        const valorInicial = Number(e.valor_inicial || e.valor || 0);
+        let status = (e.status || '').toUpperCase();
+        if (e.data_vencimento) {
+          let vencISO = e.data_vencimento;
+          if (/\d{2}\/\d{2}\/\d{4}/.test(vencISO)) {
+            const [dia, mes, ano] = vencISO.split('/');
+            vencISO = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+          }
+          const hojeStr = new Date().toISOString().slice(0, 10);
+          if (vencISO < hojeStr && status !== 'QUITADO') {
+            status = 'ATRASADO';
+          }
+        }
+        return {
+          ...e,
+          valorFinal,
+          valorInicial,
+          status,
+        };
       });
-
+      // Filtrar apenas em aberto (ATIVO, PENDENTE, ATRASADO)
+      const abertos = lista.filter(e => ['ATIVO','PENDENTE','ATRASADO'].includes(e.status));
       // Ordenar por data de vencimento (mais antigo primeiro)
-      emprestimosParaExibir.sort((a, b) => {
-        return (a.data_vencimento < b.data_vencimento) ? -1 : (a.data_vencimento > b.data_vencimento) ? 1 : 0;
-      });
-
-      if (emprestimosParaExibir.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhuma cobrança pendente</td></tr>';
+      abertos.sort((a, b) => (a.data_vencimento < b.data_vencimento ? -1 : (a.data_vencimento > b.data_vencimento ? 1 : 0)));
+      if (abertos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo em aberto</td></tr>';
         return;
       }
-
-      emprestimosParaExibir.forEach(emprestimo => {
-        const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
-        const vencimento = emprestimo.data_vencimento ? emprestimo.data_vencimento.split('-').reverse().join('/') : '-';
-        const hojeStr = new Date().toISOString().slice(0, 10);
-        let diasAtraso = 0;
-        if (emprestimo.data_vencimento && emprestimo.data_vencimento < hojeStr) {
-          const hoje = new Date();
-          const venc = new Date(emprestimo.data_vencimento);
-          diasAtraso = Math.ceil((hoje - venc) / (1000 * 60 * 60 * 24));
-        }
-        // Exibir status exatamente como vem da API, formatando igual ao emprestimos.html
-        const statusRaw = (emprestimo.status || '');
-        const status = statusRaw.charAt(0).toUpperCase() + statusRaw.slice(1).toLowerCase();
+      abertos.forEach(emprestimo => {
+        const valorFinalFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(emprestimo.valorFinal);
+        const valorInicialFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(emprestimo.valorInicial);
+        const vencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-';
         let statusClass = 'secondary';
-        if (statusRaw.toUpperCase() === 'ATRASADO' || statusRaw.toUpperCase() === 'EM ATRASO') statusClass = 'danger';
-        else if (statusRaw.toUpperCase() === 'PENDENTE' || statusRaw.toUpperCase() === 'ATIVO') statusClass = 'warning';
-        else if (statusRaw.toUpperCase() === 'QUITADO') statusClass = 'info';
+        if (emprestimo.status === 'ATRASADO') statusClass = 'danger';
+        else if (emprestimo.status === 'PENDENTE' || emprestimo.status === 'ATIVO') statusClass = 'warning';
+        else if (emprestimo.status === 'QUITADO') statusClass = 'info';
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${emprestimo.cliente_nome || 'N/A'}</td>
-          <td>${valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+          <td>${valorInicialFormatado}</td>
+          <td>${valorFinalFormatado}</td>
           <td>${vencimento}</td>
-          <td>${diasAtraso > 0 ? diasAtraso : '-'}</td>
-          <td><span class="badge badge-${statusClass}">${status}</span></td>
+          <td><span class="badge badge-${statusClass}">${emprestimo.status.charAt(0) + emprestimo.status.slice(1).toLowerCase()}</span></td>
           <td>
             <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
           </td>
         `;
         tbody.appendChild(row);
       });
-      
     } catch (error) {
       console.error('Erro ao carregar cobranças pendentes:', error);
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar cobranças</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
     }
   }
-};
 
 // Mobile Menu Controller
 const mobileMenuController = {
