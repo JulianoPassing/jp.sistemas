@@ -474,6 +474,28 @@
       }
     }
 
+    // Função para buscar valor a receber do dashboard
+    async function buscarValorReceberDashboard() {
+      try {
+        const response = await fetch('/api/cobrancas/dashboard', { credentials: 'include' });
+        if (response.ok) {
+          const data = await response.json();
+          const safeValue = Number(data.cobrancas?.valor_total_cobrancas);
+          const formattedValue = new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+          }).format(isNaN(safeValue) ? 0 : safeValue);
+          const element = document.getElementById('valor-receber');
+          if (element) element.textContent = formattedValue;
+        }
+      } catch (error) {
+        console.error('Erro ao buscar valor a receber do dashboard:', error);
+      }
+    }
+
+    // Chamar após carregar estatísticas
+    carregarEstatisticas().then(() => buscarValorReceberDashboard());
+
     // Função para renderizar empréstimos
     function renderizarEmprestimos() {
       const tbody = document.getElementById('emprestimos-tbody');
