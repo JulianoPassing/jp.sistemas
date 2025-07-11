@@ -528,8 +528,8 @@ const dashboardController = {
         return;
       }
 
-      // Ordenar por status (quitados no final) e data de vencimento (mais antigo primeiro)
-      emprestimos.sort((a, b) => {
+    // Ordenar por status (quitados no final) e data de vencimento (mais antigo primeiro)
+    emprestimos.sort((a, b) => {
       const isQuitadoA = (a.status || '').toUpperCase() === 'QUITADO';
       const isQuitadoB = (b.status || '').toUpperCase() === 'QUITADO';
       if (isQuitadoA && !isQuitadoB) return 1;
