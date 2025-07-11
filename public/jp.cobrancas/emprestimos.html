@@ -96,5 +96,88 @@
     © 2025 JP. Sistemas. Todos os direitos reservados. | jp-sistemas.com
   </footer>
   <script src="./js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('search-emprestimos');
+      const tbody = document.getElementById('historico-emprestimos');
+      let allEmprestimos = [];
+
+      // Função para buscar e renderizar todos os empréstimos
+      async function fetchAndRenderEmprestimos() {
+        tbody.innerHTML = '<tr><td colspan="7">Carregando...</td></tr>';
+        try {
+          const emprestimos = await apiService.getEmprestimos();
+          allEmprestimos = Array.isArray(emprestimos) ? emprestimos : [];
+          renderEmprestimosFiltrados();
+        } catch (err) {
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
+        }
+      }
+
+      // Função para renderizar os empréstimos filtrados
+      function renderEmprestimosFiltrados() {
+        const termo = (searchInput.value || '').toLowerCase();
+        const emprestimosFiltrados = allEmprestimos.filter(emp => {
+          return !termo ||
+            (emp.cliente_nome && emp.cliente_nome.toLowerCase().includes(termo)) ||
+            (emp.status && emp.status.toLowerCase().includes(termo)) ||
+            (emp.valor && String(emp.valor).toLowerCase().includes(termo)) ||
+            (emp.valor_final && String(emp.valor_final).toLowerCase().includes(termo));
+        });
+        tbody.innerHTML = '';
+        if (emprestimosFiltrados.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+          return;
+        }
+        const emprestimosUnicos = new Map();
+        for (const emprestimo of emprestimosFiltrados) {
+          if (emprestimosUnicos.has(emprestimo.id)) continue;
+          emprestimosUnicos.set(emprestimo.id, true);
+          const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
+          const valorInicial = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
+          let status = (emprestimo.status || '').toUpperCase();
+          if (emprestimo.data_vencimento) {
+            let vencISO = emprestimo.data_vencimento;
+            if (/\d{2}\/\d{2}\/\d{4}/.test(vencISO)) {
+              const [dia, mes, ano] = vencISO.split('/');
+              vencISO = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+            }
+            const hojeStr = new Date().toISOString().slice(0, 10);
+            if (vencISO < hojeStr && status !== 'QUITADO') {
+              status = 'ATRASADO';
+            }
+          }
+          const valorFinalFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorFinal);
+          const valorInicialFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorInicial);
+          const data = emprestimo.data_emprestimo ? new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR') : '-';
+          const vencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-';
+          let statusClass = 'secondary';
+          if (status === 'ATRASADO') statusClass = 'danger';
+          else if (status === 'PENDENTE' || status === 'ATIVO') statusClass = 'warning';
+          else if (status === 'QUITADO') statusClass = 'info';
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${emprestimo.cliente_nome || 'N/A'}</td>
+            <td>${valorInicialFormatado}</td>
+            <td>${valorFinalFormatado}</td>
+            <td>${data}</td>
+            <td>${vencimento}</td>
+            <td><span class="badge badge-${statusClass}">${status.charAt(0) + status.slice(1).toLowerCase()}</span></td>
+            <td>
+              <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        }
+      }
+
+      if (searchInput) {
+        searchInput.addEventListener('input', renderEmprestimosFiltrados);
+      }
+
+      // Inicializar busca ao carregar a página
+      fetchAndRenderEmprestimos();
+    });
+  </script>
 </body>
 </html> 
