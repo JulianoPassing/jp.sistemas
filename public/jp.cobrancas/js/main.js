@@ -1814,40 +1814,40 @@ async function renderHistoricoEmprestimos() {
       return;
     }
     tbody.innerHTML = '';
-    
-    // Usar Map para eliminar duplicatas por ID
     const emprestimosUnicos = new Map();
-    
-    // Processar cada empréstimo com verificação de parcelas
     for (const emprestimo of emprestimos) {
-      // Verificar se já processamos este empréstimo
-      if (emprestimosUnicos.has(emprestimo.id)) {
-        console.log(`Empréstimo duplicado ignorado: ID ${emprestimo.id}`);
-        continue;
-      }
-      // ✅ CORREÇÃO: Usar valores e status já padronizados pela API
-      const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
-      const status = (emprestimo.status || '').toUpperCase();
-      const valorAtualizado = valorFinal;
-      const infoJuros = ''; // Removido cálculo local de juros
-      
-      // Marcar empréstimo como processado para evitar duplicatas
+      if (emprestimosUnicos.has(emprestimo.id)) continue;
       emprestimosUnicos.set(emprestimo.id, true);
-      
-      const valor = new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(valorAtualizado);
+      const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
+      const valorInicial = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
+      let status = (emprestimo.status || '').toUpperCase();
+      if (emprestimo.data_vencimento) {
+        let vencISO = emprestimo.data_vencimento;
+        if (/\d{2}\/\d{2}\/\d{4}/.test(vencISO)) {
+          const [dia, mes, ano] = vencISO.split('/');
+          vencISO = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+        }
+        const hojeStr = new Date().toISOString().slice(0, 10);
+        if (vencISO < hojeStr && status !== 'QUITADO') {
+          status = 'ATRASADO';
+        }
+      }
+      const valorFinalFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorFinal);
+      const valorInicialFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorInicial);
       const data = emprestimo.data_emprestimo ? new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR') : '-';
       const vencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-';
-              const statusClass = status === 'Em Atraso' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : (status.toUpperCase() === 'QUITADO' ? 'info' : 'secondary')));
+      let statusClass = 'secondary';
+      if (status === 'ATRASADO') statusClass = 'danger';
+      else if (status === 'PENDENTE' || status === 'ATIVO') statusClass = 'warning';
+      else if (status === 'QUITADO') statusClass = 'info';
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${emprestimo.cliente_nome || 'N/A'}</td>
-        <td>${valor}${infoJuros}</td>
+        <td>${valorInicialFormatado}</td>
+        <td>${valorFinalFormatado}</td>
         <td>${data}</td>
         <td>${vencimento}</td>
-        <td><span class="badge badge-${statusClass}">${status}</span></td>
+        <td><span class="badge badge-${statusClass}">${status.charAt(0) + status.slice(1).toLowerCase()}</span></td>
         <td>
           <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
         </td>
@@ -1855,7 +1855,7 @@ async function renderHistoricoEmprestimos() {
       tbody.appendChild(row);
     }
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
   }
 }
 
