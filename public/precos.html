@@ -29,7 +29,7 @@
       margin: 0;
       padding: 0;
       font-family: 'Inter', sans-serif;
-      background: linear-gradient(to bottom, #ffffff 0%, #ffffff 40%, #7c7c7c63 100%);
+      background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 40%, rgba(240, 242, 245, 0.7) 100%);
       color: var(--dark-text);
       min-height: 100vh;
       overflow-x: hidden;
@@ -48,17 +48,19 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.8rem 4vw; 
-      background: var(--primary-blue); 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+      padding: 1rem 4vw; 
+      background: linear-gradient(135deg, var(--primary-blue) 0%, #003d60 100%);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2), 0 0 40px rgba(0, 230, 255, 0.1); 
       position: sticky;
       top: 0;
       z-index: 10;
       animation: fadeDown 0.7s cubic-bezier(.4,0,.2,1);
-      transition: background 0.3s ease; 
+      transition: all 0.3s ease; 
+      border-bottom: 2px solid rgba(0, 230, 255, 0.2);
     }
     header.scrolled {
-        background: rgba(0, 47, 75, 0.98); 
+        background: linear-gradient(135deg, rgba(0, 47, 75, 0.98) 0%, rgba(0, 61, 96, 0.98) 100%);
+        box-shadow: 0 6px 30px rgba(0,0,0,0.3), 0 0 50px rgba(0, 230, 255, 0.15);
     }
     .logo {
       display: flex;
@@ -122,93 +124,167 @@
       text-align: center;
       position: relative;
       z-index: 1;
-      padding: 1.2rem 1rem 0.5rem 1rem;
+      padding: 2.5rem 1rem 1.5rem 1rem;
+      width: 100%;
+      box-sizing: border-box;
     }
     .precos-hero h1 {
-      font-size: 2.4rem; 
+      font-size: 2.8rem; 
       font-weight: 800; 
-      margin-bottom: 1.2rem;
-      color: var(--primary-blue); 
-      line-height: 1.2; 
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, var(--primary-blue), #005580);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.3;
+      text-shadow: 0 2px 4px rgba(0, 47, 75, 0.1);
+      animation: fadeInUp 0.8s ease-out;
+      padding: 0 1rem;
     }
     .precos-hero p {
-      font-size: 1.15rem; 
-      max-width: 700px; 
-      margin: 0 auto 2.5rem auto;
+      font-size: 1.1rem; 
+      max-width: 800px; 
+      margin: 0 auto 2rem auto;
       color: var(--dark-text);
-      line-height: 1.6; 
+      line-height: 1.7; 
+      animation: fadeInUp 1s ease-out;
+      padding: 0 1rem;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .planos-container {
       display: flex;
       flex-wrap: nowrap;
       justify-content: center;
+      align-items: stretch;
       gap: 2rem;
-      margin: 2rem 0 3rem 0;
-      padding: 0 2vw;
+      margin: 2rem auto 3rem auto;
+      padding: 0 1rem;
       max-width: 1100px;
-      margin-left: auto;
-      margin-right: auto;
+      width: 100%;
+      box-sizing: border-box;
     }
     .plano-card {
-      background: var(--primary-blue); 
-      border: 1px solid rgba(0, 47, 75, 0.85);
-      border-radius: 18px;
-      padding: 2.2rem 1.2rem 2rem 1.2rem; 
-      width: 240px;
-      min-width: 200px;
-      max-width: 250px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.12); 
+      background: linear-gradient(145deg, #003a5e 0%, var(--primary-blue) 100%);
+      border: 2px solid rgba(0, 230, 255, 0.2);
+      border-radius: 24px;
+      padding: 2.5rem 1.5rem 2.2rem 1.5rem; 
+      width: 260px;
+      min-width: 220px;
+      max-width: 280px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15), 0 2px 8px rgba(0,230,255,0.1); 
       text-align: center;
-      transition: transform 0.3s ease, box-shadow 0.3s ease; 
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
       display: flex;
       flex-direction: column;
       align-items: center;
       color: var(--light-text);
       font-family: 'Inter', sans-serif;
       margin-bottom: 1rem;
+      position: relative;
+      overflow: hidden;
+      animation: fadeInUp 0.8s ease-out;
+    }
+    .plano-card:nth-child(2) {
+      animation-delay: 0.1s;
+      opacity: 0;
+      animation-fill-mode: forwards;
+    }
+    .plano-card:nth-child(3) {
+      animation-delay: 0.2s;
+      opacity: 0;
+      animation-fill-mode: forwards;
+    }
+    .plano-card:nth-child(4) {
+      animation-delay: 0.3s;
+      opacity: 0;
+      animation-fill-mode: forwards;
+    }
+    .plano-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--accent-blue), #00b8d4);
+      transform: scaleX(0);
+      transition: transform 0.4s ease;
+    }
+    .plano-card:hover::before {
+      transform: scaleX(1);
     }
     .plano-card .plano-titulo {
-      font-size: 1.4rem;
-      font-weight: 700;
-      margin-bottom: 0.7rem;
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 1.2rem;
       color: var(--accent-blue);
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 4px rgba(0,230,255,0.3);
     }
     .plano-card .plano-preco {
-      font-size: 2.1rem;
+      font-size: 2.8rem;
       font-weight: 800;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.3rem;
       color: #fff;
+      text-shadow: 0 2px 8px rgba(255,255,255,0.2);
     }
     .plano-card .plano-desconto {
-      font-size: 1.05rem;
-      color: #00e6ff;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
+      font-size: 1.1rem;
+      color: #00ffff;
+      margin-bottom: 0.8rem;
+      font-weight: 700;
+      padding: 0.3rem 1rem;
+      background: rgba(0, 230, 255, 0.15);
+      border-radius: 20px;
+      border: 1px solid rgba(0, 230, 255, 0.3);
     }
     .plano-card .plano-detalhe {
-      font-size: 1.05rem;
-      color: var(--light-text);
-      margin-bottom: 0.7rem;
+      font-size: 1rem;
+      color: rgba(236, 240, 241, 0.9);
+      margin-bottom: 1rem;
+      line-height: 1.5;
     }
     .plano-card .plano-mes {
-      font-size: 1.1rem;
+      font-size: 1.2rem;
       color: #b2f6ff;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.8rem;
+      font-weight: 600;
     }
     .plano-card .plano-total {
-      font-size: 1.15rem;
+      font-size: 1.3rem;
       color: #fff;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
     }
     .plano-card .plano-obs {
-      font-size: 0.95rem;
+      font-size: 1rem;
       color: #b2f6ff;
-      margin-top: 0.7rem;
+      margin-top: 1.2rem;
+      line-height: 1.8;
+      padding-top: 1.2rem;
+      border-top: 1px solid rgba(0, 230, 255, 0.2);
     }
     .plano-card:hover {
-      transform: translateY(-8px) scale(1.04); 
-      box-shadow: 0 10px 40px rgba(0,0,0,0.25); 
+      transform: translateY(-12px); 
+      box-shadow: 0 15px 50px rgba(0,230,255,0.3), 0 5px 15px rgba(0,0,0,0.2); 
+      border-color: var(--accent-blue);
+    }
+    .plano-badge {
+      position: absolute;
+      top: 1.2rem;
+      right: -2.5rem;
+      background: linear-gradient(135deg, #ff6b35, #f7931e);
+      color: #fff;
+      padding: 0.4rem 3rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      transform: rotate(45deg);
+      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+      z-index: 10;
     }
     @media (max-width: 1100px) {
       .planos-container {
@@ -227,30 +303,70 @@
         flex-direction: column;
         align-items: center;
         gap: 1.5rem;
+        padding: 1.5rem 1rem !important;
+        margin: 1rem auto !important;
+        width: calc(100% - 2rem) !important;
+        max-width: none !important;
       }
       .plano-card {
-        width: 95vw;
-        max-width: 98vw;
-        padding: 1.5rem;
+        width: 100%;
+        max-width: 340px;
+        min-width: unset;
+        padding: 2rem 1.2rem;
+        border-radius: 20px;
+        margin: 0 auto;
+      }
+      .plano-card .plano-titulo {
+        font-size: 1.3rem;
+      }
+      .plano-card .plano-preco {
+        font-size: 2.2rem;
+      }
+      .plano-card .plano-desconto {
+        font-size: 0.95rem;
+        padding: 0.25rem 0.8rem;
+      }
+      .plano-badge {
+        font-size: 0.65rem;
+        padding: 0.25rem 2rem;
+        top: 0.8rem;
+        right: -1.8rem;
+      }
+      .precos-hero {
+        padding: 1.5rem 1rem;
+      }
+      .precos-hero h1 {
+        font-size: 1.8rem;
+        padding: 0;
+        margin-bottom: 1rem;
+      }
+      .precos-hero p {
+        font-size: 0.95rem;
+        padding: 0;
+        line-height: 1.6;
+        margin-bottom: 1rem;
       }
     }
     footer {
       text-align: center;
-      padding: 2.5rem 0 1.5rem 0; 
+      padding: 3rem 0 2rem 0; 
       color: var(--light-text);
-      font-size: 0.9rem;
-      background: var(--primary-blue);
+      font-size: 1rem;
+      background: linear-gradient(180deg, var(--primary-blue) 0%, #001a2e 100%);
       margin-top: auto;
       font-family: 'Inter', sans-serif;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+      border-top: 2px solid rgba(0, 230, 255, 0.2);
     }
     footer a {
       color: var(--accent-blue);
       text-decoration: none;
-      transition: color 0.2s ease;
+      transition: all 0.3s ease;
+      font-weight: 600;
     }
     footer a:hover {
-        color: #008cff; 
+        color: #00ffff; 
+        text-shadow: 0 0 10px rgba(0, 230, 255, 0.5);
     }
     /* Modal styles */
     .modal-bg {
@@ -266,23 +382,31 @@
       display: flex;
     }
     .modal {
-      background: #fff;
-      border-radius: 18px;
-      padding: 1.2rem 1rem 1rem 1rem;
-      max-width: 390px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      border-radius: 24px;
+      padding: 1.5rem 1.2rem 1.2rem 1.2rem;
+      max-width: 420px;
       width: 95vw;
-      box-shadow: 0 8px 40px rgba(0,47,75,0.18), 0 1.5px 8px rgba(0,47,75,0.10);
+      box-shadow: 0 12px 50px rgba(0,47,75,0.25), 0 2px 10px rgba(0,230,255,0.15);
       position: relative;
       text-align: center;
-      animation: fadeDown 0.4s cubic-bezier(.4,0,.2,1);
-      border-top: 6px solid var(--accent-blue);
+      animation: fadeDown 0.5s cubic-bezier(.4,0,.2,1);
+      border-top: 8px solid var(--accent-blue);
+      border: 2px solid rgba(0, 230, 255, 0.2);
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
     .modal h2 {
-      color: var(--primary-blue);
-      font-size: 1.15rem;
-      margin-bottom: 0.7rem;
+      background: linear-gradient(135deg, var(--primary-blue), #005580);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
       font-weight: 800;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
     .modal form {
       display: flex;
@@ -374,26 +498,29 @@
     }
     .modal .close-btn {
       position: absolute;
-      top: 0.7rem;
-      right: 1rem;
-      background: var(--accent-blue);
+      top: 1rem;
+      right: 1.2rem;
+      background: linear-gradient(135deg, var(--accent-blue), #00b8d4);
       border: none;
       font-size: 1.5rem;
       color: #fff;
       cursor: pointer;
       border-radius: 50%;
-      width: 2.2rem;
-      height: 2.2rem;
+      width: 2.5rem;
+      height: 2.5rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 8px rgba(0,230,255,0.10);
-      transition: background 0.2s, color 0.2s;
+      box-shadow: 0 4px 15px rgba(0,230,255,0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       z-index: 2;
+      font-weight: 700;
     }
     .modal .close-btn:hover {
-      background: var(--primary-blue);
+      background: linear-gradient(135deg, var(--primary-blue), #003d60);
       color: var(--accent-blue);
+      transform: rotate(90deg) scale(1.1);
+      box-shadow: 0 6px 20px rgba(0,230,255,0.4);
     }
     .whatsapp-btn {
       margin-top:0.7rem;
@@ -403,28 +530,33 @@
 
     /* Estilos para o modal de seleção de sistema */
     .sistema-modal {
-      max-width: 500px;
+      max-width: 550px;
       width: 90%;
+      background: linear-gradient(145deg, #0a3552 0%, #001f3f 100%);
+      border: 2px solid var(--accent-blue);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 40px rgba(0, 230, 255, 0.2);
     }
 
     .sistema-opcoes {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
-      margin-top: 1.5rem;
+      gap: 1.2rem;
+      margin-top: 2rem;
     }
 
     .sistema-opcao {
       display: flex;
       align-items: center;
-      padding: 1.5rem;
-      background: var(--primary-blue);
-      border-radius: 12px;
+      padding: 2rem;
+      background: linear-gradient(145deg, #003a5e 0%, var(--primary-blue) 100%);
+      border-radius: 16px;
       cursor: pointer;
-      transition: all 0.3s ease;
-      border: 2px solid transparent;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 2px solid rgba(0, 230, 255, 0.2);
       position: relative;
       overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     }
 
     .sistema-opcao::before {
@@ -443,8 +575,8 @@
     }
 
     .sistema-opcao:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 25px rgba(0, 47, 75, 0.3);
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0, 230, 255, 0.3), 0 5px 15px rgba(0,0,0,0.2);
       border-color: var(--accent-blue);
     }
 
@@ -516,7 +648,7 @@
       z-index: 0;
       pointer-events: none;
       background: transparent;
-      opacity: 20%;
+      opacity: 18%;
     }
     body > *:not(#particles-js):not(.modal-bg) {
       position: relative; 
@@ -557,17 +689,30 @@
     
     /* Estilo para cards de benefícios */
     .beneficio-card {
-      background: var(--primary-blue);
-      border-radius: 12px;
-      padding: 2rem;
-      width: 300px;
+      background: linear-gradient(145deg, #003a5e 0%, var(--primary-blue) 100%);
+      border: 2px solid rgba(0, 230, 255, 0.2);
+      border-radius: 20px;
+      padding: 2.5rem;
+      width: 320px;
       text-align: center;
       color: var(--light-text);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
       overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15), 0 2px 8px rgba(0,230,255,0.1);
     }
     .beneficio-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-blue), #00b8d4);
+      transform: scaleX(0);
+      transition: transform 0.4s ease;
+    }
+    .beneficio-card::after {
       content: '';
       position: absolute;
       top: 0;
@@ -578,43 +723,53 @@
       transition: left 0.5s;
     }
     .beneficio-card:hover::before {
+      transform: scaleX(1);
+    }
+    .beneficio-card:hover::after {
       left: 100%;
     }
     .beneficio-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 25px rgba(0, 47, 75, 0.3);
+      transform: translateY(-10px);
+      box-shadow: 0 15px 50px rgba(0,230,255,0.25), 0 5px 15px rgba(0,0,0,0.2);
+      border-color: var(--accent-blue);
     }
     .beneficio-card i {
-      font-size: 2.5rem;
+      font-size: 3.5rem;
       color: var(--accent-blue);
-      margin-bottom: 1rem;
-      transition: transform 0.3s ease;
+      margin-bottom: 1.5rem;
+      transition: all 0.4s ease;
+      filter: drop-shadow(0 4px 8px rgba(0,230,255,0.3));
     }
     .beneficio-card:hover i {
-      transform: scale(1.1);
+      transform: scale(1.15) rotateY(10deg);
+      color: #00ffff;
     }
     .beneficio-card h3 {
       margin-bottom: 1rem;
       color: var(--light-text);
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       font-weight: 700;
+      letter-spacing: 0.5px;
     }
     .beneficio-card p {
       margin: 0;
-      line-height: 1.6;
-      font-size: 0.95rem;
+      line-height: 1.7;
+      font-size: 1rem;
+      color: rgba(236, 240, 241, 0.9);
     }
     
     /* Estilo para seção de informações */
     .info-section {
-      background: var(--light-gray);
-      border-radius: 12px;
-      padding: 2rem;
+      background: linear-gradient(135deg, #f0f2f5 0%, #ffffff 100%);
+      border-radius: 20px;
+      padding: 2.5rem;
       text-align: center;
-      border-left: 4px solid var(--accent-blue);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border: 2px solid rgba(0, 230, 255, 0.2);
+      border-left: 6px solid var(--accent-blue);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
       overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 47, 75, 0.08);
     }
     .info-section::before {
       content: '';
@@ -623,29 +778,31 @@
       left: -100%;
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(0, 230, 255, 0.05), transparent);
+      background: linear-gradient(90deg, transparent, rgba(0, 230, 255, 0.08), transparent);
       transition: left 0.5s;
     }
     .info-section:hover::before {
       left: 100%;
     }
     .info-section:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0, 47, 75, 0.1);
+      transform: translateY(-5px);
+      box-shadow: 0 12px 35px rgba(0, 230, 255, 0.15);
+      border-color: var(--accent-blue);
     }
     .info-section h3 {
       color: var(--primary-blue);
-      margin-bottom: 1rem;
-      font-size: 1.3rem;
-      font-weight: 700;
+      margin-bottom: 1.2rem;
+      font-size: 1.5rem;
+      font-weight: 800;
       position: relative;
       z-index: 1;
+      letter-spacing: 0.5px;
     }
     .info-section p {
       color: var(--dark-text);
       margin: 0;
-      font-size: 1rem;
-      line-height: 1.6;
+      font-size: 1.1rem;
+      line-height: 1.8;
       position: relative;
       z-index: 1;
     }
@@ -653,40 +810,112 @@
     /* Responsividade para seção de benefícios */
     @media (max-width: 900px) {
       .precos-hero h1 {
-        font-size: 2rem;
+        font-size: 2.2rem;
       }
       .precos-hero p {
-        font-size: 1rem;
+        font-size: 1.05rem;
       }
       .beneficio-card {
         width: 90vw;
         max-width: 350px;
+        padding: 2rem;
+      }
+      .beneficio-card i {
+        font-size: 2.8rem;
       }
       .info-section {
-        padding: 1.5rem;
+        padding: 2rem 1.5rem;
       }
       .info-section h3 {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
       }
       .info-section p {
-        font-size: 0.95rem;
+        font-size: 1rem;
+      }
+      .contato-msg {
+        padding: 1.2rem 1.5rem;
+        font-size: 1rem;
+      }
+    }
+    @media (max-width: 600px) {
+      .modal.sistema-modal {
+        max-width: 95vw;
+        padding: 1.5rem 1rem;
+      }
+      .sistema-opcao {
+        padding: 1.2rem;
+      }
+      .sistema-icon {
+        width: 50px;
+        height: 50px;
+      }
+      .sistema-icon i {
+        font-size: 1.4rem;
+      }
+      .sistema-info h3 {
+        font-size: 1rem;
+      }
+      .sistema-info p {
+        font-size: 0.85rem;
+      }
+      .modal {
+        padding: 1.2rem 1rem;
+      }
+      .modal h2 {
+        font-size: 1.1rem;
+      }
+      .beneficio-card {
+        padding: 1.5rem;
+        border-radius: 16px;
+      }
+      .beneficio-card i {
+        font-size: 2.5rem;
+      }
+      .beneficio-card h3 {
+        font-size: 1.1rem;
+      }
+      .beneficio-card p {
+        font-size: 0.9rem;
+      }
+      .info-section {
+        padding: 1.5rem 1rem;
+        border-radius: 14px;
+      }
+      .contato-msg {
+        padding: 1rem;
+        font-size: 0.9rem;
+        border-radius: 12px;
+        max-width: 90%;
+      }
+      .contato-container {
+        padding: 0 0.5rem;
       }
     }
     
     /* Estilo para mensagem de contato */
+    .contato-container {
+      text-align: center;
+      margin-top: 1.5rem;
+      padding: 0 1rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
     .contato-msg {
       color: var(--dark-text);
       font-size: 1rem;
-      font-weight: 500;
-      margin: 0;
-      background: rgba(0, 230, 255, 0.1);
-      border-radius: 8px;
-      padding: 1rem;
-      border: 1px solid var(--accent-blue);
-      transition: all 0.3s ease;
+      font-weight: 600;
+      margin: 0 auto;
+      background: linear-gradient(135deg, rgba(0, 230, 255, 0.1), rgba(0, 184, 212, 0.1));
+      border-radius: 16px;
+      padding: 1.2rem 1.5rem;
+      border: 2px solid var(--accent-blue);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
       overflow: hidden;
       z-index: 1;
+      box-shadow: 0 4px 15px rgba(0, 230, 255, 0.1);
+      max-width: 500px;
+      display: inline-block;
     }
     .contato-msg::before {
       content: '';
@@ -695,25 +924,98 @@
       left: -100%;
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(0, 230, 255, 0.2), transparent);
+      background: linear-gradient(90deg, transparent, rgba(0, 230, 255, 0.25), transparent);
       transition: left 0.5s;
     }
     .contato-msg:hover::before {
       left: 100%;
     }
     .contato-msg:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(0, 230, 255, 0.2);
-      background: rgba(0, 230, 255, 0.15);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0, 230, 255, 0.3);
+      background: linear-gradient(135deg, rgba(0, 230, 255, 0.15), rgba(0, 184, 212, 0.15));
+      border-color: #00ffff;
     }
     
     /* Separador visual para cards de planos */
-    .planos-container {
-      background: rgba(0, 47, 75, 0.03);
-      border-radius: 20px;
-      padding: 2rem 1rem !important;
-      margin: 1rem auto 2rem auto !important;
-      border: 1px solid rgba(0, 230, 255, 0.1);
+    .planos-section {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .planos-titulo {
+      text-align: center;
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary-blue), #005580);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 2rem;
+      letter-spacing: 0.5px;
+    }
+    @media (max-width: 700px) {
+      .planos-section {
+        padding: 0 0.5rem;
+        margin: 1rem auto;
+      }
+      .planos-titulo {
+        font-size: 1.6rem;
+        margin-bottom: 1.5rem;
+        padding: 0 0.5rem;
+      }
+    }
+    
+    /* Containers das seções */
+    .info-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .beneficios-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .beneficios-titulo {
+      text-align: center;
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary-blue), #005580);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 2rem;
+      letter-spacing: 0.5px;
+    }
+    .beneficios-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2rem;
+    }
+    @media (max-width: 700px) {
+      .info-container {
+        padding: 0 0.8rem;
+        margin: 1.5rem auto;
+      }
+      .beneficios-container {
+        padding: 0 0.8rem;
+        margin: 1.5rem auto;
+      }
+      .beneficios-titulo {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .beneficios-grid {
+        gap: 1rem;
+      }
     }
   </style>
   </head>
@@ -733,14 +1035,14 @@
   <section class="precos-hero">
     <h1>Planos e Preços</h1>
     <p>Escolha o plano ideal para o seu negócio. Cada plano dá acesso completo a <strong>um sistema específico</strong> (Sistema de Gestão ou Sistema de Empréstimos), além de suporte técnico especializado e atualizações constantes. Também oferecemos desenvolvimento de sistemas personalizados.</p>
-    <div class="sistema-funcional-msg" style="margin-top: 1.5rem; font-size: 1rem; color: var(--dark-text); font-weight: 500;">
+    <div class="sistema-funcional-msg" style="margin-top: 1.5rem; font-size: 1rem; color: var(--dark-text); font-weight: 500; padding: 1rem 1.5rem; background: rgba(0, 230, 255, 0.05); border-radius: 12px; border: 1px solid rgba(0, 230, 255, 0.15); max-width: 90%; margin-left: auto; margin-right: auto;">
       💡 Também desenvolvemos <strong>sistemas personalizados</strong> para sua empresa!
     </div>
   </section>
   
   <!-- Cards de Planos -->
-  <section style="max-width: 1200px; margin: 3rem auto; padding: 0 2rem;">
-    <h2 style="text-align: center; font-size: 2rem; font-weight: 700; color: var(--primary-blue); margin-bottom: 2rem; transition: color 0.3s ease; cursor: default;" onmouseover="this.style.color='var(--accent-blue)'" onmouseout="this.style.color='var(--primary-blue)'">Escolha seu Plano</h2>
+  <section class="planos-section">
+    <h2 class="planos-titulo">Escolha seu Plano</h2>
     <div class="planos-container">
       <div class="plano-card">
       <div class="plano-titulo"><i class="fas fa-calendar-alt"></i> Plano Mensal</div>
@@ -757,7 +1059,8 @@
       <div class="plano-detalhe">Pagamento único para 3 meses.</div>
       <div class="plano-obs">✓ Acesso a um sistema completo<br>✓ Suporte técnico<br>✓ Atualizações gratuitas</div>
     </div>
-    <div class="plano-card">
+    <div class="plano-card" style="border-color: rgba(255, 193, 7, 0.5);">
+      <div class="plano-badge" style="background: linear-gradient(135deg, #ffc107, #ff9800);">MELHOR CUSTO</div>
       <div class="plano-titulo"><i class="fas fa-calendar-check"></i> Plano Semestral</div>
       <div class="plano-desconto">Desconto de 15%</div>
       <div class="plano-total">R$474</div>
@@ -765,7 +1068,8 @@
       <div class="plano-detalhe">Pagamento único para 6 meses.</div>
       <div class="plano-obs">✓ Acesso a um sistema completo<br>✓ Suporte técnico<br>✓ Atualizações gratuitas</div>
     </div>
-    <div class="plano-card">
+    <div class="plano-card" style="border-color: var(--accent-blue); box-shadow: 0 10px 40px rgba(0,230,255,0.25);">
+      <div class="plano-badge">MAIS POPULAR</div>
       <div class="plano-titulo"><i class="fas fa-award"></i> Plano Anual</div>
       <div class="plano-desconto">Desconto de 30%</div>
       <div class="plano-total">R$828</div>
@@ -776,15 +1080,15 @@
     </div>
     
     <!-- Informação sobre escolha do sistema -->
-    <div style="text-align: center; margin-top: 2rem; padding: 0 2rem;">
+    <div class="contato-container">
       <p class="contato-msg">
-        <span style="position: relative; z-index: 2;">💬 Após a compra, entre em contato conosco para ativar o sistema desejado</span>
+        <span>💬 Após a compra, entre em contato conosco para ativar o sistema desejado</span>
       </p>
     </div>
   </section>
   
   <!-- Seção de Informações sobre Sistemas -->
-  <section style="max-width: 800px; margin: 3rem auto; padding: 0 2rem;">
+  <section class="info-container">
     <div class="info-section">
       <h3>📋 Como Funciona</h3>
       <p>
@@ -794,9 +1098,9 @@
   </section>
   
   <!-- Seção de Benefícios -->
-  <section style="max-width: 1200px; margin: 3rem auto; padding: 0 2rem;">
-    <h2 style="text-align: center; font-size: 2rem; font-weight: 700; color: var(--primary-blue); margin-bottom: 2rem; transition: color 0.3s ease; cursor: default;" onmouseover="this.style.color='var(--accent-blue)'" onmouseout="this.style.color='var(--primary-blue)'">Por que escolher JP. Sistemas?</h2>
-    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem;">
+  <section class="beneficios-container">
+    <h2 class="beneficios-titulo">Por que escolher JP. Sistemas?</h2>
+    <div class="beneficios-grid">
       <div class="beneficio-card">
         <i class="fas fa-laptop-code"></i>
         <h3>Sistemas Completos</h3>
