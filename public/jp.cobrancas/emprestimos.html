@@ -136,21 +136,25 @@
           const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
           const valorInicial = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
           let status = (emprestimo.status || '').toUpperCase();
-          if (emprestimo.data_vencimento) {
-            let vencISO = emprestimo.data_vencimento;
-            if (/\d{2}\/\d{2}\/\d{4}/.test(vencISO)) {
-              const [dia, mes, ano] = vencISO.split('/');
-              vencISO = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
-            }
-            const hojeStr = new Date().toISOString().slice(0, 10);
-            if (vencISO < hojeStr && status !== 'QUITADO') {
-              status = 'ATRASADO';
+          
+          // Usar utils.createValidDate para interpretar datas corretamente
+          const hoje = new Date();
+          hoje.setHours(0, 0, 0, 0);
+          
+          if (emprestimo.data_vencimento && status !== 'QUITADO') {
+            const vencDate = utils.createValidDate(emprestimo.data_vencimento);
+            if (vencDate) {
+              vencDate.setHours(0, 0, 0, 0);
+              if (vencDate < hoje) {
+                status = 'ATRASADO';
+              }
             }
           }
+          
           const valorFinalFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorFinal);
           const valorInicialFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorInicial);
-          const data = emprestimo.data_emprestimo ? new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR') : '-';
-          const vencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-';
+          const data = utils.formatDate(emprestimo.data_emprestimo);
+          const vencimento = utils.formatDate(emprestimo.data_vencimento);
           let statusClass = 'secondary';
           if (status === 'ATRASADO') statusClass = 'danger';
           else if (status === 'PENDENTE' || status === 'ATIVO') statusClass = 'warning';

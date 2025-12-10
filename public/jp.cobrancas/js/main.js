@@ -544,9 +544,7 @@ const dashboardController = {
       }).format(emprestimo.valorAtualizado);
       
       // Usar data de vencimento se disponível, senão mostrar "-"
-      const dataExibida = emprestimo.data_vencimento ? 
-        new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : 
-        '-';
+      const dataExibida = utils.formatDate(emprestimo.data_vencimento);
       
       // Exibir status exatamente como vem da API, formatando igual ao emprestimos.html
       const statusRaw = (emprestimo.status || '');
@@ -599,28 +597,33 @@ const dashboardController = {
       emprestimos.forEach(emprestimo => {
         const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
         const valorInicial = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
-        const dataEmprestimo = emprestimo.data_emprestimo ? new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR') : '-';
-        const vencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-';
+        const dataEmprestimo = utils.formatDate(emprestimo.data_emprestimo);
+        const vencimento = utils.formatDate(emprestimo.data_vencimento);
         
-        // Calcular dias de atraso
+        // Calcular dias de atraso usando função corrigida
         let diasAtraso = 0;
         if (emprestimo.data_vencimento) {
           const hoje = new Date();
-          const venc = new Date(emprestimo.data_vencimento);
-          diasAtraso = Math.ceil((hoje - venc) / (1000 * 60 * 60 * 24));
+          hoje.setHours(0, 0, 0, 0);
+          const venc = utils.createValidDate(emprestimo.data_vencimento);
+          if (venc) {
+            venc.setHours(0, 0, 0, 0);
+            diasAtraso = Math.ceil((hoje - venc) / (1000 * 60 * 60 * 24));
+            if (diasAtraso < 0) diasAtraso = 0;
+          }
         }
         
-        // Formatar status igual ao emprestimos.html
+        // Formatar status
         let status = (emprestimo.status || '').toUpperCase();
-        if (emprestimo.data_vencimento) {
-          let vencISO = emprestimo.data_vencimento;
-          if (/\d{2}\/\d{2}\/\d{4}/.test(vencISO)) {
-            const [dia, mes, ano] = vencISO.split('/');
-            vencISO = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
-          }
-          const hojeStr = new Date().toISOString().slice(0, 10);
-          if (vencISO < hojeStr && status !== 'QUITADO') {
-            status = 'ATRASADO';
+        if (emprestimo.data_vencimento && status !== 'QUITADO') {
+          const hoje = new Date();
+          hoje.setHours(0, 0, 0, 0);
+          const venc = utils.createValidDate(emprestimo.data_vencimento);
+          if (venc) {
+            venc.setHours(0, 0, 0, 0);
+            if (venc < hoje) {
+              status = 'ATRASADO';
+            }
           }
         }
         
@@ -1478,9 +1481,10 @@ const emprestimoController = {
                                   <p><strong>Juros Acumulados a Pagar:</strong> ${utils.formatCurrency(jurosAcumulados)}</p>
                 <p><strong>Vencimento Atual:</strong> ${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</p>
                 <p><strong>Novo Vencimento:</strong> ${(() => {
-                  const dataVenc = new Date(emp.data_vencimento);
+                  const dataVenc = utils.createValidDate(emp.data_vencimento);
+                  if (!dataVenc) return '-';
                   dataVenc.setDate(dataVenc.getDate() + 30);
-                  return utils.formatDate(dataVenc.toISOString().split('T')[0]);
+                  return utils.formatDate(dataVenc);
                 })()}</p>
                                   <p><strong>Novo Valor da Dívida:</strong> ${utils.formatCurrency(valorInicial)} <em>(volta ao valor inicial)</em></p>
                 <div style="background: #e3f2fd; padding: 0.75rem; border-radius: 6px; margin-top: 0.75rem; border-left: 4px solid #2196f3;">
@@ -1726,8 +1730,8 @@ const clienteController = {
           
           if (parcelas.length > 0) {
             const parcelasAtrasadas = parcelas.filter(p => {
-              const dataVencParcela = new Date(p.data_vencimento);
-              return dataVencParcela < hoje && (p.status !== 'Paga');
+              const dataVencParcela = utils.createValidDate(p.data_vencimento);
+              return dataVencParcela && dataVencParcela < hoje && (p.status !== 'Paga');
             });
             
             const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
@@ -1741,7 +1745,7 @@ const clienteController = {
             }
           } else {
             // Para empréstimos de parcela única
-            const dataVenc = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
+            const dataVenc = utils.createValidDate(emp.data_vencimento);
             if (dataVenc && dataVenc < hoje && statusAtual.toUpperCase() !== 'QUITADO') {
               statusAtual = 'Em Atraso';
             }
@@ -1810,7 +1814,7 @@ const clienteController = {
                       <h6 style="margin-bottom: 0.5rem; color: #002f4b;">Parcelas (${emp.parcelas.length})</h6>
                       <div style="max-height: 200px; overflow-y: auto; border: 1px solid #eee; border-radius: 4px;">
                         ${emp.parcelas.map(parcela => {
-                          const dataVenc = new Date(parcela.data_vencimento);
+                          const dataVenc = utils.createValidDate(parcela.data_vencimento);
                           const hoje = new Date();
                           hoje.setHours(0,0,0,0);
                           let statusParcela = parcela.status;
@@ -1818,7 +1822,7 @@ const clienteController = {
                           
                           if (statusParcela === 'Paga') {
                             corStatus = '#10b981'; // Verde
-                          } else if (dataVenc < hoje) {
+                          } else if (dataVenc && dataVenc < hoje) {
                             corStatus = '#ef4444'; // Vermelho (atrasada)
                             statusParcela = 'Atrasada';
                           }
@@ -1898,6 +1902,10 @@ async function renderHistoricoEmprestimos() {
       return;
     }
     tbody.innerHTML = '';
+    
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
     const emprestimosUnicos = new Map();
     for (const emprestimo of emprestimos) {
       if (emprestimosUnicos.has(emprestimo.id)) continue;
@@ -1905,21 +1913,22 @@ async function renderHistoricoEmprestimos() {
       const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
       const valorInicial = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
       let status = (emprestimo.status || '').toUpperCase();
-      if (emprestimo.data_vencimento) {
-        let vencISO = emprestimo.data_vencimento;
-        if (/\d{2}\/\d{2}\/\d{4}/.test(vencISO)) {
-          const [dia, mes, ano] = vencISO.split('/');
-          vencISO = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
-        }
-        const hojeStr = new Date().toISOString().slice(0, 10);
-        if (vencISO < hojeStr && status !== 'QUITADO') {
-          status = 'ATRASADO';
+      
+      // Verificar se está atrasado usando createValidDate
+      if (emprestimo.data_vencimento && status !== 'QUITADO') {
+        const vencDate = utils.createValidDate(emprestimo.data_vencimento);
+        if (vencDate) {
+          vencDate.setHours(0, 0, 0, 0);
+          if (vencDate < hoje) {
+            status = 'ATRASADO';
+          }
         }
       }
+      
       const valorFinalFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorFinal);
       const valorInicialFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorInicial);
-      const data = emprestimo.data_emprestimo ? new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR') : '-';
-      const vencimento = emprestimo.data_vencimento ? new Date(emprestimo.data_vencimento).toLocaleDateString('pt-BR') : '-';
+      const data = utils.formatDate(emprestimo.data_emprestimo);
+      const vencimento = utils.formatDate(emprestimo.data_vencimento);
       let statusClass = 'secondary';
       if (status === 'ATRASADO') statusClass = 'danger';
       else if (status === 'PENDENTE' || status === 'ATIVO') statusClass = 'warning';
@@ -1958,6 +1967,9 @@ async function renderEmprestimosLista() {
     }
     tbody.innerHTML = '';
     
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
     // Eliminar duplicatas por ID
     const emprestimosUnicos = new Map();
     for (const emprestimo of ativos) {
@@ -1966,25 +1978,26 @@ async function renderEmprestimosLista() {
       // Usar valores já calculados pela API
       const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
       let status = (emprestimo.status || '').toUpperCase();
-      // Forçar status ATRASADO se data_vencimento < hoje (corrigido para comparar formato ISO)
-      if (emprestimo.data_vencimento) {
-        let vencISO = emprestimo.data_vencimento;
-        if (/\d{2}\/\d{2}\/\d{4}/.test(vencISO)) {
-          const [dia, mes, ano] = vencISO.split('/');
-          vencISO = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
-        }
-        const hojeStr = new Date().toISOString().slice(0, 10);
-        if (vencISO < hojeStr && status !== 'QUITADO') {
-          status = 'ATRASADO';
+      
+      // Verificar se está atrasado usando createValidDate
+      if (emprestimo.data_vencimento && status !== 'QUITADO') {
+        const vencDate = utils.createValidDate(emprestimo.data_vencimento);
+        if (vencDate) {
+          vencDate.setHours(0, 0, 0, 0);
+          if (vencDate < hoje) {
+            status = 'ATRASADO';
+          }
         }
       }
+      
       const valorAtualizado = valorFinal;
       const infoJuros = '';
       const valor = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
       }).format(valorAtualizado);
-      const data = new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR');
+      const data = utils.formatDate(emprestimo.data_emprestimo);
+      const vencimento = utils.formatDate(emprestimo.data_vencimento);
       const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : 'info'));
       const row = document.createElement('tr');
       row.innerHTML = `
@@ -1992,7 +2005,7 @@ async function renderEmprestimosLista() {
         <td>${valor}${infoJuros}</td>
         <td>${emprestimo.parcelas || '-'}</td>
         <td>${data}</td>
-        <td>${emprestimo.data_vencimento ? (typeof emprestimo.data_vencimento === 'string' ? emprestimo.data_vencimento.split('-').reverse().join('/') : '-') : '-'}</td>
+        <td>${vencimento}</td>
         <td><span class="badge badge-${statusClass}">${status.charAt(0) + status.slice(1).toLowerCase()}</span></td>
         <td>
           <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
@@ -2041,8 +2054,8 @@ async function renderClientesLista() {
             try {
               const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
               const parcelasAtrasadas = parcelas.filter(p => {
-                const dataVencParcela = new Date(p.data_vencimento);
-                return dataVencParcela < hoje && (p.status !== 'Paga');
+                const dataVencParcela = utils.createValidDate(p.data_vencimento);
+                return dataVencParcela && dataVencParcela < hoje && (p.status !== 'Paga');
               });
               
               if (parcelasAtrasadas.length > 0) {
@@ -2055,8 +2068,8 @@ async function renderClientesLista() {
           } else {
             // Para empréstimos de parcela única
             if (!emprestimo.data_vencimento) continue;
-            const dataVenc = new Date(emprestimo.data_vencimento);
-            if (dataVenc < hoje) {
+            const dataVenc = utils.createValidDate(emprestimo.data_vencimento);
+            if (dataVenc && dataVenc < hoje) {
               temVencido = true;
               break;
             }
@@ -2222,7 +2235,7 @@ async function renderCobrancasEmAbertoLista() {
           const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
           if (parcelasNaoPagas.length > 0) {
             // Ordenar por data de vencimento e pegar a mais próxima
-            parcelasNaoPagas.sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento));
+            parcelasNaoPagas.sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
             proximaParcela = parcelasNaoPagas[0];
             
             // Para empréstimos parcelados, usar dados da próxima parcela
@@ -2231,8 +2244,8 @@ async function renderCobrancasEmAbertoLista() {
           }
           
           parcelas.forEach(parcela => {
-            const dataVencParcela = new Date(parcela.data_vencimento);
-            const atrasadaParcela = dataVencParcela < hoje && parcela.status !== 'Paga';
+            const dataVencParcela = utils.createValidDate(parcela.data_vencimento);
+            const atrasadaParcela = dataVencParcela && dataVencParcela < hoje && parcela.status !== 'Paga';
             
             if (parcela.status === 'Paga') {
               parcelasPagas++;
@@ -2253,7 +2266,7 @@ async function renderCobrancasEmAbertoLista() {
           // Sem parcelas - usar data de vencimento do empréstimo
           const hoje = new Date();
           hoje.setHours(0,0,0,0);
-          const dataVenc = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
+          const dataVenc = utils.createValidDate(emp.data_vencimento);
           if (dataVenc && dataVenc < hoje) {
             statusReal = 'atrasado';
           }
@@ -2263,7 +2276,7 @@ async function renderCobrancasEmAbertoLista() {
         // Fallback para verificação pela data de vencimento
         const hoje = new Date();
         hoje.setHours(0,0,0,0);
-        const dataVenc = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
+        const dataVenc = utils.createValidDate(emp.data_vencimento);
         if (dataVenc && dataVenc < hoje) {
           statusReal = 'atrasado';
         }
@@ -2843,7 +2856,7 @@ function renderCobrancasResumo(lista, targetId) {
   
   if (targetId === 'cobrancas-pendentes') {
     const totalPendentes = lista.filter(cobranca => {
-      const dataVenc = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
+      const dataVenc = utils.createValidDate(cobranca.data_vencimento);
       const status = (cobranca.status || '').toUpperCase();
       return dataVenc && dataVenc <= hoje && (status === 'PENDENTE' || status === 'EM ABERTO');
     }).length;
@@ -2866,13 +2879,14 @@ function renderCobrancasResumo(lista, targetId) {
   target.innerHTML = lista.map(cobranca => {
     // ✅ CORREÇÃO: Usar valores padronizados da API
     const valorAtualizado = Number(cobranca.valor_atualizado || cobranca.valor_original || cobranca.valor || 0);
-    const dataVencimento = cobranca.data_vencimento ? new Date(cobranca.data_vencimento) : null;
+    const dataVencimento = utils.createValidDate(cobranca.data_vencimento);
     let diasAtraso = 0;
     
     // Calcular dias de atraso apenas para exibição
     if (dataVencimento && dataVencimento < hoje) {
       const diffTime = hoje.getTime() - dataVencimento.getTime();
       diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      if (diasAtraso < 0) diasAtraso = 0;
     }
     
     return `
