@@ -735,10 +735,12 @@ const dashboardController = {
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             border-left: 4px solid ${statusColor};
           `;
+          const statusTexto = emp.statusCalculado === 'ATRASADO' ? 'Atrasado' : emp.statusCalculado === 'QUITADO' ? 'Quitado' : 'Em dia';
           card.innerHTML = `
             <div style="flex: 1; min-width: 0;">
               <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem; margin-bottom: 2px;">${emp.cliente_nome || 'N/A'}</div>
               <div style="font-size: 0.85rem; font-weight: 700; color: ${statusColor};">${emp.valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+              <div style="font-size: 0.75rem; color: #6b7280; margin-top: 2px;">Venc: ${emp.vencimentoExibir} • <span style="color: ${statusColor}; font-weight: 600;">${statusTexto}</span></div>
             </div>
             <button onclick="viewEmprestimo(${emp.id})" style="background: #3b82f6; color: #fff; border: none; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Ver</button>
           `;
@@ -2387,10 +2389,12 @@ async function renderEmprestimosLista() {
           box-shadow: 0 2px 8px rgba(0,0,0,0.08);
           border-left: 4px solid ${statusColor};
         `;
+        const statusTexto = emp.status === 'ATRASADO' ? 'Atrasado' : emp.status === 'QUITADO' ? 'Quitado' : 'Em dia';
         card.innerHTML = `
           <div style="flex: 1; min-width: 0;">
             <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem; margin-bottom: 2px;">${emp.cliente_nome || 'N/A'}</div>
             <div style="font-size: 0.85rem; font-weight: 700; color: ${statusColor};">${emp.valor}</div>
+            <div style="font-size: 0.75rem; color: #6b7280; margin-top: 2px;">Venc: ${emp.vencimento} • <span style="color: ${statusColor}; font-weight: 600;">${statusTexto}</span></div>
           </div>
           <button onclick="viewEmprestimo(${emp.id})" style="background: #3b82f6; color: #fff; border: none; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Ver</button>
         `;
@@ -3415,6 +3419,7 @@ async function renderAtrasadosLista() {
       
       atrasadosProcessados.forEach(emp => {
         const valorFinal = Number(emp.valor_final || emp.valor || 0);
+        const vencimentoFormatado = utils.formatDate(emp.dataVencimentoAtrasada);
         
         const card = document.createElement('div');
         card.style.cssText = `
@@ -3431,6 +3436,7 @@ async function renderAtrasadosLista() {
           <div style="flex: 1; min-width: 0;">
             <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem; margin-bottom: 2px;">${emp.cliente_nome || 'N/A'}</div>
             <div style="font-size: 0.85rem; font-weight: 700; color: #ef4444;">${valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+            <div style="font-size: 0.75rem; color: #6b7280; margin-top: 2px;">Venc: ${vencimentoFormatado} • <span style="color: #ef4444; font-weight: 600;">${emp.diasAtraso} dias</span></div>
           </div>
           <button onclick="viewEmprestimo(${emp.id})" style="background: #3b82f6; color: #fff; border: none; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Ver</button>
         `;
