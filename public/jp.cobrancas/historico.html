@@ -37,7 +37,7 @@
   <main>
     <div class="container">
       <div class="dashboard-header">
-        <div class="welcome-message" id="welcomeMessage">Bem-vindo(a)!</div>
+        <div class="welcome-message" id="welcomeMessage">Bem-vindo ao sistema JP-Cobranças!</div>
         <div class="dashboard-title">Histórico de Empréstimos</div>
         <div class="dashboard-subtitle">
           Visualize todo o histórico detalhado de empréstimos, parcelas e status de pagamento.
@@ -262,21 +262,8 @@
 
     // Função para carregar mensagem de boas-vindas
     async function carregarMensagemBoasVindas() {
-      try {
-        const response = await fetch('/api/cobrancas/usuario-info', {
-          credentials: 'include'
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const username = data.username || 'Usuário';
-          const welcomeMessage = `Bem-vindo(a), ${username.charAt(0).toUpperCase() + username.slice(1)}!`;
-          document.getElementById('welcomeMessage').textContent = welcomeMessage;
-        }
-      } catch (error) {
-        console.error('Erro ao carregar informações do usuário:', error);
-        // Manter mensagem padrão se falhar
-      }
+      // Mensagem de boas-vindas
+      document.getElementById('welcomeMessage').textContent = 'Bem-vindo ao sistema JP-Cobranças!';
     }
 
     // Função para carregar empréstimos
