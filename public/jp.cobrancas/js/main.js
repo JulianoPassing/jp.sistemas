@@ -737,10 +737,10 @@ const dashboardController = {
           `;
           card.innerHTML = `
             <div style="flex: 1; min-width: 0;">
-              <div style="font-weight: 600; color: #1f2937; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${emp.cliente_nome || 'N/A'}</div>
-              <div style="font-size: 1.1rem; font-weight: 700; color: ${statusColor};">${emp.valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+              <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem; margin-bottom: 2px;">${emp.cliente_nome || 'N/A'}</div>
+              <div style="font-size: 0.85rem; font-weight: 700; color: ${statusColor};">${emp.valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})" style="margin-left: 0.75rem; padding: 0.5rem 1rem; font-weight: 600;">Ver</button>
+            <button onclick="viewEmprestimo(${emp.id})" style="background: #3b82f6; color: #fff; border: none; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Ver</button>
           `;
           cardsContainer.appendChild(card);
         });
@@ -2389,11 +2389,10 @@ async function renderEmprestimosLista() {
         `;
         card.innerHTML = `
           <div style="flex: 1; min-width: 0;">
-            <div style="font-weight: 600; color: #1f2937; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${emp.cliente_nome || 'N/A'}</div>
-            <div style="font-size: 1.1rem; font-weight: 700; color: ${statusColor};">${emp.valor}</div>
-            <div style="font-size: 0.8rem; color: #6b7280;">Venc: ${emp.vencimento}</div>
+            <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem; margin-bottom: 2px;">${emp.cliente_nome || 'N/A'}</div>
+            <div style="font-size: 0.85rem; font-weight: 700; color: ${statusColor};">${emp.valor}</div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})" style="margin-left: 0.75rem; padding: 0.5rem 1rem; font-weight: 600;">Ver</button>
+          <button onclick="viewEmprestimo(${emp.id})" style="background: #3b82f6; color: #fff; border: none; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Ver</button>
         `;
         cardsContainer.appendChild(card);
       });
@@ -3430,11 +3429,10 @@ async function renderAtrasadosLista() {
         `;
         card.innerHTML = `
           <div style="flex: 1; min-width: 0;">
-            <div style="font-weight: 600; color: #1f2937; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${emp.cliente_nome || 'N/A'}</div>
-            <div style="font-size: 1.1rem; font-weight: 700; color: #ef4444;">${valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
-            <div style="font-size: 0.8rem; color: #ef4444; font-weight: 500;">${emp.diasAtraso} dias de atraso</div>
+            <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem; margin-bottom: 2px;">${emp.cliente_nome || 'N/A'}</div>
+            <div style="font-size: 0.85rem; font-weight: 700; color: #ef4444;">${valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})" style="margin-left: 0.75rem; padding: 0.5rem 1rem; font-weight: 600;">Ver</button>
+          <button onclick="viewEmprestimo(${emp.id})" style="background: #3b82f6; color: #fff; border: none; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Ver</button>
         `;
         cardsContainer.appendChild(card);
       });
