@@ -449,19 +449,38 @@ const dashboardController = {
       
       // Se precisar de valores específicos, usar os já calculados pela API
       const emprestimos = await apiService.getEmprestimos();
-      // LOG EXTRA: Mostrar valor de data_vencimento recebido da API
       let valorTotalReceber = 0;
       
-      emprestimos.forEach(emprestimo => {
-        // Usar valores já padronizados pela API
-        const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
+      for (const emprestimo of emprestimos) {
         const status = (emprestimo.status || '').toUpperCase();
         
-        // Somar apenas empréstimos não quitados
-        if (status.toUpperCase() !== 'QUITADO') {
+        // Ignorar empréstimos quitados
+        if (status === 'QUITADO') continue;
+        
+        // Verificar se é parcelado
+        if (emprestimo.tipo_emprestimo === 'in_installments' && emprestimo.numero_parcelas > 1) {
+          try {
+            const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
+            if (parcelas && parcelas.length > 0) {
+              // Verificar se todas as parcelas estão pagas
+              const todasPagas = parcelas.every(p => p.status === 'Paga');
+              if (!todasPagas) {
+                // Somar apenas as parcelas não pagas
+                const parcelasEmAberto = parcelas.filter(p => p.status !== 'Paga');
+                parcelasEmAberto.forEach(parcela => {
+                  valorTotalReceber += Number(parcela.valor || 0);
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Erro ao buscar parcelas:', error);
+          }
+        } else {
+          // Empréstimo normal - somar valor total
+          const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
           valorTotalReceber += valorFinal;
         }
-      });
+      }
       
       // Usar o valor calculado baseado nos valores padronizados da API
       data.cobrancas = data.cobrancas || {};
