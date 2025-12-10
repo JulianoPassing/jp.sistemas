@@ -879,10 +879,47 @@ const app = {
       }
       if (document.getElementById('emprestimos-atraso')) {
         const emprestimos = await apiService.getEmprestimos();
-        const emAtraso = (emprestimos || []).filter(e => {
-          const status = (e.status || '').toUpperCase();
-          return status === 'ATRASADO' || status === 'EM ATRASO';
-        }).length;
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        
+        let emAtraso = 0;
+        
+        for (const emp of (emprestimos || [])) {
+          const statusEmp = (emp.status || '').toUpperCase();
+          
+          // Ignorar quitados
+          if (statusEmp === 'QUITADO') continue;
+          
+          // Verificar se é empréstimo parcelado
+          if (emp.tipo_emprestimo === 'in_installments' && emp.numero_parcelas > 1) {
+            try {
+              const parcelas = await apiService.getParcelasEmprestimo(emp.id);
+              if (parcelas && parcelas.length > 0) {
+                // Verificar se todas as parcelas estão pagas
+                const todasPagas = parcelas.every(p => p.status === 'Paga');
+                if (todasPagas) continue;
+                
+                // Verificar se há parcelas atrasadas
+                const temAtrasada = parcelas.some(p => {
+                  if (p.status === 'Paga') return false;
+                  const dataVenc = utils.createValidDate(p.data_vencimento);
+                  return dataVenc && dataVenc < hoje;
+                });
+                
+                if (temAtrasada) emAtraso++;
+              }
+            } catch (error) {
+              console.error('Erro ao verificar parcelas:', error);
+            }
+          } else {
+            // Empréstimo de valor fixo - verificar data de vencimento
+            const dataVenc = utils.createValidDate(emp.data_vencimento);
+            if (dataVenc && dataVenc < hoje) {
+              emAtraso++;
+            }
+          }
+        }
+        
         document.getElementById('emprestimos-atraso').textContent = emAtraso;
       }
       
