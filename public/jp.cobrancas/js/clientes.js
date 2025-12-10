@@ -299,7 +299,7 @@ const clientesUI = {
                   </div>
                   <div class="emprestimo-details">
                     <div>Valor: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(emp.valor || emp.valor_inicial || 0)}</div>
-                    <div>Vencimento: ${emp.data_vencimento ? new Date(emp.data_vencimento).toLocaleDateString('pt-BR') : 'N/A'}</div>
+                    <div>Vencimento: ${emp.data_vencimento ? (typeof utils !== 'undefined' ? utils.formatDate(emp.data_vencimento) : new Date(emp.data_vencimento).toLocaleDateString('pt-BR')) : 'N/A'}</div>
                     <div>Juros Mensal: ${emp.juros_mensal ? emp.juros_mensal + '%' : 'N/A'}</div>
                     <div>Status: ${emp.status || 'N/A'}</div>
                   </div>
