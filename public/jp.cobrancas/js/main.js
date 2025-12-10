@@ -1604,13 +1604,35 @@ const emprestimoController = {
         }
         // Modal HTML
         const telefone = emp.telefone || emp.celular || emp.whatsapp || '';
-        const nome = emp.cliente_nome || '';
+        const nomeCompleto = emp.cliente_nome || '';
+        const primeiroNome = nomeCompleto.split(' ')[0];
         // Calcular valor total dos juros (juros total + juros aplicado por atraso)
         const valorTotalJuros = jurosTotal + jurosAplicado;
-        const msgWhatsapp = encodeURIComponent(
-                        `Olá ${nome}, seu empréstimo está vencendo hoje. O valor total é de ${utils.formatCurrency(valorAtualizado)}. Caso venha enviar somente o juros o valor é ${utils.formatCurrency(valorTotalJuros)}.`
-        );
-        const linkWhatsapp = telefone ? `https://wa.me/55${telefone.replace(/\D/g,'')}?text=${msgWhatsapp}` : '#';
+        const dataVencFormatada = utils.formatDate(emp.data_vencimento);
+        
+        // Buscar dados da próxima parcela se for parcelado
+        let valorParcelaAtual = valorAtualizado;
+        let dataParcelaAtual = dataVencFormatada;
+        if (parcelas.length > 0) {
+          const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
+          if (parcelasNaoPagas.length > 0) {
+            parcelasNaoPagas.sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
+            valorParcelaAtual = Number(parcelasNaoPagas[0].valor_parcela || 0);
+            dataParcelaAtual = utils.formatDate(parcelasNaoPagas[0].data_vencimento);
+          }
+        }
+        
+        // Guardar dados para o modal de notificação
+        const dadosNotificacao = {
+          telefone,
+          primeiroNome,
+          valorTotal: valorAtualizado,
+          valorJuros: valorTotalJuros,
+          valorParcela: valorParcelaAtual,
+          dataParcela: dataParcelaAtual,
+          dataVencimento: dataVencFormatada,
+          isParcelado: parcelas.length > 1
+        };
         const detalhes = `
           <div class="emprestimo-modal-box" style="padding: 1.5rem; max-width: 420px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 2px 16px #002f4b22;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
@@ -1633,7 +1655,7 @@ const emprestimoController = {
               </div>
             `}
             <div style="display: flex; flex-direction: column; gap: 0.7rem; margin-top: 1.5rem;">
-              <a class="btn" style="background: #25d366; color: #fff; font-weight: 600; font-size: 1.1rem; border-radius: 8px;" id="modal-notificar" href="${linkWhatsapp}" target="_blank" rel="noopener noreferrer">Notificar <b>WhatsApp</b></a>
+              <button class="btn" style="background: #25d366; color: #fff; font-weight: 600; font-size: 1.1rem; border-radius: 8px;" id="modal-notificar" type="button">Notificar <b>WhatsApp</b></button>
               <div style="display: flex; gap: 0.7rem; flex-wrap: wrap;">
                 <button class="btn" style="background: #10b981; color: #fff; flex:1; font-weight: 600; border-radius: 8px;" id="modal-btn-quitado" type="button">Quitado</button>
                 <button class="btn" style="background: #6366f1; color: #fff; flex:1; font-weight: 600; border-radius: 8px;" id="modal-btn-sojuros" type="button">Só Juros</button>
@@ -1644,11 +1666,63 @@ const emprestimoController = {
           </div>
         `;
         const modal = ui.showModal(detalhes, 'Detalhes do Empréstimo');
-        // Corrigir comportamento do botão WhatsApp para nunca recarregar
+        
+        // Botão Notificar WhatsApp - abre modal com opções
         const btnWhats = modal.querySelector('#modal-notificar');
         btnWhats.addEventListener('click', (e) => {
+          e.preventDefault();
           e.stopPropagation();
-          // Não faz nada além de abrir o link
+          
+          // Mensagem para empréstimo parcelado
+          const msgParcelado = `Olá, ${dadosNotificacao.primeiroNome}, a sua parcela vence ${dadosNotificacao.dataParcela}. Você pode pagar o valor de ${utils.formatCurrency(dadosNotificacao.valorParcela)}.
+
+Chave PIX: 04854589930
+
+Lembramos que, em caso de atraso, será cobrada uma multa diária.`;
+
+          // Mensagem para empréstimo normal
+          const msgEmprestimo = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}. Você pode pagar o valor total de ${utils.formatCurrency(dadosNotificacao.valorTotal)} ou apenas os juros de ${utils.formatCurrency(dadosNotificacao.valorJuros)}.
+
+Chave PIX: 04854589930
+
+Lembramos que, em caso de atraso, será cobrada uma multa diária.`;
+
+          const linkParcelado = dadosNotificacao.telefone ? `https://wa.me/55${dadosNotificacao.telefone.replace(/\\D/g,'')}?text=${encodeURIComponent(msgParcelado)}` : '#';
+          const linkEmprestimo = dadosNotificacao.telefone ? `https://wa.me/55${dadosNotificacao.telefone.replace(/\\D/g,'')}?text=${encodeURIComponent(msgEmprestimo)}` : '#';
+          
+          const modalNotificacao = `
+            <div style="padding: 1.5rem; max-width: 500px; margin: 0 auto;">
+              <h3 style="margin-bottom: 1.5rem; color: #002f4b; text-align: center;">Escolha o tipo de mensagem</h3>
+              
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <!-- Opção Parcelado -->
+                <div style="border: 2px solid #25d366; border-radius: 12px; padding: 1rem; background: #f0fff4;">
+                  <h4 style="color: #25d366; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                    📋 Mensagem para Parcela
+                  </h4>
+                  <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb;">${msgParcelado}</p>
+                  <a href="${linkParcelado}" target="_blank" rel="noopener noreferrer" class="btn" style="display: block; background: #25d366; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none;">
+                    Enviar via WhatsApp
+                  </a>
+                </div>
+                
+                <!-- Opção Empréstimo -->
+                <div style="border: 2px solid #3b82f6; border-radius: 12px; padding: 1rem; background: #eff6ff;">
+                  <h4 style="color: #3b82f6; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                    💰 Mensagem para Empréstimo
+                  </h4>
+                  <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb;">${msgEmprestimo}</p>
+                  <a href="${linkEmprestimo}" target="_blank" rel="noopener noreferrer" class="btn" style="display: block; background: #3b82f6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none;">
+                    Enviar via WhatsApp
+                  </a>
+                </div>
+              </div>
+              
+              <button type="button" class="btn" style="width: 100%; margin-top: 1.5rem; background: #6b7280; color: #fff; padding: 0.75rem; border-radius: 8px;" onclick="this.closest('.modal').remove()">Cancelar</button>
+            </div>
+          `;
+          
+          ui.showModal(modalNotificacao, 'Notificar Cliente');
         });
         
         // Botão Editar
