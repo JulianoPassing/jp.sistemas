@@ -600,77 +600,124 @@ const dashboardController = {
     const tbody = document.getElementById('cobrancas-pendentes');
     if (!tbody) return;
 
-    tbody.innerHTML = '';
+    tbody.innerHTML = '<tr><td colspan="7">Carregando...</td></tr>';
 
     try {
       // Buscar todos os empréstimos
       const emprestimos = await apiService.getEmprestimos();
       
       if (!emprestimos || emprestimos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
         return;
       }
 
-    // Ordenar por status (quitados no final) e data de vencimento (mais antigo primeiro)
-    emprestimos.sort((a, b) => {
-      const isQuitadoA = (a.status || '').toUpperCase() === 'QUITADO';
-      const isQuitadoB = (b.status || '').toUpperCase() === 'QUITADO';
-      if (isQuitadoA && !isQuitadoB) return 1;
-      if (!isQuitadoA && isQuitadoB) return -1;
-      // Ambos quitados ou ambos não quitados: ordenar por data de vencimento
-      const dataA = new Date(a.data_vencimento || 0);
-      const dataB = new Date(b.data_vencimento || 0);
-      return dataA - dataB;
-    });
-
-      emprestimos.forEach(emprestimo => {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      
+      // Processar cada empréstimo para determinar status real
+      const emprestimosProcessados = [];
+      
+      for (const emprestimo of emprestimos) {
         const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
-        const valorInicial = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
         const dataEmprestimo = utils.formatDate(emprestimo.data_emprestimo);
-        const vencimento = utils.formatDate(emprestimo.data_vencimento);
-        
-        // Calcular dias de atraso usando função corrigida
+        let vencimentoExibir = utils.formatDate(emprestimo.data_vencimento);
         let diasAtraso = 0;
-        if (emprestimo.data_vencimento) {
-          const hoje = new Date();
-          hoje.setHours(0, 0, 0, 0);
-          const venc = utils.createValidDate(emprestimo.data_vencimento);
-          if (venc) {
-            venc.setHours(0, 0, 0, 0);
-            diasAtraso = Math.ceil((hoje - venc) / (1000 * 60 * 60 * 24));
-            if (diasAtraso < 0) diasAtraso = 0;
-          }
-        }
-        
-        // Formatar status
         let status = (emprestimo.status || '').toUpperCase();
-        if (emprestimo.data_vencimento && status !== 'QUITADO') {
-          const hoje = new Date();
-          hoje.setHours(0, 0, 0, 0);
-          const venc = utils.createValidDate(emprestimo.data_vencimento);
-          if (venc) {
-            venc.setHours(0, 0, 0, 0);
-            if (venc < hoje) {
+        
+        // Verificar se é empréstimo parcelado
+        if (emprestimo.tipo_emprestimo === 'in_installments' && emprestimo.numero_parcelas > 1) {
+          try {
+            const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
+            
+            if (parcelas && parcelas.length > 0) {
+              // Verificar status baseado nas parcelas
+              const todasPagas = parcelas.every(p => p.status === 'Paga');
+              const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
+              
+              if (todasPagas) {
+                status = 'QUITADO';
+                diasAtraso = 0;
+              } else {
+                // Encontrar parcelas atrasadas
+                const parcelasAtrasadas = parcelasNaoPagas.filter(p => {
+                  const dataVencParcela = utils.createValidDate(p.data_vencimento);
+                  return dataVencParcela && dataVencParcela < hoje;
+                });
+                
+                if (parcelasAtrasadas.length > 0) {
+                  status = 'ATRASADO';
+                  // Pegar a parcela mais antiga atrasada
+                  parcelasAtrasadas.sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
+                  const parcelaMaisAtrasada = parcelasAtrasadas[0];
+                  const dataVencAtrasada = utils.createValidDate(parcelaMaisAtrasada.data_vencimento);
+                  vencimentoExibir = utils.formatDate(parcelaMaisAtrasada.data_vencimento);
+                  if (dataVencAtrasada) {
+                    diasAtraso = Math.ceil((hoje - dataVencAtrasada) / (1000 * 60 * 60 * 24));
+                  }
+                } else {
+                  // Tem parcelas pendentes mas nenhuma atrasada = em dia
+                  status = 'ATIVO';
+                  // Mostrar próxima parcela a vencer
+                  parcelasNaoPagas.sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
+                  if (parcelasNaoPagas.length > 0) {
+                    vencimentoExibir = utils.formatDate(parcelasNaoPagas[0].data_vencimento);
+                  }
+                  diasAtraso = 0;
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Erro ao buscar parcelas do empréstimo', emprestimo.id, error);
+          }
+        } else {
+          // Empréstimo de valor fixo - usar data de vencimento do empréstimo
+          if (status !== 'QUITADO' && emprestimo.data_vencimento) {
+            const venc = utils.createValidDate(emprestimo.data_vencimento);
+            if (venc && venc < hoje) {
               status = 'ATRASADO';
+              diasAtraso = Math.ceil((hoje - venc) / (1000 * 60 * 60 * 24));
             }
           }
         }
         
+        emprestimosProcessados.push({
+          ...emprestimo,
+          valorFinal,
+          dataEmprestimo,
+          vencimentoExibir,
+          diasAtraso,
+          statusCalculado: status
+        });
+      }
+      
+      // Ordenar por status (quitados no final) e dias de atraso
+      emprestimosProcessados.sort((a, b) => {
+        const isQuitadoA = a.statusCalculado === 'QUITADO';
+        const isQuitadoB = b.statusCalculado === 'QUITADO';
+        if (isQuitadoA && !isQuitadoB) return 1;
+        if (!isQuitadoA && isQuitadoB) return -1;
+        // Ordenar por dias de atraso (mais atrasado primeiro)
+        return b.diasAtraso - a.diasAtraso;
+      });
+
+      tbody.innerHTML = '';
+      
+      emprestimosProcessados.forEach(emp => {
         let statusClass = 'secondary';
-        if (status === 'ATRASADO') statusClass = 'danger';
-        else if (status === 'PENDENTE' || status === 'ATIVO') statusClass = 'warning';
-        else if (status === 'QUITADO') statusClass = 'info';
+        if (emp.statusCalculado === 'ATRASADO') statusClass = 'danger';
+        else if (emp.statusCalculado === 'PENDENTE' || emp.statusCalculado === 'ATIVO') statusClass = 'warning';
+        else if (emp.statusCalculado === 'QUITADO') statusClass = 'info';
         
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td>${emprestimo.cliente_nome || 'N/A'}</td>
-          <td>${valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-          <td>${dataEmprestimo}</td>
-          <td>${vencimento}</td>
-          <td>${diasAtraso > 0 ? diasAtraso : '-'}</td>
-          <td><span class="badge badge-${statusClass}">${status.charAt(0) + status.slice(1).toLowerCase()}</span></td>
+          <td>${emp.cliente_nome || 'N/A'}</td>
+          <td>${emp.valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+          <td>${emp.dataEmprestimo}</td>
+          <td>${emp.vencimentoExibir}</td>
+          <td>${emp.diasAtraso > 0 ? emp.diasAtraso : '-'}</td>
+          <td><span class="badge badge-${statusClass}">${emp.statusCalculado.charAt(0) + emp.statusCalculado.slice(1).toLowerCase()}</span></td>
           <td>
-            <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
+            <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
           </td>
         `;
         tbody.appendChild(row);
