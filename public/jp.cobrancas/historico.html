@@ -491,20 +491,29 @@
 
     // Função para determinar status do empréstimo
     function determinarStatus(emprestimo) {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      
       // Se é empréstimo parcelado (tem parcelas)
       if (emprestimo.parcelas && emprestimo.parcelas.length > 0) {
         const parcelas = emprestimo.parcelas;
         const todasPagas = parcelas.every(p => p.status === 'Paga');
-        const temAtrasada = parcelas.some(p => p.status === 'Atrasada');
-
+        
         if (todasPagas) return 'Quitado';
+        
+        // Calcular dinamicamente quais parcelas estão atrasadas (baseado na data, não no status do banco)
+        const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
+        const temAtrasada = parcelasNaoPagas.some(p => {
+          const dataVencParcela = criarDataValida(p.data_vencimento);
+          return dataVencParcela && dataVencParcela < hoje;
+        });
+
         if (temAtrasada) return 'Em Atraso';
         return 'Ativo';
       }
 
       // Se é empréstimo de valor fixo (sem parcelas)
       // Verificar se está vencido e se foi pago
-      const hoje = new Date();
       const dataVencimento = criarDataValida(emprestimo.data_vencimento);
       
       if (emprestimo.status === 'Quitado') {
@@ -521,9 +530,19 @@
 
     // Função para calcular resumo das parcelas
     function calcularResumoParcelas(parcelas) {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      
       const pagas = parcelas.filter(p => p.status === 'Paga').length;
-      const pendentes = parcelas.filter(p => p.status === 'Pendente').length;
-      const atrasadas = parcelas.filter(p => p.status === 'Atrasada').length;
+      
+      // Calcular atrasadas dinamicamente baseado na data de vencimento
+      const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
+      const atrasadas = parcelasNaoPagas.filter(p => {
+        const dataVenc = criarDataValida(p.data_vencimento);
+        return dataVenc && dataVenc < hoje;
+      }).length;
+      
+      const pendentes = parcelasNaoPagas.length - atrasadas;
       
       return { pagas, pendentes, atrasadas };
     }
@@ -695,28 +714,53 @@
       try {
         // Se a data já é um objeto Date válido
         if (data instanceof Date && !isNaN(data)) {
+          // Corrigir anos errados
+          const year = data.getFullYear();
+          if (year < 100) {
+            data.setFullYear(year + 2000);
+          } else if (year < 1950) {
+            data.setFullYear(year + 100);
+          }
           return data;
         }
         
         // Se é uma string, tentar diferentes formatos
         let dataObj;
+        const dataStr = String(data).trim();
         
         // Se a data vem no formato YYYY-MM-DD (MySQL DATE)
-        if (typeof data === 'string' && data.match(/^\d{4}-\d{2}-\d{2}$/)) {
-          dataObj = new Date(data + 'T00:00:00');
+        if (dataStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          const parts = dataStr.split('-');
+          let year = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10) - 1;
+          const day = parseInt(parts[2], 10);
+          
+          // Corrigir anos errados
+          if (year < 100) year += 2000;
+          else if (year < 1950) year += 100;
+          
+          dataObj = new Date(2000, month, day);
+          dataObj.setFullYear(year);
         }
         // Se a data vem no formato YYYY-MM-DD HH:MM:SS (MySQL DATETIME)
-        else if (typeof data === 'string' && data.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-          dataObj = new Date(data.replace(' ', 'T'));
+        else if (dataStr.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+          dataObj = new Date(dataStr.replace(' ', 'T'));
         }
         // Se a data vem no formato YYYY-MM-DDTHH:MM:SS (ISO)
-        else if (typeof data === 'string' && data.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)) {
-          dataObj = new Date(data);
+        else if (dataStr.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)) {
+          dataObj = new Date(dataStr);
         }
-        // Se a data vem no formato DD/MM/YYYY
-        else if (typeof data === 'string' && data.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-          const [dia, mes, ano] = data.split('/');
-          dataObj = new Date(ano, mes - 1, dia);
+        // Se a data vem no formato DD/MM/YYYY ou DD/MM/YY
+        else if (dataStr.match(/^\d{2}\/\d{2}\/\d{2,4}$/)) {
+          const [dia, mes, ano] = dataStr.split('/');
+          let year = parseInt(ano, 10);
+          
+          // Corrigir anos com 2 dígitos
+          if (year < 100) year += 2000;
+          else if (year < 1950) year += 100;
+          
+          dataObj = new Date(2000, parseInt(mes, 10) - 1, parseInt(dia, 10));
+          dataObj.setFullYear(year);
         }
         // Tentar criar diretamente
         else {
@@ -726,6 +770,14 @@
         // Verificar se a data é válida
         if (isNaN(dataObj.getTime())) {
           return null;
+        }
+        
+        // Corrigir anos errados no resultado final
+        const year = dataObj.getFullYear();
+        if (year < 100) {
+          dataObj.setFullYear(year + 2000);
+        } else if (year < 1950) {
+          dataObj.setFullYear(year + 100);
         }
         
         return dataObj;
