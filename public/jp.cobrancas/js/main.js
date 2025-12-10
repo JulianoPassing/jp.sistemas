@@ -2833,6 +2833,10 @@ async function renderAtrasadosLista() {
       // Verificar se tem data de vencimento e se está vencida
       if (!emp.data_vencimento) return false;
       
+      // Ignorar empréstimos quitados
+      const status = (emp.status || '').toLowerCase();
+      if (status === 'quitado') return false;
+      
       const dataVencimento = new Date(emp.data_vencimento);
       dataVencimento.setHours(0,0,0,0);
       
