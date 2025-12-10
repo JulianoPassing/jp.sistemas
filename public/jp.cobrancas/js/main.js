@@ -1161,6 +1161,16 @@ const emprestimoController = {
       // Buscar lista de clientes para o select
       const clientes = await apiService.getClientes();
       
+      // Buscar parcelas se for empréstimo parcelado
+      let parcelas = [];
+      if (emp.tipo_emprestimo === 'in_installments' && emp.numero_parcelas > 1) {
+        try {
+          parcelas = await apiService.getParcelasEmprestimo(id);
+        } catch (error) {
+          console.error('Erro ao buscar parcelas:', error);
+        }
+      }
+      
       // Criar modal de edição
       const modalEdicao = `
         <div style="padding: 1.5rem; max-width: 600px; margin: 0 auto;">
@@ -1229,6 +1239,63 @@ const emprestimoController = {
               <label>Observações</label>
               <textarea id="edit-observacoes" class="form-input" rows="3" placeholder="Observações sobre o empréstimo">${emp.observacoes || ''}</textarea>
             </div>
+            
+            ${parcelas.length > 0 ? `
+            <div style="margin-top: 1.5rem; border-top: 2px solid #e5e7eb; padding-top: 1.5rem;">
+              <h4 style="color: #002f4b; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📅 Editar Datas das Parcelas</span>
+                <span style="font-size: 0.8rem; color: #666; font-weight: normal;">(${parcelas.length} parcelas)</span>
+              </h4>
+              <div style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.5rem;">
+                ${parcelas.map(parcela => {
+                  const statusParcela = parcela.status || 'Pendente';
+                  const isPaga = statusParcela === 'Paga';
+                  const dataVenc = utils.createValidDate(parcela.data_vencimento);
+                  const hoje = new Date();
+                  hoje.setHours(0,0,0,0);
+                  const isAtrasada = !isPaga && dataVenc && dataVenc < hoje;
+                  
+                  let corFundo = '#fff';
+                  let corBorda = '#e5e7eb';
+                  if (isPaga) {
+                    corFundo = '#f0fdf4';
+                    corBorda = '#86efac';
+                  } else if (isAtrasada) {
+                    corFundo = '#fef2f2';
+                    corBorda = '#fca5a5';
+                  }
+                  
+                  return `
+                  <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; margin-bottom: 0.5rem; background: ${corFundo}; border: 1px solid ${corBorda}; border-radius: 6px;">
+                    <div style="flex: 0 0 80px; font-weight: 600; color: #374151;">
+                      Parcela ${parcela.numero_parcela}
+                    </div>
+                    <div style="flex: 0 0 100px; font-size: 0.9rem; color: #666;">
+                      ${utils.formatCurrency(parcela.valor_parcela || 0)}
+                    </div>
+                    <div style="flex: 1;">
+                      <input type="date" 
+                        class="form-input parcela-data-input" 
+                        data-parcela-numero="${parcela.numero_parcela}"
+                        data-emprestimo-id="${parcela.emprestimo_id}"
+                        value="${utils.formatDateForInput(parcela.data_vencimento)}"
+                        ${isPaga ? 'disabled' : ''}
+                        style="padding: 0.4rem; font-size: 0.9rem; ${isPaga ? 'background: #e5e7eb; cursor: not-allowed;' : ''}">
+                    </div>
+                    <div style="flex: 0 0 80px; text-align: center;">
+                      <span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; color: white; background: ${isPaga ? '#10b981' : isAtrasada ? '#ef4444' : '#6b7280'};">
+                        ${isPaga ? 'Paga' : isAtrasada ? 'Atrasada' : 'Pendente'}
+                      </span>
+                    </div>
+                  </div>
+                  `;
+                }).join('')}
+              </div>
+              <p style="font-size: 0.8rem; color: #666; margin-top: 0.5rem; font-style: italic;">
+                * Parcelas pagas não podem ter a data alterada
+              </p>
+            </div>
+            ` : ''}
             
             <div style="display: flex; gap: 1rem; margin-top: 2rem;">
               <button type="submit" class="btn btn-primary" style="flex: 1;">Salvar Alterações</button>
@@ -1320,6 +1387,38 @@ const emprestimoController = {
           if (submitBtn) {
             submitBtn.textContent = 'Salvando...';
             submitBtn.disabled = true;
+          }
+          
+          // Primeiro, atualizar as datas das parcelas se houver alterações
+          const parcelaInputs = modal.querySelectorAll('.parcela-data-input:not([disabled])');
+          for (const input of parcelaInputs) {
+            const numeroParcela = input.dataset.parcelaNumero;
+            const emprestimoId = input.dataset.emprestimoId;
+            const novaData = input.value;
+            
+            // Verificar se a data foi alterada (comparar com a data original)
+            const parcelaOriginal = parcelas.find(p => String(p.numero_parcela) === String(numeroParcela));
+            const dataOriginal = parcelaOriginal ? utils.formatDateForInput(parcelaOriginal.data_vencimento) : '';
+            
+            if (novaData && novaData !== dataOriginal) {
+              console.log(`📅 Atualizando data da parcela ${numeroParcela}: ${dataOriginal} -> ${novaData}`);
+              try {
+                const parcelaResponse = await fetch(`/api/cobrancas/emprestimos/${emprestimoId}/parcelas/${numeroParcela}/data`, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  credentials: 'include',
+                  body: JSON.stringify({ data_vencimento: novaData })
+                });
+                
+                if (!parcelaResponse.ok) {
+                  console.warn(`Erro ao atualizar parcela ${numeroParcela}`);
+                }
+              } catch (parcelaError) {
+                console.error(`Erro ao atualizar parcela ${numeroParcela}:`, parcelaError);
+              }
+            }
           }
           
           // Enviar dados para a API

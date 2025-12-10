@@ -101,6 +101,7 @@
       const searchInput = document.getElementById('search-emprestimos');
       const tbody = document.getElementById('historico-emprestimos');
       let allEmprestimos = [];
+      let emprestimosProcessados = [];
 
       // Função para buscar e renderizar todos os empréstimos
       async function fetchAndRenderEmprestimos() {
@@ -108,6 +109,71 @@
         try {
           const emprestimos = await apiService.getEmprestimos();
           allEmprestimos = Array.isArray(emprestimos) ? emprestimos : [];
+          
+          // Processar cada empréstimo para determinar status real (igual ao dashboard)
+          const hoje = new Date();
+          hoje.setHours(0, 0, 0, 0);
+          
+          emprestimosProcessados = [];
+          
+          for (const emprestimo of allEmprestimos) {
+            const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
+            const valorInicial = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
+            let vencimentoExibir = emprestimo.data_vencimento;
+            let status = (emprestimo.status || '').toUpperCase();
+            
+            // Verificar se é empréstimo parcelado
+            if (emprestimo.tipo_emprestimo === 'in_installments' && emprestimo.numero_parcelas > 1) {
+              try {
+                const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
+                
+                if (parcelas && parcelas.length > 0) {
+                  const todasPagas = parcelas.every(p => p.status === 'Paga');
+                  const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
+                  
+                  if (todasPagas) {
+                    status = 'QUITADO';
+                  } else {
+                    const parcelasAtrasadas = parcelasNaoPagas.filter(p => {
+                      const dataVencParcela = utils.createValidDate(p.data_vencimento);
+                      return dataVencParcela && dataVencParcela < hoje;
+                    });
+                    
+                    if (parcelasAtrasadas.length > 0) {
+                      status = 'ATRASADO';
+                      parcelasAtrasadas.sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
+                      vencimentoExibir = parcelasAtrasadas[0].data_vencimento;
+                    } else {
+                      status = 'ATIVO';
+                      parcelasNaoPagas.sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
+                      if (parcelasNaoPagas.length > 0) {
+                        vencimentoExibir = parcelasNaoPagas[0].data_vencimento;
+                      }
+                    }
+                  }
+                }
+              } catch (error) {
+                console.error('Erro ao buscar parcelas:', error);
+              }
+            } else {
+              // Empréstimo de valor fixo
+              if (status !== 'QUITADO' && emprestimo.data_vencimento) {
+                const venc = utils.createValidDate(emprestimo.data_vencimento);
+                if (venc && venc < hoje) {
+                  status = 'ATRASADO';
+                }
+              }
+            }
+            
+            emprestimosProcessados.push({
+              ...emprestimo,
+              valorFinal,
+              valorInicial,
+              vencimentoExibir,
+              statusCalculado: status
+            });
+          }
+          
           renderEmprestimosFiltrados();
         } catch (err) {
           tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
@@ -117,10 +183,10 @@
       // Função para renderizar os empréstimos filtrados
       function renderEmprestimosFiltrados() {
         const termo = (searchInput.value || '').toLowerCase();
-        const emprestimosFiltrados = allEmprestimos.filter(emp => {
+        const emprestimosFiltrados = emprestimosProcessados.filter(emp => {
           return !termo ||
             (emp.cliente_nome && emp.cliente_nome.toLowerCase().includes(termo)) ||
-            (emp.status && emp.status.toLowerCase().includes(termo)) ||
+            (emp.statusCalculado && emp.statusCalculado.toLowerCase().includes(termo)) ||
             (emp.valor && String(emp.valor).toLowerCase().includes(termo)) ||
             (emp.valor_final && String(emp.valor_final).toLowerCase().includes(termo));
         });
@@ -133,32 +199,18 @@
         for (const emprestimo of emprestimosFiltrados) {
           if (emprestimosUnicos.has(emprestimo.id)) continue;
           emprestimosUnicos.set(emprestimo.id, true);
-          const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
-          const valorInicial = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
-          let status = (emprestimo.status || '').toUpperCase();
           
-          // Usar utils.createValidDate para interpretar datas corretamente
-          const hoje = new Date();
-          hoje.setHours(0, 0, 0, 0);
-          
-          if (emprestimo.data_vencimento && status !== 'QUITADO') {
-            const vencDate = utils.createValidDate(emprestimo.data_vencimento);
-            if (vencDate) {
-              vencDate.setHours(0, 0, 0, 0);
-              if (vencDate < hoje) {
-                status = 'ATRASADO';
-              }
-            }
-          }
-          
-          const valorFinalFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorFinal);
-          const valorInicialFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorInicial);
+          const valorFinalFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(emprestimo.valorFinal);
+          const valorInicialFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(emprestimo.valorInicial);
           const data = utils.formatDate(emprestimo.data_emprestimo);
-          const vencimento = utils.formatDate(emprestimo.data_vencimento);
+          const vencimento = utils.formatDate(emprestimo.vencimentoExibir);
+          const status = emprestimo.statusCalculado;
+          
           let statusClass = 'secondary';
           if (status === 'ATRASADO') statusClass = 'danger';
           else if (status === 'PENDENTE' || status === 'ATIVO') statusClass = 'warning';
           else if (status === 'QUITADO') statusClass = 'info';
+          
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${emprestimo.cliente_nome || 'N/A'}</td>
