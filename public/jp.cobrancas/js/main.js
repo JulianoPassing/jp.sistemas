@@ -111,6 +111,14 @@ const utils = {
     
     // Se já é um objeto Date válido
     if (dateInput instanceof Date && !isNaN(dateInput.getTime())) {
+      // Verificar se o ano faz sentido (corrigir anos < 100)
+      const year = dateInput.getFullYear();
+      if (year < 100) {
+        dateInput.setFullYear(year + 2000);
+      } else if (year < 1950) {
+        // Provavelmente ano foi interpretado errado (ex: 1925 deveria ser 2025)
+        dateInput.setFullYear(year + 100);
+      }
       return dateInput;
     }
     
@@ -119,10 +127,21 @@ const utils = {
     // Formato ISO: 2026-01-09 ou 2026-01-09T00:00:00
     if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
       const parts = dateStr.split('T')[0].split('-');
-      const year = parseInt(parts[0], 10);
+      let year = parseInt(parts[0], 10);
       const month = parseInt(parts[1], 10) - 1;
       const day = parseInt(parts[2], 10);
-      return new Date(year, month, day);
+      
+      // Corrigir anos que parecem errados
+      if (year < 100) {
+        year = year + 2000;
+      } else if (year < 1950) {
+        year = year + 100;
+      }
+      
+      // Usar setFullYear para evitar problemas com anos pequenos
+      const date = new Date(2000, month, day);
+      date.setFullYear(year);
+      return date;
     }
     
     // Formato brasileiro: 09/01/2026 ou 09/01/26
@@ -131,11 +150,18 @@ const utils = {
       const day = parseInt(parts[0], 10);
       const month = parseInt(parts[1], 10) - 1;
       let year = parseInt(parts[2], 10);
-      // Se ano tem 2 dígitos, assumir século 21
+      
+      // Corrigir ano
       if (year < 100) {
         year = year + 2000;
+      } else if (year < 1950) {
+        year = year + 100;
       }
-      return new Date(year, month, day);
+      
+      // Usar setFullYear para evitar problemas com anos pequenos
+      const date = new Date(2000, month, day);
+      date.setFullYear(year);
+      return date;
     }
     
     // Tentar criar data diretamente
@@ -143,9 +169,12 @@ const utils = {
     
     // Verificar se a data é válida e se o ano faz sentido
     if (!isNaN(date.getTime())) {
-      // Se o ano for menor que 100, provavelmente foi interpretado errado
-      if (date.getFullYear() < 100) {
-        date.setFullYear(date.getFullYear() + 2000);
+      const year = date.getFullYear();
+      if (year < 100) {
+        date.setFullYear(year + 2000);
+      } else if (year < 1950) {
+        // Corrigir anos como 1925 que deveriam ser 2025
+        date.setFullYear(year + 100);
       }
       return date;
     }
