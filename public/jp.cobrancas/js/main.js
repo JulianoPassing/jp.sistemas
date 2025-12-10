@@ -700,28 +700,81 @@ const dashboardController = {
         return b.diasAtraso - a.diasAtraso;
       });
 
-      tbody.innerHTML = '';
+      // Verificar se é mobile
+      const isMobile = window.innerWidth <= 768;
       
-      emprestimosProcessados.forEach(emp => {
-        let statusClass = 'secondary';
-        if (emp.statusCalculado === 'ATRASADO') statusClass = 'danger';
-        else if (emp.statusCalculado === 'PENDENTE' || emp.statusCalculado === 'ATIVO') statusClass = 'warning';
-        else if (emp.statusCalculado === 'QUITADO') statusClass = 'info';
+      if (isMobile) {
+        // Layout de cards para mobile
+        const container = tbody.parentElement.parentElement;
         
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${emp.cliente_nome || 'N/A'}</td>
-          <td>${emp.valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-          <td>${emp.dataEmprestimo}</td>
-          <td>${emp.vencimentoExibir}</td>
-          <td>${emp.diasAtraso > 0 ? emp.diasAtraso : '-'}</td>
-          <td><span class="badge badge-${statusClass}">${emp.statusCalculado.charAt(0) + emp.statusCalculado.slice(1).toLowerCase()}</span></td>
-          <td>
-            <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
-          </td>
-        `;
-        tbody.appendChild(row);
-      });
+        // Esconder tabela e criar container de cards
+        tbody.parentElement.style.display = 'none';
+        
+        // Remover cards antigos se existirem
+        const oldCards = container.querySelector('.mobile-cards-container');
+        if (oldCards) oldCards.remove();
+        
+        const cardsContainer = document.createElement('div');
+        cardsContainer.className = 'mobile-cards-container';
+        cardsContainer.style.cssText = 'display: flex; flex-direction: column; gap: 0.75rem; padding: 0.5rem;';
+        
+        emprestimosProcessados.forEach(emp => {
+          let statusColor = '#6b7280';
+          if (emp.statusCalculado === 'ATRASADO') statusColor = '#ef4444';
+          else if (emp.statusCalculado === 'PENDENTE' || emp.statusCalculado === 'ATIVO') statusColor = '#f59e0b';
+          else if (emp.statusCalculado === 'QUITADO') statusColor = '#10b981';
+          
+          const card = document.createElement('div');
+          card.style.cssText = `
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 0.75rem 1rem; 
+            background: #fff; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid ${statusColor};
+          `;
+          card.innerHTML = `
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-weight: 600; color: #1f2937; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${emp.cliente_nome || 'N/A'}</div>
+              <div style="font-size: 1.1rem; font-weight: 700; color: ${statusColor};">${emp.valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})" style="margin-left: 0.75rem; padding: 0.5rem 1rem; font-weight: 600;">Ver</button>
+          `;
+          cardsContainer.appendChild(card);
+        });
+        
+        container.appendChild(cardsContainer);
+      } else {
+        // Layout de tabela para desktop
+        tbody.parentElement.style.display = '';
+        const oldCards = tbody.parentElement.parentElement.querySelector('.mobile-cards-container');
+        if (oldCards) oldCards.remove();
+        
+        tbody.innerHTML = '';
+        
+        emprestimosProcessados.forEach(emp => {
+          let statusClass = 'secondary';
+          if (emp.statusCalculado === 'ATRASADO') statusClass = 'danger';
+          else if (emp.statusCalculado === 'PENDENTE' || emp.statusCalculado === 'ATIVO') statusClass = 'warning';
+          else if (emp.statusCalculado === 'QUITADO') statusClass = 'info';
+          
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${emp.cliente_nome || 'N/A'}</td>
+            <td>${emp.valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+            <td>${emp.dataEmprestimo}</td>
+            <td>${emp.vencimentoExibir}</td>
+            <td>${emp.diasAtraso > 0 ? emp.diasAtraso : '-'}</td>
+            <td><span class="badge badge-${statusClass}">${emp.statusCalculado.charAt(0) + emp.statusCalculado.slice(1).toLowerCase()}</span></td>
+            <td>
+              <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
       
     } catch (error) {
       console.error('Erro ao carregar cobranças pendentes:', error);
@@ -2280,7 +2333,6 @@ async function renderEmprestimosLista() {
       }
       
       const valorAtualizado = valorFinal;
-      const infoJuros = '';
       const valor = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
@@ -2288,19 +2340,86 @@ async function renderEmprestimosLista() {
       const data = utils.formatDate(emprestimo.data_emprestimo);
       const vencimento = utils.formatDate(emprestimo.data_vencimento);
       const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : 'info'));
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${emprestimo.cliente_nome || 'N/A'}</td>
-        <td>${valor}${infoJuros}</td>
-        <td>${emprestimo.parcelas || '-'}</td>
-        <td>${data}</td>
-        <td>${vencimento}</td>
-        <td><span class="badge badge-${statusClass}">${status.charAt(0) + status.slice(1).toLowerCase()}</span></td>
-        <td>
-          <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
-        </td>
-      `;
-      tbody.appendChild(row);
+      
+      // Guardar dados processados
+      emprestimosUnicos.set(emprestimo.id, {
+        ...emprestimo,
+        valor,
+        data,
+        vencimento,
+        status,
+        statusClass
+      });
+    }
+    
+    // Verificar se é mobile
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
+      // Layout de cards para mobile
+      const container = tbody.parentElement.parentElement;
+      
+      // Esconder tabela
+      tbody.parentElement.style.display = 'none';
+      
+      // Remover cards antigos
+      const oldCards = container.querySelector('.mobile-emprestimos-cards');
+      if (oldCards) oldCards.remove();
+      
+      const cardsContainer = document.createElement('div');
+      cardsContainer.className = 'mobile-emprestimos-cards';
+      cardsContainer.style.cssText = 'display: flex; flex-direction: column; gap: 0.75rem; padding: 0.5rem;';
+      
+      emprestimosUnicos.forEach((emp) => {
+        let statusColor = '#6b7280';
+        if (emp.status === 'ATRASADO') statusColor = '#ef4444';
+        else if (emp.status === 'ATIVO') statusColor = '#10b981';
+        else if (emp.status === 'QUITADO') statusColor = '#3b82f6';
+        
+        const card = document.createElement('div');
+        card.style.cssText = `
+          display: flex; 
+          align-items: center; 
+          justify-content: space-between; 
+          padding: 0.75rem 1rem; 
+          background: #fff; 
+          border-radius: 10px; 
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          border-left: 4px solid ${statusColor};
+        `;
+        card.innerHTML = `
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 600; color: #1f2937; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${emp.cliente_nome || 'N/A'}</div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: ${statusColor};">${emp.valor}</div>
+            <div style="font-size: 0.8rem; color: #6b7280;">Venc: ${emp.vencimento}</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})" style="margin-left: 0.75rem; padding: 0.5rem 1rem; font-weight: 600;">Ver</button>
+        `;
+        cardsContainer.appendChild(card);
+      });
+      
+      container.appendChild(cardsContainer);
+    } else {
+      // Layout de tabela para desktop
+      tbody.parentElement.style.display = '';
+      const oldCards = tbody.parentElement.parentElement.querySelector('.mobile-emprestimos-cards');
+      if (oldCards) oldCards.remove();
+      
+      emprestimosUnicos.forEach((emp) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${emp.cliente_nome || 'N/A'}</td>
+          <td>${emp.valor}</td>
+          <td>${emp.parcelas || '-'}</td>
+          <td>${emp.data}</td>
+          <td>${emp.vencimento}</td>
+          <td><span class="badge badge-${emp.statusClass}">${emp.status.charAt(0) + emp.status.slice(1).toLowerCase()}</span></td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
     }
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
@@ -3277,27 +3396,78 @@ async function renderAtrasadosLista() {
     // Ordenar por dias de atraso (mais atrasado primeiro)
     atrasadosProcessados.sort((a, b) => b.diasAtraso - a.diasAtraso);
     
-    tbody.innerHTML = '';
+    // Verificar se é mobile
+    const isMobile = window.innerWidth <= 768;
     
-    atrasadosProcessados.forEach(emp => {
-      const valorFinal = Number(emp.valor_final || emp.valor || 0);
-      const dataEmprestimo = utils.formatDate(emp.data_emprestimo);
-      const vencimento = emp.dataVencimentoAtrasada ? emp.dataVencimentoAtrasada.toLocaleDateString('pt-BR') : '-';
+    if (isMobile) {
+      // Layout de cards para mobile
+      const container = tbody.parentElement.parentElement;
       
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${emp.cliente_nome || 'N/A'}</td>
-        <td>${valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-        <td>${dataEmprestimo}</td>
-        <td>${vencimento}</td>
-        <td>${emp.diasAtraso > 0 ? emp.diasAtraso : '-'}</td>
-        <td><span class="badge badge-danger">Atrasado</span></td>
-        <td>
-          <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
-        </td>
-      `;
-      tbody.appendChild(row);
-    });
+      // Esconder tabela
+      tbody.parentElement.style.display = 'none';
+      
+      // Remover cards antigos
+      const oldCards = container.querySelector('.mobile-atrasados-cards');
+      if (oldCards) oldCards.remove();
+      
+      const cardsContainer = document.createElement('div');
+      cardsContainer.className = 'mobile-atrasados-cards';
+      cardsContainer.style.cssText = 'display: flex; flex-direction: column; gap: 0.75rem; padding: 0.5rem;';
+      
+      atrasadosProcessados.forEach(emp => {
+        const valorFinal = Number(emp.valor_final || emp.valor || 0);
+        
+        const card = document.createElement('div');
+        card.style.cssText = `
+          display: flex; 
+          align-items: center; 
+          justify-content: space-between; 
+          padding: 0.75rem 1rem; 
+          background: #fff; 
+          border-radius: 10px; 
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          border-left: 4px solid #ef4444;
+        `;
+        card.innerHTML = `
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 600; color: #1f2937; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${emp.cliente_nome || 'N/A'}</div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: #ef4444;">${valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+            <div style="font-size: 0.8rem; color: #ef4444; font-weight: 500;">${emp.diasAtraso} dias de atraso</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})" style="margin-left: 0.75rem; padding: 0.5rem 1rem; font-weight: 600;">Ver</button>
+        `;
+        cardsContainer.appendChild(card);
+      });
+      
+      container.appendChild(cardsContainer);
+    } else {
+      // Layout de tabela para desktop
+      tbody.parentElement.style.display = '';
+      const oldCards = tbody.parentElement.parentElement.querySelector('.mobile-atrasados-cards');
+      if (oldCards) oldCards.remove();
+      
+      tbody.innerHTML = '';
+      
+      atrasadosProcessados.forEach(emp => {
+        const valorFinal = Number(emp.valor_final || emp.valor || 0);
+        const dataEmprestimo = utils.formatDate(emp.data_emprestimo);
+        const vencimento = emp.dataVencimentoAtrasada ? emp.dataVencimentoAtrasada.toLocaleDateString('pt-BR') : '-';
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${emp.cliente_nome || 'N/A'}</td>
+          <td>${valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+          <td>${dataEmprestimo}</td>
+          <td>${vencimento}</td>
+          <td>${emp.diasAtraso > 0 ? emp.diasAtraso : '-'}</td>
+          <td><span class="badge badge-danger">Atrasado</span></td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
     
     console.log(`✅ Renderizados ${atrasadosProcessados.length} empréstimos atrasados`);
     
