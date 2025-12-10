@@ -1018,9 +1018,12 @@ const emprestimoController = {
         <div style="max-height: 400px; overflow-y: auto;">
           ${parcelas.map(parcela => {
             const dataVencimento = utils.createValidDate(parcela.data_vencimento);
-            const isAtrasado = dataVencimento && dataVencimento < hoje && parcela.status !== 'Paga';
-            const status = parcela.status || parcela.cobranca_status || 'Pendente';
+            const statusDB = parcela.status || parcela.cobranca_status || 'Pendente';
             const valorParcela = Number(parcela.valor_parcela || 0);
+            
+            // Calcular dinamicamente se está atrasado (ignorar status do banco, exceto "Paga")
+            const isPaga = statusDB === 'Paga';
+            const isAtrasado = !isPaga && dataVencimento && dataVencimento < hoje;
             
             // Calcular dias de atraso corretamente
             let diasAtraso = 0;
@@ -1032,16 +1035,16 @@ const emprestimoController = {
             let statusColor = '#6b7280'; // cinza para pendente
             let statusText = 'Pendente';
             
-            if (status === 'Paga') {
+            if (isPaga) {
               statusColor = '#10b981'; // verde
               statusText = 'Paga';
-            } else if (status === 'Atrasada' || isAtrasado) {
+            } else if (isAtrasado) {
               statusColor = '#ef4444'; // vermelho
               statusText = 'Atrasada';
             }
             
             return `
-              <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem; background: ${status === 'Paga' ? '#f0fdf4' : isAtrasado ? '#fef2f2' : '#fff'};" data-emprestimo-id="${parcela.emprestimo_id}" data-numero-parcela="${parcela.numero_parcela}">
+              <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem; background: ${isPaga ? '#f0fdf4' : isAtrasado ? '#fef2f2' : '#fff'};" data-emprestimo-id="${parcela.emprestimo_id}" data-numero-parcela="${parcela.numero_parcela}">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                   <span style="font-weight: 600; color: #374151;">Parcela ${parcela.numero_parcela}</span>
                   <span style="background: ${statusColor}; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.875rem; font-weight: 500;">
@@ -1068,7 +1071,7 @@ const emprestimoController = {
                   </div>
                 ` : ''}
                 <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
-                  ${status !== 'Paga' ? `
+                  ${!isPaga ? `
                     <button class="btn" style="background: #10b981; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1; min-width: 70px;" onclick="marcarParcelaPaga(${parcela.emprestimo_id}, ${parcela.numero_parcela})">
                       Pagar
                     </button>
@@ -1434,7 +1437,7 @@ const emprestimoController = {
             <div style="margin-bottom: 1.2rem;">
               <h2 style="font-size: 1.4rem; font-weight: bold; margin-bottom: 0.2em; color: #002f4b;">${emp.cliente_nome || 'N/A'}</h2>
               <div style="font-size: 1.1rem; font-weight: 600; color: #222; margin-bottom: 0.2em;">PCL-Nº #${emp.id} ${emp.parcelas ? `(${emp.parcelas}ª parcela)` : ''}</div>
-              <div style="font-size: 1rem; color: #444; margin-bottom: 0.2em;">Deve ser pago em <b>${emp.data_vencimento ? emp.data_vencimento.split('-').reverse().join('/') : '-'}</b></div>
+              <div style="font-size: 1rem; color: #444; margin-bottom: 0.2em;">Deve ser pago em <b>${utils.formatDate(emp.data_vencimento)}</b></div>
               <div style="font-size: 1rem; color: #444;">Valor Investido <b>${utils.formatCurrency(valorInvestido)}</b></div>
               <div style="font-size: 1rem; color: #444;">Juros <b>${jurosPercent}%</b> (${utils.formatCurrency(jurosTotal)})</div>
               ${infoJuros}
