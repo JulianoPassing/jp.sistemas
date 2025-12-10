@@ -105,30 +105,86 @@ const utils = {
     }).format(value);
   },
 
+  // Função auxiliar para criar data válida a partir de diversos formatos
+  createValidDate: (dateInput) => {
+    if (!dateInput) return null;
+    
+    // Se já é um objeto Date válido
+    if (dateInput instanceof Date && !isNaN(dateInput.getTime())) {
+      return dateInput;
+    }
+    
+    const dateStr = String(dateInput).trim();
+    
+    // Formato ISO: 2026-01-09 ou 2026-01-09T00:00:00
+    if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+      const parts = dateStr.split('T')[0].split('-');
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      return new Date(year, month, day);
+    }
+    
+    // Formato brasileiro: 09/01/2026 ou 09/01/26
+    if (/^\d{2}\/\d{2}\/\d{2,4}$/.test(dateStr)) {
+      const parts = dateStr.split('/');
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      let year = parseInt(parts[2], 10);
+      // Se ano tem 2 dígitos, assumir século 21
+      if (year < 100) {
+        year = year + 2000;
+      }
+      return new Date(year, month, day);
+    }
+    
+    // Tentar criar data diretamente
+    const date = new Date(dateStr);
+    
+    // Verificar se a data é válida e se o ano faz sentido
+    if (!isNaN(date.getTime())) {
+      // Se o ano for menor que 100, provavelmente foi interpretado errado
+      if (date.getFullYear() < 100) {
+        date.setFullYear(date.getFullYear() + 2000);
+      }
+      return date;
+    }
+    
+    console.warn('Data inválida:', dateInput);
+    return null;
+  },
+
   // Formatação de data
   formatDate: (date) => {
+    const validDate = utils.createValidDate(date);
+    if (!validDate) return '-';
     return new Intl.DateTimeFormat('pt-BR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
-    }).format(new Date(date));
+    }).format(validDate);
   },
 
   // Formatação de data e hora
   formatDateTime: (date) => {
+    const validDate = utils.createValidDate(date);
+    if (!validDate) return '-';
     return new Intl.DateTimeFormat('pt-BR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    }).format(new Date(date));
+    }).format(validDate);
   },
 
   // Cálculo de dias de atraso
   calculateDaysLate: (dueDate) => {
     const today = new Date();
-    const due = new Date(dueDate);
+    today.setHours(0, 0, 0, 0);
+    const due = utils.createValidDate(dueDate);
+    if (!due) return 0;
+    due.setHours(0, 0, 0, 0);
     const diffTime = today - due;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
@@ -172,9 +228,9 @@ const utils = {
   formatDateForInput: (dateString) => {
     if (!dateString) return '';
     try {
-      const date = new Date(dateString);
+      const date = utils.createValidDate(dateString);
       // Verificar se a data é válida
-      if (isNaN(date.getTime())) return '';
+      if (!date) return '';
       
       // ✅ CORREÇÃO: Evitar problema de fuso horário
       // Usar componentes locais em vez de toISOString()
@@ -929,10 +985,17 @@ const emprestimoController = {
         </div>
         <div style="max-height: 400px; overflow-y: auto;">
           ${parcelas.map(parcela => {
-            const dataVencimento = new Date(parcela.data_vencimento);
-            const isAtrasado = dataVencimento < hoje;
+            const dataVencimento = utils.createValidDate(parcela.data_vencimento);
+            const isAtrasado = dataVencimento && dataVencimento < hoje && parcela.status !== 'Paga';
             const status = parcela.status || parcela.cobranca_status || 'Pendente';
             const valorParcela = Number(parcela.valor_parcela || 0);
+            
+            // Calcular dias de atraso corretamente
+            let diasAtraso = 0;
+            if (dataVencimento && isAtrasado) {
+              const diffTime = hoje.getTime() - dataVencimento.getTime();
+              diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            }
             
             let statusColor = '#6b7280'; // cinza para pendente
             let statusText = 'Pendente';
@@ -961,7 +1024,7 @@ const emprestimoController = {
                   <span style="color: #6b7280;">Vencimento:</span>
                   <span style="font-weight: 500; color: ${isAtrasado ? '#ef4444' : '#374151'};">
                     ${utils.formatDate(parcela.data_vencimento)}
-                    ${isAtrasado && status !== 'Paga' ? ` (${Math.floor((hoje - dataVencimento) / (1000 * 60 * 60 * 24))} dias)` : ''}
+                    ${isAtrasado && diasAtraso > 0 ? ` (${diasAtraso} dias)` : ''}
                   </span>
                 </div>
                 ${parcela.data_pagamento ? `
@@ -1267,13 +1330,13 @@ const emprestimoController = {
         const hoje = new Date();
         hoje.setHours(0,0,0,0);
         let status = (emp.status || '').toUpperCase();
-        let dataVencimento = emp.data_vencimento ? new Date(emp.data_vencimento) : null;
+        let dataVencimento = utils.createValidDate(emp.data_vencimento);
         
         // Para empréstimos parcelados, verificar status baseado nas parcelas
         if (parcelas.length > 0) {
           const parcelasAtrasadas = parcelas.filter(p => {
-            const dataVencParcela = new Date(p.data_vencimento);
-            return dataVencParcela < hoje && (p.status !== 'Paga');
+            const dataVencParcela = utils.createValidDate(p.data_vencimento);
+            return dataVencParcela && dataVencParcela < hoje && (p.status !== 'Paga');
           });
           
           const parcelasPagas = parcelas.filter(p => p.status === 'Paga');
@@ -1284,9 +1347,9 @@ const emprestimoController = {
             status = 'Em Atraso';
             // Usar a data de vencimento da parcela mais atrasada
             const parcelaMaisAtrasada = parcelasAtrasadas.sort((a, b) => 
-              new Date(a.data_vencimento) - new Date(b.data_vencimento)
+              utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento)
             )[0];
-            dataVencimento = new Date(parcelaMaisAtrasada.data_vencimento);
+            dataVencimento = utils.createValidDate(parcelaMaisAtrasada.data_vencimento);
           } else {
             status = 'ATIVO';
           }
@@ -1301,10 +1364,12 @@ const emprestimoController = {
         let diasAtraso = 0;
         let jurosDiario = 0;
         let jurosAplicado = 0;
-        if (status === 'Em Atraso') {
+        if (status === 'Em Atraso' && dataVencimento) {
           // Calcular dias de atraso
           const diffTime = hoje.getTime() - dataVencimento.getTime();
           diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          // Garantir que dias de atraso seja positivo
+          if (diasAtraso < 0) diasAtraso = 0;
           // Juros diário: juros total dividido por 30 dias, arredondado para cima
           jurosDiario = Math.ceil(jurosTotal / 30);
           jurosAplicado = jurosDiario * diasAtraso;
@@ -2855,7 +2920,8 @@ async function renderAtrasadosLista() {
           // Encontrar parcelas atrasadas (não pagas e vencidas)
           const parcelasAtrasadas = parcelas.filter(p => {
             if (p.status === 'Paga') return false;
-            const dataVencParcela = new Date(p.data_vencimento);
+            const dataVencParcela = utils.createValidDate(p.data_vencimento);
+            if (!dataVencParcela) return false;
             dataVencParcela.setHours(0,0,0,0);
             return dataVencParcela < hoje;
           });
@@ -2863,11 +2929,14 @@ async function renderAtrasadosLista() {
           if (parcelasAtrasadas.length > 0) {
             estaAtrasado = true;
             // Pegar a parcela mais antiga atrasada
-            parcelasAtrasadas.sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento));
-            dataVencimentoAtrasada = new Date(parcelasAtrasadas[0].data_vencimento);
-            dataVencimentoAtrasada.setHours(0,0,0,0);
-            const diffTime = hoje.getTime() - dataVencimentoAtrasada.getTime();
-            diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            parcelasAtrasadas.sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
+            dataVencimentoAtrasada = utils.createValidDate(parcelasAtrasadas[0].data_vencimento);
+            if (dataVencimentoAtrasada) {
+              dataVencimentoAtrasada.setHours(0,0,0,0);
+              const diffTime = hoje.getTime() - dataVencimentoAtrasada.getTime();
+              diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+              if (diasAtraso < 0) diasAtraso = 0;
+            }
           }
         } catch (error) {
           console.error('Erro ao buscar parcelas para empréstimo', emp.id, error);
@@ -2876,13 +2945,15 @@ async function renderAtrasadosLista() {
         // Empréstimo de parcela única - verificar data de vencimento
         if (!emp.data_vencimento) continue;
         
-        dataVencimentoAtrasada = new Date(emp.data_vencimento);
+        dataVencimentoAtrasada = utils.createValidDate(emp.data_vencimento);
+        if (!dataVencimentoAtrasada) continue;
         dataVencimentoAtrasada.setHours(0,0,0,0);
         
         if (dataVencimentoAtrasada < hoje) {
           estaAtrasado = true;
           const diffTime = hoje.getTime() - dataVencimentoAtrasada.getTime();
           diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          if (diasAtraso < 0) diasAtraso = 0;
         }
       }
       
@@ -2907,7 +2978,7 @@ async function renderAtrasadosLista() {
     
     atrasadosProcessados.forEach(emp => {
       const valorFinal = Number(emp.valor_final || emp.valor || 0);
-      const dataEmprestimo = emp.data_emprestimo ? new Date(emp.data_emprestimo).toLocaleDateString('pt-BR') : '-';
+      const dataEmprestimo = utils.formatDate(emp.data_emprestimo);
       const vencimento = emp.dataVencimentoAtrasada ? emp.dataVencimentoAtrasada.toLocaleDateString('pt-BR') : '-';
       
       const row = document.createElement('tr');
