@@ -457,6 +457,8 @@ const dashboardController = {
         // Ignorar empréstimos quitados
         if (status === 'QUITADO') continue;
         
+        const valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
+        
         // Verificar se é parcelado
         if (emprestimo.tipo_emprestimo === 'in_installments' && emprestimo.numero_parcelas > 1) {
           try {
@@ -465,7 +467,8 @@ const dashboardController = {
               // Verificar se todas as parcelas estão pagas
               const todasPagas = parcelas.every(p => p.status === 'Paga');
               if (!todasPagas) {
-                // Somar apenas as parcelas não pagas
+                // Somar valor investido + parcelas de juros em aberto
+                valorTotalReceber += valorInvestido;
                 const parcelasEmAberto = parcelas.filter(p => p.status !== 'Paga');
                 parcelasEmAberto.forEach(parcela => {
                   valorTotalReceber += Number(parcela.valor || 0);
@@ -476,9 +479,9 @@ const dashboardController = {
             console.error('Erro ao buscar parcelas:', error);
           }
         } else {
-          // Empréstimo normal - somar valor total
+          // Empréstimo normal - somar valor investido + juros (valor_final)
           const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
-          valorTotalReceber += valorFinal;
+          valorTotalReceber += valorInvestido + valorFinal;
         }
       }
       
