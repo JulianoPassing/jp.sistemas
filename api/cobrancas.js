@@ -741,6 +741,64 @@ router.put('/emprestimos/:emprestimo_id/parcelas/:numero_parcela/status', ensure
   }
 });
 
+// Atualizar data de vencimento de uma parcela específica
+router.put('/emprestimos/:emprestimo_id/parcelas/:numero_parcela/data', ensureDatabase, async (req, res) => {
+  try {
+    const { emprestimo_id, numero_parcela } = req.params;
+    const { data_vencimento } = req.body;
+    
+    if (!data_vencimento) {
+      return res.status(400).json({ error: 'Data de vencimento é obrigatória' });
+    }
+    
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
+    
+    // Buscar a parcela
+    const [parcelas] = await connection.execute(`
+      SELECT p.*, c.id as cobranca_id
+      FROM parcelas p
+      LEFT JOIN cobrancas c ON c.emprestimo_id = p.emprestimo_id AND c.data_vencimento = p.data_vencimento
+      WHERE p.emprestimo_id = ? AND p.numero_parcela = ?
+    `, [emprestimo_id, numero_parcela]);
+    
+    if (parcelas.length === 0) {
+      await connection.end();
+      return res.status(404).json({ error: 'Parcela não encontrada' });
+    }
+    
+    const parcela = parcelas[0];
+    
+    // Só permitir alterar data de parcelas não pagas
+    if (parcela.status === 'Paga') {
+      await connection.end();
+      return res.status(400).json({ error: 'Não é possível alterar a data de uma parcela já paga' });
+    }
+    
+    // Atualizar data de vencimento da parcela
+    await connection.execute(`
+      UPDATE parcelas 
+      SET data_vencimento = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE emprestimo_id = ? AND numero_parcela = ?
+    `, [data_vencimento, emprestimo_id, numero_parcela]);
+    
+    // Atualizar cobrança relacionada se existir
+    if (parcela.cobranca_id) {
+      await connection.execute(`
+        UPDATE cobrancas 
+        SET data_vencimento = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `, [data_vencimento, parcela.cobranca_id]);
+    }
+    
+    await connection.end();
+    res.json({ message: 'Data de vencimento da parcela atualizada com sucesso' });
+  } catch (error) {
+    console.error('Erro ao atualizar data da parcela:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Atualizar empréstimo
 router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
   try {
