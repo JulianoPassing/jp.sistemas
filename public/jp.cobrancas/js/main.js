@@ -87,7 +87,7 @@ const authSystem = {
   showWelcomeMessage() {
     const welcomeElement = document.getElementById('welcomeMessage');
     if (welcomeElement) {
-      welcomeElement.textContent = 'Bem-vindo(a)!';
+      welcomeElement.textContent = 'Bem-vindo ao sistema JP-Cobranças!';
     }
   }
 };
