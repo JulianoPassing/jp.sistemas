@@ -974,11 +974,14 @@ const emprestimoController = {
                 ` : ''}
                 <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
                   ${status !== 'Paga' ? `
-                    <button class="btn" style="background: #10b981; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1; min-width: 80px;" onclick="marcarParcelaPaga(${parcela.emprestimo_id}, ${parcela.numero_parcela})">
+                    <button class="btn" style="background: #10b981; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1; min-width: 70px;" onclick="marcarParcelaPaga(${parcela.emprestimo_id}, ${parcela.numero_parcela})">
                       Pagar
                     </button>
-                    <button class="btn" style="background: #ef4444; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1; min-width: 80px;" onclick="marcarParcelaAtrasada(${parcela.emprestimo_id}, ${parcela.numero_parcela})">
+                    <button class="btn" style="background: #ef4444; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1; min-width: 70px;" onclick="marcarParcelaAtrasada(${parcela.emprestimo_id}, ${parcela.numero_parcela})">
                       Atraso
+                    </button>
+                    <button class="btn" style="background: #3b82f6; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1; min-width: 70px;" onclick="editarDataParcela(${parcela.emprestimo_id}, ${parcela.numero_parcela}, '${parcela.data_vencimento ? parcela.data_vencimento.split('T')[0] : ''}')">
+                      Alterar Data
                     </button>
                   ` : `
                     <button class="btn" style="background: #6b7280; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1;" onclick="marcarParcelaPendente(${parcela.emprestimo_id}, ${parcela.numero_parcela})">
@@ -2828,60 +2831,84 @@ async function renderAtrasadosLista() {
     const hoje = new Date();
     hoje.setHours(0,0,0,0);
     
-    // Filtrar todos os empréstimos atrasados (baseado na data de vencimento)
-    const atrasados = emprestimos.filter(emp => {
-      // Verificar se tem data de vencimento e se está vencida
-      if (!emp.data_vencimento) return false;
-      
-      // Ignorar empréstimos quitados
-      const status = (emp.status || '').toLowerCase();
-      if (status === 'quitado') return false;
-      
-      const dataVencimento = new Date(emp.data_vencimento);
-      dataVencimento.setHours(0,0,0,0);
-      
-      // Considerar atrasado se a data de vencimento é anterior a hoje
-      return dataVencimento < hoje;
-    });
+    // Array para armazenar empréstimos atrasados com dados processados
+    const atrasadosProcessados = [];
     
-    if (atrasados.length === 0) {
+    for (const emp of emprestimos) {
+      // Ignorar empréstimos quitados
+      const statusEmp = (emp.status || '').toLowerCase();
+      if (statusEmp === 'quitado') continue;
+      
+      let estaAtrasado = false;
+      let dataVencimentoAtrasada = null;
+      let diasAtraso = 0;
+      
+      // Verificar se é empréstimo parcelado
+      if (emp.tipo_emprestimo === 'in_installments' && emp.numero_parcelas > 1) {
+        try {
+          const parcelas = await apiService.getParcelasEmprestimo(emp.id);
+          
+          // Verificar se todas as parcelas estão pagas
+          const todasPagas = parcelas.every(p => p.status === 'Paga');
+          if (todasPagas) continue; // Ignorar se todas as parcelas estão pagas
+          
+          // Encontrar parcelas atrasadas (não pagas e vencidas)
+          const parcelasAtrasadas = parcelas.filter(p => {
+            if (p.status === 'Paga') return false;
+            const dataVencParcela = new Date(p.data_vencimento);
+            dataVencParcela.setHours(0,0,0,0);
+            return dataVencParcela < hoje;
+          });
+          
+          if (parcelasAtrasadas.length > 0) {
+            estaAtrasado = true;
+            // Pegar a parcela mais antiga atrasada
+            parcelasAtrasadas.sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento));
+            dataVencimentoAtrasada = new Date(parcelasAtrasadas[0].data_vencimento);
+            dataVencimentoAtrasada.setHours(0,0,0,0);
+            const diffTime = hoje.getTime() - dataVencimentoAtrasada.getTime();
+            diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          }
+        } catch (error) {
+          console.error('Erro ao buscar parcelas para empréstimo', emp.id, error);
+        }
+      } else {
+        // Empréstimo de parcela única - verificar data de vencimento
+        if (!emp.data_vencimento) continue;
+        
+        dataVencimentoAtrasada = new Date(emp.data_vencimento);
+        dataVencimentoAtrasada.setHours(0,0,0,0);
+        
+        if (dataVencimentoAtrasada < hoje) {
+          estaAtrasado = true;
+          const diffTime = hoje.getTime() - dataVencimentoAtrasada.getTime();
+          diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        }
+      }
+      
+      if (estaAtrasado) {
+        atrasadosProcessados.push({
+          ...emp,
+          dataVencimentoAtrasada,
+          diasAtraso
+        });
+      }
+    }
+    
+    if (atrasadosProcessados.length === 0) {
       tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo atrasado</td></tr>';
       return;
     }
     
-    // Ordenar por data de vencimento (mais antigo primeiro)
-    atrasados.sort((a, b) => {
-      const dataA = new Date(a.data_vencimento);
-      const dataB = new Date(b.data_vencimento);
-      return dataA - dataB;
-    });
+    // Ordenar por dias de atraso (mais atrasado primeiro)
+    atrasadosProcessados.sort((a, b) => b.diasAtraso - a.diasAtraso);
     
     tbody.innerHTML = '';
     
-    atrasados.forEach(emp => {
+    atrasadosProcessados.forEach(emp => {
       const valorFinal = Number(emp.valor_final || emp.valor || 0);
       const dataEmprestimo = emp.data_emprestimo ? new Date(emp.data_emprestimo).toLocaleDateString('pt-BR') : '-';
-      const vencimento = emp.data_vencimento ? new Date(emp.data_vencimento).toLocaleDateString('pt-BR') : '-';
-      
-      // Calcular dias de atraso
-      let diasAtraso = 0;
-      if (emp.data_vencimento) {
-        const dataVencimento = new Date(emp.data_vencimento);
-        dataVencimento.setHours(0,0,0,0);
-        const diffTime = hoje.getTime() - dataVencimento.getTime();
-        diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      }
-      
-      // Formatar status
-      let status = (emp.status || '').toUpperCase();
-      if (diasAtraso > 0) {
-        status = 'ATRASADO';
-      }
-      
-      let statusClass = 'danger';
-      if (status === 'ATRASADO') statusClass = 'danger';
-      else if (status === 'PENDENTE' || status === 'ATIVO') statusClass = 'warning';
-      else if (status === 'QUITADO') statusClass = 'info';
+      const vencimento = emp.dataVencimentoAtrasada ? emp.dataVencimentoAtrasada.toLocaleDateString('pt-BR') : '-';
       
       const row = document.createElement('tr');
       row.innerHTML = `
@@ -2889,8 +2916,8 @@ async function renderAtrasadosLista() {
         <td>${valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
         <td>${dataEmprestimo}</td>
         <td>${vencimento}</td>
-        <td>${diasAtraso > 0 ? diasAtraso : '-'}</td>
-        <td><span class="badge badge-${statusClass}">${status.charAt(0) + status.slice(1).toLowerCase()}</span></td>
+        <td>${emp.diasAtraso > 0 ? emp.diasAtraso : '-'}</td>
+        <td><span class="badge badge-danger">Atrasado</span></td>
         <td>
           <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
         </td>
@@ -2898,7 +2925,7 @@ async function renderAtrasadosLista() {
       tbody.appendChild(row);
     });
     
-    console.log(`✅ Renderizados ${atrasados.length} empréstimos atrasados`);
+    console.log(`✅ Renderizados ${atrasadosProcessados.length} empréstimos atrasados`);
     
   } catch (error) {
     console.error('Erro ao carregar atrasados:', error);
@@ -3035,9 +3062,73 @@ async function marcarParcelaPendente(emprestimoId, numeroParcela) {
   }
 }
 
+// Função para editar data de vencimento da parcela
+async function editarDataParcela(emprestimoId, numeroParcela, dataAtual) {
+  // Criar modal com input de data
+  const modalContent = `
+    <div style="padding: 1.5rem; max-width: 400px; margin: 0 auto;">
+      <h3 style="margin-bottom: 1.5rem; color: #002f4b; text-align: center;">Alterar Data da Parcela ${numeroParcela}</h3>
+      <form id="form-alterar-data-parcela">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Nova Data de Vencimento</label>
+          <input type="date" id="nova-data-parcela" class="form-input" value="${dataAtual}" required style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;">
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+          <button type="button" class="btn" style="flex: 1; background: #6b7280; color: #fff; padding: 0.75rem; border-radius: 8px; font-size: 1rem;" onclick="ui.closeModal()">Cancelar</button>
+          <button type="submit" class="btn" style="flex: 1; background: #3b82f6; color: #fff; padding: 0.75rem; border-radius: 8px; font-size: 1rem;">Salvar</button>
+        </div>
+      </form>
+    </div>
+  `;
+  
+  ui.showModal(modalContent, 'Alterar Data da Parcela');
+  
+  // Adicionar evento de submit ao formulário
+  const form = document.getElementById('form-alterar-data-parcela');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const novaData = document.getElementById('nova-data-parcela').value;
+    
+    if (!novaData) {
+      ui.showNotification('Informe a nova data de vencimento', 'error');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/cobrancas/emprestimos/${emprestimoId}/parcelas/${numeroParcela}/data`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          data_vencimento: novaData
+        })
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Erro ao atualizar data');
+      }
+      
+      ui.closeModal();
+      ui.showNotification('Data da parcela atualizada com sucesso!', 'success');
+      
+      // Recarregar os detalhes do empréstimo
+      await emprestimoController.viewEmprestimo(emprestimoId);
+      
+    } catch (error) {
+      console.error('Erro ao atualizar data da parcela:', error);
+      ui.showNotification(error.message || 'Erro ao atualizar data da parcela', 'error');
+    }
+  });
+}
+
 // Disponibilizar funções de parcelas globalmente
 window.marcarParcelaPaga = marcarParcelaPaga;
 window.marcarParcelaAtrasada = marcarParcelaAtrasada;
 window.marcarParcelaPendente = marcarParcelaPendente;
+window.editarDataParcela = editarDataParcela;
 
  
