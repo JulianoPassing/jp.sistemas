@@ -1829,7 +1829,7 @@ const emprestimoController = {
           totalParcelas = parcelas.length;
           const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
           
-          // Filtrar parcelas vencidas (atrasadas)
+          // Filtrar parcelas vencidas (atrasadas - antes de hoje)
           parcelasVencidas = parcelasNaoPagas.filter(p => {
             const dataVencParcela = utils.createValidDate(p.data_vencimento);
             return dataVencParcela && dataVencParcela < hoje;
@@ -1839,9 +1839,19 @@ const emprestimoController = {
           valorTotalVencidas = parcelasVencidas.reduce((acc, p) => acc + Number(p.valor_parcela || 0), 0);
           
           if (parcelasNaoPagas.length > 0) {
-            // Ordenar por data de vencimento para pegar a próxima
+            // Ordenar por data de vencimento
             parcelasNaoPagas.sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
-            const proximaParcela = parcelasNaoPagas[0];
+            
+            // Prioridade: parcela que vence HOJE, senão a próxima a vencer (incluindo atrasadas)
+            const parcelaHoje = parcelasNaoPagas.find(p => {
+              const dataVenc = utils.createValidDate(p.data_vencimento);
+              if (!dataVenc) return false;
+              return dataVenc.getFullYear() === hoje.getFullYear() &&
+                     dataVenc.getMonth() === hoje.getMonth() &&
+                     dataVenc.getDate() === hoje.getDate();
+            });
+            
+            const proximaParcela = parcelaHoje || parcelasNaoPagas[0];
             valorParcelaAtual = Number(proximaParcela.valor_parcela || 0);
             dataParcelaAtual = utils.formatDate(proximaParcela.data_vencimento);
             numeroParcelaAtual = proximaParcela.numero_parcela || (parcelas.indexOf(proximaParcela) + 1);
