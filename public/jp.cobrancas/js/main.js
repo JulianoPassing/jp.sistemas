@@ -1617,7 +1617,7 @@ const emprestimoController = {
           return;
         }
         
-        if (!formData.juros_mensal || formData.juros_mensal < 0) {
+        if (formData.juros_mensal === null || formData.juros_mensal === undefined || formData.juros_mensal < 0) {
           ui.showNotification('Juros deve ser maior ou igual a zero', 'error');
           return;
         }
@@ -3659,7 +3659,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!formData.valor || parseFloat(formData.valor.replace(',', '.')) <= 0) {
               isValid = false;
               errorMessage = 'Preencha o valor inicial corretamente';
-            } else if (!formData.porcentagem || parseFloat(formData.porcentagem) < 0) {
+            } else if (formData.porcentagem === '' || formData.porcentagem === undefined || parseFloat(formData.porcentagem) < 0) {
               isValid = false;
               errorMessage = 'Preencha a porcentagem de juros corretamente';
             }
