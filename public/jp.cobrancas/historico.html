@@ -536,7 +536,7 @@
       if (emprestimo.parcelas && emprestimo.parcelas.length > 0) {
         const parcelas = emprestimo.parcelas;
         const todasPagas = parcelas.every(p => p.status === 'Paga');
-        
+
         if (todasPagas) return 'Quitado';
         
         // Calcular dinamicamente quais parcelas estão atrasadas (baseado na data, não no status do banco)

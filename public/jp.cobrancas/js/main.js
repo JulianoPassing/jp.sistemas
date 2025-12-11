@@ -1820,12 +1820,31 @@ const emprestimoController = {
         // Buscar dados da próxima parcela se for parcelado
         let valorParcelaAtual = valorAtualizado;
         let dataParcelaAtual = dataVencFormatada;
+        let numeroParcelaAtual = 1;
+        let totalParcelas = 1;
+        let parcelasVencidas = [];
+        let valorTotalVencidas = 0;
+        
         if (parcelas.length > 0) {
+          totalParcelas = parcelas.length;
           const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
+          
+          // Filtrar parcelas vencidas (atrasadas)
+          parcelasVencidas = parcelasNaoPagas.filter(p => {
+            const dataVencParcela = utils.createValidDate(p.data_vencimento);
+            return dataVencParcela && dataVencParcela < hoje;
+          }).sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
+          
+          // Calcular valor total das parcelas vencidas
+          valorTotalVencidas = parcelasVencidas.reduce((acc, p) => acc + Number(p.valor_parcela || 0), 0);
+          
           if (parcelasNaoPagas.length > 0) {
+            // Ordenar por data de vencimento para pegar a próxima
             parcelasNaoPagas.sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
-            valorParcelaAtual = Number(parcelasNaoPagas[0].valor_parcela || 0);
-            dataParcelaAtual = utils.formatDate(parcelasNaoPagas[0].data_vencimento);
+            const proximaParcela = parcelasNaoPagas[0];
+            valorParcelaAtual = Number(proximaParcela.valor_parcela || 0);
+            dataParcelaAtual = utils.formatDate(proximaParcela.data_vencimento);
+            numeroParcelaAtual = proximaParcela.numero_parcela || (parcelas.indexOf(proximaParcela) + 1);
           }
         }
         
@@ -1838,7 +1857,11 @@ const emprestimoController = {
           valorParcela: valorParcelaAtual,
           dataParcela: dataParcelaAtual,
           dataVencimento: dataVencFormatada,
-          isParcelado: parcelas.length > 1
+          isParcelado: parcelas.length > 1,
+          numeroParcelaAtual,
+          totalParcelas,
+          parcelasVencidas,
+          valorTotalVencidas
         };
         const detalhes = `
           <div class="emprestimo-modal-box" style="padding: 1.5rem; max-width: 420px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 2px 16px #002f4b22;">
@@ -1881,7 +1904,8 @@ const emprestimoController = {
           e.stopPropagation();
           
           // Mensagem para empréstimo parcelado
-          const msgParcelado = `Olá, ${dadosNotificacao.primeiroNome}, a sua parcela vence ${dadosNotificacao.dataParcela}. Você pode pagar o valor de ${utils.formatCurrency(dadosNotificacao.valorParcela)}.
+          const infoParcela = dadosNotificacao.isParcelado ? ` (parcela ${dadosNotificacao.numeroParcelaAtual}/${dadosNotificacao.totalParcelas})` : '';
+          const msgParcelado = `Olá, ${dadosNotificacao.primeiroNome}, a sua parcela${infoParcela} vence ${dadosNotificacao.dataParcela}. Você pode pagar o valor de ${utils.formatCurrency(dadosNotificacao.valorParcela)}.
 
 Chave PIX: 04854589930
 
@@ -1898,20 +1922,62 @@ Lembramos que, em caso de atraso, será cobrada uma multa diária.`;
           const telefoneNumeros = (dadosNotificacao.telefone || '').replace(/\D/g, '');
           // Se já começar com 55, não adicionar novamente
           const telefoneFinal = telefoneNumeros.startsWith('55') ? telefoneNumeros : `55${telefoneNumeros}`;
+
+          // Mensagem para todas as parcelas vencidas
+          let msgTodasVencidas = '';
+          let opcaoTodasVencidas = '';
+          
+          if (dadosNotificacao.parcelasVencidas && dadosNotificacao.parcelasVencidas.length > 1) {
+            const listaParcelasVencidas = dadosNotificacao.parcelasVencidas.map(p => {
+              const numParcela = p.numero_parcela || '?';
+              return `• Parcela ${numParcela}: ${utils.formatCurrency(Number(p.valor_parcela || 0))} (vencida em ${utils.formatDate(p.data_vencimento)})`;
+            }).join('\n');
+            
+            msgTodasVencidas = `Olá, ${dadosNotificacao.primeiroNome}, você possui ${dadosNotificacao.parcelasVencidas.length} parcelas em atraso:
+
+${listaParcelasVencidas}
+
+*Total em atraso: ${utils.formatCurrency(dadosNotificacao.valorTotalVencidas)}*
+
+Chave PIX: 04854589930
+
+Solicitamos a regularização o mais breve possível para evitar juros adicionais.`;
+
+            opcaoTodasVencidas = `
+                <!-- Opção Todas Parcelas Vencidas -->
+                <div style="border: 2px solid #ef4444; border-radius: 12px; padding: 1rem; background: #fef2f2;">
+                  <h4 style="color: #ef4444; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                    🚨 Todas Parcelas Vencidas (${dadosNotificacao.parcelasVencidas.length})
+                  </h4>
+                  <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">Total em atraso: <b style="color: #ef4444;">${utils.formatCurrency(dadosNotificacao.valorTotalVencidas)}</b></div>
+                  <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgTodasVencidas}</p>
+                  <a href="https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgTodasVencidas)}" target="_blank" rel="noopener noreferrer" class="btn" style="display: block; background: #ef4444; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none;">
+                    Enviar via WhatsApp
+                  </a>
+                </div>
+            `;
+          }
           
           const linkParcelado = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgParcelado)}` : '#';
           const linkEmprestimo = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgEmprestimo)}` : '#';
           
+          const tituloParcela = dadosNotificacao.isParcelado 
+            ? `📋 Próxima Parcela (${dadosNotificacao.numeroParcelaAtual}/${dadosNotificacao.totalParcelas})`
+            : '📋 Mensagem para Parcela';
+          
           const modalNotificacao = `
-            <div style="padding: 1.5rem; max-width: 500px; margin: 0 auto;">
+            <div style="padding: 1.5rem; max-width: 500px; margin: 0 auto; max-height: 80vh; overflow-y: auto;">
               <h3 style="margin-bottom: 1.5rem; color: #002f4b; text-align: center;">Escolha o tipo de mensagem</h3>
               
               <div style="display: flex; flex-direction: column; gap: 1rem;">
+                ${opcaoTodasVencidas}
+                
                 <!-- Opção Parcelado -->
                 <div style="border: 2px solid #25d366; border-radius: 12px; padding: 1rem; background: #f0fff4;">
                   <h4 style="color: #25d366; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                    📋 Mensagem para Parcela
+                    ${tituloParcela}
                   </h4>
+                  <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">Vencimento: <b>${dadosNotificacao.dataParcela}</b> • Valor: <b>${utils.formatCurrency(dadosNotificacao.valorParcela)}</b></div>
                   <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb;">${msgParcelado}</p>
                   <a href="${linkParcelado}" target="_blank" rel="noopener noreferrer" class="btn" style="display: block; background: #25d366; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none;">
                     Enviar via WhatsApp
@@ -1921,7 +1987,7 @@ Lembramos que, em caso de atraso, será cobrada uma multa diária.`;
                 <!-- Opção Empréstimo -->
                 <div style="border: 2px solid #3b82f6; border-radius: 12px; padding: 1rem; background: #eff6ff;">
                   <h4 style="color: #3b82f6; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                    💰 Mensagem para Empréstimo
+                    💰 Mensagem para Empréstimo Total
                   </h4>
                   <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb;">${msgEmprestimo}</p>
                   <a href="${linkEmprestimo}" target="_blank" rel="noopener noreferrer" class="btn" style="display: block; background: #3b82f6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none;">
