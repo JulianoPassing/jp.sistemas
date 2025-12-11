@@ -3014,6 +3014,7 @@ async function renderClientesLista() {
         <td><span class="badge badge-${badgeClass}">${status}</span></td>
         <td>
           <button class="btn btn-primary btn-sm" onclick="viewCliente(${cliente.id})">Ver</button>
+          <button class="btn btn-info btn-sm" onclick="editCliente(${cliente.id})">Editar</button>
           ${cliente.status === 'Lista Negra' 
             ? '<button class="btn btn-success btn-sm" onclick="removerListaNegra(' + cliente.id + ')">Remover da Lista</button>'
             : '<button class="btn btn-warning btn-sm" onclick="adicionarListaNegra(' + cliente.id + ')">Lista Negra</button>'
