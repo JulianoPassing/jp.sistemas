@@ -433,6 +433,38 @@
       }
     }
 
+    // Função para obter a data da próxima parcela a vencer (para empréstimos parcelados)
+    function obterDataVencimentoExibir(emprestimo) {
+      if (!emprestimo.parcelas || emprestimo.parcelas.length === 0) {
+        return emprestimo.data_vencimento;
+      }
+      
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      
+      const parcelasNaoPagas = emprestimo.parcelas.filter(p => p.status !== 'Paga');
+      
+      if (parcelasNaoPagas.length === 0) {
+        return emprestimo.data_vencimento; // Todas pagas
+      }
+      
+      // Verificar se há parcelas atrasadas
+      const parcelasAtrasadas = parcelasNaoPagas.filter(p => {
+        const dataVenc = criarDataValida(p.data_vencimento);
+        return dataVenc && dataVenc < hoje;
+      });
+      
+      if (parcelasAtrasadas.length > 0) {
+        // Retornar a mais antiga atrasada
+        parcelasAtrasadas.sort((a, b) => criarDataValida(a.data_vencimento) - criarDataValida(b.data_vencimento));
+        return parcelasAtrasadas[0].data_vencimento;
+      }
+      
+      // Retornar a próxima parcela a vencer
+      parcelasNaoPagas.sort((a, b) => criarDataValida(a.data_vencimento) - criarDataValida(b.data_vencimento));
+      return parcelasNaoPagas[0].data_vencimento;
+    }
+
     // Função para renderizar empréstimos
     function renderizarEmprestimos() {
       const tbody = document.getElementById('emprestimos-tbody');
@@ -442,7 +474,7 @@
         return;
       }
 
-      // Ordenar: quitados separados no final, por data de vencimento (mais antigo primeiro)
+      // Ordenar: quitados separados no final, por data de vencimento da próxima parcela (mais antigo primeiro)
       const emprestimosOrdenados = [...emprestimosFiltrados].sort((a, b) => {
         const statusA = determinarStatus(a);
         const statusB = determinarStatus(b);
@@ -451,9 +483,9 @@
         // Separar quitados no final
         if (isQuitadoA && !isQuitadoB) return 1;
         if (!isQuitadoA && isQuitadoB) return -1;
-        // Ordenar por data de vencimento (mais antigo primeiro)
-        const dataA = criarDataValida(a.data_vencimento);
-        const dataB = criarDataValida(b.data_vencimento);
+        // Ordenar por data de vencimento da próxima parcela (mais antigo primeiro)
+        const dataA = criarDataValida(obterDataVencimentoExibir(a));
+        const dataB = criarDataValida(obterDataVencimentoExibir(b));
         if (!dataA && !dataB) return 0;
         if (!dataA) return 1;
         if (!dataB) return -1;
@@ -465,6 +497,7 @@
         const status = determinarStatus(emprestimo);
         const statusClass = getStatusClass(status);
         const resumoParcelas = calcularResumoParcelas(emprestimo.parcelas || []);
+        const vencimentoExibir = obterDataVencimentoExibir(emprestimo);
 
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -475,7 +508,7 @@
           <td class="font-semibold text-green-600">R$ ${formatarMoeda(emprestimo.valor || 0)}</td>
           <td class="font-semibold text-terciary">R$ ${formatarMoeda(emprestimo.valor_final || emprestimo.valor || 0)}</td>
           <td>${formatarData(emprestimo.data_emprestimo)}</td>
-          <td>${formatarData(emprestimo.data_vencimento)}</td>
+          <td>${formatarData(vencimentoExibir)}</td>
           <td><span class="badge ${statusClass}">${status}</span></td>
           <td>
             <div class="text-sm">
