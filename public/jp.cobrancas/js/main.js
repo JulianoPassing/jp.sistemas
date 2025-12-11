@@ -3002,6 +3002,14 @@ async function renderClientesLista() {
       tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhum cliente encontrado</td></tr>';
       return;
     }
+    
+    // Ordenar clientes em ordem alfabética pelo nome
+    clientes.sort((a, b) => {
+      const nomeA = (a.nome || '').toLowerCase();
+      const nomeB = (b.nome || '').toLowerCase();
+      return nomeA.localeCompare(nomeB, 'pt-BR');
+    });
+    
     tbody.innerHTML = '';
     
     // Processar cada cliente

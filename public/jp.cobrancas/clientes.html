@@ -142,6 +142,13 @@
             (cliente.estado && cliente.estado.toLowerCase().includes(searchTerm));
         });
         
+        // Manter ordenação alfabética após filtro
+        filteredClientes.sort((a, b) => {
+          const nomeA = (a.nome || '').toLowerCase();
+          const nomeB = (b.nome || '').toLowerCase();
+          return nomeA.localeCompare(nomeB, 'pt-BR');
+        });
+        
         console.log(`🔍 Filtros aplicados: ${filteredClientes.length} de ${allClientes.length}`);
         
         // Atualizar tabela
@@ -227,6 +234,14 @@
         try {
           const clientes = await apiService.getClientes();
           allClientes = clientes || [];
+          
+          // Ordenar clientes em ordem alfabética pelo nome
+          allClientes.sort((a, b) => {
+            const nomeA = (a.nome || '').toLowerCase();
+            const nomeB = (b.nome || '').toLowerCase();
+            return nomeA.localeCompare(nomeB, 'pt-BR');
+          });
+          
           filteredClientes = [...allClientes];
           
           console.log(`🔍 Carregados ${allClientes.length} clientes para filtros`);
