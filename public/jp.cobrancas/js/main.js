@@ -716,14 +716,20 @@ const dashboardController = {
         });
       }
       
-      // Ordenar por status (quitados no final) e dias de atraso
+      // Ordenar: quitados separados no final, por data de vencimento (mais antigo primeiro)
       emprestimosProcessados.sort((a, b) => {
         const isQuitadoA = a.statusCalculado === 'QUITADO';
         const isQuitadoB = b.statusCalculado === 'QUITADO';
+        // Separar quitados no final
         if (isQuitadoA && !isQuitadoB) return 1;
         if (!isQuitadoA && isQuitadoB) return -1;
-        // Ordenar por dias de atraso (mais atrasado primeiro)
-        return b.diasAtraso - a.diasAtraso;
+        // Ordenar por data de vencimento (mais antigo primeiro)
+        const dataA = utils.createValidDate(a.data_vencimento);
+        const dataB = utils.createValidDate(b.data_vencimento);
+        if (!dataA && !dataB) return 0;
+        if (!dataA) return 1;
+        if (!dataB) return -1;
+        return dataA - dataB;
       });
 
       // Verificar se é mobile
@@ -2276,10 +2282,14 @@ async function renderHistoricoEmprestimos() {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     
-    const emprestimosUnicos = new Map();
+    // Processar empréstimos e remover duplicatas
+    const emprestimosProcessados = [];
+    const idsProcessados = new Set();
+    
     for (const emprestimo of emprestimos) {
-      if (emprestimosUnicos.has(emprestimo.id)) continue;
-      emprestimosUnicos.set(emprestimo.id, true);
+      if (idsProcessados.has(emprestimo.id)) continue;
+      idsProcessados.add(emprestimo.id);
+      
       const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
       const valorInicial = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
       let status = (emprestimo.status || '').toUpperCase();
@@ -2295,14 +2305,41 @@ async function renderHistoricoEmprestimos() {
         }
       }
       
-      const valorFinalFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorFinal);
-      const valorInicialFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorInicial);
+      emprestimosProcessados.push({
+        ...emprestimo,
+        valorFinal,
+        valorInicial,
+        status
+      });
+    }
+    
+    // Ordenar: quitados separados no final, por data de vencimento (mais antigo primeiro)
+    emprestimosProcessados.sort((a, b) => {
+      const isQuitadoA = a.status === 'QUITADO';
+      const isQuitadoB = b.status === 'QUITADO';
+      // Separar quitados no final
+      if (isQuitadoA && !isQuitadoB) return 1;
+      if (!isQuitadoA && isQuitadoB) return -1;
+      // Ordenar por data de vencimento (mais antigo primeiro)
+      const dataA = utils.createValidDate(a.data_vencimento);
+      const dataB = utils.createValidDate(b.data_vencimento);
+      if (!dataA && !dataB) return 0;
+      if (!dataA) return 1;
+      if (!dataB) return -1;
+      return dataA - dataB;
+    });
+    
+    // Renderizar empréstimos ordenados
+    for (const emprestimo of emprestimosProcessados) {
+      const valorFinalFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(emprestimo.valorFinal);
+      const valorInicialFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(emprestimo.valorInicial);
       const data = utils.formatDate(emprestimo.data_emprestimo);
       const vencimento = utils.formatDate(emprestimo.data_vencimento);
       let statusClass = 'secondary';
-      if (status === 'ATRASADO') statusClass = 'danger';
-      else if (status === 'PENDENTE' || status === 'ATIVO') statusClass = 'warning';
-      else if (status === 'QUITADO') statusClass = 'info';
+      if (emprestimo.status === 'ATRASADO') statusClass = 'danger';
+      else if (emprestimo.status === 'PENDENTE' || emprestimo.status === 'ATIVO') statusClass = 'warning';
+      else if (emprestimo.status === 'QUITADO') statusClass = 'info';
+      
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${emprestimo.cliente_nome || 'N/A'}</td>
@@ -2310,7 +2347,7 @@ async function renderHistoricoEmprestimos() {
         <td>${valorFinalFormatado}</td>
         <td>${data}</td>
         <td>${vencimento}</td>
-        <td><span class="badge badge-${statusClass}">${status.charAt(0) + status.slice(1).toLowerCase()}</span></td>
+        <td><span class="badge badge-${statusClass}">${emprestimo.status.charAt(0) + emprestimo.status.slice(1).toLowerCase()}</span></td>
         <td>
           <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
         </td>
@@ -2340,12 +2377,14 @@ async function renderEmprestimosLista() {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     
-    // Eliminar duplicatas por ID
-    const emprestimosUnicos = new Map();
+    // Processar e eliminar duplicatas
+    const emprestimosProcessados = [];
+    const idsProcessados = new Set();
+    
     for (const emprestimo of ativos) {
-      if (emprestimosUnicos.has(emprestimo.id)) continue;
-      emprestimosUnicos.set(emprestimo.id, true);
-      // Usar valores já calculados pela API
+      if (idsProcessados.has(emprestimo.id)) continue;
+      idsProcessados.add(emprestimo.id);
+      
       const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
       let status = (emprestimo.status || '').toUpperCase();
       
@@ -2360,17 +2399,15 @@ async function renderEmprestimosLista() {
         }
       }
       
-      const valorAtualizado = valorFinal;
       const valor = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
-      }).format(valorAtualizado);
+      }).format(valorFinal);
       const data = utils.formatDate(emprestimo.data_emprestimo);
       const vencimento = utils.formatDate(emprestimo.data_vencimento);
       const statusClass = status === 'ATRASADO' ? 'danger' : (status === 'PENDENTE' ? 'warning' : (status === 'ATIVO' ? 'success' : 'info'));
       
-      // Guardar dados processados
-      emprestimosUnicos.set(emprestimo.id, {
+      emprestimosProcessados.push({
         ...emprestimo,
         valor,
         data,
@@ -2379,6 +2416,22 @@ async function renderEmprestimosLista() {
         statusClass
       });
     }
+    
+    // Ordenar: quitados separados no final, por data de vencimento (mais antigo primeiro)
+    emprestimosProcessados.sort((a, b) => {
+      const isQuitadoA = a.status === 'QUITADO';
+      const isQuitadoB = b.status === 'QUITADO';
+      // Separar quitados no final
+      if (isQuitadoA && !isQuitadoB) return 1;
+      if (!isQuitadoA && isQuitadoB) return -1;
+      // Ordenar por data de vencimento (mais antigo primeiro)
+      const dataA = utils.createValidDate(a.data_vencimento);
+      const dataB = utils.createValidDate(b.data_vencimento);
+      if (!dataA && !dataB) return 0;
+      if (!dataA) return 1;
+      if (!dataB) return -1;
+      return dataA - dataB;
+    });
     
     // Verificar se é mobile
     const isMobile = window.innerWidth <= 768;
@@ -2398,7 +2451,7 @@ async function renderEmprestimosLista() {
       cardsContainer.className = 'mobile-emprestimos-cards';
       cardsContainer.style.cssText = 'display: flex; flex-direction: column; gap: 0.75rem; padding: 0.5rem;';
       
-      emprestimosUnicos.forEach((emp) => {
+      emprestimosProcessados.forEach((emp) => {
         let statusColor = '#6b7280';
         if (emp.status === 'ATRASADO') statusColor = '#ef4444';
         else if (emp.status === 'ATIVO') statusColor = '#10b981';
@@ -2434,7 +2487,7 @@ async function renderEmprestimosLista() {
       const oldCards = tbody.parentElement.parentElement.querySelector('.mobile-emprestimos-cards');
       if (oldCards) oldCards.remove();
       
-      emprestimosUnicos.forEach((emp) => {
+      emprestimosProcessados.forEach((emp) => {
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${emp.cliente_nome || 'N/A'}</td>
@@ -2643,8 +2696,8 @@ async function renderCobrancasEmAbertoLista() {
     
     console.log(`📊 Empréstimos únicos encontrados: ${emprestimosUnicos.size}`);
     
-    // Array para armazenar as linhas da tabela
-    const linhasTabela = [];
+    // Array para armazenar os empréstimos processados
+    const emprestimosProcessados = [];
     
     // Verificar status de cada empréstimo com base nas parcelas
     for (const emp of emprestimosUnicos.values()) {
@@ -2734,20 +2787,46 @@ async function renderCobrancasEmAbertoLista() {
         badge = `<span class="badge" style="background:#888;color:#fff;">${emp.status || '-'}</span>`;
       }
       
-      // Adicionar linha à array
-      linhasTabela.push(`
-        <tr>
-          <td>${emp.cliente_nome || 'N/A'}</td>
-          <td>${valor}</td>
-          <td>${vencimento}</td>
-          <td>${badge}</td>
-          <td>
-            <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
-            <button class="btn btn-warning btn-sm" onclick="cobrar(${emp.id})">Cobrar</button>
-          </td>
-        </tr>
-      `);
+      // Adicionar empréstimo processado ao array
+      emprestimosProcessados.push({
+        ...emp,
+        valorFormatado: valor,
+        vencimentoFormatado: vencimento,
+        vencimentoData: vencimentoACobrar,
+        badge,
+        statusReal
+      });
     }
+    
+    // Ordenar: quitados separados no final, por data de vencimento (mais antigo primeiro)
+    emprestimosProcessados.sort((a, b) => {
+      const isQuitadoA = a.statusReal === 'quitado';
+      const isQuitadoB = b.statusReal === 'quitado';
+      // Separar quitados no final
+      if (isQuitadoA && !isQuitadoB) return 1;
+      if (!isQuitadoA && isQuitadoB) return -1;
+      // Ordenar por data de vencimento (mais antigo primeiro)
+      const dataA = utils.createValidDate(a.vencimentoData);
+      const dataB = utils.createValidDate(b.vencimentoData);
+      if (!dataA && !dataB) return 0;
+      if (!dataA) return 1;
+      if (!dataB) return -1;
+      return dataA - dataB;
+    });
+    
+    // Criar linhas da tabela
+    const linhasTabela = emprestimosProcessados.map(emp => `
+      <tr>
+        <td>${emp.cliente_nome || 'N/A'}</td>
+        <td>${emp.valorFormatado}</td>
+        <td>${emp.vencimentoFormatado}</td>
+        <td>${emp.badge}</td>
+        <td>
+          <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
+          <button class="btn btn-warning btn-sm" onclick="cobrar(${emp.id})">Cobrar</button>
+        </td>
+      </tr>
+    `);
     
     // Inserir todas as linhas de uma vez
     tbody.innerHTML = linhasTabela.join('');
