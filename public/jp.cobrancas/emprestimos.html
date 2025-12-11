@@ -225,6 +225,22 @@
           });
         }
         
+        // Ordenar: quitados separados no final, por data de vencimento (mais antigo primeiro)
+        emprestimosUnicos.sort((a, b) => {
+          const isQuitadoA = a.status === 'QUITADO';
+          const isQuitadoB = b.status === 'QUITADO';
+          // Separar quitados no final
+          if (isQuitadoA && !isQuitadoB) return 1;
+          if (!isQuitadoA && isQuitadoB) return -1;
+          // Ordenar por data de vencimento (mais antigo primeiro)
+          const dataA = utils.createValidDate(a.vencimentoExibir);
+          const dataB = utils.createValidDate(b.vencimentoExibir);
+          if (!dataA && !dataB) return 0;
+          if (!dataA) return 1;
+          if (!dataB) return -1;
+          return dataA - dataB;
+        });
+        
         // Verificar se é mobile
         const isMobile = window.innerWidth <= 768;
         const container = tbody.parentElement.parentElement;
