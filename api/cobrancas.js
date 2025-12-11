@@ -2089,6 +2089,53 @@ router.put('/clientes/:id/lista-negra', ensureDatabase, async (req, res) => {
   }
 });
 
+// Atualizar cliente
+router.put('/clientes/:id', ensureDatabase, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nome, cpf_cnpj, telefone, email, endereco, cidade, estado, cep } = req.body;
+    
+    if (!nome) {
+      return res.status(400).json({ error: 'Nome é obrigatório.' });
+    }
+    
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
+    
+    // Verificar se o cliente existe
+    const [existing] = await connection.execute('SELECT * FROM clientes_cobrancas WHERE id = ?', [id]);
+    if (existing.length === 0) {
+      await connection.end();
+      return res.status(404).json({ error: 'Cliente não encontrado.' });
+    }
+    
+    // Atualizar cliente
+    await connection.execute(
+      `UPDATE clientes_cobrancas SET 
+        nome = ?, 
+        cpf_cnpj = ?, 
+        telefone = ?, 
+        email = ?, 
+        endereco = ?, 
+        cidade = ?, 
+        estado = ?, 
+        cep = ?,
+        updated_at = NOW()
+      WHERE id = ?`,
+      [nome, cpf_cnpj || null, telefone || null, email || null, endereco || null, cidade || null, estado || null, cep || null, id]
+    );
+    
+    // Buscar cliente atualizado
+    const [updated] = await connection.execute('SELECT * FROM clientes_cobrancas WHERE id = ?', [id]);
+    await connection.end();
+    
+    res.json(updated[0]);
+  } catch (error) {
+    console.error('Erro ao atualizar cliente:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Remover cliente
 router.delete('/clientes/:id', ensureDatabase, async (req, res) => {
   const { id } = req.params;
