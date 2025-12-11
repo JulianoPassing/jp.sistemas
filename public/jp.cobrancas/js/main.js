@@ -1888,6 +1888,10 @@ const emprestimoController = {
             </div>
             <div style="margin-bottom: 1.2rem;">
               <h2 style="font-size: 1.4rem; font-weight: bold; margin-bottom: 0.2em; color: #002f4b;">${emp.cliente_nome || 'N/A'}</h2>
+              ${telefone ? `<div style="font-size: 0.95rem; color: #666; margin-bottom: 0.4em; display: flex; align-items: center; gap: 0.4rem;">
+                <span style="color: #25d366;">📱</span> 
+                <a href="https://wa.me/55${telefone.replace(/\D/g, '')}" target="_blank" style="color: #25d366; text-decoration: none; font-weight: 500;">${telefone}</a>
+              </div>` : ''}
               <div style="font-size: 1.1rem; font-weight: 600; color: #222; margin-bottom: 0.2em;">PCL-Nº #${emp.id} ${emp.parcelas ? `(${emp.parcelas}ª parcela)` : ''}</div>
               <div style="font-size: 1rem; color: #444; margin-bottom: 0.2em;">Deve ser pago em <b>${utils.formatDate(emp.data_vencimento)}</b></div>
               <div style="font-size: 1rem; color: #444;">Valor Investido <b>${utils.formatCurrency(valorInvestido)}</b></div>
@@ -1962,14 +1966,16 @@ Lembramos que, em caso de atraso, será cobrada uma multa diária de ${utils.for
           let msgTodasVencidas = '';
           let opcaoTodasVencidas = '';
           
-          if (dadosNotificacao.parcelasVencidas && dadosNotificacao.parcelasVencidas.length > 1) {
+          if (dadosNotificacao.parcelasVencidas && dadosNotificacao.parcelasVencidas.length >= 1) {
             const listaParcelasVencidas = dadosNotificacao.parcelasVencidas.map(p => {
               const numParcela = p.numero_parcela || '?';
               return `• Parcela ${numParcela}: ${utils.formatCurrency(Number(p.valor_parcela || 0))} (vencida em ${utils.formatDate(p.data_vencimento)})`;
             }).join('\n');
             
             // Mensagem para parcelas vencidas (sem juros diário)
-            msgTodasVencidas = `Olá, ${dadosNotificacao.primeiroNome}, você possui ${dadosNotificacao.parcelasVencidas.length} parcelas em atraso:
+            const qtdParcelas = dadosNotificacao.parcelasVencidas.length;
+            const textoQtd = qtdParcelas === 1 ? '1 parcela em atraso' : `${qtdParcelas} parcelas em atraso`;
+            msgTodasVencidas = `Olá, ${dadosNotificacao.primeiroNome}, você possui ${textoQtd}:
 
 ${listaParcelasVencidas}
 
@@ -1979,11 +1985,12 @@ Chave PIX: 04854589930
 
 Solicitamos a regularização o mais breve possível.`;
 
+            const tituloVencidas = qtdParcelas === 1 ? '🚨 Parcela Vencida' : `🚨 Parcelas Vencidas (${qtdParcelas})`;
             opcaoTodasVencidas = `
-                <!-- Opção Todas Parcelas Vencidas -->
+                <!-- Opção Parcelas Vencidas -->
                 <div style="border: 2px solid #ef4444; border-radius: 12px; padding: 1rem; background: #fef2f2;">
                   <h4 style="color: #ef4444; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                    🚨 Todas Parcelas Vencidas (${dadosNotificacao.parcelasVencidas.length})
+                    ${tituloVencidas}
                   </h4>
                   <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">Total em atraso: <b style="color: #ef4444;">${utils.formatCurrency(dadosNotificacao.valorTotalVencidas)}</b></div>
                   <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgTodasVencidas}</p>
