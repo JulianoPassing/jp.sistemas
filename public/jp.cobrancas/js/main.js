@@ -1894,8 +1894,13 @@ Chave PIX: 04854589930
 
 Lembramos que, em caso de atraso, será cobrada uma multa diária.`;
 
-          const linkParcelado = dadosNotificacao.telefone ? `https://wa.me/55${dadosNotificacao.telefone.replace(/\\D/g,'')}?text=${encodeURIComponent(msgParcelado)}` : '#';
-          const linkEmprestimo = dadosNotificacao.telefone ? `https://wa.me/55${dadosNotificacao.telefone.replace(/\\D/g,'')}?text=${encodeURIComponent(msgEmprestimo)}` : '#';
+          // Limpar telefone - remover todos os caracteres não numéricos
+          const telefoneNumeros = (dadosNotificacao.telefone || '').replace(/\D/g, '');
+          // Se já começar com 55, não adicionar novamente
+          const telefoneFinal = telefoneNumeros.startsWith('55') ? telefoneNumeros : `55${telefoneNumeros}`;
+          
+          const linkParcelado = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgParcelado)}` : '#';
+          const linkEmprestimo = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgEmprestimo)}` : '#';
           
           const modalNotificacao = `
             <div style="padding: 1.5rem; max-width: 500px; margin: 0 auto;">
