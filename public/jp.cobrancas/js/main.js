@@ -1905,6 +1905,11 @@ const emprestimoController = {
               <div style="font-size: 1rem; color: #444;">Valor Investido <b>${utils.formatCurrency(valorInvestido)}</b></div>
               <div style="font-size: 1rem; color: #444;">Juros <b>${jurosPercent}%</b> (${utils.formatCurrency(jurosTotal)})</div>
               ${infoJuros}
+              ${emp.observacoes ? `
+              <div style="margin-top: 0.8rem; padding: 0.8rem; background: #f8f9fa; border-radius: 8px; border-left: 3px solid #6366f1;">
+                <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.3rem; font-weight: 600;">📝 Observações:</div>
+                <div style="font-size: 0.95rem; color: #333; white-space: pre-line;">${emp.observacoes}</div>
+              </div>` : ''}
             </div>
             <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid #eee;">
             ${parcelas.length > 1 ? this.renderParcelasDetalhadas(parcelas) : `
