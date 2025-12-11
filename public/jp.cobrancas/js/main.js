@@ -412,6 +412,14 @@ const ui = {
 
     return modal;
   },
+  
+  // Fechar modal
+  closeModal() {
+    const modal = document.querySelector('.modal');
+    if (modal) {
+      modal.remove();
+    }
+  },
 
   // Table helpers (mantido para compatibilidade)
   createTableRow(data, actions = []) {
