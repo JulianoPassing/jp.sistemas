@@ -1861,7 +1861,14 @@ const emprestimoController = {
           numeroParcelaAtual,
           totalParcelas,
           parcelasVencidas,
-          valorTotalVencidas
+          valorTotalVencidas,
+          // Dados adicionais para mensagem detalhada
+          valorInvestido,
+          jurosTotal,
+          jurosDiario,
+          diasAtraso,
+          jurosAplicado,
+          jurosPercent
         };
         const detalhes = `
           <div class="emprestimo-modal-box" style="padding: 1.5rem; max-width: 420px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 2px 16px #002f4b22;">
@@ -1903,20 +1910,38 @@ const emprestimoController = {
           e.preventDefault();
           e.stopPropagation();
           
-          // Mensagem para empréstimo parcelado
+          // Mensagem para empréstimo parcelado (sem juros diário)
           const infoParcela = dadosNotificacao.isParcelado ? ` (parcela ${dadosNotificacao.numeroParcelaAtual}/${dadosNotificacao.totalParcelas})` : '';
           const msgParcelado = `Olá, ${dadosNotificacao.primeiroNome}, a sua parcela${infoParcela} vence ${dadosNotificacao.dataParcela}. Você pode pagar o valor de ${utils.formatCurrency(dadosNotificacao.valorParcela)}.
 
 Chave PIX: 04854589930
 
-Lembramos que, em caso de atraso, será cobrada uma multa diária.`;
+Solicitamos o pagamento até a data de vencimento.`;
+
+          // Informações de juros para a mensagem
+          const infoJurosMsg = dadosNotificacao.diasAtraso > 0 
+            ? `\n📊 *Detalhes:*
+• Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
+• Juros mensal (${dadosNotificacao.jurosPercent}%): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
+• Juros diário: ${utils.formatCurrency(dadosNotificacao.jurosDiario)}/dia
+• Dias em atraso: ${dadosNotificacao.diasAtraso} dia(s)
+• Juros por atraso: ${utils.formatCurrency(dadosNotificacao.jurosAplicado)}
+
+💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotal)}*`
+            : `\n📊 *Detalhes:*
+• Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
+• Juros mensal (${dadosNotificacao.jurosPercent}%): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
+
+💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotal)}*
+💵 *Apenas juros: ${utils.formatCurrency(dadosNotificacao.jurosTotal)}*`;
 
           // Mensagem para empréstimo normal
-          const msgEmprestimo = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}. Você pode pagar o valor total de ${utils.formatCurrency(dadosNotificacao.valorTotal)} ou apenas os juros de ${utils.formatCurrency(dadosNotificacao.valorJuros)}.
+          const msgEmprestimo = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.
+${infoJurosMsg}
 
 Chave PIX: 04854589930
 
-Lembramos que, em caso de atraso, será cobrada uma multa diária.`;
+Lembramos que, em caso de atraso, será cobrada uma multa diária de ${utils.formatCurrency(dadosNotificacao.jurosDiario)}.`;
 
           // Limpar telefone - remover todos os caracteres não numéricos
           const telefoneNumeros = (dadosNotificacao.telefone || '').replace(/\D/g, '');
@@ -1933,15 +1958,16 @@ Lembramos que, em caso de atraso, será cobrada uma multa diária.`;
               return `• Parcela ${numParcela}: ${utils.formatCurrency(Number(p.valor_parcela || 0))} (vencida em ${utils.formatDate(p.data_vencimento)})`;
             }).join('\n');
             
+            // Mensagem para parcelas vencidas (sem juros diário)
             msgTodasVencidas = `Olá, ${dadosNotificacao.primeiroNome}, você possui ${dadosNotificacao.parcelasVencidas.length} parcelas em atraso:
 
 ${listaParcelasVencidas}
 
-*Total em atraso: ${utils.formatCurrency(dadosNotificacao.valorTotalVencidas)}*
+💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotalVencidas)}*
 
 Chave PIX: 04854589930
 
-Solicitamos a regularização o mais breve possível para evitar juros adicionais.`;
+Solicitamos a regularização o mais breve possível.`;
 
             opcaoTodasVencidas = `
                 <!-- Opção Todas Parcelas Vencidas -->
