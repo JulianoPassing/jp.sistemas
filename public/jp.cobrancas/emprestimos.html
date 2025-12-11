@@ -296,19 +296,19 @@
           
           tbody.innerHTML = '';
           emprestimosUnicos.forEach(emp => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
+          const row = document.createElement('tr');
+          row.innerHTML = `
               <td>${emp.cliente_nome || 'N/A'}</td>
               <td>${emp.valorInicialFormatado}</td>
               <td>${emp.valorFinalFormatado}</td>
               <td>${emp.data}</td>
               <td>${emp.vencimento}</td>
               <td><span class="badge badge-${emp.statusClass}">${emp.status.charAt(0) + emp.status.slice(1).toLowerCase()}</span></td>
-              <td>
+            <td>
                 <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
-              </td>
-            `;
-            tbody.appendChild(row);
+            </td>
+          `;
+          tbody.appendChild(row);
           });
         }
       }
