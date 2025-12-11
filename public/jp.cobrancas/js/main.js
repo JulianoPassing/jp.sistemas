@@ -1829,10 +1829,10 @@ const emprestimoController = {
           totalParcelas = parcelas.length;
           const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
           
-          // Filtrar parcelas vencidas (atrasadas - antes de hoje)
+          // Filtrar parcelas vencidas (atrasadas + vence hoje)
           parcelasVencidas = parcelasNaoPagas.filter(p => {
             const dataVencParcela = utils.createValidDate(p.data_vencimento);
-            return dataVencParcela && dataVencParcela < hoje;
+            return dataVencParcela && dataVencParcela <= hoje; // <= inclui hoje
           }).sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
           
           // Calcular valor total das parcelas vencidas
