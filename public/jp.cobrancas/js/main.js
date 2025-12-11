@@ -2474,6 +2474,127 @@ const clienteController = {
     }
   },
 
+  async editCliente(id) {
+    try {
+      const response = await fetch(`/api/cobrancas/clientes/${id}`, {
+        credentials: 'include'
+      });
+      const cliente = await response.json();
+      
+      if (!response.ok) {
+        ui.showNotification('Cliente não encontrado', 'error');
+        return;
+      }
+      
+      const modalContent = `
+        <div class="cliente-modal-box" style="padding: 1.5rem; max-width: 600px; margin: 0 auto;">
+          <h3 style="margin-bottom: 1.5rem; color: #002f4b;">Editar Cliente</h3>
+          
+          <form id="form-editar-cliente">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label class="form-label">Nome Completo *</label>
+                <input type="text" class="form-input" name="nome" value="${cliente.nome || ''}" required>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">CPF/CNPJ</label>
+                <input type="text" class="form-input" name="cpf_cnpj" value="${cliente.cpf_cnpj || ''}">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">Telefone</label>
+                <input type="text" class="form-input" name="telefone" value="${cliente.telefone || ''}" placeholder="(XX) XXXXX-XXXX">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-input" name="email" value="${cliente.email || ''}">
+              </div>
+              
+              <div class="form-group" style="grid-column: span 2;">
+                <label class="form-label">Endereço</label>
+                <input type="text" class="form-input" name="endereco" value="${cliente.endereco || ''}">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">Cidade</label>
+                <input type="text" class="form-input" name="cidade" value="${cliente.cidade || ''}">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">Estado</label>
+                <input type="text" class="form-input" name="estado" value="${cliente.estado || ''}" maxlength="2" placeholder="UF">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">CEP</label>
+                <input type="text" class="form-input" name="cep" value="${cliente.cep || ''}" placeholder="00000-000">
+              </div>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: flex-end;">
+              <button type="button" class="btn btn-secondary" onclick="ui.closeModal()">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+            </div>
+          </form>
+        </div>
+      `;
+      
+      ui.showModal(modalContent, 'Editar Cliente');
+      
+      // Adicionar evento de submit
+      const form = document.getElementById('form-editar-cliente');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        const clienteData = {
+          nome: formData.get('nome'),
+          cpf_cnpj: formData.get('cpf_cnpj'),
+          telefone: formData.get('telefone'),
+          email: formData.get('email'),
+          endereco: formData.get('endereco'),
+          cidade: formData.get('cidade'),
+          estado: formData.get('estado'),
+          cep: formData.get('cep')
+        };
+        
+        try {
+          const updateResponse = await fetch(`/api/cobrancas/clientes/${id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(clienteData)
+          });
+          
+          if (!updateResponse.ok) {
+            const error = await updateResponse.json();
+            ui.showNotification(error.error || 'Erro ao atualizar cliente', 'error');
+            return;
+          }
+          
+          ui.showNotification('Cliente atualizado com sucesso!', 'success');
+          ui.closeModal();
+          
+          // Recarregar lista de clientes
+          if (typeof renderClientesLista === 'function') {
+            renderClientesLista();
+          }
+        } catch (error) {
+          console.error('Erro ao atualizar cliente:', error);
+          ui.showNotification('Erro ao atualizar cliente', 'error');
+        }
+      });
+      
+    } catch (error) {
+      console.error('Erro ao buscar cliente:', error);
+      ui.showNotification('Erro ao buscar dados do cliente', 'error');
+    }
+  },
+
   async deleteCliente(id) {
     if (!confirm('Tem certeza que deseja remover este cliente?')) return;
     
@@ -3926,6 +4047,14 @@ async function deleteCliente(id) {
   }
 }
 
+async function editCliente(id) {
+  if (typeof clienteController !== 'undefined' && clienteController.editCliente) {
+    return clienteController.editCliente(id);
+  } else {
+    console.error('clienteController não está disponível');
+  }
+}
+
 function cobrar(id) {
   if (typeof cobrancaController !== 'undefined' && cobrancaController.cobrar) {
     return cobrancaController.cobrar(id);
@@ -3939,6 +4068,7 @@ window.renderHistoricoEmprestimos = renderHistoricoEmprestimos;
 window.viewEmprestimo = viewEmprestimo;
 window.viewCliente = viewCliente;
 window.deleteCliente = deleteCliente;
+window.editCliente = editCliente;
 window.cobrar = cobrar;
 
 // Funções para controle de status das parcelas
