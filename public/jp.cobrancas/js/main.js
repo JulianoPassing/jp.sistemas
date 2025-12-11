@@ -1957,13 +1957,34 @@ Solicitamos o pagamento até a data de vencimento.`;
 💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotal)}*
 💵 *Apenas juros: ${utils.formatCurrency(dadosNotificacao.jurosTotal)}*`;
 
-          // Mensagem para empréstimo normal
+          // Mensagem para empréstimo normal (com juros diário)
           const msgEmprestimo = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.
 ${infoJurosMsg}
 
 Chave PIX: 04854589930
 
 Lembramos que, em caso de atraso, será cobrada uma multa diária de ${utils.formatCurrency(dadosNotificacao.jurosDiario)}.`;
+
+          // Mensagem para empréstimo sem juros diário
+          const infoJurosSemDiario = dadosNotificacao.diasAtraso > 0 
+            ? `\n📊 *Detalhes:*
+• Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
+• Juros mensal (${dadosNotificacao.jurosPercent}%): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
+
+💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotal)}*`
+            : `\n📊 *Detalhes:*
+• Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
+• Juros mensal (${dadosNotificacao.jurosPercent}%): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
+
+💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotal)}*
+💵 *Apenas juros: ${utils.formatCurrency(dadosNotificacao.jurosTotal)}*`;
+
+          const msgEmprestimoSemDiario = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.
+${infoJurosSemDiario}
+
+Chave PIX: 04854589930
+
+Solicitamos o pagamento até a data de vencimento.`;
 
           // Limpar telefone - remover todos os caracteres não numéricos
           const telefoneNumeros = (dadosNotificacao.telefone || '').replace(/\D/g, '');
@@ -2011,6 +2032,7 @@ Solicitamos a regularização o mais breve possível.`;
           
           const linkParcelado = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgParcelado)}` : '#';
           const linkEmprestimo = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgEmprestimo)}` : '#';
+          const linkEmprestimoSemDiario = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgEmprestimoSemDiario)}` : '#';
           
           const tituloParcela = dadosNotificacao.isParcelado 
             ? `📋 Próxima Parcela (${dadosNotificacao.numeroParcelaAtual}/${dadosNotificacao.totalParcelas})`
@@ -2035,13 +2057,24 @@ Solicitamos a regularização o mais breve possível.`;
                   </a>
                 </div>
                 
-                <!-- Opção Empréstimo -->
+                <!-- Opção Empréstimo com Juros Diário -->
                 <div style="border: 2px solid #3b82f6; border-radius: 12px; padding: 1rem; background: #eff6ff;">
                   <h4 style="color: #3b82f6; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                    💰 Mensagem para Empréstimo Total
+                    💰 Empréstimo (com juros diário)
                   </h4>
-                  <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb;">${msgEmprestimo}</p>
+                  <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgEmprestimo}</p>
                   <a href="${linkEmprestimo}" target="_blank" rel="noopener noreferrer" class="btn" style="display: block; background: #3b82f6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none;">
+                    Enviar via WhatsApp
+                  </a>
+                </div>
+                
+                <!-- Opção Empréstimo sem Juros Diário -->
+                <div style="border: 2px solid #8b5cf6; border-radius: 12px; padding: 1rem; background: #f5f3ff;">
+                  <h4 style="color: #8b5cf6; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                    💵 Empréstimo (sem juros diário)
+                  </h4>
+                  <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgEmprestimoSemDiario}</p>
+                  <a href="${linkEmprestimoSemDiario}" target="_blank" rel="noopener noreferrer" class="btn" style="display: block; background: #8b5cf6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none;">
                     Enviar via WhatsApp
                   </a>
                 </div>
