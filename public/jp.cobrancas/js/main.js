@@ -575,51 +575,167 @@ const dashboardController = {
       return;
     }
 
-    // ✅ CORREÇÃO: Usar valores e status já padronizados pela API
-    // A API já calcula valores e status consistentemente
-    const emprestimosProcessados = emprestimos.map(emprestimo => {
-      // Usar valores já calculados pela API
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    // Processar empréstimos com verificação de parcelas
+    const emprestimosProcessados = [];
+    
+    for (const emprestimo of emprestimos) {
       const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
-      const status = (emprestimo.status || '').toUpperCase();
+      let status = (emprestimo.status || '').toUpperCase();
+      let vencimentoExibir = emprestimo.data_vencimento;
       
-      // Informações adicionais podem ser adicionadas aqui se necessário
-      // mas os valores principais devem vir da API
-      return { 
+      // Verificar se é empréstimo parcelado
+      if (emprestimo.tipo_emprestimo === 'in_installments' && emprestimo.numero_parcelas > 1) {
+        try {
+          const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
+          
+          if (parcelas && parcelas.length > 0) {
+            const todasPagas = parcelas.every(p => p.status === 'Paga');
+            const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
+            
+            if (todasPagas) {
+              status = 'QUITADO';
+            } else {
+              const parcelasAtrasadas = parcelasNaoPagas.filter(p => {
+                const dataVencParcela = utils.createValidDate(p.data_vencimento);
+                return dataVencParcela && dataVencParcela < hoje;
+              });
+              
+              if (parcelasAtrasadas.length > 0) {
+                status = 'ATRASADO';
+                parcelasAtrasadas.sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
+                vencimentoExibir = parcelasAtrasadas[0].data_vencimento;
+              } else {
+                status = 'ATIVO';
+                parcelasNaoPagas.sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
+                if (parcelasNaoPagas.length > 0) {
+                  vencimentoExibir = parcelasNaoPagas[0].data_vencimento;
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao buscar parcelas:', error);
+        }
+      } else {
+        // Empréstimo de valor fixo
+        if (status !== 'QUITADO' && emprestimo.data_vencimento) {
+          const venc = utils.createValidDate(emprestimo.data_vencimento);
+          if (venc && venc < hoje) {
+            status = 'ATRASADO';
+          }
+        }
+      }
+      
+      emprestimosProcessados.push({ 
         ...emprestimo, 
         status, 
         valorAtualizado: valorFinal,
-        infoJuros: '' // Removido cálculo local de juros
-      };
-    });
+        vencimentoExibir,
+        infoJuros: ''
+      });
+    }
 
-        emprestimosProcessados.forEach(emprestimo => {
-      const valor = new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(emprestimo.valorAtualizado);
+    // Verificar se é mobile
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
+      // Layout de cards para mobile
+      const container = tbody.parentElement.parentElement;
       
-      // Usar data de vencimento se disponível, senão mostrar "-"
-      const dataExibida = utils.formatDate(emprestimo.data_vencimento);
+      // Esconder tabela e criar container de cards
+      tbody.parentElement.style.display = 'none';
       
-      // Exibir status exatamente como vem da API, formatando igual ao emprestimos.html
-      const statusRaw = (emprestimo.status || '');
-      const status = statusRaw.charAt(0).toUpperCase() + statusRaw.slice(1).toLowerCase();
-      let statusClass = 'secondary';
-      if (statusRaw.toUpperCase() === 'ATRASADO' || statusRaw.toUpperCase() === 'EM ATRASO') statusClass = 'danger';
-      else if (statusRaw.toUpperCase() === 'PENDENTE' || statusRaw.toUpperCase() === 'ATIVO') statusClass = 'warning';
-      else if (statusRaw.toUpperCase() === 'QUITADO') statusClass = 'info';
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${emprestimo.cliente_nome || 'N/A'}</td>
-        <td>${valor}${emprestimo.infoJuros}</td>
-        <td>${dataExibida}</td>
-        <td><span class="badge badge-${statusClass}">${status}</span></td>
-        <td>
-          <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
-        </td>
-      `;
-      tbody.appendChild(row);
-    });
+      // Remover cards antigos se existirem
+      const oldCards = container.querySelector('.mobile-recentes-cards');
+      if (oldCards) oldCards.remove();
+      
+      const cardsContainer = document.createElement('div');
+      cardsContainer.className = 'mobile-recentes-cards';
+      cardsContainer.style.cssText = 'display: flex; flex-direction: column; gap: 0.75rem; padding: 0.5rem;';
+      
+      emprestimosProcessados.forEach(emprestimo => {
+        const valor = new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        }).format(emprestimo.valorAtualizado);
+        
+        const dataExibida = utils.formatDate(emprestimo.vencimentoExibir);
+        const statusRaw = (emprestimo.status || '');
+        
+        let statusColor = '#6b7280';
+        let statusTexto = 'Pendente';
+        if (statusRaw.toUpperCase() === 'ATRASADO' || statusRaw.toUpperCase() === 'EM ATRASO') {
+          statusColor = '#ef4444';
+          statusTexto = 'Atrasado';
+        } else if (statusRaw.toUpperCase() === 'QUITADO') {
+          statusColor = '#10b981';
+          statusTexto = 'Quitado';
+        } else if (statusRaw.toUpperCase() === 'ATIVO') {
+          statusColor = '#f59e0b';
+          statusTexto = 'Em dia';
+        }
+        
+        const card = document.createElement('div');
+        card.style.cssText = `
+          display: flex; 
+          align-items: center; 
+          justify-content: space-between; 
+          padding: 0.75rem 1rem; 
+          background: #fff; 
+          border-radius: 10px; 
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          border-left: 4px solid ${statusColor};
+        `;
+        card.innerHTML = `
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem; margin-bottom: 2px;">${emprestimo.cliente_nome || 'N/A'}</div>
+            <div style="font-size: 0.85rem; font-weight: 700; color: #059669;">${valor}</div>
+            <div style="font-size: 0.75rem; color: #6b7280; margin-top: 2px;">Venc: ${dataExibida} • <span style="color: ${statusColor}; font-weight: 600;">${statusTexto}</span></div>
+          </div>
+          <button onclick="viewEmprestimo(${emprestimo.id})" style="background: #3b82f6; color: #fff; border: none; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Ver</button>
+        `;
+        cardsContainer.appendChild(card);
+      });
+      
+      container.appendChild(cardsContainer);
+    } else {
+      // Layout de tabela para desktop
+      tbody.parentElement.style.display = '';
+      const oldCards = tbody.parentElement.parentElement.querySelector('.mobile-recentes-cards');
+      if (oldCards) oldCards.remove();
+      
+      emprestimosProcessados.forEach(emprestimo => {
+        const valor = new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        }).format(emprestimo.valorAtualizado);
+        
+        // Usar data da próxima parcela a vencer
+        const dataExibida = utils.formatDate(emprestimo.vencimentoExibir);
+        
+        // Exibir status exatamente como vem da API, formatando igual ao emprestimos.html
+        const statusRaw = (emprestimo.status || '');
+        const status = statusRaw.charAt(0).toUpperCase() + statusRaw.slice(1).toLowerCase();
+        let statusClass = 'secondary';
+        if (statusRaw.toUpperCase() === 'ATRASADO' || statusRaw.toUpperCase() === 'EM ATRASO') statusClass = 'danger';
+        else if (statusRaw.toUpperCase() === 'PENDENTE' || statusRaw.toUpperCase() === 'ATIVO') statusClass = 'warning';
+        else if (statusRaw.toUpperCase() === 'QUITADO') statusClass = 'info';
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${emprestimo.cliente_nome || 'N/A'}</td>
+          <td>${valor}${emprestimo.infoJuros}</td>
+          <td>${dataExibida}</td>
+          <td><span class="badge badge-${statusClass}">${status}</span></td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emprestimo.id})">Ver</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
   },
 
   async updateCobrancasPendentes() {
