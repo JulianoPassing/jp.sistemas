@@ -1832,10 +1832,32 @@ router.post('/emprestimos/:id/pagamento-juros', ensureDatabase, async (req, res)
       VALUES (?, ?, ?, ?, ?)
     `, [emprestimo.id, valor_juros_pago, data_pagamento, forma_pagamento, `Pagamento de juros: ${observacoes || ''}`]);
     
-    // Calcular nova data de vencimento (+30 dias)
+    // Calcular nova data de vencimento baseado na frequência
     const dataVencimentoAtual = new Date(emprestimo.data_vencimento);
     const novaDataVencimento = new Date(dataVencimentoAtual);
-    novaDataVencimento.setDate(novaDataVencimento.getDate() + 30);
+    
+    // Determinar dias a adicionar baseado na frequência
+    const frequencia = emprestimo.frequencia || 'monthly';
+    let diasAdicionar = 30; // padrão mensal
+    
+    switch (frequencia) {
+      case 'daily':
+        diasAdicionar = 1;
+        break;
+      case 'weekly':
+        diasAdicionar = 7;
+        break;
+      case 'biweekly':
+        diasAdicionar = 14;
+        break;
+      case 'monthly':
+      default:
+        diasAdicionar = 30;
+        break;
+    }
+    
+    novaDataVencimento.setDate(novaDataVencimento.getDate() + diasAdicionar);
+    console.log(`📅 Frequência: ${frequencia}, Dias adicionados: ${diasAdicionar}, Nova data: ${novaDataVencimento.toISOString().split('T')[0]}`);
     
     // Atualizar empréstimo: nova data de vencimento, status Ativo, valor volta ao inicial
     // O valor da dívida volta ao valor inicial do empréstimo (não acumula juros)
