@@ -1462,10 +1462,10 @@ const emprestimoController = {
               <div class="form-group">
                 <label>Frequência de Pagamento *</label>
                 <select id="edit-frequencia" class="form-input" required>
-                  <option value="monthly" ${emp.frequencia_pagamento === 'monthly' ? 'selected' : ''}>Mensal</option>
-                  <option value="weekly" ${emp.frequencia_pagamento === 'weekly' ? 'selected' : ''}>Semanal</option>
-                  <option value="daily" ${emp.frequencia_pagamento === 'daily' ? 'selected' : ''}>Diário</option>
-                  <option value="biweekly" ${emp.frequencia_pagamento === 'biweekly' ? 'selected' : ''}>Quinzenal</option>
+                  <option value="monthly" ${(emp.frequencia || emp.frequencia_pagamento) === 'monthly' ? 'selected' : ''}>Mensal</option>
+                  <option value="weekly" ${(emp.frequencia || emp.frequencia_pagamento) === 'weekly' ? 'selected' : ''}>Semanal</option>
+                  <option value="daily" ${(emp.frequencia || emp.frequencia_pagamento) === 'daily' ? 'selected' : ''}>Diário</option>
+                  <option value="biweekly" ${(emp.frequencia || emp.frequencia_pagamento) === 'biweekly' ? 'selected' : ''}>Quinzenal</option>
                 </select>
               </div>
             </div>
@@ -2460,7 +2460,12 @@ const clienteController = {
                       <p style="margin: 0.3rem 0;"><strong>Data Empréstimo:</strong> ${emp.data_emprestimo ? utils.formatDate(emp.data_emprestimo) : 'N/A'}</p>
                       <p style="margin: 0.3rem 0;"><strong>Data Vencimento:</strong> ${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : 'N/A'}</p>
                                              <p style="margin: 0.3rem 0;"><strong>Valor da Parcela:</strong> <span style="color: #6366f1; font-weight: bold;">${utils.formatCurrency(emp.valorParcela)}</span></p>
-                      <p style="margin: 0.3rem 0;"><strong>Frequência:</strong> ${emp.frequencia === 'monthly' ? 'Mensal' : (emp.frequencia === 'weekly' ? 'Semanal' : 'N/A')}</p>
+                      <p style="margin: 0.3rem 0;"><strong>Frequência:</strong> ${
+                        emp.frequencia === 'monthly' ? 'Mensal' : 
+                        emp.frequencia === 'weekly' ? 'Semanal' : 
+                        emp.frequencia === 'biweekly' ? 'Quinzenal' : 
+                        emp.frequencia === 'daily' ? 'Diário' : 'N/A'
+                      }</p>
                     </div>
                   </div>
                   
@@ -3775,6 +3780,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Montar payload do empréstimo
+        // Verificar frequência selecionada
+        const frequenciaSelecionada = formData.frequencia || 'monthly';
+        console.log('📆 Frequência selecionada:', frequenciaSelecionada);
+        console.log('📆 FormData frequencia:', formData.frequencia);
+        
         const payload = {
           cliente_id,
           valor: valorInicial,
@@ -3788,7 +3798,7 @@ document.addEventListener('DOMContentLoaded', () => {
           observacoes: formData.observacoes || '',
           tipo_emprestimo: parseInt(formData.parcelas) > 1 ? 'in_installments' : 'fixed',
           numero_parcelas: parseInt(formData.parcelas) || 1,
-          frequencia: formData.frequencia || 'monthly',
+          frequencia: frequenciaSelecionada,
           tipo_calculo: tipoCalculoCalculo
         };
         
