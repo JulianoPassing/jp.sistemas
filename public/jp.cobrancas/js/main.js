@@ -1946,11 +1946,15 @@ Chave PIX: 04854589930
 Solicitamos o pagamento até a data de vencimento.`;
 
           // Informações de juros para a mensagem
+          // Calcular juros total + juros diário
+          const jurosTotalMaisDiario = dadosNotificacao.jurosTotal + dadosNotificacao.jurosDiario;
+          
           const infoJurosMsg = dadosNotificacao.diasAtraso > 0 
             ? `\n📊 *Detalhes:*
 • Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
 • Juros mensal (${dadosNotificacao.jurosPercent}%): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
 • Juros diário: ${utils.formatCurrency(dadosNotificacao.jurosDiario)}/dia
+• Juros + diário: ${utils.formatCurrency(jurosTotalMaisDiario)}
 • Dias em atraso: ${dadosNotificacao.diasAtraso} dia(s)
 • Juros por atraso: ${utils.formatCurrency(dadosNotificacao.jurosAplicado)}
 
@@ -1958,9 +1962,11 @@ Solicitamos o pagamento até a data de vencimento.`;
             : `\n📊 *Detalhes:*
 • Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
 • Juros mensal (${dadosNotificacao.jurosPercent}%): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
+• Juros diário: ${utils.formatCurrency(dadosNotificacao.jurosDiario)}/dia
+• Juros + diário: ${utils.formatCurrency(jurosTotalMaisDiario)}
 
 💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotal)}*
-💵 *Apenas juros: ${utils.formatCurrency(dadosNotificacao.jurosTotal)}*`;
+💵 *Apenas juros (com diário): ${utils.formatCurrency(jurosTotalMaisDiario)}*`;
 
           // Mensagem para empréstimo normal (com juros diário)
           const msgEmprestimo = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.
