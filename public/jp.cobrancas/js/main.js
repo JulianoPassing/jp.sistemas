@@ -1977,17 +1977,20 @@ Chave PIX: 04854589930
 Lembramos que, em caso de atraso, será cobrada uma multa diária de ${utils.formatCurrency(dadosNotificacao.jurosDiario)}.`;
 
           // Mensagem para empréstimo sem juros diário
+          // Calcular valor total SEM juros diário (só valor investido + juros mensal)
+          const valorTotalSemDiario = dadosNotificacao.valorInvestido + dadosNotificacao.jurosTotal;
+          
           const infoJurosSemDiario = dadosNotificacao.diasAtraso > 0 
             ? `\n📊 *Detalhes:*
 • Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
 • Juros mensal (${dadosNotificacao.jurosPercent}%): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
 
-💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotal)}*`
+💰 *Total a pagar: ${utils.formatCurrency(valorTotalSemDiario)}*`
             : `\n📊 *Detalhes:*
 • Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
 • Juros mensal (${dadosNotificacao.jurosPercent}%): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
 
-💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotal)}*
+💰 *Total a pagar: ${utils.formatCurrency(valorTotalSemDiario)}*
 💵 *Apenas juros: ${utils.formatCurrency(dadosNotificacao.jurosTotal)}*`;
 
           const msgEmprestimoSemDiario = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.
