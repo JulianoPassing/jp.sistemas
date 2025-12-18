@@ -1946,17 +1946,19 @@ Chave PIX: 04854589930
 Solicitamos o pagamento até a data de vencimento.`;
 
           // Informações de juros para a mensagem
-          // Calcular juros total + juros diário
+          // Calcular juros total + juros diário (para quando não tem atraso)
           const jurosTotalMaisDiario = dadosNotificacao.jurosTotal + dadosNotificacao.jurosDiario;
+          // Calcular soma total: juros mensal + juros por atraso (para quando tem atraso)
+          const jurosMensalMaisAtraso = dadosNotificacao.jurosTotal + dadosNotificacao.jurosAplicado;
           
           const infoJurosMsg = dadosNotificacao.diasAtraso > 0 
             ? `\n📊 *Detalhes:*
 • Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
 • Juros mensal (${dadosNotificacao.jurosPercent}%): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
 • Juros diário: ${utils.formatCurrency(dadosNotificacao.jurosDiario)}/dia
-• Juros + diário: ${utils.formatCurrency(jurosTotalMaisDiario)}
 • Dias em atraso: ${dadosNotificacao.diasAtraso} dia(s)
 • Juros por atraso: ${utils.formatCurrency(dadosNotificacao.jurosAplicado)}
+• Total de juros: ${utils.formatCurrency(jurosMensalMaisAtraso)}
 
 💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotal)}*`
             : `\n📊 *Detalhes:*
