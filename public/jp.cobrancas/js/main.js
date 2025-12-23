@@ -2007,6 +2007,11 @@ Solicitamos o pagamento até a data de vencimento.`;
           // Se já começar com 55, não adicionar novamente
           const telefoneFinal = telefoneNumeros.startsWith('55') ? telefoneNumeros : `55${telefoneNumeros}`;
 
+          // Estilo e comportamento para quando não tem telefone (mover para cima para usar em todos os links)
+          const semTelefone = !telefoneNumeros;
+          const btnDisabledStyle = semTelefone ? 'opacity: 0.5; cursor: not-allowed;' : '';
+          const btnOnClick = semTelefone ? `onclick="event.preventDefault(); ui.showNotification('⚠️ Cliente sem telefone cadastrado! Edite o empréstimo para adicionar o telefone.', 'error'); return false;"` : '';
+          
           // Mensagem para todas as parcelas vencidas
           let msgTodasVencidas = '';
           let opcaoTodasVencidas = '';
@@ -2031,6 +2036,7 @@ Chave PIX: 04854589930
 Solicitamos a regularização o mais breve possível.`;
 
             const tituloVencidas = qtdParcelas === 1 ? '🚨 Parcela Vencida' : `🚨 Parcelas Vencidas (${qtdParcelas})`;
+            const linkVencidas = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgTodasVencidas)}` : '';
             opcaoTodasVencidas = `
                 <!-- Opção Parcelas Vencidas -->
                 <div style="border: 2px solid #ef4444; border-radius: 12px; padding: 1rem; background: #fef2f2;">
@@ -2039,24 +2045,34 @@ Solicitamos a regularização o mais breve possível.`;
                   </h4>
                   <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">Total em atraso: <b style="color: #ef4444;">${utils.formatCurrency(dadosNotificacao.valorTotalVencidas)}</b></div>
                   <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgTodasVencidas}</p>
-                  <a href="https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgTodasVencidas)}" target="_blank" rel="noopener noreferrer" class="btn" style="display: block; background: #ef4444; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none;">
+                  <a href="${linkVencidas || 'javascript:void(0)'}" ${linkVencidas ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #ef4444; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">
                     Enviar via WhatsApp
                   </a>
                 </div>
             `;
           }
           
-          const linkParcelado = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgParcelado)}` : '#';
-          const linkEmprestimo = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgEmprestimo)}` : '#';
-          const linkEmprestimoSemDiario = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgEmprestimoSemDiario)}` : '#';
+          const linkParcelado = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgParcelado)}` : '';
+          const linkEmprestimo = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgEmprestimo)}` : '';
+          const linkEmprestimoSemDiario = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgEmprestimoSemDiario)}` : '';
           
           const tituloParcela = dadosNotificacao.isParcelado 
             ? `📋 Próxima Parcela (${dadosNotificacao.numeroParcelaAtual}/${dadosNotificacao.totalParcelas})`
             : '📋 Mensagem para Parcela';
           
+          // Aviso de telefone não cadastrado
+          const avisoSemTelefone = semTelefone ? `
+            <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span style="font-size: 1.2rem;">⚠️</span>
+              <span style="color: #92400e; font-size: 0.9rem;"><b>Atenção:</b> Cliente sem telefone cadastrado. Edite o empréstimo para adicionar.</span>
+            </div>
+          ` : '';
+          
           const modalNotificacao = `
             <div style="padding: 1.5rem; max-width: 500px; margin: 0 auto; max-height: 80vh; overflow-y: auto;">
               <h3 style="margin-bottom: 1.5rem; color: #002f4b; text-align: center;">Escolha o tipo de mensagem</h3>
+              
+              ${avisoSemTelefone}
               
               <div style="display: flex; flex-direction: column; gap: 1rem;">
                 ${opcaoTodasVencidas}
@@ -2068,7 +2084,7 @@ Solicitamos a regularização o mais breve possível.`;
                   </h4>
                   <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">Vencimento: <b>${dadosNotificacao.dataParcela}</b> • Valor: <b>${utils.formatCurrency(dadosNotificacao.valorParcela)}</b></div>
                   <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb;">${msgParcelado}</p>
-                  <a href="${linkParcelado}" target="_blank" rel="noopener noreferrer" class="btn" style="display: block; background: #25d366; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none;">
+                  <a href="${linkParcelado || 'javascript:void(0)'}" ${linkParcelado ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #25d366; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">
                     Enviar via WhatsApp
                   </a>
                 </div>
@@ -2079,7 +2095,7 @@ Solicitamos a regularização o mais breve possível.`;
                     💰 Empréstimo (com juros diário)
                   </h4>
                   <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgEmprestimo}</p>
-                  <a href="${linkEmprestimo}" target="_blank" rel="noopener noreferrer" class="btn" style="display: block; background: #3b82f6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none;">
+                  <a href="${linkEmprestimo || 'javascript:void(0)'}" ${linkEmprestimo ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #3b82f6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">
                     Enviar via WhatsApp
                   </a>
                 </div>
@@ -2090,7 +2106,7 @@ Solicitamos a regularização o mais breve possível.`;
                     💵 Empréstimo (sem juros diário)
                   </h4>
                   <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgEmprestimoSemDiario}</p>
-                  <a href="${linkEmprestimoSemDiario}" target="_blank" rel="noopener noreferrer" class="btn" style="display: block; background: #8b5cf6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none;">
+                  <a href="${linkEmprestimoSemDiario || 'javascript:void(0)'}" ${linkEmprestimoSemDiario ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #8b5cf6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">
                     Enviar via WhatsApp
                   </a>
                 </div>
