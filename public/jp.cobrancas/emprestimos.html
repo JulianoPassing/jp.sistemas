@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css">
+  <!-- SheetJS para exportação Excel -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 <body class="app-layout">
   <header>
@@ -45,7 +47,12 @@
       <div class="section">
         <div class="section-header">
           <h3 class="section-title">Empréstimos</h3>
-          <button id="toggleForm" class="btn btn-primary">Novo Empréstimo</button>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button id="btnBackup" class="btn btn-success" onclick="exportarBackupExcel()" style="background: #059669; border-color: #059669;">
+              <i class="fas fa-download" style="margin-right: 0.5rem;"></i>Backup Excel
+            </button>
+            <button id="toggleForm" class="btn btn-primary">Novo Empréstimo</button>
+          </div>
         </div>
         
         <!-- Caixa de Busca -->
@@ -95,8 +102,324 @@
   <footer class="text-center p-4 mt-8">
     © 2025 JP. Sistemas. Todos os direitos reservados. | jp-sistemas.com
   </footer>
+  <!-- Font Awesome para ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="./js/main.js"></script>
   <script>
+    // ========================================
+    // FUNÇÃO DE BACKUP/EXPORTAÇÃO PARA EXCEL
+    // ========================================
+    async function exportarBackupExcel() {
+      const btnBackup = document.getElementById('btnBackup');
+      const textoOriginal = btnBackup.innerHTML;
+      
+      try {
+        // Mostrar loading
+        btnBackup.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Gerando...';
+        btnBackup.disabled = true;
+        
+        // Buscar todos os dados
+        const [emprestimos, clientes] = await Promise.all([
+          apiService.getEmprestimos(),
+          apiService.getClientes()
+        ]);
+        
+        // Criar mapa de clientes para acesso rápido
+        const clientesMap = {};
+        clientes.forEach(c => {
+          clientesMap[c.id] = c;
+        });
+        
+        // Arrays para armazenar dados das planilhas
+        const dadosEmprestimos = [];
+        const dadosParcelas = [];
+        const dadosResumo = [];
+        
+        // Data atual para cálculos
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        
+        // Totalizadores
+        let totalEmprestado = 0;
+        let totalAReceber = 0;
+        let totalRecebido = 0;
+        let totalEmAtraso = 0;
+        let emprestimosAtivos = 0;
+        let emprestimosQuitados = 0;
+        let emprestimosEmAtraso = 0;
+        
+        // Processar cada empréstimo
+        for (const emp of emprestimos) {
+          const cliente = clientesMap[emp.cliente_id] || {};
+          const valorInicial = Number(emp.valor || 0);
+          const valorFinal = Number(emp.valor_final || emp.valor || 0);
+          const jurosPct = Number(emp.juros_mensal || 0);
+          const dataEmprestimo = emp.data_emprestimo || '';
+          const dataVencimento = emp.data_vencimento || '';
+          
+          // Calcular dias vencidos
+          let diasVencidos = 0;
+          let estaEmAtraso = false;
+          let estaEmDia = false;
+          let statusFinal = (emp.status || 'Ativo').toUpperCase();
+          
+          // Buscar parcelas se for parcelado
+          let parcelas = [];
+          if (emp.tipo_emprestimo === 'in_installments' && emp.numero_parcelas > 1) {
+            try {
+              parcelas = await apiService.getParcelasEmprestimo(emp.id);
+            } catch (error) {
+              console.error('Erro ao buscar parcelas:', error);
+            }
+          }
+          
+          // Variáveis para totalização de parcelas
+          let parcelasPagas = 0;
+          let parcelasEmAberto = 0;
+          let parcelasAtrasadas = 0;
+          let valorPago = 0;
+          let valorEmAberto = 0;
+          let valorAtrasado = 0;
+          
+          if (parcelas.length > 0) {
+            // Processar parcelas
+            const todasPagas = parcelas.every(p => p.status === 'Paga');
+            
+            if (todasPagas) {
+              statusFinal = 'QUITADO';
+              estaEmDia = true;
+            } else {
+              const parcelasAtrasadasArr = parcelas.filter(p => {
+                const dataVenc = utils.createValidDate(p.data_vencimento);
+                return dataVenc && dataVenc < hoje && p.status !== 'Paga';
+              });
+              
+              if (parcelasAtrasadasArr.length > 0) {
+                statusFinal = 'ATRASADO';
+                estaEmAtraso = true;
+                // Calcular dias do maior atraso
+                parcelasAtrasadasArr.sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
+                const dataVencMaisAntiga = utils.createValidDate(parcelasAtrasadasArr[0].data_vencimento);
+                diasVencidos = Math.floor((hoje - dataVencMaisAntiga) / (1000 * 60 * 60 * 24));
+              } else {
+                statusFinal = 'ATIVO';
+                estaEmDia = true;
+              }
+            }
+            
+            // Contar parcelas por status
+            parcelas.forEach(p => {
+              const valorParcela = Number(p.valor_parcela || 0);
+              const dataVenc = utils.createValidDate(p.data_vencimento);
+              const atrasada = dataVenc && dataVenc < hoje && p.status !== 'Paga';
+              
+              if (p.status === 'Paga') {
+                parcelasPagas++;
+                valorPago += valorParcela;
+              } else if (atrasada) {
+                parcelasAtrasadas++;
+                valorAtrasado += valorParcela;
+              } else {
+                parcelasEmAberto++;
+                valorEmAberto += valorParcela;
+              }
+              
+              // Adicionar dados das parcelas na planilha de parcelas
+              dadosParcelas.push({
+                'Cliente': cliente.nome || 'N/A',
+                'ID Empréstimo': emp.id,
+                'Nº Parcela': p.numero_parcela,
+                'Valor Parcela': valorParcela,
+                'Data Vencimento': utils.formatDate(p.data_vencimento),
+                'Status': p.status === 'Paga' ? 'PAGA' : (atrasada ? 'ATRASADA' : 'EM ABERTO'),
+                'Data Pagamento': p.data_pagamento ? utils.formatDate(p.data_pagamento) : '-',
+                'Valor Pago': Number(p.valor_pago || 0)
+              });
+            });
+            
+          } else {
+            // Empréstimo de parcela única (valor fixo)
+            if (statusFinal !== 'QUITADO') {
+              const dataVenc = utils.createValidDate(dataVencimento);
+              if (dataVenc && dataVenc < hoje) {
+                statusFinal = 'ATRASADO';
+                estaEmAtraso = true;
+                diasVencidos = Math.floor((hoje - dataVenc) / (1000 * 60 * 60 * 24));
+              } else {
+                estaEmDia = true;
+              }
+            } else {
+              estaEmDia = true;
+              parcelasPagas = 1;
+              valorPago = valorFinal;
+            }
+            
+            if (statusFinal !== 'QUITADO') {
+              if (estaEmAtraso) {
+                parcelasAtrasadas = 1;
+                valorAtrasado = valorFinal;
+              } else {
+                parcelasEmAberto = 1;
+                valorEmAberto = valorFinal;
+              }
+            }
+            
+            // Adicionar parcela única na planilha de parcelas
+            dadosParcelas.push({
+              'Cliente': cliente.nome || 'N/A',
+              'ID Empréstimo': emp.id,
+              'Nº Parcela': 1,
+              'Valor Parcela': valorFinal,
+              'Data Vencimento': utils.formatDate(dataVencimento),
+              'Status': statusFinal === 'QUITADO' ? 'PAGA' : (estaEmAtraso ? 'ATRASADA' : 'EM ABERTO'),
+              'Data Pagamento': statusFinal === 'QUITADO' ? '-' : '-',
+              'Valor Pago': statusFinal === 'QUITADO' ? valorFinal : 0
+            });
+          }
+          
+          // Atualizar totalizadores
+          totalEmprestado += valorInicial;
+          if (statusFinal === 'QUITADO') {
+            totalRecebido += valorFinal;
+            emprestimosQuitados++;
+          } else {
+            totalAReceber += valorEmAberto + valorAtrasado;
+            if (estaEmAtraso) {
+              totalEmAtraso += valorAtrasado;
+              emprestimosEmAtraso++;
+            }
+            emprestimosAtivos++;
+          }
+          
+          // Adicionar dados do empréstimo na planilha principal
+          dadosEmprestimos.push({
+            'ID': emp.id,
+            'Cliente': cliente.nome || 'N/A',
+            'CPF/CNPJ': cliente.cpf_cnpj || '-',
+            'Telefone': cliente.telefone || '-',
+            'Email': cliente.email || '-',
+            'Endereço': cliente.endereco || '-',
+            'Cidade': cliente.cidade || '-',
+            'Estado': cliente.estado || '-',
+            'Valor Emprestado': valorInicial,
+            'Juros (%)': jurosPct,
+            'Valor Final': valorFinal,
+            'Tipo': emp.tipo_emprestimo === 'in_installments' ? 'Parcelado' : 'Fixo',
+            'Nº Parcelas': emp.numero_parcelas || 1,
+            'Data Empréstimo': utils.formatDate(dataEmprestimo),
+            'Data Vencimento': utils.formatDate(dataVencimento),
+            'Dias Vencidos': diasVencidos,
+            'Status': statusFinal,
+            'Em Atraso?': estaEmAtraso ? 'SIM' : 'NÃO',
+            'Em Dia?': estaEmDia ? 'SIM' : 'NÃO',
+            'Parcelas Pagas': parcelasPagas,
+            'Parcelas em Aberto': parcelasEmAberto,
+            'Parcelas Atrasadas': parcelasAtrasadas,
+            'Valor Pago': valorPago,
+            'Valor em Aberto': valorEmAberto,
+            'Valor Atrasado': valorAtrasado,
+            'Observações': emp.observacoes || '-'
+          });
+        }
+        
+        // Criar planilha de resumo
+        dadosResumo.push(
+          { 'Descrição': 'RESUMO GERAL DO BACKUP', 'Valor': '' },
+          { 'Descrição': '', 'Valor': '' },
+          { 'Descrição': 'Data do Backup', 'Valor': new Date().toLocaleString('pt-BR') },
+          { 'Descrição': '', 'Valor': '' },
+          { 'Descrição': 'TOTAIS', 'Valor': '' },
+          { 'Descrição': 'Total de Empréstimos', 'Valor': emprestimos.length },
+          { 'Descrição': 'Empréstimos Ativos', 'Valor': emprestimosAtivos },
+          { 'Descrição': 'Empréstimos Quitados', 'Valor': emprestimosQuitados },
+          { 'Descrição': 'Empréstimos em Atraso', 'Valor': emprestimosEmAtraso },
+          { 'Descrição': '', 'Valor': '' },
+          { 'Descrição': 'VALORES', 'Valor': '' },
+          { 'Descrição': 'Valor Total Emprestado', 'Valor': formatarMoeda(totalEmprestado) },
+          { 'Descrição': 'Valor Total a Receber', 'Valor': formatarMoeda(totalAReceber) },
+          { 'Descrição': 'Valor Total Recebido', 'Valor': formatarMoeda(totalRecebido) },
+          { 'Descrição': 'Valor Total em Atraso', 'Valor': formatarMoeda(totalEmAtraso) }
+        );
+        
+        // Função auxiliar para formatar moeda
+        function formatarMoeda(valor) {
+          return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
+        }
+        
+        // Criar workbook Excel
+        const wb = XLSX.utils.book_new();
+        
+        // Planilha de Resumo
+        const wsResumo = XLSX.utils.json_to_sheet(dadosResumo);
+        wsResumo['!cols'] = [{ wch: 30 }, { wch: 25 }];
+        XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo');
+        
+        // Planilha de Empréstimos
+        const wsEmprestimos = XLSX.utils.json_to_sheet(dadosEmprestimos);
+        wsEmprestimos['!cols'] = [
+          { wch: 6 },  // ID
+          { wch: 25 }, // Cliente
+          { wch: 16 }, // CPF/CNPJ
+          { wch: 16 }, // Telefone
+          { wch: 25 }, // Email
+          { wch: 30 }, // Endereço
+          { wch: 15 }, // Cidade
+          { wch: 8 },  // Estado
+          { wch: 16 }, // Valor Emprestado
+          { wch: 10 }, // Juros
+          { wch: 16 }, // Valor Final
+          { wch: 12 }, // Tipo
+          { wch: 12 }, // Nº Parcelas
+          { wch: 14 }, // Data Empréstimo
+          { wch: 14 }, // Data Vencimento
+          { wch: 14 }, // Dias Vencidos
+          { wch: 12 }, // Status
+          { wch: 12 }, // Em Atraso?
+          { wch: 10 }, // Em Dia?
+          { wch: 14 }, // Parcelas Pagas
+          { wch: 18 }, // Parcelas em Aberto
+          { wch: 18 }, // Parcelas Atrasadas
+          { wch: 14 }, // Valor Pago
+          { wch: 16 }, // Valor em Aberto
+          { wch: 14 }, // Valor Atrasado
+          { wch: 30 }  // Observações
+        ];
+        XLSX.utils.book_append_sheet(wb, wsEmprestimos, 'Empréstimos');
+        
+        // Planilha de Parcelas
+        const wsParcelas = XLSX.utils.json_to_sheet(dadosParcelas);
+        wsParcelas['!cols'] = [
+          { wch: 25 }, // Cliente
+          { wch: 14 }, // ID Empréstimo
+          { wch: 12 }, // Nº Parcela
+          { wch: 14 }, // Valor Parcela
+          { wch: 16 }, // Data Vencimento
+          { wch: 14 }, // Status
+          { wch: 16 }, // Data Pagamento
+          { wch: 14 }  // Valor Pago
+        ];
+        XLSX.utils.book_append_sheet(wb, wsParcelas, 'Parcelas');
+        
+        // Gerar nome do arquivo com data
+        const dataAtual = new Date();
+        const nomeArquivo = `Backup_Emprestimos_${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}_${String(dataAtual.getHours()).padStart(2, '0')}${String(dataAtual.getMinutes()).padStart(2, '0')}.xlsx`;
+        
+        // Salvar arquivo
+        XLSX.writeFile(wb, nomeArquivo);
+        
+        // Mostrar mensagem de sucesso
+        ui.showNotification(`Backup exportado com sucesso! ${emprestimos.length} empréstimos exportados.`, 'success');
+        
+      } catch (error) {
+        console.error('Erro ao exportar backup:', error);
+        ui.showNotification('Erro ao exportar backup. Tente novamente.', 'error');
+      } finally {
+        // Restaurar botão
+        btnBackup.innerHTML = textoOriginal;
+        btnBackup.disabled = false;
+      }
+    }
+    
     document.addEventListener('DOMContentLoaded', function() {
       const searchInput = document.getElementById('search-emprestimos');
       const tbody = document.getElementById('historico-emprestimos');
