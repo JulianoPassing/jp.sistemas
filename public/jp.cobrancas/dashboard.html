@@ -120,6 +120,25 @@
         <div class="section-header">
           <h3 class="section-title">Todos os Empréstimos</h3>
         </div>
+        
+        <!-- Caixa de Busca -->
+        <div class="search-container" style="margin-bottom: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+          <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 250px;">
+              <input 
+                type="text" 
+                id="search-todos-emprestimos" 
+                class="form-input" 
+                placeholder="Buscar por nome do cliente..."
+                style="width: 100%;"
+              >
+            </div>
+          </div>
+          <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">
+            <span id="search-results-info-dashboard">Mostrando todos os empréstimos</span>
+          </div>
+        </div>
+        
         <div class="table-container">
           <table class="table">
             <thead>

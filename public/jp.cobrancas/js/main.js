@@ -746,6 +746,9 @@ const dashboardController = {
     }
   },
 
+  // Variável para armazenar todos os empréstimos processados (para filtragem)
+  todosEmprestimosProcessados: [],
+  
   async updateCobrancasPendentes() {
     const tbody = document.getElementById('cobrancas-pendentes');
     if (!tbody) return;
@@ -758,6 +761,8 @@ const dashboardController = {
       
       if (!emprestimos || emprestimos.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+        this.todosEmprestimosProcessados = [];
+        this.updateSearchResultsInfo(0, 0);
         return;
       }
 
@@ -860,10 +865,67 @@ const dashboardController = {
         return dataA - dataB;
       });
 
-      // Verificar se é mobile
-      const isMobile = window.innerWidth <= 768;
+      // Armazenar para filtragem
+      this.todosEmprestimosProcessados = emprestimosProcessados;
       
-      if (isMobile) {
+      // Renderizar com filtro atual (se houver)
+      const searchInput = document.getElementById('search-todos-emprestimos');
+      const termo = searchInput ? searchInput.value : '';
+      this.renderEmprestimosFiltrados(termo);
+      
+    } catch (error) {
+      console.error('Erro ao carregar cobranças pendentes:', error);
+      const tbody = document.getElementById('cobrancas-pendentes');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-500">Erro ao carregar cobranças</td></tr>';
+      }
+    }
+  },
+  
+  // Atualizar informação de resultados da busca
+  updateSearchResultsInfo(filtrados, total) {
+    const info = document.getElementById('search-results-info-dashboard');
+    if (info) {
+      if (filtrados === total) {
+        info.textContent = `Mostrando todos os ${total} empréstimos`;
+      } else {
+        info.textContent = `Mostrando ${filtrados} de ${total} empréstimos`;
+      }
+    }
+  },
+  
+  // Renderizar empréstimos com filtro
+  renderEmprestimosFiltrados(termo = '') {
+    const tbody = document.getElementById('cobrancas-pendentes');
+    if (!tbody) return;
+    
+    const termoLower = termo.toLowerCase().trim();
+    
+    // Filtrar por nome do cliente
+    const emprestimosFiltrados = this.todosEmprestimosProcessados.filter(emp => {
+      if (!termoLower) return true;
+      const nomeCliente = (emp.cliente_nome || '').toLowerCase();
+      return nomeCliente.includes(termoLower);
+    });
+    
+    // Atualizar info de resultados
+    this.updateSearchResultsInfo(emprestimosFiltrados.length, this.todosEmprestimosProcessados.length);
+    
+    if (emprestimosFiltrados.length === 0) {
+      // Esconder cards mobile se existirem
+      const container = tbody.parentElement.parentElement;
+      const oldCards = container.querySelector('.mobile-cards-container');
+      if (oldCards) oldCards.remove();
+      tbody.parentElement.style.display = '';
+      
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+      return;
+    }
+
+    // Verificar se é mobile
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
         // Layout de cards para mobile
         const container = tbody.parentElement.parentElement;
         
@@ -878,7 +940,7 @@ const dashboardController = {
         cardsContainer.className = 'mobile-cards-container';
         cardsContainer.style.cssText = 'display: flex; flex-direction: column; gap: 0.75rem; padding: 0.5rem;';
         
-        emprestimosProcessados.forEach(emp => {
+        emprestimosFiltrados.forEach(emp => {
           let statusColor = '#6b7280';
           if (emp.statusCalculado === 'ATRASADO') statusColor = '#ef4444';
           else if (emp.statusCalculado === 'PENDENTE' || emp.statusCalculado === 'ATIVO') statusColor = '#f59e0b';
@@ -916,7 +978,7 @@ const dashboardController = {
         
         tbody.innerHTML = '';
         
-        emprestimosProcessados.forEach(emp => {
+        emprestimosFiltrados.forEach(emp => {
           let statusClass = 'secondary';
           if (emp.statusCalculado === 'ATRASADO') statusClass = 'danger';
           else if (emp.statusCalculado === 'PENDENTE' || emp.statusCalculado === 'ATIVO') statusClass = 'warning';
@@ -937,11 +999,6 @@ const dashboardController = {
           tbody.appendChild(row);
         });
       }
-      
-    } catch (error) {
-      console.error('Erro ao carregar cobranças pendentes:', error);
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar cobranças</td></tr>';
-    }
   }
 };
 
@@ -3419,6 +3476,14 @@ function sair() {
 // Inicializar quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
   app.init();
+
+  // Event listener para busca na seção "Todos os Empréstimos" do Dashboard
+  const searchTodosEmprestimos = document.getElementById('search-todos-emprestimos');
+  if (searchTodosEmprestimos) {
+    searchTodosEmprestimos.addEventListener('input', (e) => {
+      dashboardController.renderEmprestimosFiltrados(e.target.value);
+    });
+  }
 
   // Modal de Novo Empréstimo
   const novoEmprestimoBtn = document.getElementById('toggleForm');
