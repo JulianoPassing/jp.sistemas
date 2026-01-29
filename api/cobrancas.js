@@ -155,6 +155,29 @@ async function createCobrancasDatabase(username) {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
+    // Tabela de configurações do usuário
+    await cobrancasConnection.execute(`
+      CREATE TABLE IF NOT EXISTS configuracoes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        chave_pix VARCHAR(255) DEFAULT NULL,
+        msg_parcela TEXT DEFAULT NULL,
+        msg_emprestimo_com_juros TEXT DEFAULT NULL,
+        msg_emprestimo_sem_juros TEXT DEFAULT NULL,
+        msg_parcelas_vencidas TEXT DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    // Inserir registro padrão de configurações se não existir
+    const [configExists] = await cobrancasConnection.execute('SELECT COUNT(*) as total FROM configuracoes');
+    if (configExists[0].total === 0) {
+      await cobrancasConnection.execute(`
+        INSERT INTO configuracoes (chave_pix, msg_parcela, msg_emprestimo_com_juros, msg_emprestimo_sem_juros, msg_parcelas_vencidas) 
+        VALUES (NULL, NULL, NULL, NULL, NULL)
+      `);
+    }
+
     await rootConnection.end();
     await cobrancasConnection.end();
     
@@ -2238,6 +2261,90 @@ router.post('/emprestimos/corrigir-status-vencidos', ensureDatabase, async (req,
     res.json({ success: true, updated: result.affectedRows });
   } catch (error) {
     console.error('Erro ao corrigir status dos empréstimos vencidos:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// ========== CONFIGURAÇÕES DO USUÁRIO ==========
+
+// Buscar configurações do usuário
+router.get('/configuracoes', ensureDatabase, async (req, res) => {
+  try {
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
+    
+    // Verificar se a tabela existe e criar se não existir
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS configuracoes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        chave_pix VARCHAR(255) DEFAULT NULL,
+        msg_parcela TEXT DEFAULT NULL,
+        msg_emprestimo_com_juros TEXT DEFAULT NULL,
+        msg_emprestimo_sem_juros TEXT DEFAULT NULL,
+        msg_parcelas_vencidas TEXT DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    
+    const [rows] = await connection.execute('SELECT * FROM configuracoes LIMIT 1');
+    
+    // Se não existir configuração, criar uma padrão
+    if (rows.length === 0) {
+      await connection.execute(`
+        INSERT INTO configuracoes (chave_pix, msg_parcela, msg_emprestimo_com_juros, msg_emprestimo_sem_juros, msg_parcelas_vencidas) 
+        VALUES (NULL, NULL, NULL, NULL, NULL)
+      `);
+      const [newRows] = await connection.execute('SELECT * FROM configuracoes LIMIT 1');
+      await connection.end();
+      return res.json(newRows[0]);
+    }
+    
+    await connection.end();
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Erro ao buscar configurações:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Salvar configurações do usuário
+router.put('/configuracoes', ensureDatabase, async (req, res) => {
+  try {
+    const { chave_pix, msg_parcela, msg_emprestimo_com_juros, msg_emprestimo_sem_juros, msg_parcelas_vencidas } = req.body;
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
+    
+    // Verificar se existe registro
+    const [rows] = await connection.execute('SELECT id FROM configuracoes LIMIT 1');
+    
+    if (rows.length === 0) {
+      // Inserir novo registro
+      await connection.execute(`
+        INSERT INTO configuracoes (chave_pix, msg_parcela, msg_emprestimo_com_juros, msg_emprestimo_sem_juros, msg_parcelas_vencidas) 
+        VALUES (?, ?, ?, ?, ?)
+      `, [chave_pix || null, msg_parcela || null, msg_emprestimo_com_juros || null, msg_emprestimo_sem_juros || null, msg_parcelas_vencidas || null]);
+    } else {
+      // Atualizar registro existente
+      await connection.execute(`
+        UPDATE configuracoes SET 
+          chave_pix = ?, 
+          msg_parcela = ?, 
+          msg_emprestimo_com_juros = ?, 
+          msg_emprestimo_sem_juros = ?, 
+          msg_parcelas_vencidas = ?,
+          updated_at = NOW()
+        WHERE id = ?
+      `, [chave_pix || null, msg_parcela || null, msg_emprestimo_com_juros || null, msg_emprestimo_sem_juros || null, msg_parcelas_vencidas || null, rows[0].id]);
+    }
+    
+    // Buscar configuração atualizada
+    const [updated] = await connection.execute('SELECT * FROM configuracoes LIMIT 1');
+    await connection.end();
+    
+    res.json(updated[0]);
+  } catch (error) {
+    console.error('Erro ao salvar configurações:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
