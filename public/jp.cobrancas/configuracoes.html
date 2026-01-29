@@ -199,11 +199,11 @@
           <h3>Mensagem para Parcela</h3>
           <div class="form-group">
             <label for="msg_parcela">Mensagem enviada para lembrar de parcelas</label>
-            <textarea id="msg_parcela" class="form-textarea" placeholder="Deixe em branco para usar a mensagem padrão"></textarea>
+            <textarea id="msg_parcela" class="form-textarea"></textarea>
             <button type="button" class="preview-btn" onclick="previewMensagem('msg_parcela')">Ver Preview</button>
             <div id="preview_msg_parcela" class="preview-box"></div>
             <div class="variables-box">
-              <h4>Variáveis disponíveis:</h4>
+              <h4>Variáveis disponíveis (serão substituídas automaticamente):</h4>
               <ul class="variables-list">
                 <li><code>{nome}</code> - Nome do cliente</li>
                 <li><code>{parcela_atual}</code> - Número da parcela atual</li>
@@ -213,7 +213,6 @@
                 <li><code>{chave_pix}</code> - Sua chave PIX</li>
               </ul>
             </div>
-            <small>Mensagem padrão: "Olá, {nome}, a sua parcela ({parcela_atual}/{total_parcelas}) vence {data_vencimento}. Você pode pagar o valor de {valor}.\n\nChave PIX: {chave_pix}\n\nSolicitamos o pagamento até a data de vencimento."</small>
           </div>
         </div>
 
@@ -222,11 +221,11 @@
           <h3>Mensagem de Empréstimo (com juros diário)</h3>
           <div class="form-group">
             <label for="msg_emprestimo_com_juros">Mensagem para empréstimos com cobrança de juros diário</label>
-            <textarea id="msg_emprestimo_com_juros" class="form-textarea" placeholder="Deixe em branco para usar a mensagem padrão"></textarea>
+            <textarea id="msg_emprestimo_com_juros" class="form-textarea"></textarea>
             <button type="button" class="preview-btn" onclick="previewMensagem('msg_emprestimo_com_juros')">Ver Preview</button>
             <div id="preview_msg_emprestimo_com_juros" class="preview-box"></div>
             <div class="variables-box">
-              <h4>Variáveis disponíveis:</h4>
+              <h4>Variáveis disponíveis (serão substituídas automaticamente):</h4>
               <ul class="variables-list">
                 <li><code>{nome}</code> - Nome do cliente</li>
                 <li><code>{data_vencimento}</code> - Data de vencimento</li>
@@ -248,11 +247,11 @@
           <h3>Mensagem de Empréstimo (sem juros diário)</h3>
           <div class="form-group">
             <label for="msg_emprestimo_sem_juros">Mensagem para empréstimos sem cobrança de juros diário</label>
-            <textarea id="msg_emprestimo_sem_juros" class="form-textarea" placeholder="Deixe em branco para usar a mensagem padrão"></textarea>
+            <textarea id="msg_emprestimo_sem_juros" class="form-textarea"></textarea>
             <button type="button" class="preview-btn" onclick="previewMensagem('msg_emprestimo_sem_juros')">Ver Preview</button>
             <div id="preview_msg_emprestimo_sem_juros" class="preview-box"></div>
             <div class="variables-box">
-              <h4>Variáveis disponíveis:</h4>
+              <h4>Variáveis disponíveis (serão substituídas automaticamente):</h4>
               <ul class="variables-list">
                 <li><code>{nome}</code> - Nome do cliente</li>
                 <li><code>{data_vencimento}</code> - Data de vencimento</li>
@@ -271,11 +270,11 @@
           <h3>Mensagem para Parcelas Vencidas</h3>
           <div class="form-group">
             <label for="msg_parcelas_vencidas">Mensagem enviada quando há parcelas em atraso</label>
-            <textarea id="msg_parcelas_vencidas" class="form-textarea" placeholder="Deixe em branco para usar a mensagem padrão"></textarea>
+            <textarea id="msg_parcelas_vencidas" class="form-textarea"></textarea>
             <button type="button" class="preview-btn" onclick="previewMensagem('msg_parcelas_vencidas')">Ver Preview</button>
             <div id="preview_msg_parcelas_vencidas" class="preview-box"></div>
             <div class="variables-box">
-              <h4>Variáveis disponíveis:</h4>
+              <h4>Variáveis disponíveis (serão substituídas automaticamente):</h4>
               <ul class="variables-list">
                 <li><code>{nome}</code> - Nome do cliente</li>
                 <li><code>{qtd_parcelas}</code> - Quantidade de parcelas vencidas</li>
@@ -306,6 +305,50 @@
   </footer>
   <script src="./js/main.js"></script>
   <script>
+    // Mensagens padrão do sistema (mesmas do código original)
+    const MENSAGENS_PADRAO = {
+      msg_parcela: `Olá, {nome}, a sua parcela ({parcela_atual}/{total_parcelas}) vence {data_vencimento}. Você pode pagar o valor de {valor}.
+
+Chave PIX: {chave_pix}
+
+Solicitamos o pagamento até a data de vencimento.`,
+
+      msg_emprestimo_com_juros: `Olá, {nome}, seu empréstimo vence {data_vencimento}.
+
+📊 *Detalhes:*
+• Valor investido: {valor_investido}
+• Juros mensal ({juros_percent}%): {juros_total}
+• Juros diário: {juros_diario}/dia
+
+💰 *Total a pagar: {valor_total}*
+
+Chave PIX: {chave_pix}
+
+Lembramos que, em caso de atraso, será cobrada uma multa diária de {juros_diario}.`,
+
+      msg_emprestimo_sem_juros: `Olá, {nome}, seu empréstimo vence {data_vencimento}.
+
+📊 *Detalhes:*
+• Valor investido: {valor_investido}
+• Juros mensal ({juros_percent}%): {juros_total}
+
+💰 *Total a pagar: {valor_total}*
+
+Chave PIX: {chave_pix}
+
+Solicitamos o pagamento até a data de vencimento.`,
+
+      msg_parcelas_vencidas: `Olá, {nome}, você possui {qtd_parcelas} parcela(s) em atraso:
+
+{lista_parcelas}
+
+💰 *Total a pagar: {valor_total}*
+
+Chave PIX: {chave_pix}
+
+Solicitamos a regularização o mais breve possível.`
+    };
+
     // Carregar configurações ao iniciar
     document.addEventListener('DOMContentLoaded', async function() {
       // Menu mobile
@@ -337,15 +380,21 @@
         
         const config = await response.json();
         
-        // Preencher campos
+        // Preencher campos - usar valor salvo ou mensagem padrão
         document.getElementById('chave_pix').value = config.chave_pix || '';
-        document.getElementById('msg_parcela').value = config.msg_parcela || '';
-        document.getElementById('msg_emprestimo_com_juros').value = config.msg_emprestimo_com_juros || '';
-        document.getElementById('msg_emprestimo_sem_juros').value = config.msg_emprestimo_sem_juros || '';
-        document.getElementById('msg_parcelas_vencidas').value = config.msg_parcelas_vencidas || '';
+        document.getElementById('msg_parcela').value = config.msg_parcela || MENSAGENS_PADRAO.msg_parcela;
+        document.getElementById('msg_emprestimo_com_juros').value = config.msg_emprestimo_com_juros || MENSAGENS_PADRAO.msg_emprestimo_com_juros;
+        document.getElementById('msg_emprestimo_sem_juros').value = config.msg_emprestimo_sem_juros || MENSAGENS_PADRAO.msg_emprestimo_sem_juros;
+        document.getElementById('msg_parcelas_vencidas').value = config.msg_parcelas_vencidas || MENSAGENS_PADRAO.msg_parcelas_vencidas;
         
       } catch (error) {
         console.error('Erro ao carregar configurações:', error);
+        // Em caso de erro, preencher com padrões
+        document.getElementById('msg_parcela').value = MENSAGENS_PADRAO.msg_parcela;
+        document.getElementById('msg_emprestimo_com_juros').value = MENSAGENS_PADRAO.msg_emprestimo_com_juros;
+        document.getElementById('msg_emprestimo_sem_juros').value = MENSAGENS_PADRAO.msg_emprestimo_sem_juros;
+        document.getElementById('msg_parcelas_vencidas').value = MENSAGENS_PADRAO.msg_parcelas_vencidas;
+        
         if (typeof ui !== 'undefined') {
           ui.showNotification('Erro ao carregar configurações', 'error');
         }
@@ -376,6 +425,11 @@
           throw new Error('Erro ao salvar configurações');
         }
         
+        // Atualizar configurações globais no main.js
+        if (typeof carregarConfiguracoesUsuario === 'function') {
+          await carregarConfiguracoesUsuario();
+        }
+        
         if (typeof ui !== 'undefined') {
           ui.showNotification('Configurações salvas com sucesso!', 'success');
         } else {
@@ -394,18 +448,17 @@
 
     // Restaurar configurações padrão
     function resetarPadrao() {
-      if (confirm('Tem certeza que deseja restaurar as configurações padrão? Todas as suas mensagens personalizadas serão removidas.')) {
-        document.getElementById('chave_pix').value = '';
-        document.getElementById('msg_parcela').value = '';
-        document.getElementById('msg_emprestimo_com_juros').value = '';
-        document.getElementById('msg_emprestimo_sem_juros').value = '';
-        document.getElementById('msg_parcelas_vencidas').value = '';
+      if (confirm('Tem certeza que deseja restaurar as mensagens padrão do sistema?')) {
+        document.getElementById('msg_parcela').value = MENSAGENS_PADRAO.msg_parcela;
+        document.getElementById('msg_emprestimo_com_juros').value = MENSAGENS_PADRAO.msg_emprestimo_com_juros;
+        document.getElementById('msg_emprestimo_sem_juros').value = MENSAGENS_PADRAO.msg_emprestimo_sem_juros;
+        document.getElementById('msg_parcelas_vencidas').value = MENSAGENS_PADRAO.msg_parcelas_vencidas;
         
         // Esconder previews
         document.querySelectorAll('.preview-box').forEach(box => box.style.display = 'none');
         
         if (typeof ui !== 'undefined') {
-          ui.showNotification('Campos restaurados. Clique em "Salvar" para aplicar.', 'info');
+          ui.showNotification('Mensagens restauradas para o padrão. Clique em "Salvar" para aplicar.', 'info');
         }
       }
     }
@@ -417,15 +470,9 @@
       
       let mensagem = textarea.value.trim();
       
-      // Se vazio, mostrar mensagem padrão
+      // Se vazio, usar mensagem padrão
       if (!mensagem) {
-        const defaults = {
-          'msg_parcela': 'Olá, {nome}, a sua parcela ({parcela_atual}/{total_parcelas}) vence {data_vencimento}. Você pode pagar o valor de {valor}.\n\nChave PIX: {chave_pix}\n\nSolicitamos o pagamento até a data de vencimento.',
-          'msg_emprestimo_com_juros': 'Olá, {nome}, seu empréstimo vence {data_vencimento}.\n\n📊 *Detalhes:*\n• Valor investido: {valor_investido}\n• Juros mensal ({juros_percent}%): {juros_total}\n• Juros diário: {juros_diario}/dia\n\n💰 *Total a pagar: {valor_total}*\n\nChave PIX: {chave_pix}\n\nLembramos que, em caso de atraso, será cobrada uma multa diária.',
-          'msg_emprestimo_sem_juros': 'Olá, {nome}, seu empréstimo vence {data_vencimento}.\n\n📊 *Detalhes:*\n• Valor investido: {valor_investido}\n• Juros mensal ({juros_percent}%): {juros_total}\n\n💰 *Total a pagar: {valor_total}*\n\nChave PIX: {chave_pix}\n\nSolicitamos o pagamento até a data de vencimento.',
-          'msg_parcelas_vencidas': 'Olá, {nome}, você possui {qtd_parcelas} parcela(s) em atraso:\n\n{lista_parcelas}\n\n💰 *Total a pagar: {valor_total}*\n\nChave PIX: {chave_pix}\n\nSolicitamos a regularização o mais breve possível.'
-        };
-        mensagem = defaults[campoId] || 'Mensagem padrão não disponível';
+        mensagem = MENSAGENS_PADRAO[campoId] || 'Mensagem padrão não disponível';
       }
       
       // Substituir variáveis por exemplos
