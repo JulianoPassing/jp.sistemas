@@ -8,8 +8,138 @@ const appState = {
     dashboard: null,
     emprestimos: [],
     cobrancas: []
+  },
+  configuracoes: {
+    chave_pix: null,
+    msg_parcela: null,
+    msg_emprestimo_com_juros: null,
+    msg_emprestimo_sem_juros: null,
+    msg_parcelas_vencidas: null
   }
 };
+
+// Função para carregar configurações do usuário
+async function carregarConfiguracoesUsuario() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/cobrancas/configuracoes`, {
+      credentials: 'include'
+    });
+    if (response.ok) {
+      const config = await response.json();
+      appState.configuracoes = {
+        chave_pix: config.chave_pix || null,
+        msg_parcela: config.msg_parcela || null,
+        msg_emprestimo_com_juros: config.msg_emprestimo_com_juros || null,
+        msg_emprestimo_sem_juros: config.msg_emprestimo_sem_juros || null,
+        msg_parcelas_vencidas: config.msg_parcelas_vencidas || null
+      };
+      console.log('Configurações carregadas:', appState.configuracoes);
+    }
+  } catch (error) {
+    console.log('Usando configurações padrão:', error.message);
+  }
+}
+
+// Função helper para gerar mensagem de cobrança com base nas configurações
+function gerarMensagemCobranca(tipo, dados) {
+  const config = appState.configuracoes;
+  const chavePix = config.chave_pix || '(Chave PIX não configurada)';
+  
+  // Função para substituir variáveis na mensagem
+  const substituirVariaveis = (msg, vars) => {
+    let resultado = msg;
+    for (const [chave, valor] of Object.entries(vars)) {
+      resultado = resultado.split(chave).join(valor);
+    }
+    return resultado;
+  };
+  
+  switch (tipo) {
+    case 'parcela': {
+      const variaveis = {
+        '{nome}': dados.nome,
+        '{parcela_atual}': dados.parcelaAtual,
+        '{total_parcelas}': dados.totalParcelas,
+        '{data_vencimento}': dados.dataVencimento,
+        '{valor}': dados.valor,
+        '{chave_pix}': chavePix
+      };
+      
+      if (config.msg_parcela) {
+        return substituirVariaveis(config.msg_parcela, variaveis);
+      }
+      
+      // Mensagem padrão
+      const infoParcela = dados.isParcelado ? ` (parcela ${dados.parcelaAtual}/${dados.totalParcelas})` : '';
+      return `Olá, ${dados.nome}, a sua parcela${infoParcela} vence ${dados.dataVencimento}. Você pode pagar o valor de ${dados.valor}.
+
+Chave PIX: ${chavePix}
+
+Solicitamos o pagamento até a data de vencimento.`;
+    }
+    
+    case 'emprestimo_com_juros': {
+      const variaveis = {
+        '{nome}': dados.nome,
+        '{data_vencimento}': dados.dataVencimento,
+        '{valor_investido}': dados.valorInvestido,
+        '{juros_percent}': dados.jurosPercent,
+        '{juros_total}': dados.jurosTotal,
+        '{juros_diario}': dados.jurosDiario,
+        '{dias_atraso}': dados.diasAtraso,
+        '{juros_atraso}': dados.jurosAtraso,
+        '{valor_total}': dados.valorTotal,
+        '{chave_pix}': chavePix
+      };
+      
+      if (config.msg_emprestimo_com_juros) {
+        return substituirVariaveis(config.msg_emprestimo_com_juros, variaveis);
+      }
+      
+      // Mensagem padrão (será construída no código existente)
+      return null;
+    }
+    
+    case 'emprestimo_sem_juros': {
+      const variaveis = {
+        '{nome}': dados.nome,
+        '{data_vencimento}': dados.dataVencimento,
+        '{valor_investido}': dados.valorInvestido,
+        '{juros_percent}': dados.jurosPercent,
+        '{juros_total}': dados.jurosTotal,
+        '{valor_total}': dados.valorTotal,
+        '{chave_pix}': chavePix
+      };
+      
+      if (config.msg_emprestimo_sem_juros) {
+        return substituirVariaveis(config.msg_emprestimo_sem_juros, variaveis);
+      }
+      
+      // Mensagem padrão (será construída no código existente)
+      return null;
+    }
+    
+    case 'parcelas_vencidas': {
+      const variaveis = {
+        '{nome}': dados.nome,
+        '{qtd_parcelas}': dados.qtdParcelas,
+        '{lista_parcelas}': dados.listaParcelas,
+        '{valor_total}': dados.valorTotal,
+        '{chave_pix}': chavePix
+      };
+      
+      if (config.msg_parcelas_vencidas) {
+        return substituirVariaveis(config.msg_parcelas_vencidas, variaveis);
+      }
+      
+      // Mensagem padrão (será construída no código existente)
+      return null;
+    }
+    
+    default:
+      return null;
+  }
+}
 
 // Sistema de autenticação usando o mesmo padrão do sistema principal
 const authSystem = {
@@ -1994,13 +2124,32 @@ const emprestimoController = {
           e.preventDefault();
           e.stopPropagation();
           
+          // Obter chave PIX das configurações ou usar padrão
+          const chavePix = appState.configuracoes.chave_pix || '(Chave PIX não configurada)';
+          
           // Mensagem para empréstimo parcelado (sem juros diário)
           const infoParcela = dadosNotificacao.isParcelado ? ` (parcela ${dadosNotificacao.numeroParcelaAtual}/${dadosNotificacao.totalParcelas})` : '';
-          const msgParcelado = `Olá, ${dadosNotificacao.primeiroNome}, a sua parcela${infoParcela} vence ${dadosNotificacao.dataParcela}. Você pode pagar o valor de ${utils.formatCurrency(dadosNotificacao.valorParcela)}.
+          
+          // Verificar se há mensagem personalizada para parcela
+          let msgParcelado;
+          const msgParcelaPersonalizada = gerarMensagemCobranca('parcela', {
+            nome: dadosNotificacao.primeiroNome,
+            parcelaAtual: dadosNotificacao.numeroParcelaAtual,
+            totalParcelas: dadosNotificacao.totalParcelas,
+            dataVencimento: dadosNotificacao.dataParcela,
+            valor: utils.formatCurrency(dadosNotificacao.valorParcela),
+            isParcelado: dadosNotificacao.isParcelado
+          });
+          
+          if (msgParcelaPersonalizada) {
+            msgParcelado = msgParcelaPersonalizada;
+          } else {
+            msgParcelado = `Olá, ${dadosNotificacao.primeiroNome}, a sua parcela${infoParcela} vence ${dadosNotificacao.dataParcela}. Você pode pagar o valor de ${utils.formatCurrency(dadosNotificacao.valorParcela)}.
 
-Chave PIX: 04854589930
+Chave PIX: ${chavePix}
 
 Solicitamos o pagamento até a data de vencimento.`;
+          }
 
           // Informações de juros para a mensagem
           // Calcular juros total + juros diário (para quando não tem atraso)
@@ -2027,13 +2176,30 @@ Solicitamos o pagamento até a data de vencimento.`;
 💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotal)}*
 💵 *Apenas juros (com diário): ${utils.formatCurrency(jurosTotalMaisDiario)}*`;
 
-          // Mensagem para empréstimo normal (com juros diário)
-          const msgEmprestimo = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.
+          // Verificar se há mensagem personalizada para empréstimo com juros diário
+          let msgEmprestimo;
+          const msgEmprestimoPersonalizada = gerarMensagemCobranca('emprestimo_com_juros', {
+            nome: dadosNotificacao.primeiroNome,
+            dataVencimento: dadosNotificacao.dataVencimento,
+            valorInvestido: utils.formatCurrency(dadosNotificacao.valorInvestido),
+            jurosPercent: dadosNotificacao.jurosPercent,
+            jurosTotal: utils.formatCurrency(dadosNotificacao.jurosTotal),
+            jurosDiario: utils.formatCurrency(dadosNotificacao.jurosDiario),
+            diasAtraso: dadosNotificacao.diasAtraso,
+            jurosAtraso: utils.formatCurrency(dadosNotificacao.jurosAplicado),
+            valorTotal: utils.formatCurrency(dadosNotificacao.valorTotal)
+          });
+          
+          if (msgEmprestimoPersonalizada) {
+            msgEmprestimo = msgEmprestimoPersonalizada;
+          } else {
+            msgEmprestimo = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.
 ${infoJurosMsg}
 
-Chave PIX: 04854589930
+Chave PIX: ${chavePix}
 
 Lembramos que, em caso de atraso, será cobrada uma multa diária de ${utils.formatCurrency(dadosNotificacao.jurosDiario)}.`;
+          }
 
           // Mensagem para empréstimo sem juros diário
           // Calcular valor total SEM juros diário (só valor investido + juros mensal)
@@ -2052,12 +2218,27 @@ Lembramos que, em caso de atraso, será cobrada uma multa diária de ${utils.for
 💰 *Total a pagar: ${utils.formatCurrency(valorTotalSemDiario)}*
 💵 *Apenas juros: ${utils.formatCurrency(dadosNotificacao.jurosTotal)}*`;
 
-          const msgEmprestimoSemDiario = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.
+          // Verificar se há mensagem personalizada para empréstimo sem juros diário
+          let msgEmprestimoSemDiario;
+          const msgEmprestimoSemJurosPersonalizada = gerarMensagemCobranca('emprestimo_sem_juros', {
+            nome: dadosNotificacao.primeiroNome,
+            dataVencimento: dadosNotificacao.dataVencimento,
+            valorInvestido: utils.formatCurrency(dadosNotificacao.valorInvestido),
+            jurosPercent: dadosNotificacao.jurosPercent,
+            jurosTotal: utils.formatCurrency(dadosNotificacao.jurosTotal),
+            valorTotal: utils.formatCurrency(valorTotalSemDiario)
+          });
+          
+          if (msgEmprestimoSemJurosPersonalizada) {
+            msgEmprestimoSemDiario = msgEmprestimoSemJurosPersonalizada;
+          } else {
+            msgEmprestimoSemDiario = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.
 ${infoJurosSemDiario}
 
-Chave PIX: 04854589930
+Chave PIX: ${chavePix}
 
 Solicitamos o pagamento até a data de vencimento.`;
+          }
 
           // Limpar telefone - remover todos os caracteres não numéricos
           const telefoneNumeros = (dadosNotificacao.telefone || '').replace(/\D/g, '');
@@ -2082,15 +2263,28 @@ Solicitamos o pagamento até a data de vencimento.`;
             // Mensagem para parcelas vencidas (sem juros diário)
             const qtdParcelas = dadosNotificacao.parcelasVencidas.length;
             const textoQtd = qtdParcelas === 1 ? '1 parcela em atraso' : `${qtdParcelas} parcelas em atraso`;
-            msgTodasVencidas = `Olá, ${dadosNotificacao.primeiroNome}, você possui ${textoQtd}:
+            
+            // Verificar se há mensagem personalizada para parcelas vencidas
+            const msgVencidasPersonalizada = gerarMensagemCobranca('parcelas_vencidas', {
+              nome: dadosNotificacao.primeiroNome,
+              qtdParcelas: qtdParcelas.toString(),
+              listaParcelas: listaParcelasVencidas,
+              valorTotal: utils.formatCurrency(dadosNotificacao.valorTotalVencidas)
+            });
+            
+            if (msgVencidasPersonalizada) {
+              msgTodasVencidas = msgVencidasPersonalizada;
+            } else {
+              msgTodasVencidas = `Olá, ${dadosNotificacao.primeiroNome}, você possui ${textoQtd}:
 
 ${listaParcelasVencidas}
 
 💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotalVencidas)}*
 
-Chave PIX: 04854589930
+Chave PIX: ${chavePix}
 
 Solicitamos a regularização o mais breve possível.`;
+            }
 
             const tituloVencidas = qtdParcelas === 1 ? '🚨 Parcela Vencida' : `🚨 Parcelas Vencidas (${qtdParcelas})`;
             const linkVencidas = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgTodasVencidas)}` : '';
@@ -3474,8 +3668,11 @@ function sair() {
 }
 
 // Inicializar quando o DOM estiver pronto
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   app.init();
+  
+  // Carregar configurações do usuário
+  await carregarConfiguracoesUsuario();
 
   // Event listener para busca na seção "Todos os Empréstimos" do Dashboard
   const searchTodosEmprestimos = document.getElementById('search-todos-emprestimos');

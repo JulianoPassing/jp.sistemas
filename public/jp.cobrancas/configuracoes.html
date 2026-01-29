@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JP-Cobranças - Configurações</title>
+  <link rel="icon" type="image/png" href="https://i.imgur.com/6N82fk2.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+  <style>
+    .config-section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .config-section h3 {
+      color: #002f4b;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #374151;
+    }
+    .form-group small {
+      display: block;
+      color: #6b7280;
+      font-size: 0.8rem;
+      margin-top: 0.25rem;
+    }
+    .form-input, .form-textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .form-textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+    .variables-box {
+      background: #f3f4f6;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+    }
+    .variables-box h4 {
+      color: #374151;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .variables-box code {
+      background: #e5e7eb;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: #1f2937;
+    }
+    .variables-list {
+      display: grid;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .variables-list li {
+      list-style: none;
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+    }
+    .btn-save {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-save:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+    .btn-reset {
+      background: #6b7280;
+      color: #fff;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-left: 1rem;
+    }
+    .btn-reset:hover {
+      background: #4b5563;
+    }
+    .actions-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #e5e7eb;
+    }
+    .preview-btn {
+      background: #10b981;
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    .preview-btn:hover {
+      background: #059669;
+    }
+    .preview-box {
+      background: #f0fff4;
+      border: 1px solid #10b981;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 0.5rem;
+      white-space: pre-line;
+      font-size: 0.9rem;
+      display: none;
+    }
+  </style>
+</head>
+<body class="app-layout">
+  <header>
+    <div class="header-content">
+      <a href="index.html" class="logo" style="display: flex; align-items: center;">
+        <img src="https://i.imgur.com/EQ1tjZX.png" alt="JP-Cobranças" style="height: 5rem; width: auto; object-fit: contain;">
+      </a>
+      <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Abrir menu"><span class="menu-icon"></span></button>
+      <div class="nav-wrapper">
+        <nav>
+          <a href="dashboard.html" class="nav-link">Dashboard</a>
+          <a href="clientes.html" class="nav-link">Clientes</a>
+          <a href="adicionar-cliente.html" class="nav-link">Adicionar Cliente</a>
+          <a href="cobrancas.html" class="nav-link">Cobranças</a>
+          <a href="atrasados.html" class="nav-link">Atrasados</a>
+          <a href="lista-negra.html" class="nav-link">Lista Negra</a>
+          <a href="emprestimos.html" class="nav-link">Empréstimos</a>
+          <a href="historico.html" class="nav-link">Histórico</a>
+          <a href="configuracoes.html" class="nav-link active">Configurações</a>
+          <a href="#" class="nav-link" onclick="sair()">Sair</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="container">
+      <div class="dashboard-header">
+        <div class="dashboard-title">Configurações</div>
+        <div class="dashboard-subtitle">Personalize suas mensagens de cobrança e chave PIX</div>
+      </div>
+
+      <form id="form-configuracoes">
+        <!-- Chave PIX -->
+        <div class="config-section">
+          <h3>Chave PIX</h3>
+          <div class="form-group">
+            <label for="chave_pix">Sua Chave PIX para Recebimentos</label>
+            <input type="text" id="chave_pix" class="form-input" placeholder="CPF, CNPJ, E-mail, Telefone ou Chave Aleatória">
+            <small>Esta chave será exibida nas mensagens de cobrança enviadas aos clientes.</small>
+          </div>
+        </div>
+
+        <!-- Mensagem de Parcela -->
+        <div class="config-section">
+          <h3>Mensagem para Parcela</h3>
+          <div class="form-group">
+            <label for="msg_parcela">Mensagem enviada para lembrar de parcelas</label>
+            <textarea id="msg_parcela" class="form-textarea" placeholder="Deixe em branco para usar a mensagem padrão"></textarea>
+            <button type="button" class="preview-btn" onclick="previewMensagem('msg_parcela')">Ver Preview</button>
+            <div id="preview_msg_parcela" class="preview-box"></div>
+            <div class="variables-box">
+              <h4>Variáveis disponíveis:</h4>
+              <ul class="variables-list">
+                <li><code>{nome}</code> - Nome do cliente</li>
+                <li><code>{parcela_atual}</code> - Número da parcela atual</li>
+                <li><code>{total_parcelas}</code> - Total de parcelas</li>
+                <li><code>{data_vencimento}</code> - Data de vencimento</li>
+                <li><code>{valor}</code> - Valor da parcela</li>
+                <li><code>{chave_pix}</code> - Sua chave PIX</li>
+              </ul>
+            </div>
+            <small>Mensagem padrão: "Olá, {nome}, a sua parcela ({parcela_atual}/{total_parcelas}) vence {data_vencimento}. Você pode pagar o valor de {valor}.\n\nChave PIX: {chave_pix}\n\nSolicitamos o pagamento até a data de vencimento."</small>
+          </div>
+        </div>
+
+        <!-- Mensagem de Empréstimo com Juros Diário -->
+        <div class="config-section">
+          <h3>Mensagem de Empréstimo (com juros diário)</h3>
+          <div class="form-group">
+            <label for="msg_emprestimo_com_juros">Mensagem para empréstimos com cobrança de juros diário</label>
+            <textarea id="msg_emprestimo_com_juros" class="form-textarea" placeholder="Deixe em branco para usar a mensagem padrão"></textarea>
+            <button type="button" class="preview-btn" onclick="previewMensagem('msg_emprestimo_com_juros')">Ver Preview</button>
+            <div id="preview_msg_emprestimo_com_juros" class="preview-box"></div>
+            <div class="variables-box">
+              <h4>Variáveis disponíveis:</h4>
+              <ul class="variables-list">
+                <li><code>{nome}</code> - Nome do cliente</li>
+                <li><code>{data_vencimento}</code> - Data de vencimento</li>
+                <li><code>{valor_investido}</code> - Valor investido/emprestado</li>
+                <li><code>{juros_percent}</code> - Percentual de juros mensal</li>
+                <li><code>{juros_total}</code> - Valor do juros mensal</li>
+                <li><code>{juros_diario}</code> - Valor do juros diário</li>
+                <li><code>{dias_atraso}</code> - Dias em atraso</li>
+                <li><code>{juros_atraso}</code> - Juros por atraso</li>
+                <li><code>{valor_total}</code> - Valor total a pagar</li>
+                <li><code>{chave_pix}</code> - Sua chave PIX</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensagem de Empréstimo sem Juros Diário -->
+        <div class="config-section">
+          <h3>Mensagem de Empréstimo (sem juros diário)</h3>
+          <div class="form-group">
+            <label for="msg_emprestimo_sem_juros">Mensagem para empréstimos sem cobrança de juros diário</label>
+            <textarea id="msg_emprestimo_sem_juros" class="form-textarea" placeholder="Deixe em branco para usar a mensagem padrão"></textarea>
+            <button type="button" class="preview-btn" onclick="previewMensagem('msg_emprestimo_sem_juros')">Ver Preview</button>
+            <div id="preview_msg_emprestimo_sem_juros" class="preview-box"></div>
+            <div class="variables-box">
+              <h4>Variáveis disponíveis:</h4>
+              <ul class="variables-list">
+                <li><code>{nome}</code> - Nome do cliente</li>
+                <li><code>{data_vencimento}</code> - Data de vencimento</li>
+                <li><code>{valor_investido}</code> - Valor investido/emprestado</li>
+                <li><code>{juros_percent}</code> - Percentual de juros mensal</li>
+                <li><code>{juros_total}</code> - Valor do juros mensal</li>
+                <li><code>{valor_total}</code> - Valor total a pagar</li>
+                <li><code>{chave_pix}</code> - Sua chave PIX</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensagem de Parcelas Vencidas -->
+        <div class="config-section">
+          <h3>Mensagem para Parcelas Vencidas</h3>
+          <div class="form-group">
+            <label for="msg_parcelas_vencidas">Mensagem enviada quando há parcelas em atraso</label>
+            <textarea id="msg_parcelas_vencidas" class="form-textarea" placeholder="Deixe em branco para usar a mensagem padrão"></textarea>
+            <button type="button" class="preview-btn" onclick="previewMensagem('msg_parcelas_vencidas')">Ver Preview</button>
+            <div id="preview_msg_parcelas_vencidas" class="preview-box"></div>
+            <div class="variables-box">
+              <h4>Variáveis disponíveis:</h4>
+              <ul class="variables-list">
+                <li><code>{nome}</code> - Nome do cliente</li>
+                <li><code>{qtd_parcelas}</code> - Quantidade de parcelas vencidas</li>
+                <li><code>{lista_parcelas}</code> - Lista detalhada das parcelas</li>
+                <li><code>{valor_total}</code> - Valor total em atraso</li>
+                <li><code>{chave_pix}</code> - Sua chave PIX</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions-bar">
+          <button type="button" class="btn-reset" onclick="resetarPadrao()">Restaurar Padrão</button>
+          <button type="submit" class="btn-save">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            Salvar Configurações
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+  <footer class="text-center p-4 mt-8">
+    © 2025 JP. Sistemas. Todos os direitos reservados. | jp-sistemas.com
+  </footer>
+  <script src="./js/main.js"></script>
+  <script>
+    // Carregar configurações ao iniciar
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Menu mobile
+      const menuBtn = document.getElementById('mobile-menu-toggle');
+      const navWrapper = document.querySelector('.nav-wrapper');
+      if (menuBtn && navWrapper) {
+        menuBtn.addEventListener('click', function() {
+          navWrapper.classList.toggle('open');
+        });
+      }
+
+      // Carregar configurações
+      await carregarConfiguracoes();
+    });
+
+    async function carregarConfiguracoes() {
+      try {
+        const response = await fetch('/api/cobrancas/configuracoes', {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            window.location.href = 'login.html';
+            return;
+          }
+          throw new Error('Erro ao carregar configurações');
+        }
+        
+        const config = await response.json();
+        
+        // Preencher campos
+        document.getElementById('chave_pix').value = config.chave_pix || '';
+        document.getElementById('msg_parcela').value = config.msg_parcela || '';
+        document.getElementById('msg_emprestimo_com_juros').value = config.msg_emprestimo_com_juros || '';
+        document.getElementById('msg_emprestimo_sem_juros').value = config.msg_emprestimo_sem_juros || '';
+        document.getElementById('msg_parcelas_vencidas').value = config.msg_parcelas_vencidas || '';
+        
+      } catch (error) {
+        console.error('Erro ao carregar configurações:', error);
+        if (typeof ui !== 'undefined') {
+          ui.showNotification('Erro ao carregar configurações', 'error');
+        }
+      }
+    }
+
+    // Salvar configurações
+    document.getElementById('form-configuracoes').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const dados = {
+        chave_pix: document.getElementById('chave_pix').value.trim() || null,
+        msg_parcela: document.getElementById('msg_parcela').value.trim() || null,
+        msg_emprestimo_com_juros: document.getElementById('msg_emprestimo_com_juros').value.trim() || null,
+        msg_emprestimo_sem_juros: document.getElementById('msg_emprestimo_sem_juros').value.trim() || null,
+        msg_parcelas_vencidas: document.getElementById('msg_parcelas_vencidas').value.trim() || null
+      };
+      
+      try {
+        const response = await fetch('/api/cobrancas/configuracoes', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(dados)
+        });
+        
+        if (!response.ok) {
+          throw new Error('Erro ao salvar configurações');
+        }
+        
+        if (typeof ui !== 'undefined') {
+          ui.showNotification('Configurações salvas com sucesso!', 'success');
+        } else {
+          alert('Configurações salvas com sucesso!');
+        }
+        
+      } catch (error) {
+        console.error('Erro ao salvar configurações:', error);
+        if (typeof ui !== 'undefined') {
+          ui.showNotification('Erro ao salvar configurações', 'error');
+        } else {
+          alert('Erro ao salvar configurações');
+        }
+      }
+    });
+
+    // Restaurar configurações padrão
+    function resetarPadrao() {
+      if (confirm('Tem certeza que deseja restaurar as configurações padrão? Todas as suas mensagens personalizadas serão removidas.')) {
+        document.getElementById('chave_pix').value = '';
+        document.getElementById('msg_parcela').value = '';
+        document.getElementById('msg_emprestimo_com_juros').value = '';
+        document.getElementById('msg_emprestimo_sem_juros').value = '';
+        document.getElementById('msg_parcelas_vencidas').value = '';
+        
+        // Esconder previews
+        document.querySelectorAll('.preview-box').forEach(box => box.style.display = 'none');
+        
+        if (typeof ui !== 'undefined') {
+          ui.showNotification('Campos restaurados. Clique em "Salvar" para aplicar.', 'info');
+        }
+      }
+    }
+
+    // Preview da mensagem
+    function previewMensagem(campoId) {
+      const textarea = document.getElementById(campoId);
+      const previewBox = document.getElementById('preview_' + campoId);
+      
+      let mensagem = textarea.value.trim();
+      
+      // Se vazio, mostrar mensagem padrão
+      if (!mensagem) {
+        const defaults = {
+          'msg_parcela': 'Olá, {nome}, a sua parcela ({parcela_atual}/{total_parcelas}) vence {data_vencimento}. Você pode pagar o valor de {valor}.\n\nChave PIX: {chave_pix}\n\nSolicitamos o pagamento até a data de vencimento.',
+          'msg_emprestimo_com_juros': 'Olá, {nome}, seu empréstimo vence {data_vencimento}.\n\n📊 *Detalhes:*\n• Valor investido: {valor_investido}\n• Juros mensal ({juros_percent}%): {juros_total}\n• Juros diário: {juros_diario}/dia\n\n💰 *Total a pagar: {valor_total}*\n\nChave PIX: {chave_pix}\n\nLembramos que, em caso de atraso, será cobrada uma multa diária.',
+          'msg_emprestimo_sem_juros': 'Olá, {nome}, seu empréstimo vence {data_vencimento}.\n\n📊 *Detalhes:*\n• Valor investido: {valor_investido}\n• Juros mensal ({juros_percent}%): {juros_total}\n\n💰 *Total a pagar: {valor_total}*\n\nChave PIX: {chave_pix}\n\nSolicitamos o pagamento até a data de vencimento.',
+          'msg_parcelas_vencidas': 'Olá, {nome}, você possui {qtd_parcelas} parcela(s) em atraso:\n\n{lista_parcelas}\n\n💰 *Total a pagar: {valor_total}*\n\nChave PIX: {chave_pix}\n\nSolicitamos a regularização o mais breve possível.'
+        };
+        mensagem = defaults[campoId] || 'Mensagem padrão não disponível';
+      }
+      
+      // Substituir variáveis por exemplos
+      const chavePix = document.getElementById('chave_pix').value || '(sua chave PIX)';
+      const exemplos = {
+        '{nome}': 'João',
+        '{parcela_atual}': '2',
+        '{total_parcelas}': '6',
+        '{data_vencimento}': '15/02/2025',
+        '{valor}': 'R$ 500,00',
+        '{valor_investido}': 'R$ 2.000,00',
+        '{juros_percent}': '10',
+        '{juros_total}': 'R$ 200,00',
+        '{juros_diario}': 'R$ 6,67',
+        '{dias_atraso}': '5',
+        '{juros_atraso}': 'R$ 33,35',
+        '{valor_total}': 'R$ 2.233,35',
+        '{qtd_parcelas}': '3',
+        '{lista_parcelas}': '• Parcela 1: R$ 500,00 (vencida em 15/01/2025)\n• Parcela 2: R$ 500,00 (vencida em 15/02/2025)',
+        '{chave_pix}': chavePix
+      };
+      
+      for (const [variavel, exemplo] of Object.entries(exemplos)) {
+        mensagem = mensagem.split(variavel).join(exemplo);
+      }
+      
+      previewBox.textContent = mensagem;
+      previewBox.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
