@@ -176,41 +176,16 @@ const authSystem = {
     }
   },
 
-  // Configurar logout automático (simplificado)
+  // Configurar logout automático (desabilitado para melhor experiência)
   setupAutoLogout() {
-    // Logout por inatividade (30 minutos)
-    let inactivityTimer;
-    const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutos
-
-    const resetInactivityTimer = () => {
-      clearTimeout(inactivityTimer);
-      inactivityTimer = setTimeout(() => {
-        console.log('Sessão expirada por inatividade');
-        this.logout();
-      }, INACTIVITY_TIMEOUT);
-    };
-
-    // Resetar timer em eventos de atividade
-    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-    activityEvents.forEach(event => {
-      document.addEventListener(event, resetInactivityTimer, true);
-    });
-
-    // Iniciar timer
-    resetInactivityTimer();
-
-    // Logout quando a aba ficar oculta (15 minutos)
-    let hiddenTimer;
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        hiddenTimer = setTimeout(() => {
-          console.log('Sessão expirada - página oculta por muito tempo');
-          this.logout();
-        }, 15 * 60 * 1000); // 15 minutos
-      } else {
-        clearTimeout(hiddenTimer);
-      }
-    });
+    // NOTA: Logout automático por inatividade foi DESABILITADO
+    // A sessão do servidor dura 24 horas, então o usuário permanece logado
+    // O logout só acontece quando:
+    // 1. O usuário clica em "Sair"
+    // 2. A sessão do servidor expira (24 horas)
+    // 3. O navegador é fechado e os cookies são limpos
+    
+    console.log('Sistema configurado para manter sessão ativa');
   },
 
   // Exibir mensagem de boas-vindas
