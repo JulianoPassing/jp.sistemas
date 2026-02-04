@@ -1,5 +1,8 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
+const path = require('path');
+const fs = require('fs').promises;
+const multer = require('multer');
 const { getCobrancasDatabaseConfig } = require('../database-config');
 const bcrypt = require('bcryptjs');
 
@@ -152,6 +155,21 @@ async function createCobrancasDatabase(username) {
         INDEX idx_data_vencimento (data_vencimento),
         INDEX idx_status (status),
         UNIQUE KEY unique_emprestimo_parcela (emprestimo_id, numero_parcela)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    await cobrancasConnection.execute(`
+      CREATE TABLE IF NOT EXISTS cliente_cobrancas_documentos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        cliente_id INT NOT NULL,
+        nome_original VARCHAR(255) NOT NULL,
+        nome_arquivo VARCHAR(255) NOT NULL,
+        caminho VARCHAR(500) NOT NULL,
+        tipo_mime VARCHAR(100) NOT NULL,
+        tamanho INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (cliente_id) REFERENCES clientes_cobrancas(id) ON DELETE CASCADE,
+        INDEX idx_cliente_id (cliente_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
@@ -2202,6 +2220,167 @@ router.delete('/clientes/:id', ensureDatabase, async (req, res) => {
     res.json({ message: 'Cliente removido com sucesso.' });
   } catch (error) {
     console.error('Erro ao remover cliente:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// --- Documentos do cliente (PDF e imagens) - JP Cobranças ---
+const uploadsCobrancasDir = path.join(__dirname, '..', 'uploads', 'cobrancas');
+const allowedMimesCobrancas = [
+  'application/pdf',
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/gif',
+  'image/webp'
+];
+
+const storageDocumentosCobrancas = multer.diskStorage({
+  destination: async (req, file, cb) => {
+    try {
+      const username = (req.session && req.session.cobrancasUser) ? String(req.session.cobrancasUser).replace(/[^a-z0-9_]/g, '_') : 'default';
+      const clienteId = req.params.id || '0';
+      const dir = path.join(uploadsCobrancasDir, username, 'clientes', clienteId);
+      await fs.mkdir(dir, { recursive: true });
+      cb(null, dir);
+    } catch (err) {
+      cb(err);
+    }
+  },
+  filename: (req, file, cb) => {
+    const nomeOriginal = (file.originalname || 'arquivo').replace(/[^a-zA-Z0-9._-]/g, '_');
+    cb(null, `${Date.now()}-${nomeOriginal}`);
+  }
+});
+
+const uploadDocumentosCobrancas = multer({
+  storage: storageDocumentosCobrancas,
+  limits: { fileSize: 15 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (allowedMimesCobrancas.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Tipo não permitido. Use PDF ou imagens (JPEG, PNG, GIF, WebP).'));
+    }
+  }
+});
+
+const SQL_CREATE_CLIENTE_COBRANCAS_DOCUMENTOS = `
+  CREATE TABLE IF NOT EXISTS cliente_cobrancas_documentos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    cliente_id INT NOT NULL,
+    nome_original VARCHAR(255) NOT NULL,
+    nome_arquivo VARCHAR(255) NOT NULL,
+    caminho VARCHAR(500) NOT NULL,
+    tipo_mime VARCHAR(100) NOT NULL,
+    tamanho INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cliente_id) REFERENCES clientes_cobrancas(id) ON DELETE CASCADE,
+    INDEX idx_cliente_id (cliente_id)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+`;
+
+router.get('/clientes/:id/documentos', ensureDatabase, async (req, res) => {
+  try {
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
+    await connection.execute(SQL_CREATE_CLIENTE_COBRANCAS_DOCUMENTOS);
+    const { id } = req.params;
+    const [rows] = await connection.execute(
+      'SELECT id, nome_original, nome_arquivo, caminho, tipo_mime, tamanho, created_at FROM cliente_cobrancas_documentos WHERE cliente_id = ? ORDER BY created_at DESC',
+      [id]
+    );
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error('Erro ao listar documentos cobranças:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+router.post('/clientes/:id/documentos', ensureDatabase, (req, res, next) => {
+  uploadDocumentosCobrancas.single('arquivo')(req, res, async (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'Arquivo muito grande. Máximo 15 MB.' });
+      }
+      return res.status(400).json({ error: err.message || 'Erro no upload.' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'Nenhum arquivo enviado. Envie um PDF ou imagem.' });
+    }
+    try {
+      const username = req.session.cobrancasUser;
+      const connection = await createCobrancasConnection(username);
+      const { id } = req.params;
+      const caminhoRel = path.relative(path.join(uploadsCobrancasDir), req.file.path).replace(/\\/g, '/');
+      await connection.execute(
+        'INSERT INTO cliente_cobrancas_documentos (cliente_id, nome_original, nome_arquivo, caminho, tipo_mime, tamanho) VALUES (?, ?, ?, ?, ?, ?)',
+        [id, req.file.originalname || req.file.filename, req.file.filename, caminhoRel, req.file.mimetype, req.file.size || 0]
+      );
+      await connection.end();
+      res.status(201).json({ message: 'Documento anexado com sucesso', filename: req.file.originalname });
+    } catch (error) {
+      console.error('Erro ao salvar documento cobranças:', error);
+      try {
+        await fs.unlink(req.file.path);
+      } catch (_) {}
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+});
+
+router.get('/clientes/:id/documentos/:docId/arquivo', ensureDatabase, async (req, res) => {
+  try {
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
+    const { id, docId } = req.params;
+    const [rows] = await connection.execute(
+      'SELECT caminho, nome_original, tipo_mime FROM cliente_cobrancas_documentos WHERE id = ? AND cliente_id = ?',
+      [docId, id]
+    );
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Documento não encontrado.' });
+    }
+    const doc = rows[0];
+    const fullPath = path.join(uploadsCobrancasDir, doc.caminho);
+    try {
+      await fs.access(fullPath);
+    } catch (_) {
+      return res.status(404).json({ error: 'Arquivo não encontrado no servidor.' });
+    }
+    res.setHeader('Content-Type', doc.tipo_mime || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(doc.nome_original)}"`);
+    res.sendFile(path.resolve(fullPath));
+  } catch (error) {
+    console.error('Erro ao servir documento cobranças:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+router.delete('/clientes/:id/documentos/:docId', ensureDatabase, async (req, res) => {
+  try {
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
+    const { id, docId } = req.params;
+    const [rows] = await connection.execute(
+      'SELECT caminho FROM cliente_cobrancas_documentos WHERE id = ? AND cliente_id = ?',
+      [docId, id]
+    );
+    if (rows.length === 0) {
+      await connection.end();
+      return res.status(404).json({ error: 'Documento não encontrado.' });
+    }
+    const fullPath = path.join(uploadsCobrancasDir, rows[0].caminho);
+    await connection.execute('DELETE FROM cliente_cobrancas_documentos WHERE id = ? AND cliente_id = ?', [docId, id]);
+    await connection.end();
+    try {
+      await fs.unlink(fullPath);
+    } catch (_) {}
+    res.json({ message: 'Documento removido com sucesso' });
+  } catch (error) {
+    console.error('Erro ao remover documento cobranças:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });

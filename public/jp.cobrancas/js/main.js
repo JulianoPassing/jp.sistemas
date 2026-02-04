@@ -3326,6 +3326,7 @@ async function renderClientesLista() {
         <td><span class="badge badge-${badgeClass}">${status}</span></td>
         <td>
           <button class="btn btn-primary btn-sm" onclick="viewCliente(${cliente.id})">Ver</button>
+          <button class="btn btn-sm btn-documentos-cobrancas" style="background:#0d9488;color:#fff;" data-cliente-id="${cliente.id}" data-cliente-nome="${(cliente.nome || '').replace(/"/g, '&quot;')}">Documentos</button>
           <button class="btn btn-info btn-sm" onclick="editCliente(${cliente.id})">Editar</button>
           ${cliente.status === 'Lista Negra' 
             ? '<button class="btn btn-success btn-sm" onclick="removerListaNegra(' + cliente.id + ')">Remover da Lista</button>'
@@ -3336,9 +3337,129 @@ async function renderClientesLista() {
       `;
       tbody.appendChild(row);
     }
+    document.querySelectorAll('.btn-documentos-cobrancas').forEach(btn => {
+      btn.onclick = () => abrirModalDocumentosCobrancas(btn.getAttribute('data-cliente-id'), btn.getAttribute('data-cliente-nome') || '');
+    });
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-red-500">Erro ao carregar clientes</td></tr>';
   }
+}
+
+function escapeHtmlCobrancas(s) {
+  if (!s) return '';
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+async function carregarListaDocumentosCobrancas(clienteId) {
+  const ul = document.getElementById('lista-documentos-cobrancas');
+  if (!ul) return;
+  ul.innerHTML = '<li style="padding:12px;color:#64748b;"><i class="fas fa-spinner fa-spin"></i> Carregando...</li>';
+  try {
+    const resp = await fetch(`/api/cobrancas/clientes/${clienteId}/documentos`, { credentials: 'include' });
+    const docs = await resp.json();
+    if (!resp.ok) {
+      ul.innerHTML = '<li style="padding:12px;color:#dc2626;">Erro ao carregar documentos.</li>';
+      return;
+    }
+    if (docs.length === 0) {
+      ul.innerHTML = '<li style="padding:12px;color:#64748b;">Nenhum documento anexado.</li>';
+      return;
+    }
+    ul.innerHTML = docs.map(d => {
+      const data = d.created_at ? new Date(d.created_at).toLocaleDateString('pt-BR') : '';
+      const tipo = (d.tipo_mime || '').includes('pdf') ? 'file-pdf' : 'file-image';
+      return `<li style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f1f5f9;">
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtmlCobrancas(d.nome_original)}"><i class="fas fa-${tipo}" style="margin-right:8px;color:#0d9488;"></i>${escapeHtmlCobrancas(d.nome_original)}</span>
+        <span style="font-size:0.85rem;color:#64748b;margin-right:8px;">${data}</span>
+        <button type="button" class="btn btn-sm btn-abrir-doc-cobrancas" data-cliente-id="${clienteId}" data-doc-id="${d.id}" style="margin-right:8px;background:#0d9488;color:#fff;border:none;border-radius:6px;cursor:pointer;padding:4px 10px;" title="Abrir"><i class="fas fa-external-link-alt"></i> Abrir</button>
+        <button type="button" class="btn btn-danger btn-sm btn-excluir-doc-cobrancas" data-cliente-id="${clienteId}" data-doc-id="${d.id}" style="padding:4px 10px;"><i class="fas fa-trash"></i></button>
+      </li>`;
+    }).join('');
+    document.querySelectorAll('.btn-abrir-doc-cobrancas').forEach(btn => {
+      btn.onclick = async () => {
+        const cid = btn.getAttribute('data-cliente-id');
+        const did = btn.getAttribute('data-doc-id');
+        try {
+          const r = await fetch(`/api/cobrancas/clientes/${cid}/documentos/${did}/arquivo`, { credentials: 'include' });
+          if (!r.ok) { alert('Erro ao abrir documento.'); return; }
+          const blob = await r.blob();
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+        } catch (_) { alert('Erro ao abrir documento.'); }
+      };
+    });
+    document.querySelectorAll('.btn-excluir-doc-cobrancas').forEach(btn => {
+      btn.onclick = async () => {
+        const cid = btn.getAttribute('data-cliente-id');
+        const did = btn.getAttribute('data-doc-id');
+        if (!confirm('Remover este documento?')) return;
+        try {
+          const r = await fetch(`/api/cobrancas/clientes/${cid}/documentos/${did}`, { method: 'DELETE', credentials: 'include' });
+          if (r.ok) await carregarListaDocumentosCobrancas(cid);
+          else alert('Erro ao remover.');
+        } catch (_) { alert('Erro ao remover.'); }
+      };
+    });
+  } catch (_) {
+    ul.innerHTML = '<li style="padding:12px;color:#dc2626;">Erro ao carregar documentos.</li>';
+  }
+}
+
+function abrirModalDocumentosCobrancas(clienteId, clienteNome) {
+  let modal = document.getElementById('modal-documentos-cobrancas');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-documentos-cobrancas';
+    modal.style.cssText = 'display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);z-index:2001;backdrop-filter:blur(5px);';
+    modal.innerHTML = `
+      <div style="background:#fff;max-width:560px;margin:40px auto;padding:28px;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.25);position:relative;max-height:90vh;overflow:auto;">
+        <button id="fechar-modal-documentos-cobrancas" style="position:absolute;top:15px;right:20px;font-size:1.5rem;background:none;border:none;cursor:pointer;color:#666;">&times;</button>
+        <h2 id="modal-documentos-cobrancas-titulo" style="margin-bottom:16px;font-size:1.25rem;color:#1e293b;font-weight:600;">Documentos do Cliente</h2>
+        <p style="color:#64748b;font-size:0.9rem;margin-bottom:16px;">Aceito: PDF e imagens (JPEG, PNG, GIF, WebP). Máx. 15 MB.</p>
+        <form id="form-upload-documento-cobrancas" style="margin-bottom:20px;">
+          <input type="file" id="input-documento-cobrancas" name="arquivo" accept=".pdf,image/jpeg,image/jpg,image/png,image/gif,image/webp" style="margin-bottom:10px;display:block;width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:8px;" />
+          <button type="submit" class="btn" id="btn-anexar-doc-cobrancas" style="background:#0d9488;color:#fff;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;">
+            <i class="fas fa-upload"></i> Anexar documento
+          </button>
+        </form>
+        <hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0;" />
+        <h3 style="font-size:1rem;color:#334155;margin-bottom:12px;">Documentos anexados</h3>
+        <ul id="lista-documentos-cobrancas" style="list-style:none;padding:0;margin:0;"></ul>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById('fechar-modal-documentos-cobrancas').onclick = () => { modal.style.display = 'none'; };
+    modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+    document.getElementById('form-upload-documento-cobrancas').onsubmit = async function(e) {
+      e.preventDefault();
+      const input = document.getElementById('input-documento-cobrancas');
+      const cid = modal.getAttribute('data-cliente-id');
+      if (!cid || !input.files || !input.files[0]) {
+        alert('Selecione um arquivo (PDF ou imagem).');
+        return;
+      }
+      const btn = document.getElementById('btn-anexar-doc-cobrancas');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+      try {
+        const formData = new FormData();
+        formData.append('arquivo', input.files[0]);
+        const resp = await fetch(`/api/cobrancas/clientes/${cid}/documentos`, { method: 'POST', credentials: 'include', body: formData });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) { alert(data.error || 'Erro ao anexar documento.'); return; }
+        input.value = '';
+        await carregarListaDocumentosCobrancas(cid);
+      } catch (err) { alert('Erro ao enviar arquivo.'); }
+      finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> Anexar documento'; }
+    };
+  }
+  modal.setAttribute('data-cliente-id', clienteId);
+  document.getElementById('modal-documentos-cobrancas-titulo').textContent = 'Documentos — ' + (clienteNome || 'Cliente #' + clienteId);
+  document.getElementById('input-documento-cobrancas').value = '';
+  modal.style.display = 'block';
+  carregarListaDocumentosCobrancas(clienteId);
 }
 
 // Função para renderizar a lista negra
