@@ -21,6 +21,7 @@ console.log('DB_USER:', process.env.DB_USER);
 console.log('DB_PASSWORD:', process.env.DB_PASSWORD);
 console.log('DATABASE_PROVIDER:', process.env.DATABASE_PROVIDER);
 const fs = require('fs').promises;
+const multer = require('multer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -189,6 +190,21 @@ async function createUserDatabase(username) {
         FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE SET NULL,
         INDEX idx_pedido_id (pedido_id),
         INDEX idx_produto_id (produto_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    await userConnection.execute(`
+      CREATE TABLE IF NOT EXISTS cliente_documentos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        cliente_id INT NOT NULL,
+        nome_original VARCHAR(255) NOT NULL,
+        nome_arquivo VARCHAR(255) NOT NULL,
+        caminho VARCHAR(500) NOT NULL,
+        tipo_mime VARCHAR(100) NOT NULL,
+        tamanho INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+        INDEX idx_cliente_id (cliente_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
@@ -404,6 +420,172 @@ app.delete('/api/clientes/:id', requireAuthJWT, async (req, res) => {
     res.json({ message: 'Cliente removido com sucesso' });
   } catch (error) {
     console.error('Erro ao remover cliente:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// --- Documentos do cliente (PDF e imagens) ---
+const uploadsDir = path.join(__dirname, 'uploads');
+const allowedMimes = [
+  'application/pdf',
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/gif',
+  'image/webp'
+];
+
+const storageDocumentos = multer.diskStorage({
+  destination: async (req, file, cb) => {
+    try {
+      const dbName = (req.user && req.user.dbName) ? String(req.user.dbName).replace(/[^a-z0-9_]/g, '_') : 'default';
+      const clienteId = req.params.id || '0';
+      const dir = path.join(uploadsDir, dbName, 'clientes', clienteId);
+      await fs.mkdir(dir, { recursive: true });
+      cb(null, dir);
+    } catch (err) {
+      cb(err);
+    }
+  },
+  filename: (req, file, cb) => {
+    const nomeOriginal = (file.originalname || 'arquivo').replace(/[^a-zA-Z0-9._-]/g, '_');
+    const ext = path.extname(nomeOriginal) || (file.mimetype === 'application/pdf' ? '.pdf' : path.extname(nomeOriginal));
+    cb(null, `${Date.now()}-${nomeOriginal}`);
+  }
+});
+
+const uploadDocumentos = multer({
+  storage: storageDocumentos,
+  limits: { fileSize: 15 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Tipo de arquivo não permitido. Use PDF ou imagens (JPEG, PNG, GIF, WebP).'));
+    }
+  }
+});
+
+app.get('/api/clientes/:id/documentos', requireAuthJWT, async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: req.user.dbName,
+      charset: 'utf8mb4'
+    });
+    const { id } = req.params;
+    const [rows] = await connection.execute(
+      'SELECT id, nome_original, nome_arquivo, caminho, tipo_mime, tamanho, created_at FROM cliente_documentos WHERE cliente_id = ? ORDER BY created_at DESC',
+      [id]
+    );
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error('Erro ao listar documentos:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/clientes/:id/documentos', requireAuthJWT, (req, res, next) => {
+  uploadDocumentos.single('arquivo')(req, res, async (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'Arquivo muito grande. Máximo 15 MB.' });
+      }
+      return res.status(400).json({ error: err.message || 'Erro no upload.' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'Nenhum arquivo enviado. Envie um PDF ou imagem.' });
+    }
+    try {
+      const connection = await mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: req.user.dbName,
+        charset: 'utf8mb4'
+      });
+      const { id } = req.params;
+      const caminhoRel = path.relative(path.join(__dirname, 'uploads'), req.file.path).replace(/\\/g, '/');
+      await connection.execute(
+        'INSERT INTO cliente_documentos (cliente_id, nome_original, nome_arquivo, caminho, tipo_mime, tamanho) VALUES (?, ?, ?, ?, ?, ?)',
+        [id, req.file.originalname || req.file.filename, req.file.filename, caminhoRel, req.file.mimetype, req.file.size || 0]
+      );
+      await connection.end();
+      res.status(201).json({ message: 'Documento anexado com sucesso', filename: req.file.originalname });
+    } catch (error) {
+      console.error('Erro ao salvar documento:', error);
+      try {
+        await fs.unlink(req.file.path);
+      } catch (_) {}
+      res.status(500).json({ error: error.message });
+    }
+  });
+});
+
+app.get('/api/clientes/:id/documentos/:docId/arquivo', requireAuthJWT, async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: req.user.dbName,
+      charset: 'utf8mb4'
+    });
+    const { id, docId } = req.params;
+    const [rows] = await connection.execute(
+      'SELECT caminho, nome_original, tipo_mime FROM cliente_documentos WHERE id = ? AND cliente_id = ?',
+      [docId, id]
+    );
+    await connection.end();
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Documento não encontrado.' });
+    }
+    const doc = rows[0];
+    const fullPath = path.join(uploadsDir, doc.caminho);
+    try {
+      await fs.access(fullPath);
+    } catch (_) {
+      return res.status(404).json({ error: 'Arquivo não encontrado no servidor.' });
+    }
+    res.setHeader('Content-Type', doc.tipo_mime || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(doc.nome_original)}"`);
+    res.sendFile(path.resolve(fullPath));
+  } catch (error) {
+    console.error('Erro ao servir documento:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/clientes/:id/documentos/:docId', requireAuthJWT, async (req, res) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: req.user.dbName,
+      charset: 'utf8mb4'
+    });
+    const { id, docId } = req.params;
+    const [rows] = await connection.execute(
+      'SELECT caminho FROM cliente_documentos WHERE id = ? AND cliente_id = ?',
+      [docId, id]
+    );
+    if (rows.length === 0) {
+      await connection.end();
+      return res.status(404).json({ error: 'Documento não encontrado.' });
+    }
+    const fullPath = path.join(uploadsDir, rows[0].caminho);
+    await connection.execute('DELETE FROM cliente_documentos WHERE id = ? AND cliente_id = ?', [docId, id]);
+    await connection.end();
+    try {
+      await fs.unlink(fullPath);
+    } catch (_) {}
+    res.json({ message: 'Documento removido com sucesso' });
+  } catch (error) {
+    console.error('Erro ao remover documento:', error);
     res.status(500).json({ error: error.message });
   }
 });

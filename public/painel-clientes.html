@@ -696,6 +696,9 @@
             <button class="btn btn-primary btn-ver-mais" data-id="${cli.id}">
               <i class="fas fa-eye"></i> Ver Mais
             </button>
+            <button class="btn btn-info btn-documentos" data-id="${cli.id}" data-razao="${(cli.razao || '').replace(/"/g, '&quot;')}" style="background:#0d9488!important;">
+              <i class="fas fa-paperclip"></i> Documentos
+            </button>
             <button class="btn btn-success btn-editar" data-id="${cli.id}">
               <i class="fas fa-edit"></i> Editar
             </button>
@@ -712,6 +715,14 @@
           const id = this.getAttribute('data-id');
           const cliente = clientes.find(c => String(c.id) === String(id));
           if (cliente) mostrarModalCliente(cliente);
+        };
+      });
+
+      document.querySelectorAll('.btn-documentos').forEach(btn => {
+        btn.onclick = function() {
+          const id = this.getAttribute('data-id');
+          const razao = this.getAttribute('data-razao') || '';
+          abrirModalDocumentos(id, razao);
         };
       });
       
@@ -1022,6 +1033,146 @@
         modal.style.display = 'none';
       };
       modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+    }
+
+    if (!document.getElementById('modal-documentos')) {
+      const modalDoc = document.createElement('div');
+      modalDoc.id = 'modal-documentos';
+      modalDoc.style.display = 'none';
+      modalDoc.style.position = 'fixed';
+      modalDoc.style.top = '0';
+      modalDoc.style.left = '0';
+      modalDoc.style.width = '100vw';
+      modalDoc.style.height = '100vh';
+      modalDoc.style.background = 'rgba(0,0,0,0.5)';
+      modalDoc.style.zIndex = '2001';
+      modalDoc.style.backdropFilter = 'blur(5px)';
+      modalDoc.innerHTML = `
+        <div style="background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);max-width:560px;margin:40px auto;padding:28px;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.25);position:relative;border:1px solid rgba(255,255,255,0.2);max-height:90vh;overflow:auto;">
+          <button id="fechar-modal-documentos" style="position:absolute;top:15px;right:20px;font-size:1.5rem;background:none;border:none;cursor:pointer;color:#666;">&times;</button>
+          <h2 id="modal-documentos-titulo" style="margin-bottom:16px;font-size:1.25rem;color:#1e293b;font-weight:600;">Documentos do Cliente</h2>
+          <p style="color:#64748b;font-size:0.9rem;margin-bottom:16px;">Aceito: PDF e imagens (JPEG, PNG, GIF, WebP). Máx. 15 MB.</p>
+          <form id="form-upload-documento" style="margin-bottom:20px;">
+            <input type="file" id="input-documento" name="arquivo" accept=".pdf,image/jpeg,image/jpg,image/png,image/gif,image/webp" style="margin-bottom:10px;display:block;width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:8px;" />
+            <button type="submit" class="btn" id="btn-anexar-doc" style="background:#0d9488!important;color:#fff!important;">
+              <i class="fas fa-upload"></i> Anexar documento
+            </button>
+          </form>
+          <hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0;" />
+          <h3 style="font-size:1rem;color:#334155;margin-bottom:12px;">Documentos anexados</h3>
+          <ul id="lista-documentos-cliente" style="list-style:none;padding:0;margin:0;"></ul>
+        </div>
+      `;
+      document.body.appendChild(modalDoc);
+      document.getElementById('fechar-modal-documentos').onclick = () => {
+        modalDoc.style.display = 'none';
+      };
+      modalDoc.onclick = (e) => { if (e.target === modalDoc) modalDoc.style.display = 'none'; };
+      document.getElementById('form-upload-documento').onsubmit = async function(e) {
+        e.preventDefault();
+        const input = document.getElementById('input-documento');
+        const clienteId = modalDoc.getAttribute('data-cliente-id');
+        if (!clienteId || !input.files || !input.files[0]) {
+          alert('Selecione um arquivo (PDF ou imagem).');
+          return;
+        }
+        const btn = document.getElementById('btn-anexar-doc');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+        try {
+          const formData = new FormData();
+          formData.append('arquivo', input.files[0]);
+          const resp = await fetch(\`/api/clientes/\${clienteId}/documentos\`, {
+            method: 'POST',
+            credentials: 'include',
+            body: formData
+          });
+          const data = await resp.json().catch(() => ({}));
+          if (!resp.ok) {
+            alert(data.error || 'Erro ao anexar documento.');
+            return;
+          }
+          input.value = '';
+          await carregarListaDocumentos(clienteId);
+        } catch (err) {
+          alert('Erro ao enviar arquivo.');
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-upload"></i> Anexar documento';
+        }
+      };
+    }
+    
+    function abrirModalDocumentos(clienteId, razao) {
+      const modalDoc = document.getElementById('modal-documentos');
+      if (!modalDoc) return;
+      modalDoc.setAttribute('data-cliente-id', clienteId);
+      document.getElementById('modal-documentos-titulo').textContent = 'Documentos — ' + (razao || 'Cliente #' + clienteId);
+      document.getElementById('input-documento').value = '';
+      modalDoc.style.display = 'block';
+      carregarListaDocumentos(clienteId);
+    }
+    
+    async function carregarListaDocumentos(clienteId) {
+      const ul = document.getElementById('lista-documentos-cliente');
+      if (!ul) return;
+      ul.innerHTML = '<li style="padding:12px;color:#64748b;"><i class="fas fa-spinner fa-spin"></i> Carregando...</li>';
+      try {
+        const resp = await fetch(\`/api/clientes/\${clienteId}/documentos\`, { credentials: 'include' });
+        const docs = await resp.json();
+        if (!resp.ok) {
+          ul.innerHTML = '<li style="padding:12px;color:#dc2626;">Erro ao carregar documentos.</li>';
+          return;
+        }
+        if (docs.length === 0) {
+          ul.innerHTML = '<li style="padding:12px;color:#64748b;">Nenhum documento anexado.</li>';
+          return;
+        }
+        ul.innerHTML = docs.map(d => {
+          const data = d.created_at ? new Date(d.created_at).toLocaleDateString('pt-BR') : '';
+          const tipo = (d.tipo_mime || '').includes('pdf') ? 'file-pdf' : 'file-image';
+          return \`<li style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f1f5f9;">
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="\${escapeHtml(d.nome_original)}"><i class="fas fa-\${tipo}" style="margin-right:8px;color:#0d9488;"></i>\${escapeHtml(d.nome_original)}</span>
+            <span style="font-size:0.85rem;color:#64748b;margin-right:8px;">\${data}</span>
+            <button type="button" class="btn btn-abrir-doc" data-cliente-id="\${clienteId}" data-doc-id="\${d.id}" style="margin-right:8px;padding:4px 10px;background:#0d9488!important;color:#fff!important;border:none;border-radius:6px;cursor:pointer;" title="Abrir"><i class="fas fa-external-link-alt"></i> Abrir</button>
+            <button type="button" class="btn btn-danger btn-excluir-doc" data-cliente-id="\${clienteId}" data-doc-id="\${d.id}" style="padding:4px 10px;font-size:0.85rem;"><i class="fas fa-trash"></i></button>
+          </li>\`;
+        }).join('');
+        document.querySelectorAll('.btn-abrir-doc').forEach(btn => {
+          btn.onclick = async function() {
+            const cid = this.getAttribute('data-cliente-id');
+            const did = this.getAttribute('data-doc-id');
+            try {
+              const r = await fetch(\`/api/clientes/\${cid}/documentos/\${did}/arquivo\`, { credentials: 'include' });
+              if (!r.ok) { alert('Erro ao abrir documento.'); return; }
+              const blob = await r.blob();
+              const url = URL.createObjectURL(blob);
+              window.open(url, '_blank');
+            } catch (_) { alert('Erro ao abrir documento.'); }
+          };
+        });
+        document.querySelectorAll('.btn-excluir-doc').forEach(btn => {
+          btn.onclick = async function() {
+            const cid = this.getAttribute('data-cliente-id');
+            const did = this.getAttribute('data-doc-id');
+            if (!confirm('Remover este documento?')) return;
+            try {
+              const r = await fetch(\`/api/clientes/\${cid}/documentos/\${did}\`, { method: 'DELETE', credentials: 'include' });
+              if (r.ok) await carregarListaDocumentos(cid);
+              else alert('Erro ao remover.');
+            } catch (_) { alert('Erro ao remover.'); }
+          };
+        });
+      } catch (_) {
+        ul.innerHTML = '<li style="padding:12px;color:#dc2626;">Erro ao carregar documentos.</li>';
+      }
+    }
+    
+    function escapeHtml(s) {
+      if (!s) return '';
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
     }
     
     function mostrarModalCliente(cli) {

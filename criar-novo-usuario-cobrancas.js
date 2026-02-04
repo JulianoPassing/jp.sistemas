@@ -226,13 +226,34 @@ async function criarNovoUsuario() {
     `);
     console.log('✅ Tabela sessions criada');
 
+    // Tabela configuracoes (mensagens de cobrança e chave PIX)
+    await connection.execute(`
+      CREATE TABLE configuracoes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        chave_pix VARCHAR(255) DEFAULT NULL,
+        msg_parcela TEXT DEFAULT NULL,
+        msg_emprestimo_com_juros TEXT DEFAULT NULL,
+        msg_emprestimo_sem_juros TEXT DEFAULT NULL,
+        msg_parcelas_vencidas TEXT DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    
+    // Inserir registro padrão de configurações
+    await connection.execute(`
+      INSERT INTO configuracoes (chave_pix, msg_parcela, msg_emprestimo_com_juros, msg_emprestimo_sem_juros, msg_parcelas_vencidas) 
+      VALUES (NULL, NULL, NULL, NULL, NULL)
+    `);
+    console.log('✅ Tabela configuracoes criada');
+
     // 8. Verificar se tudo foi criado corretamente
     console.log('🔍 Verificando criação...');
     
     let userCheck = [];
     let dbCheck = [];
     let tables = [];
-    let counts = [{ clientes: 0, emprestimos: 0, cobrancas: 0, pagamentos: 0, parcelas: 0 }];
+    let counts = [{ clientes: 0, emprestimos: 0, cobrancas: 0, pagamentos: 0, parcelas: 0, configuracoes: 0 }];
     
     try {
       // Verificar usuário no banco correto
@@ -249,14 +270,15 @@ async function criarNovoUsuario() {
       await connection.execute(`USE \`${dbName}\``);
       [tables] = await connection.execute('SHOW TABLES');
       
-      // Contar registros (deve ser 0)
+      // Contar registros (deve ser 0, exceto configuracoes que tem 1)
       [counts] = await connection.execute(`
         SELECT 
           (SELECT COUNT(*) FROM clientes_cobrancas) as clientes,
           (SELECT COUNT(*) FROM emprestimos) as emprestimos,
           (SELECT COUNT(*) FROM cobrancas) as cobrancas,
           (SELECT COUNT(*) FROM pagamentos) as pagamentos,
-          (SELECT COUNT(*) FROM parcelas) as parcelas
+          (SELECT COUNT(*) FROM parcelas) as parcelas,
+          (SELECT COUNT(*) FROM configuracoes) as configuracoes
       `);
     } catch (verifyError) {
       console.log('⚠️ Erro na verificação (mas usuário foi criado):', verifyError.message);
@@ -284,6 +306,7 @@ async function criarNovoUsuario() {
     console.log(`   Cobranças: ${counts[0].cobrancas}`);
     console.log(`   Pagamentos: ${counts[0].pagamentos}`);
     console.log(`   Parcelas: ${counts[0].parcelas}`);
+    console.log(`   Configurações: ${counts[0].configuracoes}`);
     console.log('');
     console.log('🌟 O usuário já pode fazer login no sistema!');
 
