@@ -489,15 +489,16 @@ app.get('/api/clientes/:id/documentos', requireAuthJWT, async (req, res) => {
 });
 
 app.post('/api/clientes/:id/documentos', requireAuthJWT, (req, res, next) => {
-  uploadDocumentos.single('arquivo')(req, res, async (err) => {
+  uploadDocumentos.array('arquivo', 20)(req, res, async (err) => {
     if (err) {
       if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ error: 'Arquivo muito grande. Máximo 15 MB.' });
+        return res.status(400).json({ error: 'Arquivo muito grande. Máximo 15 MB por arquivo.' });
       }
       return res.status(400).json({ error: err.message || 'Erro no upload.' });
     }
-    if (!req.file) {
-      return res.status(400).json({ error: 'Nenhum arquivo enviado. Envie um PDF ou imagem.' });
+    const files = req.files && req.files.length ? req.files : [];
+    if (files.length === 0) {
+      return res.status(400).json({ error: 'Nenhum arquivo enviado. Envie um ou mais PDFs ou imagens.' });
     }
     try {
       const connection = await mysql.createConnection({
@@ -508,18 +509,22 @@ app.post('/api/clientes/:id/documentos', requireAuthJWT, (req, res, next) => {
         charset: 'utf8mb4'
       });
       const { id } = req.params;
-      const caminhoRel = path.relative(path.join(__dirname, 'uploads'), req.file.path).replace(/\\/g, '/');
-      await connection.execute(
-        'INSERT INTO cliente_documentos (cliente_id, nome_original, nome_arquivo, caminho, tipo_mime, tamanho) VALUES (?, ?, ?, ?, ?, ?)',
-        [id, req.file.originalname || req.file.filename, req.file.filename, caminhoRel, req.file.mimetype, req.file.size || 0]
-      );
+      const uploaded = [];
+      for (const file of files) {
+        const caminhoRel = path.relative(path.join(__dirname, 'uploads'), file.path).replace(/\\/g, '/');
+        await connection.execute(
+          'INSERT INTO cliente_documentos (cliente_id, nome_original, nome_arquivo, caminho, tipo_mime, tamanho) VALUES (?, ?, ?, ?, ?, ?)',
+          [id, file.originalname || file.filename, file.filename, caminhoRel, file.mimetype, file.size || 0]
+        );
+        uploaded.push(file.originalname || file.filename);
+      }
       await connection.end();
-      res.status(201).json({ message: 'Documento anexado com sucesso', filename: req.file.originalname });
+      res.status(201).json({ message: files.length === 1 ? 'Documento anexado com sucesso.' : `${files.length} documentos anexados com sucesso.`, count: files.length });
     } catch (error) {
       console.error('Erro ao salvar documento:', error);
-      try {
-        await fs.unlink(req.file.path);
-      } catch (_) {}
+      for (const file of files) {
+        try { await fs.unlink(file.path); } catch (_) {}
+      }
       res.status(500).json({ error: error.message });
     }
   });
