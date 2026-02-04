@@ -2772,9 +2772,9 @@ const clienteController = {
           <!-- Documentos do cliente -->
           <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
             <h4 style="margin-bottom: 0.5rem; color: #002f4b;">Documentos</h4>
-            <p style="font-size: 0.875rem; color: #64748b; margin-bottom: 1rem;">PDF e imagens (JPEG, PNG, GIF, WebP). Máx. 15 MB.</p>
+            <p style="font-size: 0.875rem; color: #64748b; margin-bottom: 1rem;">PDF e imagens (JPEG, PNG, GIF, WebP). Máx. 15 MB por arquivo. Você pode selecionar vários de uma vez.</p>
             <form id="form-upload-doc-modal-ver" data-cliente-id="${id}" style="margin-bottom: 1rem;">
-              <input type="file" id="input-doc-modal-ver" name="arquivo" accept=".pdf,image/jpeg,image/jpg,image/png,image/gif,image/webp" style="margin-bottom: 0.5rem; display: block; width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 8px;" />
+              <input type="file" id="input-doc-modal-ver" name="arquivo" accept=".pdf,image/jpeg,image/jpg,image/png,image/gif,image/webp" multiple style="margin-bottom: 0.5rem; display: block; width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 8px;" />
               <button type="submit" class="btn btn-sm" id="btn-anexar-doc-modal-ver" style="background: #0d9488; color: #fff; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer;"><i class="fas fa-upload"></i> Anexar documento</button>
             </form>
             <ul id="modal-ver-cliente-docs-list" style="list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto;"></ul>
@@ -3429,9 +3429,9 @@ function abrirModalDocumentosCobrancas(clienteId, clienteNome) {
       <div style="background:#fff;max-width:560px;margin:40px auto;padding:28px;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.25);position:relative;max-height:90vh;overflow:auto;">
         <button id="fechar-modal-documentos-cobrancas" style="position:absolute;top:15px;right:20px;font-size:1.5rem;background:none;border:none;cursor:pointer;color:#666;">&times;</button>
         <h2 id="modal-documentos-cobrancas-titulo" style="margin-bottom:16px;font-size:1.25rem;color:#1e293b;font-weight:600;">Documentos do Cliente</h2>
-        <p style="color:#64748b;font-size:0.9rem;margin-bottom:16px;">Aceito: PDF e imagens (JPEG, PNG, GIF, WebP). Máx. 15 MB.</p>
+        <p style="color:#64748b;font-size:0.9rem;margin-bottom:16px;">Aceito: PDF e imagens (JPEG, PNG, GIF, WebP). Máx. 15 MB por arquivo. Você pode selecionar vários de uma vez.</p>
         <form id="form-upload-documento-cobrancas" style="margin-bottom:20px;">
-          <input type="file" id="input-documento-cobrancas" name="arquivo" accept=".pdf,image/jpeg,image/jpg,image/png,image/gif,image/webp" style="margin-bottom:10px;display:block;width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:8px;" />
+          <input type="file" id="input-documento-cobrancas" name="arquivo" accept=".pdf,image/jpeg,image/jpg,image/png,image/gif,image/webp" multiple style="margin-bottom:10px;display:block;width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:8px;" />
           <button type="submit" class="btn" id="btn-anexar-doc-cobrancas" style="background:#0d9488;color:#fff;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;">
             <i class="fas fa-upload"></i> Anexar documento
           </button>
@@ -3448,8 +3448,8 @@ function abrirModalDocumentosCobrancas(clienteId, clienteNome) {
       e.preventDefault();
       const input = document.getElementById('input-documento-cobrancas');
       const cid = modal.getAttribute('data-cliente-id');
-      if (!cid || !input.files || !input.files[0]) {
-        alert('Selecione um arquivo (PDF ou imagem).');
+      if (!cid || !input.files || input.files.length === 0) {
+        alert('Selecione um ou mais arquivos (PDF ou imagem).');
         return;
       }
       const btn = document.getElementById('btn-anexar-doc-cobrancas');
@@ -3457,7 +3457,9 @@ function abrirModalDocumentosCobrancas(clienteId, clienteNome) {
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
       try {
         const formData = new FormData();
-        formData.append('arquivo', input.files[0]);
+        for (let i = 0; i < input.files.length; i++) {
+          formData.append('arquivo', input.files[i]);
+        }
         const resp = await fetch(`/api/cobrancas/clientes/${cid}/documentos`, { method: 'POST', credentials: 'include', body: formData });
         const data = await resp.json().catch(() => ({}));
         if (!resp.ok) { alert(data.error || 'Erro ao anexar documento.'); return; }
@@ -3531,8 +3533,8 @@ async function initDocumentosModalVer(modal, clienteId) {
   form.onsubmit = async (e) => {
     e.preventDefault();
     const input = modal.querySelector('#input-doc-modal-ver');
-    if (!input.files || !input.files[0]) {
-      alert('Selecione um arquivo (PDF ou imagem).');
+    if (!input.files || input.files.length === 0) {
+      alert('Selecione um ou mais arquivos (PDF ou imagem).');
       return;
     }
     const btn = modal.querySelector('#btn-anexar-doc-modal-ver');
@@ -3540,7 +3542,9 @@ async function initDocumentosModalVer(modal, clienteId) {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
     try {
       const formData = new FormData();
-      formData.append('arquivo', input.files[0]);
+      for (let i = 0; i < input.files.length; i++) {
+        formData.append('arquivo', input.files[i]);
+      }
       const resp = await fetch(`/api/cobrancas/clientes/${clienteId}/documentos`, { method: 'POST', credentials: 'include', body: formData });
       const data = await resp.json().catch(() => ({}));
       if (!resp.ok) { alert(data.error || 'Erro ao anexar documento.'); return; }
