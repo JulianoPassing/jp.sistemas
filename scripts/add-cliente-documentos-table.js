@@ -1,7 +1,7 @@
 /**
- * Script para criar a tabela cliente_documentos no banco definido em DB_NAME.
+ * Cria a tabela cliente_documentos em TODOS os bancos do sistema que têm a tabela clientes
+ * (banco principal + um banco por usuário: diego, deivid, etc.).
  * Execute: node scripts/add-cliente-documentos-table.js
- * Para multi-tenant, execute uma vez por banco ou use o SQL manualmente.
  */
 const mysql = require('mysql2/promise');
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
@@ -22,18 +22,38 @@ CREATE TABLE IF NOT EXISTS cliente_documentos (
 `;
 
 async function run() {
-  const dbName = process.env.DB_NAME || 'sistemajuliano';
+  const config = {
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    charset: 'utf8mb4'
+  };
+
   try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: dbName,
-      charset: 'utf8mb4'
-    });
-    await connection.execute(SQL_CREATE_TABLE);
-    await connection.end();
-    console.log('Tabela cliente_documentos criada no banco', dbName);
+    const conn = await mysql.createConnection({ ...config });
+    const [rows] = await conn.execute(`
+      SELECT TABLE_SCHEMA
+      FROM information_schema.TABLES
+      WHERE TABLE_NAME = 'clientes'
+      AND TABLE_SCHEMA NOT IN ('information_schema', 'mysql', 'performance_schema', 'sys')
+    `);
+    await conn.end();
+
+    const databases = rows.map((r) => r.TABLE_SCHEMA);
+    if (databases.length === 0) {
+      console.log('Nenhum banco com tabela "clientes" encontrado.');
+      return;
+    }
+
+    console.log('Bancos com tabela clientes:', databases.join(', '));
+
+    for (const dbName of databases) {
+      const connection = await mysql.createConnection({ ...config, database: dbName });
+      await connection.execute(SQL_CREATE_TABLE);
+      await connection.end();
+      console.log('Tabela cliente_documentos criada no banco:', dbName);
+    }
+    console.log('Concluído. Total:', databases.length, 'banco(s).');
   } catch (err) {
     console.error('Erro:', err.message);
     process.exit(1);
