@@ -2768,10 +2768,22 @@ const clienteController = {
               `).join('')
             }
           </div>
+          
+          <!-- Documentos do cliente -->
+          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
+            <h4 style="margin-bottom: 0.5rem; color: #002f4b;">Documentos</h4>
+            <p style="font-size: 0.875rem; color: #64748b; margin-bottom: 1rem;">PDF e imagens (JPEG, PNG, GIF, WebP). Máx. 15 MB.</p>
+            <form id="form-upload-doc-modal-ver" data-cliente-id="${id}" style="margin-bottom: 1rem;">
+              <input type="file" id="input-doc-modal-ver" name="arquivo" accept=".pdf,image/jpeg,image/jpg,image/png,image/gif,image/webp" style="margin-bottom: 0.5rem; display: block; width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 8px;" />
+              <button type="submit" class="btn btn-sm" id="btn-anexar-doc-modal-ver" style="background: #0d9488; color: #fff; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer;"><i class="fas fa-upload"></i> Anexar documento</button>
+            </form>
+            <ul id="modal-ver-cliente-docs-list" style="list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto;"></ul>
+          </div>
         </div>
       `;
       
-      ui.showModal(modalContent, 'Detalhes do Cliente');
+      const modal = ui.showModal(modalContent, 'Detalhes do Cliente');
+      initDocumentosModalVer(modal, id);
     } catch (error) {
       console.error('Erro ao buscar cliente:', error);
       ui.showNotification('Erro ao buscar dados do cliente', 'error');
@@ -3460,6 +3472,85 @@ function abrirModalDocumentosCobrancas(clienteId, clienteNome) {
   document.getElementById('input-documento-cobrancas').value = '';
   modal.style.display = 'block';
   carregarListaDocumentosCobrancas(clienteId);
+}
+
+async function initDocumentosModalVer(modal, clienteId) {
+  const ul = modal.querySelector('#modal-ver-cliente-docs-list');
+  const form = modal.querySelector('#form-upload-doc-modal-ver');
+  if (!ul || !form) return;
+
+  async function renderDocs() {
+    ul.innerHTML = '<li style="padding:12px;color:#64748b;"><i class="fas fa-spinner fa-spin"></i> Carregando...</li>';
+    try {
+      const resp = await fetch(`/api/cobrancas/clientes/${clienteId}/documentos`, { credentials: 'include' });
+      const docs = await resp.json();
+      if (!resp.ok) {
+        ul.innerHTML = '<li style="padding:12px;color:#dc2626;">Erro ao carregar documentos.</li>';
+        return;
+      }
+      if (docs.length === 0) {
+        ul.innerHTML = '<li style="padding:12px;color:#64748b;">Nenhum documento anexado.</li>';
+        return;
+      }
+      ul.innerHTML = docs.map(d => {
+        const data = d.created_at ? new Date(d.created_at).toLocaleDateString('pt-BR') : '';
+        const tipo = (d.tipo_mime || '').includes('pdf') ? 'file-pdf' : 'file-image';
+        const nomeSafe = (d.nome_original || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        return `<li style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f1f5f9;">
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${nomeSafe}"><i class="fas fa-${tipo}" style="margin-right:8px;color:#0d9488;"></i>${nomeSafe}</span>
+          <span style="font-size:0.85rem;color:#64748b;margin-right:8px;">${data}</span>
+          <button type="button" class="btn btn-sm btn-abrir-doc-modal-ver" data-doc-id="${d.id}" style="margin-right:8px;background:#0d9488;color:#fff;border:none;border-radius:6px;cursor:pointer;padding:4px 10px;"><i class="fas fa-external-link-alt"></i> Abrir</button>
+          <button type="button" class="btn btn-danger btn-sm btn-excluir-doc-modal-ver" data-doc-id="${d.id}" style="padding:4px 10px;"><i class="fas fa-trash"></i></button>
+        </li>`;
+      }).join('');
+      modal.querySelectorAll('.btn-abrir-doc-modal-ver').forEach(btn => {
+        btn.onclick = async () => {
+          try {
+            const r = await fetch(`/api/cobrancas/clientes/${clienteId}/documentos/${btn.getAttribute('data-doc-id')}/arquivo`, { credentials: 'include' });
+            if (!r.ok) { alert('Erro ao abrir documento.'); return; }
+            const blob = await r.blob();
+            window.open(URL.createObjectURL(blob), '_blank');
+          } catch (_) { alert('Erro ao abrir documento.'); }
+        };
+      });
+      modal.querySelectorAll('.btn-excluir-doc-modal-ver').forEach(btn => {
+        btn.onclick = async () => {
+          if (!confirm('Remover este documento?')) return;
+          try {
+            const r = await fetch(`/api/cobrancas/clientes/${clienteId}/documentos/${btn.getAttribute('data-doc-id')}`, { method: 'DELETE', credentials: 'include' });
+            if (r.ok) await renderDocs();
+            else alert('Erro ao remover.');
+          } catch (_) { alert('Erro ao remover.'); }
+        };
+      });
+    } catch (_) {
+      ul.innerHTML = '<li style="padding:12px;color:#dc2626;">Erro ao carregar documentos.</li>';
+    }
+  }
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const input = modal.querySelector('#input-doc-modal-ver');
+    if (!input.files || !input.files[0]) {
+      alert('Selecione um arquivo (PDF ou imagem).');
+      return;
+    }
+    const btn = modal.querySelector('#btn-anexar-doc-modal-ver');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    try {
+      const formData = new FormData();
+      formData.append('arquivo', input.files[0]);
+      const resp = await fetch(`/api/cobrancas/clientes/${clienteId}/documentos`, { method: 'POST', credentials: 'include', body: formData });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) { alert(data.error || 'Erro ao anexar documento.'); return; }
+      input.value = '';
+      await renderDocs();
+    } catch (err) { alert('Erro ao enviar arquivo.'); }
+    finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> Anexar documento'; }
+  };
+
+  await renderDocs();
 }
 
 // Função para renderizar a lista negra
