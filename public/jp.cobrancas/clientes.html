@@ -180,6 +180,7 @@
             <td><span class="badge badge-${getStatusBadgeClass(cliente.status)}">${cliente.status || 'Ativo'}</span></td>
             <td>
               <button class="btn btn-primary btn-sm" onclick="viewCliente(${cliente.id})">Ver</button>
+              <button class="btn btn-sm btn-documentos-cobrancas" style="background:#0d9488;color:#fff;" data-cliente-id="${cliente.id}" data-cliente-nome="${(cliente.nome || '').replace(/"/g, '&quot;')}">Documentos</button>
               <button class="btn btn-info btn-sm" onclick="editCliente(${cliente.id})">Editar</button>
               ${cliente.status === 'Lista Negra' 
                 ? '<button class="btn btn-success btn-sm" onclick="removerListaNegra(' + cliente.id + ')">Remover da Lista</button>'
@@ -189,6 +190,9 @@
             </td>
           `;
           tbody.appendChild(row);
+        });
+        document.querySelectorAll('.btn-documentos-cobrancas').forEach(btn => {
+          btn.onclick = () => abrirModalDocumentosCobrancas(btn.getAttribute('data-cliente-id'), btn.getAttribute('data-cliente-nome') || '');
         });
       }
       
