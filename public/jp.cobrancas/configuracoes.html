@@ -184,6 +184,33 @@
       </div>
 
       <form id="form-configuracoes">
+        <!-- Dados da conta -->
+        <div class="config-section">
+          <h3>Dados da conta</h3>
+          <p style="color: #6b7280; margin-bottom: 1rem;">Altere seu e-mail e senha de acesso.</p>
+          <p style="margin-bottom: 0.5rem;"><strong>Usuário:</strong> <span id="perfil-username-cobrancas"></span></p>
+          <p style="margin-bottom: 1.5rem;"><strong>E-mail atual:</strong> <span id="perfil-email-cobrancas"></span></p>
+          <div class="form-group">
+            <label for="novo-email-cobrancas">Novo e-mail</label>
+            <input type="email" id="novo-email-cobrancas" class="form-input" placeholder="seu@email.com">
+            <label for="senha-atual-email-cobrancas" style="margin-top: 0.75rem;">Senha atual (para confirmar)</label>
+            <input type="password" id="senha-atual-email-cobrancas" class="form-input" placeholder="Digite sua senha">
+            <button type="button" class="btn-save" id="btn-alterar-email-cobrancas" style="margin-top: 0.75rem;">Alterar e-mail</button>
+            <span id="msg-email-cobrancas" style="display: block; margin-top: 0.5rem; font-size: 0.9rem;"></span>
+          </div>
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 1.5rem 0;">
+          <div class="form-group">
+            <label for="senha-atual-cobrancas">Senha atual</label>
+            <input type="password" id="senha-atual-cobrancas" class="form-input" placeholder="Digite sua senha atual">
+            <label for="nova-senha-cobrancas" style="margin-top: 0.75rem;">Nova senha</label>
+            <input type="password" id="nova-senha-cobrancas" class="form-input" placeholder="Mínimo 6 caracteres" minlength="6">
+            <label for="confirmar-senha-cobrancas" style="margin-top: 0.75rem;">Confirmar nova senha</label>
+            <input type="password" id="confirmar-senha-cobrancas" class="form-input" placeholder="Repita a nova senha">
+            <button type="button" class="btn-save" id="btn-alterar-senha-cobrancas" style="margin-top: 0.75rem;">Alterar senha</button>
+            <span id="msg-senha-cobrancas" style="display: block; margin-top: 0.5rem; font-size: 0.9rem;"></span>
+          </div>
+        </div>
+
         <!-- Chave PIX -->
         <div class="config-section">
           <h3>Chave PIX</h3>
@@ -194,32 +221,32 @@
           </div>
         </div>
 
-        <!-- Mensagem de Parcela -->
+        <!-- 1ª Mensagem: Juros - sem diário -->
         <div class="config-section">
-          <h3>Mensagem para Parcela</h3>
+          <h3>1. Mensagem de Empréstimo (sem juros diário)</h3>
           <div class="form-group">
-            <label for="msg_parcela">Mensagem enviada para lembrar de parcelas</label>
-            <textarea id="msg_parcela" class="form-textarea" placeholder="Deixe em branco para usar a mensagem padrão"></textarea>
-            <button type="button" class="preview-btn" onclick="previewMensagem('msg_parcela')">Ver Preview</button>
-            <div id="preview_msg_parcela" class="preview-box"></div>
+            <label for="msg_emprestimo_sem_juros">Mensagem para empréstimos sem cobrança de juros diário</label>
+            <textarea id="msg_emprestimo_sem_juros" class="form-textarea" placeholder="Deixe em branco para usar a mensagem padrão"></textarea>
+            <button type="button" class="preview-btn" onclick="previewMensagem('msg_emprestimo_sem_juros')">Ver Preview</button>
+            <div id="preview_msg_emprestimo_sem_juros" class="preview-box"></div>
             <div class="variables-box">
               <h4>Variáveis disponíveis:</h4>
               <ul class="variables-list">
                 <li><code>{nome}</code> - Nome do cliente</li>
-                <li><code>{parcela_atual}</code> - Número da parcela atual</li>
-                <li><code>{total_parcelas}</code> - Total de parcelas</li>
                 <li><code>{data_vencimento}</code> - Data de vencimento</li>
-                <li><code>{valor}</code> - Valor da parcela</li>
+                <li><code>{valor_investido}</code> - Valor investido/emprestado</li>
+                <li><code>{juros_percent}</code> - Percentual de juros mensal</li>
+                <li><code>{juros_total}</code> - Valor do juros mensal</li>
+                <li><code>{valor_total}</code> - Valor total a pagar</li>
                 <li><code>{chave_pix}</code> - Sua chave PIX</li>
               </ul>
             </div>
-            <small>Mensagem padrão: "Olá, {nome}, a sua parcela ({parcela_atual}/{total_parcelas}) vence {data_vencimento}. Você pode pagar o valor de {valor}.\n\nChave PIX: {chave_pix}\n\nSolicitamos o pagamento até a data de vencimento."</small>
           </div>
         </div>
 
-        <!-- Mensagem de Empréstimo com Juros Diário -->
+        <!-- 2ª Mensagem: Juros - com multa diária -->
         <div class="config-section">
-          <h3>Mensagem de Empréstimo (com juros diário)</h3>
+          <h3>2. Mensagem de Empréstimo (com juros/multa diária)</h3>
           <div class="form-group">
             <label for="msg_emprestimo_com_juros">Mensagem para empréstimos com cobrança de juros diário</label>
             <textarea id="msg_emprestimo_com_juros" class="form-textarea" placeholder="Deixe em branco para usar a mensagem padrão"></textarea>
@@ -243,26 +270,26 @@
           </div>
         </div>
 
-        <!-- Mensagem de Empréstimo sem Juros Diário -->
+        <!-- 3ª Mensagem: Parcelado -->
         <div class="config-section">
-          <h3>Mensagem de Empréstimo (sem juros diário)</h3>
+          <h3>3. Mensagem para Parcela (parcelado)</h3>
           <div class="form-group">
-            <label for="msg_emprestimo_sem_juros">Mensagem para empréstimos sem cobrança de juros diário</label>
-            <textarea id="msg_emprestimo_sem_juros" class="form-textarea" placeholder="Deixe em branco para usar a mensagem padrão"></textarea>
-            <button type="button" class="preview-btn" onclick="previewMensagem('msg_emprestimo_sem_juros')">Ver Preview</button>
-            <div id="preview_msg_emprestimo_sem_juros" class="preview-box"></div>
+            <label for="msg_parcela">Mensagem enviada para lembrar de parcelas</label>
+            <textarea id="msg_parcela" class="form-textarea" placeholder="Deixe em branco para usar a mensagem padrão"></textarea>
+            <button type="button" class="preview-btn" onclick="previewMensagem('msg_parcela')">Ver Preview</button>
+            <div id="preview_msg_parcela" class="preview-box"></div>
             <div class="variables-box">
               <h4>Variáveis disponíveis:</h4>
               <ul class="variables-list">
                 <li><code>{nome}</code> - Nome do cliente</li>
+                <li><code>{parcela_atual}</code> - Número da parcela atual</li>
+                <li><code>{total_parcelas}</code> - Total de parcelas</li>
                 <li><code>{data_vencimento}</code> - Data de vencimento</li>
-                <li><code>{valor_investido}</code> - Valor investido/emprestado</li>
-                <li><code>{juros_percent}</code> - Percentual de juros mensal</li>
-                <li><code>{juros_total}</code> - Valor do juros mensal</li>
-                <li><code>{valor_total}</code> - Valor total a pagar</li>
+                <li><code>{valor}</code> - Valor da parcela</li>
                 <li><code>{chave_pix}</code> - Sua chave PIX</li>
               </ul>
             </div>
+            <small>Mensagem padrão: "Olá, {nome}, a sua parcela ({parcela_atual}/{total_parcelas}) vence {data_vencimento}. Você pode pagar o valor de {valor}.\n\nChave PIX: {chave_pix}\n\nSolicitamos o pagamento até a data de vencimento."</small>
           </div>
         </div>
 
@@ -317,9 +344,105 @@
         });
       }
 
-      // Carregar configurações
+      // Carregar perfil (e-mail) e configurações
+      await carregarPerfilCobrancas();
       await carregarConfiguracoes();
+      bindPerfilCobrancas();
     });
+
+    async function carregarPerfilCobrancas() {
+      try {
+        const res = await fetch('/api/cobrancas/perfil', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        document.getElementById('perfil-username-cobrancas').textContent = data.username || '';
+        document.getElementById('perfil-email-cobrancas').textContent = data.email || '(não informado)';
+      } catch (e) {
+        console.error('Erro ao carregar perfil:', e);
+      }
+    }
+
+    function bindPerfilCobrancas() {
+      document.getElementById('btn-alterar-email-cobrancas').onclick = async function() {
+        const msg = document.getElementById('msg-email-cobrancas');
+        msg.textContent = '';
+        msg.style.color = '';
+        const email = document.getElementById('novo-email-cobrancas').value.trim();
+        const senha = document.getElementById('senha-atual-email-cobrancas').value;
+        if (!email || !email.includes('@')) {
+          msg.textContent = 'Informe um e-mail válido.';
+          msg.style.color = '#dc2626';
+          return;
+        }
+        if (!senha) {
+          msg.textContent = 'Informe a senha atual para confirmar.';
+          msg.style.color = '#dc2626';
+          return;
+        }
+        try {
+          const res = await fetch('/api/cobrancas/alterar-email', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ email, senha_atual: senha })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok) {
+            msg.textContent = data.message || 'E-mail alterado com sucesso!';
+            msg.style.color = '#059669';
+            document.getElementById('novo-email-cobrancas').value = '';
+            document.getElementById('senha-atual-email-cobrancas').value = '';
+            carregarPerfilCobrancas();
+          } else {
+            msg.textContent = data.error || 'Erro ao alterar e-mail.';
+            msg.style.color = '#dc2626';
+          }
+        } catch (err) {
+          msg.textContent = 'Erro ao alterar e-mail.';
+          msg.style.color = '#dc2626';
+        }
+      };
+
+      document.getElementById('btn-alterar-senha-cobrancas').onclick = async function() {
+        const msg = document.getElementById('msg-senha-cobrancas');
+        msg.textContent = '';
+        msg.style.color = '';
+        const nova = document.getElementById('nova-senha-cobrancas').value;
+        const conf = document.getElementById('confirmar-senha-cobrancas').value;
+        if (nova !== conf) {
+          msg.textContent = 'A nova senha e a confirmação não coincidem.';
+          msg.style.color = '#dc2626';
+          return;
+        }
+        if (nova.length < 6) {
+          msg.textContent = 'A nova senha deve ter no mínimo 6 caracteres.';
+          msg.style.color = '#dc2626';
+          return;
+        }
+        try {
+          const res = await fetch('/api/cobrancas/alterar-senha', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ senha_atual: document.getElementById('senha-atual-cobrancas').value, nova_senha: nova })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok) {
+            msg.textContent = data.message || 'Senha alterada com sucesso!';
+            msg.style.color = '#059669';
+            document.getElementById('senha-atual-cobrancas').value = '';
+            document.getElementById('nova-senha-cobrancas').value = '';
+            document.getElementById('confirmar-senha-cobrancas').value = '';
+          } else {
+            msg.textContent = data.error || 'Erro ao alterar senha.';
+            msg.style.color = '#dc2626';
+          }
+        } catch (err) {
+          msg.textContent = 'Erro ao alterar senha.';
+          msg.style.color = '#dc2626';
+        }
+      };
+    }
 
     async function carregarConfiguracoes() {
       try {

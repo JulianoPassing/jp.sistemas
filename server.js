@@ -341,6 +341,90 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ success: true });
 });
 
+// Perfil do usuário (e-mail) e alteração de senha/e-mail
+app.get('/api/auth/perfil', requireAuthJWT, async (req, res) => {
+  try {
+    const usersConfig = getUsersConfig();
+    const connection = await mysql.createConnection(usersConfig);
+    const [rows] = await connection.execute(
+      'SELECT username, email FROM users WHERE username = ? AND is_active = TRUE',
+      [req.user.username]
+    );
+    await connection.end();
+    if (rows.length === 0) return res.status(404).json({ error: 'Usuário não encontrado.' });
+    res.json({ username: rows[0].username, email: rows[0].email || '' });
+  } catch (error) {
+    console.error('Erro ao buscar perfil:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/auth/alterar-senha', requireAuthJWT, async (req, res) => {
+  try {
+    const { senha_atual, nova_senha } = req.body;
+    if (!senha_atual || !nova_senha) {
+      return res.status(400).json({ error: 'Informe a senha atual e a nova senha.' });
+    }
+    if (nova_senha.length < 6) {
+      return res.status(400).json({ error: 'A nova senha deve ter no mínimo 6 caracteres.' });
+    }
+    const usersConfig = getUsersConfig();
+    const connection = await mysql.createConnection(usersConfig);
+    const [rows] = await connection.execute('SELECT password FROM users WHERE username = ?', [req.user.username]);
+    if (rows.length === 0) {
+      await connection.end();
+      return res.status(404).json({ error: 'Usuário não encontrado.' });
+    }
+    const valid = await bcrypt.compare(senha_atual, rows[0].password);
+    if (!valid) {
+      await connection.end();
+      return res.status(401).json({ error: 'Senha atual incorreta.' });
+    }
+    const hash = await bcrypt.hash(nova_senha, 12);
+    await connection.execute('UPDATE users SET password = ?, updated_at = NOW() WHERE username = ?', [hash, req.user.username]);
+    await connection.end();
+    res.json({ message: 'Senha alterada com sucesso.' });
+  } catch (error) {
+    console.error('Erro ao alterar senha:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/auth/alterar-email', requireAuthJWT, async (req, res) => {
+  try {
+    const { email, senha_atual } = req.body;
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      return res.status(400).json({ error: 'Informe um e-mail válido.' });
+    }
+    if (!senha_atual) {
+      return res.status(400).json({ error: 'Informe a senha atual para confirmar.' });
+    }
+    const usersConfig = getUsersConfig();
+    const connection = await mysql.createConnection(usersConfig);
+    const [rows] = await connection.execute('SELECT password FROM users WHERE username = ?', [req.user.username]);
+    if (rows.length === 0) {
+      await connection.end();
+      return res.status(404).json({ error: 'Usuário não encontrado.' });
+    }
+    const valid = await bcrypt.compare(senha_atual, rows[0].password);
+    if (!valid) {
+      await connection.end();
+      return res.status(401).json({ error: 'Senha atual incorreta.' });
+    }
+    const [existing] = await connection.execute('SELECT id FROM users WHERE email = ? AND username != ?', [email.trim(), req.user.username]);
+    if (existing.length > 0) {
+      await connection.end();
+      return res.status(400).json({ error: 'Este e-mail já está em uso por outro usuário.' });
+    }
+    await connection.execute('UPDATE users SET email = ?, updated_at = NOW() WHERE username = ?', [email.trim(), req.user.username]);
+    await connection.end();
+    res.json({ message: 'E-mail alterado com sucesso.' });
+  } catch (error) {
+    console.error('Erro ao alterar e-mail:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Rotas protegidas usando JWT
 app.get('/api/clientes', requireAuthJWT, async (req, res) => {
   try {

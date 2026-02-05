@@ -2450,6 +2450,114 @@ router.post('/emprestimos/corrigir-status-vencidos', ensureDatabase, async (req,
 // ========== CONFIGURAÇÕES DO USUÁRIO ==========
 
 // Buscar configurações do usuário
+// Requer apenas sessão (não cria banco do usuário)
+function requireCobrancasSession(req, res, next) {
+  if (!req.session || !req.session.cobrancasUser) {
+    return res.status(401).json({ error: 'Não autenticado.' });
+  }
+  next();
+}
+
+async function getUsersConnection() {
+  return mysql.createConnection({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'jpsistemas',
+    password: process.env.DB_PASSWORD || 'Juliano@95',
+    database: 'jpsistemas_users',
+    charset: 'utf8mb4'
+  });
+}
+
+async function ensureEmailColumnUsuariosCobrancas(connection) {
+  try {
+    await connection.execute('ALTER TABLE usuarios_cobrancas ADD COLUMN email VARCHAR(255) NULL');
+  } catch (err) {
+    if (err.code !== 'ER_DUP_FIELDNAME') throw err;
+  }
+}
+
+router.get('/perfil', requireCobrancasSession, async (req, res) => {
+  try {
+    const conn = await getUsersConnection();
+    await ensureEmailColumnUsuariosCobrancas(conn);
+    const [rows] = await conn.execute(
+      'SELECT username, email FROM usuarios_cobrancas WHERE username = ?',
+      [req.session.cobrancasUser]
+    );
+    await conn.end();
+    if (rows.length === 0) return res.status(404).json({ error: 'Usuário não encontrado.' });
+    res.json({ username: rows[0].username, email: rows[0].email || '' });
+  } catch (error) {
+    console.error('Erro ao buscar perfil cobranças:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+router.put('/alterar-senha', requireCobrancasSession, async (req, res) => {
+  try {
+    const { senha_atual, nova_senha } = req.body;
+    if (!senha_atual || !nova_senha) {
+      return res.status(400).json({ error: 'Informe a senha atual e a nova senha.' });
+    }
+    if (nova_senha.length < 6) {
+      return res.status(400).json({ error: 'A nova senha deve ter no mínimo 6 caracteres.' });
+    }
+    const conn = await getUsersConnection();
+    const [rows] = await conn.execute('SELECT password_hash FROM usuarios_cobrancas WHERE username = ?', [req.session.cobrancasUser]);
+    if (rows.length === 0) {
+      await conn.end();
+      return res.status(404).json({ error: 'Usuário não encontrado.' });
+    }
+    const valid = await bcrypt.compare(senha_atual, rows[0].password_hash);
+    if (!valid) {
+      await conn.end();
+      return res.status(401).json({ error: 'Senha atual incorreta.' });
+    }
+    const hash = await bcrypt.hash(nova_senha, 12);
+    await conn.execute('UPDATE usuarios_cobrancas SET password_hash = ? WHERE username = ?', [hash, req.session.cobrancasUser]);
+    await conn.end();
+    res.json({ message: 'Senha alterada com sucesso.' });
+  } catch (error) {
+    console.error('Erro ao alterar senha cobranças:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+router.put('/alterar-email', requireCobrancasSession, async (req, res) => {
+  try {
+    const { email, senha_atual } = req.body;
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      return res.status(400).json({ error: 'Informe um e-mail válido.' });
+    }
+    if (!senha_atual) {
+      return res.status(400).json({ error: 'Informe a senha atual para confirmar.' });
+    }
+    const conn = await getUsersConnection();
+    await ensureEmailColumnUsuariosCobrancas(conn);
+    const [rows] = await conn.execute('SELECT password_hash FROM usuarios_cobrancas WHERE username = ?', [req.session.cobrancasUser]);
+    if (rows.length === 0) {
+      await conn.end();
+      return res.status(404).json({ error: 'Usuário não encontrado.' });
+    }
+    const valid = await bcrypt.compare(senha_atual, rows[0].password_hash);
+    if (!valid) {
+      await conn.end();
+      return res.status(401).json({ error: 'Senha atual incorreta.' });
+    }
+    const [existing] = await conn.execute('SELECT id FROM usuarios_cobrancas WHERE email = ? AND username != ?', [email.trim(), req.session.cobrancasUser]);
+    if (existing.length > 0) {
+      await conn.end();
+      return res.status(400).json({ error: 'Este e-mail já está em uso por outro usuário.' });
+    }
+    await conn.execute('UPDATE usuarios_cobrancas SET email = ? WHERE username = ?', [email.trim(), req.session.cobrancasUser]);
+    await conn.end();
+    res.json({ message: 'E-mail alterado com sucesso.' });
+  } catch (error) {
+    console.error('Erro ao alterar e-mail cobranças:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 router.get('/configuracoes', ensureDatabase, async (req, res) => {
   try {
     const username = req.session.cobrancasUser;
