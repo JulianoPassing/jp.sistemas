@@ -268,6 +268,30 @@
           </div>
         </div>
       </div>
+      <div class="config-area" style="max-width: 500px; margin: 0 auto 25px auto;">
+        <h3>Dados da conta</h3>
+        <p style="margin-bottom: 15px; color: var(--text-secondary);">Altere seu e-mail e senha de acesso.</p>
+        <p style="margin-bottom: 15px;"><strong>Usuário:</strong> <span id="perfil-username"></span></p>
+        <p style="margin-bottom: 20px;"><strong>E-mail atual:</strong> <span id="perfil-email"></span></p>
+        <form id="form-alterar-email" style="margin-bottom: 25px;">
+          <label for="novo-email">Novo e-mail</label>
+          <input type="email" id="novo-email" name="novo_email" required placeholder="seu@email.com" />
+          <label for="senha-atual-email">Senha atual (para confirmar)</label>
+          <input type="password" id="senha-atual-email" name="senha_atual" required placeholder="Digite sua senha" />
+          <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Alterar e-mail</button>
+          <span id="msg-email" style="display:block; margin-top: 8px; font-size: 14px;"></span>
+        </form>
+        <form id="form-alterar-senha">
+          <label for="senha-atual">Senha atual</label>
+          <input type="password" id="senha-atual" name="senha_atual" required placeholder="Digite sua senha atual" />
+          <label for="nova-senha">Nova senha</label>
+          <input type="password" id="nova-senha" name="nova_senha" required minlength="6" placeholder="Mínimo 6 caracteres" />
+          <label for="confirmar-senha">Confirmar nova senha</label>
+          <input type="password" id="confirmar-senha" name="confirmar_senha" required placeholder="Repita a nova senha" />
+          <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Alterar senha</button>
+          <span id="msg-senha" style="display:block; margin-top: 8px; font-size: 14px;"></span>
+        </form>
+      </div>
       <div class="config-area" id="empresa-config-area">
         <form id="empresaForm" style="max-width: 500px; margin: 0 auto;">
           <h3>Informações da Empresa</h3>
@@ -308,6 +332,91 @@
       // Exibir nome do usuário
       const username = sessionStorage.getItem('username') || 'Usuário';
       document.getElementById('userDisplay').textContent = username;
+      carregarPerfil();
+    });
+
+    async function carregarPerfil() {
+      try {
+        const res = await fetch('/api/auth/perfil', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        document.getElementById('perfil-username').textContent = data.username || '';
+        document.getElementById('perfil-email').textContent = data.email || '(não informado)';
+      } catch (e) {
+        console.error('Erro ao carregar perfil:', e);
+      }
+    }
+
+    document.getElementById('form-alterar-email').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const msg = document.getElementById('msg-email');
+      msg.textContent = '';
+      msg.style.color = '';
+      const email = document.getElementById('novo-email').value.trim();
+      const senha = document.getElementById('senha-atual-email').value;
+      try {
+        const res = await fetch('/api/auth/alterar-email', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, senha_atual: senha })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          msg.textContent = data.message || 'E-mail alterado com sucesso!';
+          msg.style.color = 'green';
+          document.getElementById('novo-email').value = '';
+          document.getElementById('senha-atual-email').value = '';
+          carregarPerfil();
+        } else {
+          msg.textContent = data.error || 'Erro ao alterar e-mail.';
+          msg.style.color = 'red';
+        }
+      } catch (err) {
+        msg.textContent = 'Erro ao alterar e-mail.';
+        msg.style.color = 'red';
+      }
+    });
+
+    document.getElementById('form-alterar-senha').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const msg = document.getElementById('msg-senha');
+      msg.textContent = '';
+      msg.style.color = '';
+      const nova = document.getElementById('nova-senha').value;
+      const conf = document.getElementById('confirmar-senha').value;
+      if (nova !== conf) {
+        msg.textContent = 'A nova senha e a confirmação não coincidem.';
+        msg.style.color = 'red';
+        return;
+      }
+      if (nova.length < 6) {
+        msg.textContent = 'A nova senha deve ter no mínimo 6 caracteres.';
+        msg.style.color = 'red';
+        return;
+      }
+      try {
+        const res = await fetch('/api/auth/alterar-senha', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ senha_atual: document.getElementById('senha-atual').value, nova_senha: nova })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          msg.textContent = data.message || 'Senha alterada com sucesso!';
+          msg.style.color = 'green';
+          document.getElementById('senha-atual').value = '';
+          document.getElementById('nova-senha').value = '';
+          document.getElementById('confirmar-senha').value = '';
+        } else {
+          msg.textContent = data.error || 'Erro ao alterar senha.';
+          msg.style.color = 'red';
+        }
+      } catch (err) {
+        msg.textContent = 'Erro ao alterar senha.';
+        msg.style.color = 'red';
+      }
     });
 
     async function logout() {
