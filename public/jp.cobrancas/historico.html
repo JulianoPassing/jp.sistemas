@@ -295,9 +295,15 @@
           throw new Error('Erro ao carregar empréstimos');
         }
 
-        todosEmprestimos = await response.json();
+        const rawList = await response.json();
+        // Mesma lista que Empréstimos e Dashboard: deduplicar por id (uma entrada por empréstimo)
+        const byId = new Map();
+        (Array.isArray(rawList) ? rawList : []).forEach(function(e) {
+          if (e && e.id != null && !byId.has(e.id)) byId.set(e.id, e);
+        });
+        todosEmprestimos = Array.from(byId.values());
         emprestimosFiltrados = [...todosEmprestimos];
-        
+
         // Buscar parcelas para cada empréstimo
         await Promise.all(todosEmprestimos.map(async (emprestimo) => {
           try {
@@ -541,8 +547,8 @@
               ${emprestimo.telefone ? `<div style="font-size: 0.8rem; color: #6b7280;">${emprestimo.telefone}</div>` : ''}
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.8rem; color: #4b5563; margin-bottom: 0.5rem;">
-              <span><strong>Inicial:</strong> R$ ${formatarMoeda(emprestimo.valor || 0)}</span>
-              <span><strong>Final:</strong> R$ ${formatarMoeda(emprestimo.valor_final || emprestimo.valor || 0)}</span>
+              <span><strong>Inicial:</strong> R$ ${formatarMoeda(emprestimo.valor_inicial ?? emprestimo.valor ?? 0)}</span>
+              <span><strong>Final:</strong> R$ ${formatarMoeda(emprestimo.valor_final ?? emprestimo.valor ?? 0)}</span>
               <span><strong>Empréstimo:</strong> ${formatarData(emprestimo.data_emprestimo)}</span>
               <span><strong>Venc:</strong> ${formatarData(vencimentoExibir)}</span>
             </div>
@@ -579,8 +585,8 @@
             <div class="font-semibold">${emprestimo.cliente_nome || 'N/A'}</div>
             <div class="text-sm text-gray-500">${emprestimo.telefone || ''}</div>
           </td>
-          <td class="font-semibold text-green-600">R$ ${formatarMoeda(emprestimo.valor || 0)}</td>
-          <td class="font-semibold text-terciary">R$ ${formatarMoeda(emprestimo.valor_final || emprestimo.valor || 0)}</td>
+          <td class="font-semibold text-green-600">R$ ${formatarMoeda(emprestimo.valor_inicial ?? emprestimo.valor ?? 0)}</td>
+          <td class="font-semibold text-terciary">R$ ${formatarMoeda(emprestimo.valor_final ?? emprestimo.valor ?? 0)}</td>
           <td>${formatarData(emprestimo.data_emprestimo)}</td>
           <td>${formatarData(vencimentoExibir)}</td>
           <td><span class="badge ${statusClass}">${status}</span></td>
@@ -670,9 +676,12 @@
 
       emprestimosFiltrados = todosEmprestimos.filter(emprestimo => {
         // Filtro por termo de busca
+        const valorInicial = (emprestimo.valor_inicial ?? emprestimo.valor ?? 0).toString();
+        const valorFinal = (emprestimo.valor_final ?? emprestimo.valor ?? 0).toString();
         const matchSearch = !searchTerm || 
           (emprestimo.cliente_nome && emprestimo.cliente_nome.toLowerCase().includes(searchTerm)) ||
-          (emprestimo.valor && emprestimo.valor.toString().includes(searchTerm)) ||
+          (valorInicial && valorInicial.includes(searchTerm)) ||
+          (valorFinal && valorFinal.includes(searchTerm)) ||
           (emprestimo.observacoes && emprestimo.observacoes.toLowerCase().includes(searchTerm));
 
         // Filtro por status
@@ -730,8 +739,8 @@
       // Preencher informações gerais
       document.getElementById('modal-cliente').textContent = emprestimo.cliente_nome || 'N/A';
       document.getElementById('modal-telefone').textContent = emprestimo.telefone || 'N/A';
-      document.getElementById('modal-valor-inicial').textContent = 'R$ ' + formatarMoeda(emprestimo.valor || 0);
-      document.getElementById('modal-valor-final').textContent = 'R$ ' + formatarMoeda(emprestimo.valor_final || emprestimo.valor || 0);
+      document.getElementById('modal-valor-inicial').textContent = 'R$ ' + formatarMoeda(emprestimo.valor_inicial ?? emprestimo.valor ?? 0);
+      document.getElementById('modal-valor-final').textContent = 'R$ ' + formatarMoeda(emprestimo.valor_final ?? emprestimo.valor ?? 0);
       document.getElementById('modal-data-emprestimo').textContent = formatarData(emprestimo.data_emprestimo);
       document.getElementById('modal-vencimento').textContent = formatarData(emprestimo.data_vencimento);
       document.getElementById('modal-juros').textContent = (emprestimo.juros_mensal || 0) + '%';
