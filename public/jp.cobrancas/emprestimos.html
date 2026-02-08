@@ -422,6 +422,14 @@
     }
     
     document.addEventListener('DOMContentLoaded', function() {
+      const menuBtn = document.getElementById('mobile-menu-toggle');
+      const navWrapper = document.querySelector('.nav-wrapper');
+      if (menuBtn && navWrapper) {
+        menuBtn.addEventListener('click', function() {
+          navWrapper.classList.toggle('open');
+        });
+      }
+
       const searchInput = document.getElementById('search-emprestimos');
       const tbody = document.getElementById('historico-emprestimos');
       let allEmprestimos = [];
