@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body class="app-layout">
@@ -57,6 +58,13 @@
             <label for="telefone" class="form-label">Telefone *</label>
             <input type="tel" id="telefone" name="telefone" class="form-input" required>
           </div>
+          <div class="form-group md:col-span-2" style="grid-column: 1 / -1;">
+            <hr style="border: none; border-top: 1px solid var(--gray-200); margin: 1rem 0 1.5rem;" />
+            <label class="form-label">Documentos (opcional)</label>
+            <p style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 0.75rem;">PDF e imagens (JPEG, PNG, GIF, WebP). Máx. 15 MB por arquivo. Você pode selecionar vários de uma vez.</p>
+            <input type="file" id="documentos-cliente" name="documentos" accept=".pdf,image/jpeg,image/jpg,image/png,image/gif,image/webp" multiple style="margin-bottom: 0.5rem; display: block; width: 100%; padding: 8px; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 0.875rem;">
+            <ul id="lista-arquivos-selecionados" style="list-style: none; padding: 0; margin: 0 0 1rem 0; font-size: 0.875rem; color: var(--gray-600);"></ul>
+          </div>
           <div class="form-group md:col-span-2">
             <button type="submit" class="btn btn-primary">Cadastrar Cliente</button>
             <a href="clientes.html" class="btn btn-secondary ml-2">Cancelar</a>
@@ -79,54 +87,85 @@
         });
       }
 
+      // Mostrar nomes dos arquivos selecionados
+      const inputDocs = document.getElementById('documentos-cliente');
+      const listaArquivos = document.getElementById('lista-arquivos-selecionados');
+      if (inputDocs && listaArquivos) {
+        inputDocs.addEventListener('change', function() {
+          listaArquivos.innerHTML = '';
+          if (this.files && this.files.length > 0) {
+            for (let i = 0; i < this.files.length; i++) {
+              const li = document.createElement('li');
+              li.style.marginBottom = '4px';
+              li.innerHTML = '<i class="fas fa-file-alt" style="margin-right:6px;color:#0d9488;"></i>' + (this.files[i].name || 'Arquivo ' + (i + 1));
+              listaArquivos.appendChild(li);
+            }
+          }
+        });
+      }
+
       // Adicionar listener para o formulário de cadastro
       const form = document.getElementById('form-adicionar-cliente');
       if (form) {
         form.addEventListener('submit', async function(e) {
           e.preventDefault();
           
-          const formData = new FormData(form);
-          const clienteData = {
-            nome: formData.get('nome'),
-            cpf_cnpj: formData.get('cpf'),
-            telefone: formData.get('telefone')
-          };
+          const submitBtn = form.querySelector('button[type="submit"]');
+          const originalText = submitBtn.textContent;
+          submitBtn.textContent = 'Cadastrando...';
+          submitBtn.disabled = true;
 
           try {
-            // Mostrar loading
-            const submitBtn = form.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = 'Cadastrando...';
-            submitBtn.disabled = true;
+            const clienteData = {
+              nome: form.querySelector('#nome').value,
+              cpf_cnpj: form.querySelector('#cpf').value,
+              telefone: form.querySelector('#telefone').value
+            };
 
-            // Fazer a requisição para a API
             const response = await fetch('/api/cobrancas/clientes', {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
+              headers: { 'Content-Type': 'application/json' },
               credentials: 'include',
               body: JSON.stringify(clienteData)
             });
 
             if (!response.ok) {
-              throw new Error(`Erro ${response.status}: ${response.statusText}`);
+              const errData = await response.json().catch(() => ({}));
+              throw new Error(errData.error || errData.message || `Erro ${response.status}`);
             }
 
             const result = await response.json();
-            
-            // Mostrar sucesso
+            const novoClienteId = result.id || (result.cliente && result.cliente.id);
+            if (!novoClienteId) {
+              alert('Cliente cadastrado, mas não foi possível obter o ID para anexar documentos.');
+              window.location.href = 'clientes.html';
+              return;
+            }
+
+            const inputDocumentos = document.getElementById('documentos-cliente');
+            if (inputDocumentos && inputDocumentos.files && inputDocumentos.files.length > 0) {
+              submitBtn.textContent = 'Anexando documentos...';
+              for (let i = 0; i < inputDocumentos.files.length; i++) {
+                const formDataDoc = new FormData();
+                formDataDoc.append('arquivo', inputDocumentos.files[i]);
+                const respDoc = await fetch(`/api/cobrancas/clientes/${novoClienteId}/documentos`, {
+                  method: 'POST',
+                  credentials: 'include',
+                  body: formDataDoc
+                });
+                if (!respDoc.ok) {
+                  const dataErr = await respDoc.json().catch(() => ({}));
+                  console.warn('Erro ao anexar arquivo:', inputDocumentos.files[i].name, dataErr.error || respDoc.statusText);
+                }
+              }
+            }
+
             alert('Cliente cadastrado com sucesso!');
-            
-            // Redirecionar para a lista de clientes
             window.location.href = 'clientes.html';
-            
           } catch (error) {
             console.error('Erro ao cadastrar cliente:', error);
-            alert('Erro ao cadastrar cliente: ' + error.message);
+            alert('Erro ao cadastrar cliente: ' + (error.message || error));
           } finally {
-            // Restaurar botão
-            const submitBtn = form.querySelector('button[type="submit"]');
             submitBtn.textContent = originalText;
             submitBtn.disabled = false;
           }
