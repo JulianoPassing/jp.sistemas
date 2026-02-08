@@ -255,8 +255,13 @@
       
       // Event listener para novo empréstimo
       document.getElementById('btn-novo-emprestimo').addEventListener('click', novoEmprestimo);
-      
 
+      // Atualizar layout (tabela vs cards) ao redimensionar a tela
+      window.addEventListener('resize', function() {
+        if (emprestimosFiltrados.length > 0) {
+          renderizarEmprestimos();
+        }
+      });
     });
 
 
@@ -469,9 +474,13 @@
     // Função para renderizar empréstimos
     function renderizarEmprestimos() {
       const tbody = document.getElementById('emprestimos-tbody');
-      
+      const container = tbody.parentElement.parentElement;
+
       if (emprestimosFiltrados.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+        const oldCards = container.querySelector('.mobile-historico-cards');
+        if (oldCards) oldCards.remove();
+        tbody.parentElement.style.display = '';
         return;
       }
 
@@ -493,15 +502,79 @@
         return dataA - dataB;
       });
 
-      tbody.innerHTML = '';
-      emprestimosOrdenados.forEach(emprestimo => {
-        const status = determinarStatus(emprestimo);
-        const statusClass = getStatusClass(status);
-        const resumoParcelas = calcularResumoParcelas(emprestimo.parcelas || []);
-        const vencimentoExibir = obterDataVencimentoExibir(emprestimo);
+      const isMobile = window.innerWidth <= 768;
 
-        const row = document.createElement('tr');
-        row.innerHTML = `
+      if (isMobile) {
+        // Layout de cards para mobile
+        tbody.parentElement.style.display = 'none';
+
+        const oldCards = container.querySelector('.mobile-historico-cards');
+        if (oldCards) oldCards.remove();
+
+        const cardsContainer = document.createElement('div');
+        cardsContainer.className = 'mobile-historico-cards';
+        cardsContainer.style.cssText = 'display: flex; flex-direction: column; gap: 0.75rem; padding: 0.5rem;';
+
+        emprestimosOrdenados.forEach(emprestimo => {
+          const status = determinarStatus(emprestimo);
+          const statusClass = getStatusClass(status);
+          const resumoParcelas = calcularResumoParcelas(emprestimo.parcelas || []);
+          const vencimentoExibir = obterDataVencimentoExibir(emprestimo);
+
+          let statusColor = '#6b7280';
+          if (status === 'Em Atraso') statusColor = '#ef4444';
+          else if (status === 'Ativo') statusColor = '#10b981';
+          else if (status === 'Quitado') statusColor = '#3b82f6';
+          else if (status === 'Cancelado') statusColor = '#6b7280';
+
+          const card = document.createElement('div');
+          card.style.cssText = `
+            padding: 1rem;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid ${statusColor};
+          `;
+          card.innerHTML = `
+            <div style="margin-bottom: 0.5rem;">
+              <div style="font-weight: 600; color: #1f2937; font-size: 0.95rem;">${emprestimo.cliente_nome || 'N/A'}</div>
+              ${emprestimo.telefone ? `<div style="font-size: 0.8rem; color: #6b7280;">${emprestimo.telefone}</div>` : ''}
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.8rem; color: #4b5563; margin-bottom: 0.5rem;">
+              <span><strong>Inicial:</strong> R$ ${formatarMoeda(emprestimo.valor || 0)}</span>
+              <span><strong>Final:</strong> R$ ${formatarMoeda(emprestimo.valor_final || emprestimo.valor || 0)}</span>
+              <span><strong>Empréstimo:</strong> ${formatarData(emprestimo.data_emprestimo)}</span>
+              <span><strong>Venc:</strong> ${formatarData(vencimentoExibir)}</span>
+            </div>
+            <div style="font-size: 0.8rem; margin-bottom: 0.5rem;">
+              <span class="badge ${statusClass}">${status}</span>
+              <span style="color: #6b7280; margin-left: 0.5rem;">
+                ${resumoParcelas.pagas} pagas · ${resumoParcelas.pendentes} pend. · ${resumoParcelas.atrasadas} atrasadas
+              </span>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="abrirDetalhes(${emprestimo.id})" style="width: 100%; margin-top: 0.25rem;">
+              Ver Detalhes
+            </button>
+          `;
+          cardsContainer.appendChild(card);
+        });
+
+        container.appendChild(cardsContainer);
+      } else {
+        // Layout de tabela para desktop
+        tbody.parentElement.style.display = '';
+        const oldCards = container.querySelector('.mobile-historico-cards');
+        if (oldCards) oldCards.remove();
+
+        tbody.innerHTML = '';
+        emprestimosOrdenados.forEach(emprestimo => {
+          const status = determinarStatus(emprestimo);
+          const statusClass = getStatusClass(status);
+          const resumoParcelas = calcularResumoParcelas(emprestimo.parcelas || []);
+          const vencimentoExibir = obterDataVencimentoExibir(emprestimo);
+
+          const row = document.createElement('tr');
+          row.innerHTML = `
           <td>
             <div class="font-semibold">${emprestimo.cliente_nome || 'N/A'}</div>
             <div class="text-sm text-gray-500">${emprestimo.telefone || ''}</div>
@@ -524,8 +597,9 @@
             </button>
           </td>
         `;
-        tbody.appendChild(row);
-      });
+          tbody.appendChild(row);
+        });
+      }
     }
 
     // Função para determinar status do empréstimo
