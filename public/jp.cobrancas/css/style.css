@@ -765,6 +765,89 @@ footer {
     content: none;
   }
   
+  /* Lista negra em cards no mobile */
+  .table-container.table-lista-negra {
+    overflow-x: visible;
+  }
+  .table-container.table-lista-negra .table {
+    display: block;
+  }
+  .table-container.table-lista-negra thead {
+    display: none;
+  }
+  .table-container.table-lista-negra tbody {
+    display: block;
+  }
+  .table-container.table-lista-negra tbody tr {
+    display: block;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius-lg);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s ease;
+  }
+  .table-container.table-lista-negra tbody tr:hover {
+    box-shadow: var(--shadow-md);
+  }
+  .table-container.table-lista-negra tbody tr:nth-child(even) {
+    background: var(--white);
+  }
+  .table-container.table-lista-negra tbody td {
+    display: block;
+    padding: 0.5rem 0;
+    border: none;
+    white-space: normal;
+    font-size: 0.875rem;
+  }
+  .table-container.table-lista-negra tbody td:not([colspan])::before {
+    font-weight: 600;
+    color: var(--gray-600);
+    margin-right: 0.5rem;
+  }
+  .table-container.table-lista-negra tbody td:nth-child(1)::before {
+    content: "Cliente: ";
+  }
+  .table-container.table-lista-negra tbody td:nth-child(2)::before {
+    content: "CPF: ";
+  }
+  .table-container.table-lista-negra tbody td:nth-child(3)::before {
+    content: "Motivo: ";
+  }
+  .table-container.table-lista-negra tbody td:nth-child(4)::before {
+    content: "Data Inclusão: ";
+  }
+  .table-container.table-lista-negra tbody td:nth-child(5)::before {
+    content: "Status: ";
+  }
+  .table-container.table-lista-negra tbody td:nth-child(6)::before {
+    content: "Ações";
+    display: block;
+    margin-bottom: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--gray-200);
+  }
+  .table-container.table-lista-negra tbody td:nth-child(6) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .table-container.table-lista-negra tbody td:nth-child(6) .btn {
+    flex: 1 1 auto;
+    min-width: fit-content;
+    white-space: nowrap;
+    width: auto;
+  }
+  .table-container.table-lista-negra tbody tr td[colspan] {
+    text-align: center;
+    padding: 1.5rem;
+  }
+  .table-container.table-lista-negra tbody tr td[colspan]::before {
+    content: none;
+  }
+  
   .nav-wrapper nav {
     display: none;
     flex-direction: column;
@@ -864,10 +947,12 @@ footer {
     white-space: nowrap;
     font-size: 0.85rem;
   }
-  .table-container.table-clientes tbody td {
+  .table-container.table-clientes tbody td,
+  .table-container.table-lista-negra tbody td {
     white-space: normal;
   }
-  .table-container.table-clientes .btn {
+  .table-container.table-clientes .btn,
+  .table-container.table-lista-negra .btn {
     width: auto;
   }
 }
