@@ -475,20 +475,33 @@
         hoje.setHours(0, 0, 0, 0);
         let totalEmprestado = 0, totalAReceber = 0, totalRecebido = 0, totalEmAtraso = 0;
         let emprestimosAtivos = 0, emprestimosQuitados = 0, emprestimosEmAtraso = 0;
-        const linhasTabela = [];
+        let qtdFixo = 0, qtdParcelado = 0;
+        let totalParcelasPagas = 0, valorParcelasPagas = 0;
+        let totalParcelasEmAberto = 0, valorParcelasEmAberto = 0;
+        let totalParcelasAtrasadas = 0, valorParcelasAtrasadas = 0;
+
+        const emprestimosFixo = [];
+        const emprestimosParcelados = [];
+        const parcelasPagas = [];
+        const parcelasEmAberto = [];
+        const parcelasAtrasadas = [];
 
         for (const emp of (emprestimos || [])) {
           const cliente = clientesMap[emp.cliente_id] || {};
+          const nomeCliente = (cliente.nome || 'N/A').substring(0, 22);
           const valorInicial = Number(emp.valor || 0);
           const valorFinal = Number(emp.valor_final || emp.valor || 0);
+          const jurosPct = Number(emp.juros_mensal || 0);
           const dataEmprestimo = emp.data_emprestimo || '';
           const dataVencimento = emp.data_vencimento || '';
           let statusFinal = (emp.status || 'Ativo').toUpperCase();
           let valorPago = 0, valorEmAberto = 0, valorAtrasado = 0;
+          let parcelasPagasCount = 0, parcelasEmAbertoCount = 0, parcelasAtrasadasCount = 0;
           let estaEmAtraso = false, estaEmDia = false;
+          const ehParcelado = emp.tipo_emprestimo === 'in_installments' && (emp.numero_parcelas || 0) > 1;
 
           let parcelas = [];
-          if (emp.tipo_emprestimo === 'in_installments' && emp.numero_parcelas > 1) {
+          if (ehParcelado) {
             try {
               parcelas = await apiService.getParcelasEmprestimo(emp.id) || [];
             } catch (_) {}
@@ -522,6 +535,37 @@
                 else valorEmAberto += v;
               });
             }
+
+            parcelas.forEach(p => {
+              const valorParcela = Number(p.valor_parcela || 0);
+              const dataVenc = utils.createValidDate(p.data_vencimento);
+              const atrasada = dataVenc && dataVenc < hoje && p.status !== 'Paga';
+              const statusParcela = p.status === 'Paga' ? 'PAGA' : (atrasada ? 'ATRASADA' : 'EM ABERTO');
+              const row = [nomeCliente, String(emp.id), String(p.numero_parcela || '-'), formatarMoeda(valorParcela), utils.formatDate(p.data_vencimento) || '-', statusParcela, p.data_pagamento ? utils.formatDate(p.data_pagamento) : '-', formatarMoeda(Number(p.valor_pago || 0))];
+              if (p.status === 'Paga') {
+                parcelasPagas.push(row);
+                totalParcelasPagas++;
+                valorParcelasPagas += valorParcela;
+              } else if (atrasada) {
+                parcelasAtrasadas.push(row);
+                totalParcelasAtrasadas++;
+                valorParcelasAtrasadas += valorParcela;
+              } else {
+                parcelasEmAberto.push(row);
+                totalParcelasEmAberto++;
+                valorParcelasEmAberto += valorParcela;
+              }
+              if (p.status === 'Paga') parcelasPagasCount++;
+              else if (atrasada) parcelasAtrasadasCount++;
+              else parcelasEmAbertoCount++;
+            });
+            qtdParcelado++;
+            emprestimosParcelados.push([
+              String(emp.id), nomeCliente, formatarMoeda(valorInicial), jurosPct + '%', formatarMoeda(valorFinal),
+              String(emp.numero_parcelas || 1), utils.formatDate(dataEmprestimo) || '-', utils.formatDate(dataVencimento) || '-',
+              statusFinal, String(parcelasPagasCount), String(parcelasEmAbertoCount), String(parcelasAtrasadasCount),
+              formatarMoeda(valorPago), formatarMoeda(valorEmAberto), formatarMoeda(valorAtrasado), (emp.observacoes || '-').substring(0, 18)
+            ]);
           } else {
             const dataVenc = utils.createValidDate(dataVencimento);
             if (statusFinal === 'QUITADO') {
@@ -531,11 +575,28 @@
               statusFinal = 'ATRASADO';
               estaEmAtraso = true;
               valorAtrasado = valorFinal;
+              parcelasAtrasadas.push([nomeCliente, String(emp.id), '1', formatarMoeda(valorFinal), utils.formatDate(dataVencimento) || '-', 'ATRASADA', '-', '-']);
+              totalParcelasAtrasadas++;
+              valorParcelasAtrasadas += valorFinal;
             } else {
               statusFinal = 'ATIVO';
               estaEmDia = true;
               valorEmAberto = valorFinal;
+              parcelasEmAberto.push([nomeCliente, String(emp.id), '1', formatarMoeda(valorFinal), utils.formatDate(dataVencimento) || '-', 'EM ABERTO', '-', '-']);
+              totalParcelasEmAberto++;
+              valorParcelasEmAberto += valorFinal;
             }
+            if (statusFinal === 'QUITADO') {
+              parcelasPagas.push([nomeCliente, String(emp.id), '1', formatarMoeda(valorFinal), utils.formatDate(dataVencimento) || '-', 'PAGA', '-', formatarMoeda(valorFinal)]);
+              totalParcelasPagas++;
+              valorParcelasPagas += valorFinal;
+            }
+            qtdFixo++;
+            emprestimosFixo.push([
+              String(emp.id), nomeCliente, formatarMoeda(valorInicial), jurosPct + '%', formatarMoeda(valorFinal),
+              utils.formatDate(dataEmprestimo) || '-', utils.formatDate(dataVencimento) || '-', statusFinal,
+              formatarMoeda(valorPago), formatarMoeda(valorEmAberto), formatarMoeda(valorAtrasado), (emp.observacoes || '-').substring(0, 22)
+            ]);
           }
 
           totalEmprestado += valorInicial;
@@ -550,15 +611,6 @@
             }
             emprestimosAtivos++;
           }
-
-          linhasTabela.push([
-            (cliente.nome || 'N/A').substring(0, 28),
-            formatarMoeda(valorInicial),
-            formatarMoeda(valorFinal),
-            utils.formatDate(dataEmprestimo) || '-',
-            utils.formatDate(dataVencimento) || '-',
-            statusFinal
-          ]);
         }
 
         const dataHoraEmissao = new Date().toLocaleString('pt-BR', {
@@ -569,101 +621,220 @@
         carregarImagemBase64Emprestimos(LOGO_JP_COBRANCAS, function(logoBase64) {
           const { jsPDF } = window.jspdf;
           const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-          const primaryColor = [0, 47, 75];   // #002f4b
-          const secondaryColor = [67, 160, 71]; // verde
+          const primaryColor = [0, 47, 75];
+          const pageW = 210;
+          const margin = 14;
+          const maxY = 270;
+
+          function footer() {
+            const pageHeight = doc.internal.pageSize.height;
+            doc.setFontSize(7);
+            doc.setTextColor(120, 120, 120);
+            doc.text('J.P Cobranças — Backup de Empréstimos — ' + dataHoraEmissao, pageW / 2, pageHeight - 8, { align: 'center' });
+          }
+
+          function novaPaginaSePreciso(startY) {
+            if (startY > maxY) {
+              doc.addPage();
+              footer();
+              return 20;
+            }
+            return startY;
+          }
 
           let startY = 18;
-
           if (logoBase64) {
             doc.addImage(logoBase64, 'PNG', 85, 8, 40, 18);
             startY = 32;
           }
-
           doc.setFontSize(10);
           doc.setTextColor(80, 80, 80);
-          doc.setFont('helvetica', 'normal');
-          doc.text('Backup de Empréstimos — J.P Cobranças', 105, startY, { align: 'center' });
+          doc.text('Backup de Empréstimos — J.P Cobranças', pageW / 2, startY, { align: 'center' });
           startY += 6;
           doc.setFontSize(9);
-          doc.text('Emitido em: ' + dataHoraEmissao, 105, startY, { align: 'center' });
-          startY += 12;
-
+          doc.text('Emitido em: ' + dataHoraEmissao, pageW / 2, startY, { align: 'center' });
+          startY += 14;
           doc.setDrawColor(200, 200, 200);
-          doc.setLineWidth(0.3);
-          doc.line(14, startY - 2, 196, startY - 2);
-          startY += 2;
+          doc.line(margin, startY - 2, pageW - margin, startY - 2);
+          startY += 4;
 
           doc.setFontSize(11);
           doc.setTextColor(0, 47, 75);
           doc.setFont('helvetica', 'bold');
-          doc.text('Resumo', 14, startY);
+          doc.text('Resumo geral', margin, startY);
           startY += 8;
 
           doc.autoTable({
             startY: startY,
             head: [['Descrição', 'Valor / Quantidade']],
             body: [
+              ['Data do backup', dataHoraEmissao],
+              ['', ''],
               ['Total de empréstimos', String((emprestimos || []).length)],
+              ['Empréstimos à vista / Com juros', String(qtdFixo)],
+              ['Empréstimos parcelados', String(qtdParcelado)],
               ['Empréstimos ativos', String(emprestimosAtivos)],
               ['Empréstimos quitados', String(emprestimosQuitados)],
               ['Empréstimos em atraso', String(emprestimosEmAtraso)],
+              ['', ''],
               ['Valor total emprestado', formatarMoeda(totalEmprestado)],
               ['Valor total a receber', formatarMoeda(totalAReceber)],
               ['Valor total recebido', formatarMoeda(totalRecebido)],
-              ['Valor total em atraso', formatarMoeda(totalEmAtraso)]
+              ['Valor total em atraso', formatarMoeda(totalEmAtraso)],
+              ['', ''],
+              ['Parcelas pagas (qtd / valor)', totalParcelasPagas + ' / ' + formatarMoeda(valorParcelasPagas)],
+              ['Parcelas em aberto (qtd / valor)', totalParcelasEmAberto + ' / ' + formatarMoeda(valorParcelasEmAberto)],
+              ['Parcelas atrasadas (qtd / valor)', totalParcelasAtrasadas + ' / ' + formatarMoeda(valorParcelasAtrasadas)]
             ],
             theme: 'grid',
-            headStyles: {
-              fillColor: primaryColor,
-              textColor: [255, 255, 255],
-              fontStyle: 'bold',
-              fontSize: 10
-            },
-            styles: { fontSize: 9, cellPadding: 4 },
-            columnStyles: {
-              0: { cellWidth: 110, halign: 'left' },
-              1: { cellWidth: 72, halign: 'right' }
-            },
-            margin: { left: 14, right: 14 }
+            headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 10 },
+            styles: { fontSize: 9, cellPadding: 3 },
+            columnStyles: { 0: { cellWidth: 95, halign: 'left' }, 1: { cellWidth: 87, halign: 'right' } },
+            margin: { left: margin, right: margin }
           });
-          startY = doc.lastAutoTable.finalY + 12;
+          startY = doc.lastAutoTable.finalY + 14;
 
+          const tabelaPadrao = {
+            theme: 'grid',
+            headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+            styles: { fontSize: 7, cellPadding: 2 },
+            alternateRowStyles: { fillColor: [248, 249, 250] },
+            margin: { left: margin, right: margin },
+            didDrawPage: footer
+          };
+
+          startY = novaPaginaSePreciso(startY);
           doc.setFontSize(11);
           doc.setTextColor(0, 47, 75);
           doc.setFont('helvetica', 'bold');
-          doc.text('Lista de Empréstimos', 14, startY);
-          startY += 8;
+          doc.text('1. Empréstimos à vista / Com juros', margin, startY);
+          startY += 6;
+          if (emprestimosFixo.length > 0) {
+            doc.autoTable({
+              startY: startY,
+              head: [['ID', 'Cliente', 'Valor Inicial', 'Juros', 'Valor Final', 'Data Emp.', 'Venc.', 'Status', 'Pago', 'Aberto', 'Atrasado', 'Obs.']],
+              body: emprestimosFixo,
+              columnStyles: {
+                0: { cellWidth: 10, halign: 'center' }, 1: { cellWidth: 28, halign: 'left' }, 2: { cellWidth: 22, halign: 'right' },
+                3: { cellWidth: 12, halign: 'center' }, 4: { cellWidth: 22, halign: 'right' }, 5: { cellWidth: 20, halign: 'center' },
+                6: { cellWidth: 20, halign: 'center' }, 7: { cellWidth: 16, halign: 'center' }, 8: { cellWidth: 18, halign: 'right' },
+                9: { cellWidth: 18, halign: 'right' }, 10: { cellWidth: 18, halign: 'right' }, 11: { cellWidth: 18, halign: 'left' }
+              },
+              ...tabelaPadrao
+            });
+            startY = doc.lastAutoTable.finalY + 12;
+          } else {
+            doc.setFontSize(9);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Nenhum empréstimo à vista cadastrado.', margin, startY + 4);
+            startY += 14;
+          }
 
-          doc.autoTable({
-            startY: startY,
-            head: [['Cliente', 'Valor Inicial', 'Valor Final', 'Data Empréstimo', 'Vencimento', 'Status']],
-            body: linhasTabela,
-            theme: 'grid',
-            headStyles: {
-              fillColor: primaryColor,
-              textColor: [255, 255, 255],
-              fontStyle: 'bold',
-              fontSize: 9
-            },
-            styles: { fontSize: 8, cellPadding: 3 },
-            columnStyles: {
-              0: { cellWidth: 42, halign: 'left' },
-              1: { cellWidth: 28, halign: 'right' },
-              2: { cellWidth: 28, halign: 'right' },
-              3: { cellWidth: 28, halign: 'center' },
-              4: { cellWidth: 28, halign: 'center' },
-              5: { cellWidth: 28, halign: 'center' }
-            },
-            alternateRowStyles: { fillColor: [248, 249, 250] },
-            margin: { left: 14, right: 14 },
-            didDrawPage: function() {
-              const pageHeight = doc.internal.pageSize.height;
-              doc.setFontSize(7);
-              doc.setTextColor(120, 120, 120);
-              doc.text('J.P Cobranças — Backup de Empréstimos — ' + dataHoraEmissao, 105, pageHeight - 8, { align: 'center' });
-            }
-          });
+          startY = novaPaginaSePreciso(startY);
+          doc.setFontSize(11);
+          doc.setTextColor(0, 47, 75);
+          doc.setFont('helvetica', 'bold');
+          doc.text('2. Empréstimos parcelados', margin, startY);
+          startY += 6;
+          if (emprestimosParcelados.length > 0) {
+            doc.autoTable({
+              startY: startY,
+              head: [['ID', 'Cliente', 'Val.Inic.', 'Juros', 'Val.Final', 'Nº', 'Data Emp.', 'Venc.', 'Status', 'Pág', 'Abert', 'Atr', 'Pago', 'Aberto', 'Atrasado', 'Obs']],
+              body: emprestimosParcelados,
+              columnStyles: {
+                0: { cellWidth: 8, halign: 'center' }, 1: { cellWidth: 18, halign: 'left' }, 2: { cellWidth: 14, halign: 'right' },
+                3: { cellWidth: 10, halign: 'center' }, 4: { cellWidth: 14, halign: 'right' }, 5: { cellWidth: 8, halign: 'center' },
+                6: { cellWidth: 16, halign: 'center' }, 7: { cellWidth: 16, halign: 'center' }, 8: { cellWidth: 12, halign: 'center' },
+                9: { cellWidth: 8, halign: 'center' }, 10: { cellWidth: 8, halign: 'center' }, 11: { cellWidth: 8, halign: 'center' },
+                12: { cellWidth: 12, halign: 'right' }, 13: { cellWidth: 12, halign: 'right' }, 14: { cellWidth: 12, halign: 'right' }, 15: { cellWidth: 10, halign: 'left' }
+              },
+              ...tabelaPadrao
+            });
+            startY = doc.lastAutoTable.finalY + 12;
+          } else {
+            doc.setFontSize(9);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Nenhum empréstimo parcelado cadastrado.', margin, startY + 4);
+            startY += 14;
+          }
 
+          startY = novaPaginaSePreciso(startY);
+          doc.setFontSize(11);
+          doc.setTextColor(0, 47, 75);
+          doc.setFont('helvetica', 'bold');
+          doc.text('3. Parcelas em aberto', margin, startY);
+          startY += 6;
+          if (parcelasEmAberto.length > 0) {
+            doc.autoTable({
+              startY: startY,
+              head: [['Cliente', 'ID Emp.', 'Nº', 'Valor', 'Vencimento', 'Status', 'Data Pgto', 'Valor Pago']],
+              body: parcelasEmAberto,
+              columnStyles: {
+                0: { cellWidth: 35, halign: 'left' }, 1: { cellWidth: 14, halign: 'center' }, 2: { cellWidth: 10, halign: 'center' },
+                3: { cellWidth: 25, halign: 'right' }, 4: { cellWidth: 22, halign: 'center' }, 5: { cellWidth: 22, halign: 'center' },
+                6: { cellWidth: 22, halign: 'center' }, 7: { cellWidth: 25, halign: 'right' }
+              },
+              ...tabelaPadrao
+            });
+            startY = doc.lastAutoTable.finalY + 12;
+          } else {
+            doc.setFontSize(9);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Nenhuma parcela em aberto.', margin, startY + 4);
+            startY += 14;
+          }
+
+          startY = novaPaginaSePreciso(startY);
+          doc.setFontSize(11);
+          doc.setTextColor(0, 47, 75);
+          doc.setFont('helvetica', 'bold');
+          doc.text('4. Parcelas atrasadas', margin, startY);
+          startY += 6;
+          if (parcelasAtrasadas.length > 0) {
+            doc.autoTable({
+              startY: startY,
+              head: [['Cliente', 'ID Emp.', 'Nº', 'Valor', 'Vencimento', 'Status', 'Data Pgto', 'Valor Pago']],
+              body: parcelasAtrasadas,
+              columnStyles: {
+                0: { cellWidth: 35, halign: 'left' }, 1: { cellWidth: 14, halign: 'center' }, 2: { cellWidth: 10, halign: 'center' },
+                3: { cellWidth: 25, halign: 'right' }, 4: { cellWidth: 22, halign: 'center' }, 5: { cellWidth: 22, halign: 'center' },
+                6: { cellWidth: 22, halign: 'center' }, 7: { cellWidth: 25, halign: 'right' }
+              },
+              ...tabelaPadrao
+            });
+            startY = doc.lastAutoTable.finalY + 12;
+          } else {
+            doc.setFontSize(9);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Nenhuma parcela atrasada.', margin, startY + 4);
+            startY += 14;
+          }
+
+          startY = novaPaginaSePreciso(startY);
+          doc.setFontSize(11);
+          doc.setTextColor(0, 47, 75);
+          doc.setFont('helvetica', 'bold');
+          doc.text('5. Parcelas pagas', margin, startY);
+          startY += 6;
+          if (parcelasPagas.length > 0) {
+            doc.autoTable({
+              startY: startY,
+              head: [['Cliente', 'ID Emp.', 'Nº', 'Valor', 'Vencimento', 'Status', 'Data Pgto', 'Valor Pago']],
+              body: parcelasPagas,
+              columnStyles: {
+                0: { cellWidth: 35, halign: 'left' }, 1: { cellWidth: 14, halign: 'center' }, 2: { cellWidth: 10, halign: 'center' },
+                3: { cellWidth: 25, halign: 'right' }, 4: { cellWidth: 22, halign: 'center' }, 5: { cellWidth: 22, halign: 'center' },
+                6: { cellWidth: 22, halign: 'center' }, 7: { cellWidth: 25, halign: 'right' }
+              },
+              ...tabelaPadrao
+            });
+          } else {
+            doc.setFontSize(9);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Nenhuma parcela paga registrada.', margin, startY + 4);
+          }
+
+          footer();
           const nomeArquivo = 'Backup_Emprestimos_' + new Date().toISOString().slice(0, 10) + '_' +
             String(new Date().getHours()).padStart(2, '0') + String(new Date().getMinutes()).padStart(2, '0') + '.pdf';
           doc.save(nomeArquivo);
