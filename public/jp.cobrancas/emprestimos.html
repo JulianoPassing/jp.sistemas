@@ -11,6 +11,9 @@
   <link rel="stylesheet" href="./css/style.css">
   <!-- SheetJS para exportação Excel -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <!-- jsPDF para exportação PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body class="app-layout">
   <header>
@@ -50,7 +53,10 @@
           <h3 class="section-title">Empréstimos</h3>
           <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
             <button id="btnBackup" class="btn btn-success" onclick="exportarBackupExcel()" style="background: #059669; border-color: #059669;">
-              <i class="fas fa-download" style="margin-right: 0.5rem;"></i>Backup Excel
+              <i class="fas fa-file-excel" style="margin-right: 0.5rem;"></i>Backup Excel
+            </button>
+            <button id="btnBackupPdf" class="btn btn-danger" onclick="exportarBackupPdf()" style="background: #dc2626; border-color: #dc2626;">
+              <i class="fas fa-file-pdf" style="margin-right: 0.5rem;"></i>Backup PDF
             </button>
             <button id="toggleForm" class="btn btn-primary">Novo Empréstimo</button>
           </div>
@@ -418,6 +424,257 @@
         // Restaurar botão
         btnBackup.innerHTML = textoOriginal;
         btnBackup.disabled = false;
+      }
+    }
+
+    // Carregar imagem e converter para base64 (para uso no PDF)
+    function carregarImagemBase64Emprestimos(url, callback) {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = this.naturalWidth;
+        canvas.height = this.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(this, 0, 0);
+        try {
+          callback(canvas.toDataURL('image/png'));
+        } catch (e) {
+          callback(null);
+        }
+      };
+      img.onerror = function() { callback(null); };
+      img.src = url;
+    }
+
+    // ========================================
+    // FUNÇÃO DE BACKUP/EXPORTAÇÃO PARA PDF
+    // ========================================
+    const LOGO_JP_COBRANCAS = 'https://i.imgur.com/EQ1tjZX.png';
+
+    async function exportarBackupPdf() {
+      const btnPdf = document.getElementById('btnBackupPdf');
+      if (!btnPdf) return;
+      const textoOriginal = btnPdf.innerHTML;
+      btnPdf.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Gerando...';
+      btnPdf.disabled = true;
+
+      function formatarMoeda(v) {
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+      }
+
+      try {
+        const [emprestimos, clientes] = await Promise.all([
+          apiService.getEmprestimos(),
+          apiService.getClientes()
+        ]);
+        const clientesMap = {};
+        (clientes || []).forEach(c => { clientesMap[c.id] = c; });
+
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        let totalEmprestado = 0, totalAReceber = 0, totalRecebido = 0, totalEmAtraso = 0;
+        let emprestimosAtivos = 0, emprestimosQuitados = 0, emprestimosEmAtraso = 0;
+        const linhasTabela = [];
+
+        for (const emp of (emprestimos || [])) {
+          const cliente = clientesMap[emp.cliente_id] || {};
+          const valorInicial = Number(emp.valor || 0);
+          const valorFinal = Number(emp.valor_final || emp.valor || 0);
+          const dataEmprestimo = emp.data_emprestimo || '';
+          const dataVencimento = emp.data_vencimento || '';
+          let statusFinal = (emp.status || 'Ativo').toUpperCase();
+          let valorPago = 0, valorEmAberto = 0, valorAtrasado = 0;
+          let estaEmAtraso = false, estaEmDia = false;
+
+          let parcelas = [];
+          if (emp.tipo_emprestimo === 'in_installments' && emp.numero_parcelas > 1) {
+            try {
+              parcelas = await apiService.getParcelasEmprestimo(emp.id) || [];
+            } catch (_) {}
+          }
+
+          if (parcelas.length > 0) {
+            const todasPagas = parcelas.every(p => p.status === 'Paga');
+            if (todasPagas) {
+              statusFinal = 'QUITADO';
+              estaEmDia = true;
+              valorPago = parcelas.reduce((s, p) => s + Number(p.valor_parcela || 0), 0);
+            } else {
+              const atrasadas = parcelas.filter(p => {
+                const dv = utils.createValidDate(p.data_vencimento);
+                return dv && dv < hoje && p.status !== 'Paga';
+              });
+              if (atrasadas.length > 0) {
+                statusFinal = 'ATRASADO';
+                estaEmAtraso = true;
+                valorAtrasado = atrasadas.reduce((s, p) => s + Number(p.valor_parcela || 0), 0);
+              } else {
+                statusFinal = 'ATIVO';
+                estaEmDia = true;
+              }
+              parcelas.forEach(p => {
+                const v = Number(p.valor_parcela || 0);
+                const dv = utils.createValidDate(p.data_vencimento);
+                const atr = dv && dv < hoje && p.status !== 'Paga';
+                if (p.status === 'Paga') valorPago += v;
+                else if (atr) valorAtrasado += v;
+                else valorEmAberto += v;
+              });
+            }
+          } else {
+            const dataVenc = utils.createValidDate(dataVencimento);
+            if (statusFinal === 'QUITADO') {
+              estaEmDia = true;
+              valorPago = valorFinal;
+            } else if (dataVenc && dataVenc < hoje) {
+              statusFinal = 'ATRASADO';
+              estaEmAtraso = true;
+              valorAtrasado = valorFinal;
+            } else {
+              statusFinal = 'ATIVO';
+              estaEmDia = true;
+              valorEmAberto = valorFinal;
+            }
+          }
+
+          totalEmprestado += valorInicial;
+          if (statusFinal === 'QUITADO') {
+            totalRecebido += (valorPago || valorFinal);
+            emprestimosQuitados++;
+          } else {
+            totalAReceber += (valorEmAberto + valorAtrasado);
+            if (estaEmAtraso) {
+              totalEmAtraso += valorAtrasado;
+              emprestimosEmAtraso++;
+            }
+            emprestimosAtivos++;
+          }
+
+          linhasTabela.push([
+            (cliente.nome || 'N/A').substring(0, 28),
+            formatarMoeda(valorInicial),
+            formatarMoeda(valorFinal),
+            utils.formatDate(dataEmprestimo) || '-',
+            utils.formatDate(dataVencimento) || '-',
+            statusFinal
+          ]);
+        }
+
+        const dataHoraEmissao = new Date().toLocaleString('pt-BR', {
+          day: '2-digit', month: '2-digit', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        });
+
+        carregarImagemBase64Emprestimos(LOGO_JP_COBRANCAS, function(logoBase64) {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+          const primaryColor = [0, 47, 75];   // #002f4b
+          const secondaryColor = [67, 160, 71]; // verde
+
+          let startY = 18;
+
+          if (logoBase64) {
+            doc.addImage(logoBase64, 'PNG', 85, 8, 40, 18);
+            startY = 32;
+          }
+
+          doc.setFontSize(10);
+          doc.setTextColor(80, 80, 80);
+          doc.setFont('helvetica', 'normal');
+          doc.text('Backup de Empréstimos — J.P Cobranças', 105, startY, { align: 'center' });
+          startY += 6;
+          doc.setFontSize(9);
+          doc.text('Emitido em: ' + dataHoraEmissao, 105, startY, { align: 'center' });
+          startY += 12;
+
+          doc.setDrawColor(200, 200, 200);
+          doc.setLineWidth(0.3);
+          doc.line(14, startY - 2, 196, startY - 2);
+          startY += 2;
+
+          doc.setFontSize(11);
+          doc.setTextColor(0, 47, 75);
+          doc.setFont('helvetica', 'bold');
+          doc.text('Resumo', 14, startY);
+          startY += 8;
+
+          doc.autoTable({
+            startY: startY,
+            head: [['Descrição', 'Valor / Quantidade']],
+            body: [
+              ['Total de empréstimos', String((emprestimos || []).length)],
+              ['Empréstimos ativos', String(emprestimosAtivos)],
+              ['Empréstimos quitados', String(emprestimosQuitados)],
+              ['Empréstimos em atraso', String(emprestimosEmAtraso)],
+              ['Valor total emprestado', formatarMoeda(totalEmprestado)],
+              ['Valor total a receber', formatarMoeda(totalAReceber)],
+              ['Valor total recebido', formatarMoeda(totalRecebido)],
+              ['Valor total em atraso', formatarMoeda(totalEmAtraso)]
+            ],
+            theme: 'grid',
+            headStyles: {
+              fillColor: primaryColor,
+              textColor: [255, 255, 255],
+              fontStyle: 'bold',
+              fontSize: 10
+            },
+            styles: { fontSize: 9, cellPadding: 4 },
+            columnStyles: {
+              0: { cellWidth: 110, halign: 'left' },
+              1: { cellWidth: 72, halign: 'right' }
+            },
+            margin: { left: 14, right: 14 }
+          });
+          startY = doc.lastAutoTable.finalY + 12;
+
+          doc.setFontSize(11);
+          doc.setTextColor(0, 47, 75);
+          doc.setFont('helvetica', 'bold');
+          doc.text('Lista de Empréstimos', 14, startY);
+          startY += 8;
+
+          doc.autoTable({
+            startY: startY,
+            head: [['Cliente', 'Valor Inicial', 'Valor Final', 'Data Empréstimo', 'Vencimento', 'Status']],
+            body: linhasTabela,
+            theme: 'grid',
+            headStyles: {
+              fillColor: primaryColor,
+              textColor: [255, 255, 255],
+              fontStyle: 'bold',
+              fontSize: 9
+            },
+            styles: { fontSize: 8, cellPadding: 3 },
+            columnStyles: {
+              0: { cellWidth: 42, halign: 'left' },
+              1: { cellWidth: 28, halign: 'right' },
+              2: { cellWidth: 28, halign: 'right' },
+              3: { cellWidth: 28, halign: 'center' },
+              4: { cellWidth: 28, halign: 'center' },
+              5: { cellWidth: 28, halign: 'center' }
+            },
+            alternateRowStyles: { fillColor: [248, 249, 250] },
+            margin: { left: 14, right: 14 },
+            didDrawPage: function() {
+              const pageHeight = doc.internal.pageSize.height;
+              doc.setFontSize(7);
+              doc.setTextColor(120, 120, 120);
+              doc.text('J.P Cobranças — Backup de Empréstimos — ' + dataHoraEmissao, 105, pageHeight - 8, { align: 'center' });
+            }
+          });
+
+          const nomeArquivo = 'Backup_Emprestimos_' + new Date().toISOString().slice(0, 10) + '_' +
+            String(new Date().getHours()).padStart(2, '0') + String(new Date().getMinutes()).padStart(2, '0') + '.pdf';
+          doc.save(nomeArquivo);
+          ui.showNotification('Backup PDF exportado com sucesso.', 'success');
+        });
+      } catch (err) {
+        console.error('Erro ao exportar backup PDF:', err);
+        ui.showNotification('Erro ao exportar backup PDF. Tente novamente.', 'error');
+      } finally {
+        btnPdf.innerHTML = textoOriginal;
+        btnPdf.disabled = false;
       }
     }
     
