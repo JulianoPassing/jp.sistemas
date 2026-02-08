@@ -1046,35 +1046,35 @@
     <div class="planos-container">
       <div class="plano-card">
       <div class="plano-titulo"><i class="fas fa-calendar-alt"></i> Plano Mensal</div>
-      <div class="plano-preco">R$99</div>
-      <div class="plano-mes">por mês</div>
+      <div class="plano-preco">R$ 150</div>
+      <div class="plano-mes">por mês (sem desconto)</div>
       <div class="plano-detalhe">Pagamento mensal, sem fidelidade.</div>
       <div class="plano-obs">✓ Acesso a um sistema completo<br>✓ Suporte técnico<br>✓ Atualizações gratuitas</div>
     </div>
     <div class="plano-card">
       <div class="plano-titulo"><i class="fas fa-calendar"></i> Plano Trimestral</div>
       <div class="plano-desconto">Desconto de 10%</div>
-      <div class="plano-total">R$267</div>
-      <div class="plano-mes">(R$89/mês)</div>
-      <div class="plano-detalhe">Pagamento único para 3 meses.</div>
+      <div class="plano-total">R$ 405</div>
+      <div class="plano-mes">(R$ 135/mês)</div>
+      <div class="plano-detalhe">Pagamento único à vista para 3 meses.</div>
       <div class="plano-obs">✓ Acesso a um sistema completo<br>✓ Suporte técnico<br>✓ Atualizações gratuitas</div>
     </div>
     <div class="plano-card" style="border-color: rgba(255, 193, 7, 0.5);">
       <div class="plano-badge" style="background: linear-gradient(135deg, #ffc107, #ff9800);">MELHOR CUSTO</div>
       <div class="plano-titulo"><i class="fas fa-calendar-check"></i> Plano Semestral</div>
-      <div class="plano-desconto">Desconto de 15%</div>
-      <div class="plano-total">R$474</div>
-      <div class="plano-mes">(R$79/mês)</div>
-      <div class="plano-detalhe">Pagamento único para 6 meses.</div>
+      <div class="plano-desconto">Desconto de 20%</div>
+      <div class="plano-total">R$ 720</div>
+      <div class="plano-mes">(R$ 120/mês)</div>
+      <div class="plano-detalhe">Pagamento único à vista para 6 meses.</div>
       <div class="plano-obs">✓ Acesso a um sistema completo<br>✓ Suporte técnico<br>✓ Atualizações gratuitas</div>
     </div>
     <div class="plano-card" style="border-color: var(--accent-blue); box-shadow: 0 10px 40px rgba(0,230,255,0.25);">
       <div class="plano-badge">MAIS POPULAR</div>
       <div class="plano-titulo"><i class="fas fa-award"></i> Plano Anual</div>
-      <div class="plano-desconto">Desconto de 30%</div>
-      <div class="plano-total">R$828</div>
-      <div class="plano-mes">(R$69/mês)</div>
-      <div class="plano-detalhe">Pagamento único para 12 meses.</div>
+      <div class="plano-desconto">Desconto de 44%</div>
+      <div class="plano-total">R$ 1.000</div>
+      <div class="plano-mes">(R$ 83,33/mês)</div>
+      <div class="plano-detalhe">Pagamento único à vista para 12 meses.</div>
       <div class="plano-obs">✓ Acesso a um sistema completo<br>✓ Suporte técnico<br>✓ Atualizações gratuitas</div>
     </div>
     </div>
@@ -1177,8 +1177,8 @@
         </div>
       </form>
       <div class="qr-section">
-        <img src="https://i.imgur.com/Zf4IoHR.png" alt="QR Code Pagamento R$99" />
-        <div style="font-size:0.98rem;color:var(--primary-blue);font-weight:600;">Escaneie para pagar R$99</div>
+        <img src="https://i.imgur.com/NX8HTd3.png" alt="QR Code Pagamento R$ 150" />
+        <div style="font-size:0.98rem;color:var(--primary-blue);font-weight:600;">Escaneie para pagar R$ 150</div>
       </div>
       <div class="bank-info">
         <div><strong>Agência:</strong> 0001</div>
@@ -1217,24 +1217,24 @@
         // Definir QR e texto conforme o card
         if(idx === 1) { // Trimestral
           modalTitle.textContent = 'Pagamento - Plano Trimestral';
-          qrImg.src = 'https://i.imgur.com/AWSsrzH.png';
-          qrImg.alt = 'QR Code Pagamento R$267';
-          qrText.textContent = 'Escaneie para pagar R$267';
+          qrImg.src = 'https://i.imgur.com/TPgSWtn.png';
+          qrImg.alt = 'QR Code Pagamento R$ 405';
+          qrText.textContent = 'Escaneie para pagar R$ 405';
         } else if(idx === 2) { // Semestral
           modalTitle.textContent = 'Pagamento - Plano Semestral';
-          qrImg.src = 'https://i.imgur.com/7totbqW.png';
-          qrImg.alt = 'QR Code Pagamento R$474';
-          qrText.textContent = 'Escaneie para pagar R$474';
+          qrImg.src = 'https://i.imgur.com/f7R4ggi.png';
+          qrImg.alt = 'QR Code Pagamento R$ 720';
+          qrText.textContent = 'Escaneie para pagar R$ 720';
         } else if(idx === 3) { // Anual
           modalTitle.textContent = 'Pagamento - Plano Anual';
-          qrImg.src = 'https://i.imgur.com/zaNq76T.png';
-          qrImg.alt = 'QR Code Pagamento R$828';
-          qrText.textContent = 'Escaneie para pagar R$828';
+          qrImg.src = 'https://i.imgur.com/Nk3GYzp.png';
+          qrImg.alt = 'QR Code Pagamento R$ 1.000';
+          qrText.textContent = 'Escaneie para pagar R$ 1.000';
         } else {
           modalTitle.textContent = 'Pagamento - Plano Mensal';
-          qrImg.src = 'https://i.imgur.com/Zf4IoHR.png';
-          qrImg.alt = 'QR Code Pagamento R$99';
-          qrText.textContent = 'Escaneie para pagar R$99';
+          qrImg.src = 'https://i.imgur.com/NX8HTd3.png';
+          qrImg.alt = 'QR Code Pagamento R$ 150';
+          qrText.textContent = 'Escaneie para pagar R$ 150';
         }
         modalBg.classList.add('active');
       });
