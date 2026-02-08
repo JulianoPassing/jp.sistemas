@@ -685,6 +685,86 @@ footer {
     padding: 0.5rem;
   }
   
+  /* Lista de clientes em cards no mobile (sem scroll horizontal) */
+  .table-container.table-clientes {
+    overflow-x: visible;
+  }
+  .table-container.table-clientes .table {
+    display: block;
+  }
+  .table-container.table-clientes thead {
+    display: none;
+  }
+  .table-container.table-clientes tbody {
+    display: block;
+  }
+  .table-container.table-clientes tbody tr {
+    display: block;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius-lg);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s ease;
+  }
+  .table-container.table-clientes tbody tr:hover {
+    box-shadow: var(--shadow-md);
+  }
+  .table-container.table-clientes tbody tr:nth-child(even) {
+    background: var(--white);
+  }
+  .table-container.table-clientes tbody td {
+    display: block;
+    padding: 0.5rem 0;
+    border: none;
+    white-space: normal;
+    font-size: 0.875rem;
+  }
+  .table-container.table-clientes tbody td:not([colspan])::before {
+    font-weight: 600;
+    color: var(--gray-600);
+    margin-right: 0.5rem;
+  }
+  .table-container.table-clientes tbody td:nth-child(1)::before {
+    content: "Nome: ";
+  }
+  .table-container.table-clientes tbody td:nth-child(2)::before {
+    content: "CPF: ";
+  }
+  .table-container.table-clientes tbody td:nth-child(3)::before {
+    content: "Telefone: ";
+  }
+  .table-container.table-clientes tbody td:nth-child(4)::before {
+    content: "Status: ";
+  }
+  .table-container.table-clientes tbody td:nth-child(5)::before {
+    content: "Ações";
+    display: block;
+    margin-bottom: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--gray-200);
+  }
+  .table-container.table-clientes tbody td:nth-child(5) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .table-container.table-clientes tbody td:nth-child(5) .btn {
+    flex: 1 1 auto;
+    min-width: fit-content;
+    white-space: nowrap;
+    width: auto;
+  }
+  .table-container.table-clientes tbody tr td[colspan] {
+    text-align: center;
+    padding: 1.5rem;
+  }
+  .table-container.table-clientes tbody tr td[colspan]::before {
+    content: none;
+  }
+  
   .nav-wrapper nav {
     display: none;
     flex-direction: column;
@@ -783,6 +863,12 @@ footer {
   .table td {
     white-space: nowrap;
     font-size: 0.85rem;
+  }
+  .table-container.table-clientes tbody td {
+    white-space: normal;
+  }
+  .table-container.table-clientes .btn {
+    width: auto;
   }
 }
 
