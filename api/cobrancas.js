@@ -230,6 +230,46 @@ async function ensureDatabase(req, res, next) {
   }
 }
 
+// Função para calcular próxima data de vencimento baseado na frequência
+// Mensal: +1 mês mantendo o dia (com ajuste para fev 28/29 e meses de 30 dias)
+// Semanal: +7 dias | Quinzenal: +14 dias | Diário: +1 dia
+function calcularProximaDataVencimento(dataVencimentoAtual, frequencia) {
+  const data = new Date(dataVencimentoAtual);
+  const freq = frequencia || 'monthly';
+
+  switch (freq) {
+    case 'daily':
+      data.setDate(data.getDate() + 1);
+      break;
+    case 'weekly':
+      data.setDate(data.getDate() + 7);
+      break;
+    case 'biweekly':
+      data.setDate(data.getDate() + 14);
+      break;
+    case 'monthly':
+    default: {
+      const diaAtual = data.getDate();
+      const mesAtual = data.getMonth();
+      const anoAtual = data.getFullYear();
+      // Fevereiro dia 28/29: foi ajuste de 29/30/31 -> próximo mês volta a 31
+      // Mês 30 dias (abr,jun,set,nov) dia 30: foi ajuste de 31 -> próximo mês volta a 31
+      const diaAlvo = (mesAtual === 1 && diaAtual >= 28) ||  // fev 28 ou 29
+        (diaAtual === 30 && [3, 5, 8, 10].includes(mesAtual))  // último dia de abr,jun,set,nov
+        ? 31
+        : diaAtual;
+
+      const proxMes = mesAtual === 11 ? 0 : mesAtual + 1;
+      const proxAno = mesAtual === 11 ? anoAtual + 1 : anoAtual;
+      const ultimoDiaMes = new Date(proxAno, proxMes + 1, 0).getDate();
+      data.setFullYear(proxAno, proxMes, Math.min(diaAlvo, ultimoDiaMes));
+      break;
+    }
+  }
+
+  return data;
+}
+
 // Função helper para cálculos padronizados de empréstimos
 function calcularValoresEmprestimo(emprestimo) {
   const valorInicial = parseFloat(emprestimo.valor || 0);
@@ -1882,31 +1922,11 @@ router.post('/emprestimos/:id/pagamento-juros', ensureDatabase, async (req, res)
     `, [emprestimo.id, valor_juros_pago, data_pagamento, forma_pagamento, `Pagamento de juros: ${observacoes || ''}`]);
     
     // Calcular nova data de vencimento baseado na frequência
-    const dataVencimentoAtual = new Date(emprestimo.data_vencimento);
-    const novaDataVencimento = new Date(dataVencimentoAtual);
-    
-    // Determinar dias a adicionar baseado na frequência
+    // Mensal: +1 mês mantendo o dia (fev 29/30/31->28, março volta 29/30/31; meses 30 dias idem)
+    // Semanal: +7 dias | Quinzenal: +14 dias | Diário: +1 dia
     const frequencia = emprestimo.frequencia || 'monthly';
-    let diasAdicionar = 30; // padrão mensal
-    
-    switch (frequencia) {
-      case 'daily':
-        diasAdicionar = 1;
-        break;
-      case 'weekly':
-        diasAdicionar = 7;
-        break;
-      case 'biweekly':
-        diasAdicionar = 14;
-        break;
-      case 'monthly':
-      default:
-        diasAdicionar = 30;
-        break;
-    }
-    
-    novaDataVencimento.setDate(novaDataVencimento.getDate() + diasAdicionar);
-    console.log(`📅 Frequência: ${frequencia}, Dias adicionados: ${diasAdicionar}, Nova data: ${novaDataVencimento.toISOString().split('T')[0]}`);
+    const novaDataVencimento = calcularProximaDataVencimento(emprestimo.data_vencimento, frequencia);
+    console.log(`📅 Frequência: ${frequencia}, Nova data: ${novaDataVencimento.toISOString().split('T')[0]}`);
     
     // Atualizar empréstimo: nova data de vencimento, status Ativo, valor volta ao inicial
     // O valor da dívida volta ao valor inicial do empréstimo (não acumula juros)

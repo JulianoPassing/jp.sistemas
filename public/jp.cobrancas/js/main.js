@@ -355,6 +355,44 @@ const utils = {
     requestAnimationFrame(updateValue);
   },
 
+  // Calcular próxima data de vencimento pela frequência
+  // Mensal: +1 mês mantendo o dia (fev 29/30/31->28, março volta 29/30/31; meses 30 dias idem)
+  // Semanal: +7 dias | Quinzenal: +14 dias | Diário: +1 dia
+  calcularProximaDataVencimento: (dataVencimentoAtual, frequencia) => {
+    const data = utils.createValidDate(dataVencimentoAtual);
+    if (!data) return null;
+    const freq = frequencia || 'monthly';
+
+    switch (freq) {
+      case 'daily':
+        data.setDate(data.getDate() + 1);
+        break;
+      case 'weekly':
+        data.setDate(data.getDate() + 7);
+        break;
+      case 'biweekly':
+        data.setDate(data.getDate() + 14);
+        break;
+      case 'monthly':
+      default: {
+        const diaAtual = data.getDate();
+        const mesAtual = data.getMonth();
+        const anoAtual = data.getFullYear();
+        const diaAlvo = (mesAtual === 1 && diaAtual >= 28) ||
+          (diaAtual === 30 && [3, 5, 8, 10].includes(mesAtual))
+          ? 31
+          : diaAtual;
+
+        const proxMes = mesAtual === 11 ? 0 : mesAtual + 1;
+        const proxAno = mesAtual === 11 ? anoAtual + 1 : anoAtual;
+        const ultimoDiaMes = new Date(proxAno, proxMes + 1, 0).getDate();
+        data.setFullYear(proxAno, proxMes, Math.min(diaAlvo, ultimoDiaMes));
+        break;
+      }
+    }
+    return data;
+  },
+
   // Formatação de data para inputs HTML
   formatDateForInput: (dateString) => {
     if (!dateString) return '';
@@ -2390,15 +2428,13 @@ Solicitamos a regularização o mais breve possível.`;
                                   <p><strong>Juros Acumulados a Pagar:</strong> ${utils.formatCurrency(jurosAcumulados)}</p>
                 <p><strong>Vencimento Atual:</strong> ${emp.data_vencimento ? utils.formatDate(emp.data_vencimento) : '-'}</p>
                 <p><strong>Novo Vencimento:</strong> ${(() => {
-                  const dataVenc = utils.createValidDate(emp.data_vencimento);
-                  if (!dataVenc) return '-';
-                  dataVenc.setDate(dataVenc.getDate() + 30);
-                  return utils.formatDate(dataVenc);
+                  const prox = utils.calcularProximaDataVencimento(emp.data_vencimento, emp.frequencia || emp.frequencia_pagamento);
+                  return prox ? utils.formatDate(prox) : '-';
                 })()}</p>
                                   <p><strong>Novo Valor da Dívida:</strong> ${utils.formatCurrency(valorInicial)} <em>(volta ao valor inicial)</em></p>
                 <div style="background: #e3f2fd; padding: 0.75rem; border-radius: 6px; margin-top: 0.75rem; border-left: 4px solid #2196f3;">
                   <p style="margin: 0; font-size: 0.9rem; color: #1565c0;">
-                    <strong>Como funciona:</strong> Ao pagar apenas os juros, o valor da dívida volta ao valor inicial do empréstimo e o prazo é estendido em 30 dias.
+                    <strong>Como funciona:</strong> Ao pagar apenas os juros, o valor da dívida volta ao valor inicial do empréstimo e o prazo é estendido conforme a frequência (mensal +1 mês, semanal +7 dias, quinzenal +14 dias).
                   </p>
                 </div>
               </div>
