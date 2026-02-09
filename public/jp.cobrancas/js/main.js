@@ -3843,9 +3843,9 @@ async function recarregarDadosPagina() {
   try {
     console.log('Recarregando dados da página...');
     
-    // Recarregar lista de cobranças se estiver na página de cobranças
-    if (document.getElementById('cobrancas-pendentes')) {
-      await dashboardController.updateCobrancasPendentes();
+    // Recarregar dashboard completo (empréstimos recentes + todos os empréstimos) se estiver na página do dashboard
+    if (document.getElementById('emprestimos-recentes') || document.getElementById('cobrancas-pendentes')) {
+      await dashboardController.loadDashboardData();
     }
     
     // Recarregar histórico de empréstimos se estiver na página de emprestimos
@@ -3856,11 +3856,6 @@ async function recarregarDadosPagina() {
     // Recarregar lista de clientes se estiver na página de clientes
     if (document.getElementById('lista-clientes')) {
       await renderClientesLista();
-    }
-    
-    // Recarregar dashboard se estiver na página principal
-    if (document.getElementById('dashboard-stats')) {
-      await app.loadDashboardData();
     }
     
     // Recarregar atrasados se estiver na página de atrasados
@@ -4678,6 +4673,9 @@ async function marcarParcelaPaga(emprestimoId, numeroParcela) {
     // Recarregar os detalhes do empréstimo
     await emprestimoController.viewEmprestimo(emprestimoId);
     
+    // Atualizar dashboard (empréstimos recentes + todos os empréstimos) se estiver na página
+    await recarregarDadosPagina();
+    
   } catch (error) {
     console.error('Erro ao marcar parcela como paga:', error);
     ui.showNotification('Erro ao marcar parcela como paga', 'error');
@@ -4734,6 +4732,9 @@ async function marcarParcelaPendente(emprestimoId, numeroParcela) {
     
     // Recarregar os detalhes do empréstimo
     await emprestimoController.viewEmprestimo(emprestimoId);
+    
+    // Atualizar dashboard se estiver na página
+    await recarregarDadosPagina();
     
   } catch (error) {
     console.error('Erro ao marcar parcela como pendente:', error);
