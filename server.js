@@ -26,6 +26,9 @@ const multer = require('multer');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy (nginx, etc.) para req.protocol e req.get('host') corretos
+app.set('trust proxy', 1);
+
 app.use(express.json({ limit: '70mb' }));
 app.use(express.urlencoded({ extended: true, limit: '70mb' }));
 app.all('/api/empresa', empresaHandler);
@@ -34,6 +37,8 @@ app.all('/api/empresa', empresaHandler);
 // CORS - deve vir antes de qualquer middleware de sessão ou rotas
 const allowedOrigins = [
   'https://jp-sistemas.vercel.app',
+  'https://jp-sistemas.com',
+  'http://jp-sistemas.com',
   'http://localhost:3000'
 ];
 app.use(cors({

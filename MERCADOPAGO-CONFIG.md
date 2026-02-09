@@ -16,13 +16,17 @@ Na página **precos.html**, ao clicar em um plano, o usuário pode escolher:
 3. Crie uma aplicação em **Suas integrações**
 4. Em **Credenciais**, copie o **Access Token** (Produção para pagamentos reais, Teste para testes)
 
-### 2. Variável de ambiente
+### 2. Variáveis de ambiente
 
 Adicione no arquivo `.env` na raiz do projeto:
 
 ```
 MP_ACCESS_TOKEN=seu_access_token_aqui
+MP_BASE_URL=https://jp-sistemas.com
 ```
+
+- **MP_ACCESS_TOKEN**: Access Token do Mercado Pago (obrigatório)
+- **MP_BASE_URL**: URL base do site para retorno após pagamento (recomendado em VPS com proxy). Ex: `https://jp-sistemas.com` (sem barra no final)
 
 **Importante:** Nunca coloque o Access Token no código ou em repositório público.
 

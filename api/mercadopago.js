@@ -34,6 +34,12 @@ router.post('/preference', async (req, res) => {
 
     const preference = new Preference(client);
 
+    // URL base para retorno (use MP_BASE_URL no .env ou detecte automaticamente)
+    const baseUrl = process.env.MP_BASE_URL || `${req.protocol}://${req.get('host')}`.replace(/\/$/, '');
+    const successUrl = `${baseUrl}/precos.html?status=success`;
+    const failureUrl = `${baseUrl}/precos.html?status=failure`;
+    const pendingUrl = `${baseUrl}/precos.html?status=pending`;
+
     const preferenceData = {
       body: {
         items: [
@@ -45,16 +51,12 @@ router.post('/preference', async (req, res) => {
             currency_id: 'BRL'
           }
         ],
-        auto_return: 'approved',
         back_urls: {
-          success: `${req.protocol}://${req.get('host')}/precos.html?status=success`,
-          failure: `${req.protocol}://${req.get('host')}/precos.html?status=failure`,
-          pending: `${req.protocol}://${req.get('host')}/precos.html?status=pending`
+          success: successUrl,
+          failure: failureUrl,
+          pending: pendingUrl
         },
-        // Excluir PIX - o usuário já tem opção PIX via QR code na página
-        payment_methods: {
-          excluded_payment_types: [{ id: 'bank_transfer' }]
-        }
+        auto_return: 'approved'
       }
     };
 
