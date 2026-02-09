@@ -1,0 +1,23 @@
+# Variáveis de ambiente (NUNCA commitar credenciais)
+.env
+.env.local
+.env.*.local
+env.pronto.txt
+
+# Dependências
+node_modules/
+
+# Logs e cache
+npm-debug.log*
+*.log
+.cache
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
