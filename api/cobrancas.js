@@ -2606,19 +2606,17 @@ router.post('/backup-email', ensureDatabase, uploadBackupEmail, async (req, res)
     };
 
     const a1 = findByPattern(/Backup_Emprestimos.*\.xlsx$/i);
-    const a2 = findByPattern(/Backup_Emprestimos.*\.pdf$/i);
     const a3 = findByPattern(/Backup_Carteira_Clientes.*\.xlsx$/i);
-    const a4 = findByPattern(/Backup_Carteira_Clientes.*\.pdf$/i);
 
-    if (!a1 || !a2 || !a3 || !a4) {
+    if (!a1 || !a3) {
       const names = entries.map(function (e) { return (e.entryName || '').split('/').pop(); });
       return res.status(400).json({
         error: 'ZIP inválido.',
-        message: 'O ZIP deve conter os 4 arquivos (Empréstimos e Carteira de Clientes em Excel e PDF). Encontrados: ' + (names.join(', ') || 'nenhum')
+        message: 'O ZIP deve conter as 2 planilhas Excel: Empréstimos e Carteira de Clientes. Encontrados: ' + (names.join(', ') || 'nenhum')
       });
     }
 
-    const attachments = [a1, a2, a3, a4];
+    const attachments = [a1, a3];
 
     const smtpUser = process.env.SMTP_USER || process.env.BACKUP_EMAIL_USER || 'suporte.jpsistemas@gmail.com';
     const smtpPass = process.env.SMTP_PASS || process.env.BACKUP_EMAIL_APP_PASSWORD;
@@ -2659,8 +2657,8 @@ router.post('/backup-email', ensureDatabase, uploadBackupEmail, async (req, res)
               <p style="margin: 0 0 16px 0; color: #374151; font-size: 15px; line-height: 1.6;">Olá, <strong>${username}</strong>!</p>
               <p style="margin: 0 0 20px 0; color: #6b7280; font-size: 14px; line-height: 1.6;">Segue em anexo o backup solicitado, contendo:</p>
               <ul style="margin: 0 0 24px 0; padding-left: 20px; color: #4b5563; font-size: 14px; line-height: 1.8;">
-                <li><strong>Backup de Empréstimos</strong> — planilha e relatório em PDF</li>
-                <li><strong>Carteira de Clientes</strong> — planilha e relatório em PDF</li>
+                <li><strong>Backup de Empréstimos</strong> — planilha Excel</li>
+                <li><strong>Carteira de Clientes</strong> — planilha Excel</li>
               </ul>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
                 <tr>

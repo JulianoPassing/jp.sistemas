@@ -1030,43 +1030,6 @@
         const dataHora = new Date();
         const nomeEmpExcel = `Backup_Emprestimos_${dataHora.getFullYear()}-${String(dataHora.getMonth() + 1).padStart(2, '0')}-${String(dataHora.getDate()).padStart(2, '0')}_${String(dataHora.getHours()).padStart(2, '0')}${String(dataHora.getMinutes()).padStart(2, '0')}.xlsx`;
 
-        const blobEmpPdf = await new Promise(function(resolve) {
-          carregarImagemBase64Emprestimos('https://i.imgur.com/EQ1tjZX.png', function(logoBase64) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-            const pageW = 210, margin = 14, maxY = 270;
-            let startY = 18;
-            if (logoBase64) {
-              doc.addImage(logoBase64, 'PNG', 85, 8, 40, 18);
-              startY = 32;
-            }
-            doc.setFontSize(10);
-            doc.setTextColor(80, 80, 80);
-            doc.text('Backup de Empréstimos — J.P Cobranças', pageW / 2, startY, { align: 'center' });
-            startY += 10;
-            doc.setFontSize(9);
-            doc.setTextColor(100, 100, 100);
-            doc.autoTable({
-              startY,
-              head: [['Cliente', 'Valor Inicial', 'Valor Final', 'Data Emp.', 'Venc.', 'Status']],
-              body: (dadosEmprestimos || []).slice(0, 50).map(function(r) {
-                return [
-                  (r.Cliente || '').substring(0, 18),
-                  formatarMoedaLocal(r['Valor Emprestado'] || 0),
-                  formatarMoedaLocal(r['Valor Final'] || 0),
-                  (r['Data Empréstimo'] || '-').substring(0, 10),
-                  (r['Data Vencimento'] || '-').substring(0, 10),
-                  r.Status || '-'
-                ];
-              }),
-              margin: { left: margin, right: margin },
-              styles: { fontSize: 7 }
-            });
-            resolve(doc.output('blob'));
-          });
-        });
-        const nomeEmpPdf = 'Backup_Emprestimos_' + dataHora.toISOString().slice(0, 10) + '.pdf';
-
         const dadosClientes = (clientes || []).map(function(c) {
           return {
             'ID': c.id,
@@ -1090,38 +1053,9 @@
         const blobCliExcel = new Blob([bufCli], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const nomeCliExcel = `Backup_Carteira_Clientes_${dataHora.getFullYear()}-${String(dataHora.getMonth() + 1).padStart(2, '0')}-${String(dataHora.getDate()).padStart(2, '0')}_${String(dataHora.getHours()).padStart(2, '0')}${String(dataHora.getMinutes()).padStart(2, '0')}.xlsx`;
 
-        const { jsPDF } = window.jspdf;
-        const docCli = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-        docCli.setFontSize(12);
-        docCli.setTextColor(0, 47, 75);
-        docCli.text('Carteira de Clientes — J.P Cobranças', 105, 15, { align: 'center' });
-        docCli.setFontSize(9);
-        docCli.setTextColor(100, 100, 100);
-        docCli.autoTable({
-          startY: 22,
-          head: [['ID', 'Nome', 'CPF/CNPJ', 'Telefone', 'Email', 'Cidade', 'Status']],
-          body: (dadosClientes || []).slice(0, 80).map(function(r) {
-            return [
-              String(r.ID || ''),
-              (r.Nome || '').substring(0, 20),
-              (r['CPF/CNPJ'] || '').substring(0, 14),
-              (r.Telefone || '').substring(0, 14),
-              (r.Email || '').substring(0, 18),
-              (r.Cidade || '').substring(0, 12),
-              r.Status || '-'
-            ];
-          }),
-          margin: { left: 10, right: 10 },
-          styles: { fontSize: 7 }
-        });
-        const blobCliPdf = docCli.output('blob');
-        const nomeCliPdf = `Backup_Carteira_Clientes_${dataHora.toISOString().slice(0, 10)}.pdf`;
-
         const zip = new JSZip();
         zip.file(nomeEmpExcel, blobEmpExcel);
-        zip.file(nomeEmpPdf || 'Backup_Emprestimos.pdf', blobEmpPdf);
         zip.file(nomeCliExcel, blobCliExcel);
-        zip.file(nomeCliPdf, blobCliPdf);
         const zipBlob = await zip.generateAsync({ type: 'blob' });
         const nomeZip = 'Backup_JP_Cobrancas_' + dataHora.getFullYear() + '-' + String(dataHora.getMonth() + 1).padStart(2, '0') + '-' + String(dataHora.getDate()).padStart(2, '0') + '_' + String(dataHora.getHours()).padStart(2, '0') + String(dataHora.getMinutes()).padStart(2, '0') + '.zip';
 
