@@ -3,10 +3,22 @@ const mysql = require('mysql2/promise');
 const path = require('path');
 const fs = require('fs').promises;
 const multer = require('multer');
+const nodemailer = require('nodemailer');
 const { getCobrancasDatabaseConfig } = require('../database-config');
 const bcrypt = require('bcryptjs');
 
 const router = express.Router();
+
+// Multer para backup por e-mail (4 arquivos em memória)
+const uploadBackupEmail = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 }
+}).fields([
+  { name: 'emprestimos_excel', maxCount: 1 },
+  { name: 'emprestimos_pdf', maxCount: 1 },
+  { name: 'clientes_excel', maxCount: 1 },
+  { name: 'clientes_pdf', maxCount: 1 }
+]);
 
 // Função para criar conexão com banco de cobranças do usuário
 async function createCobrancasConnection(username) {
@@ -2555,6 +2567,140 @@ router.put('/alterar-email', requireCobrancasSession, async (req, res) => {
   } catch (error) {
     console.error('Erro ao alterar e-mail cobranças:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Backup por e-mail: envia do suporte.jpsistemas@gmail.com para o e-mail cadastrado do usuário
+router.post('/backup-email', ensureDatabase, uploadBackupEmail, async (req, res) => {
+  try {
+    const username = req.session.cobrancasUser;
+    const conn = await getUsersConnection();
+    await ensureEmailColumnUsuariosCobrancas(conn);
+    const [rows] = await conn.execute(
+      'SELECT email FROM usuarios_cobrancas WHERE username = ?',
+      [username]
+    );
+    await conn.end();
+    if (rows.length === 0 || !rows[0].email || !String(rows[0].email).trim().includes('@')) {
+      return res.status(400).json({
+        error: 'E-mail não cadastrado.',
+        message: 'Cadastre seu e-mail em Configurações > Perfil para receber o backup.'
+      });
+    }
+    const destinoEmail = String(rows[0].email).trim();
+
+    const files = req.files;
+    if (!files || !files.emprestimos_excel || !files.emprestimos_pdf || !files.clientes_excel || !files.clientes_pdf) {
+      return res.status(400).json({
+        error: 'Arquivos incompletos.',
+        message: 'Envie os 4 arquivos: Empréstimos (Excel e PDF) e Carteira de Clientes (Excel e PDF).'
+      });
+    }
+
+    const smtpUser = process.env.SMTP_USER || process.env.BACKUP_EMAIL_USER || 'suporte.jpsistemas@gmail.com';
+    const smtpPass = process.env.SMTP_PASS || process.env.BACKUP_EMAIL_APP_PASSWORD;
+    if (!smtpPass) {
+      return res.status(503).json({
+        error: 'Serviço de e-mail não configurado.',
+        message: 'O administrador precisa configurar BACKUP_EMAIL_APP_PASSWORD (ou SMTP_PASS) no servidor.'
+      });
+    }
+
+    const dataHora = new Date().toLocaleString('pt-BR', {
+      dateStyle: 'long',
+      timeStyle: 'medium'
+    });
+
+    const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backup JP-Cobranças</title>
+</head>
+<body style="margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f7fa;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f7fa;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
+          <tr>
+            <td style="background: linear-gradient(135deg, #002f4b 0%, #001425 100%); padding: 32px 40px; text-align: center;">
+              <img src="https://i.imgur.com/EQ1tjZX.png" alt="JP-Cobranças" width="180" height="auto" style="max-height: 60px; object-fit: contain;" />
+              <h1 style="margin: 16px 0 0 0; color: #ffffff; font-size: 22px; font-weight: 600;">Backup do Sistema</h1>
+              <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">Seus dados foram exportados com sucesso</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px 40px;">
+              <p style="margin: 0 0 16px 0; color: #374151; font-size: 15px; line-height: 1.6;">Olá, <strong>${username}</strong>!</p>
+              <p style="margin: 0 0 20px 0; color: #6b7280; font-size: 14px; line-height: 1.6;">Segue em anexo o backup solicitado, contendo:</p>
+              <ul style="margin: 0 0 24px 0; padding-left: 20px; color: #4b5563; font-size: 14px; line-height: 1.8;">
+                <li><strong>Backup de Empréstimos</strong> — planilha e relatório em PDF</li>
+                <li><strong>Carteira de Clientes</strong> — planilha e relatório em PDF</li>
+              </ul>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <tr>
+                  <td style="padding: 16px 20px;">
+                    <p style="margin: 0; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Data e hora da solicitação</p>
+                    <p style="margin: 4px 0 0 0; color: #002f4b; font-size: 16px; font-weight: 600;">${dataHora}</p>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 24px 0 0 0; color: #9ca3af; font-size: 12px;">Este e-mail foi enviado automaticamente pelo sistema JP-Cobranças. Não responda.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 20px 40px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px;">© ${new Date().getFullYear()} JP. Sistemas · jp-sistemas.com</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587', 10),
+      secure: false,
+      auth: { user: smtpUser, pass: smtpPass }
+    });
+
+    const attachments = [
+      { filename: (files.emprestimos_excel[0].originalname || 'Backup_Emprestimos.xlsx'), content: files.emprestimos_excel[0].buffer },
+      { filename: (files.emprestimos_pdf[0].originalname || 'Backup_Emprestimos.pdf'), content: files.emprestimos_pdf[0].buffer },
+      { filename: (files.clientes_excel[0].originalname || 'Backup_Carteira_Clientes.xlsx'), content: files.clientes_excel[0].buffer },
+      { filename: (files.clientes_pdf[0].originalname || 'Backup_Carteira_Clientes.pdf'), content: files.clientes_pdf[0].buffer }
+    ];
+
+    await transporter.sendMail({
+      from: `"JP-Cobranças Suporte" <${smtpUser}>`,
+      to: destinoEmail,
+      subject: `Backup JP-Cobranças — ${dataHora}`,
+      html: htmlBody,
+      attachments
+    });
+
+    res.json({
+      success: true,
+      message: 'Backup enviado com sucesso para ' + destinoEmail + '.'
+    });
+  } catch (err) {
+    console.error('Erro ao enviar backup por e-mail:', err);
+    if (err.code === 'EAUTH' || err.responseCode === 535) {
+      return res.status(503).json({
+        error: 'Falha na autenticação do e-mail.',
+        message: 'Verifique SMTP_USER e SMTP_PASS (ou senha de app do Gmail) no servidor.'
+      });
+    }
+    res.status(500).json({
+      error: 'Erro ao enviar backup.',
+      message: err.message || 'Tente novamente mais tarde.'
+    });
   }
 });
 
