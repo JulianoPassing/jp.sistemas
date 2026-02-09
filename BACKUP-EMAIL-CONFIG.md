@@ -80,6 +80,52 @@ Depois de salvar o `.env`, reinicie a aplicação (ex.: `pm2 restart all` ou rei
 
 ---
 
+## Erro 413 (Content Too Large)
+
+Se ao clicar em **Backup via E-mail** aparecer **413** no navegador (F12), o envio dos 4 arquivos está sendo bloqueado por limite de tamanho. O backup pode passar de **10–50 MB** no total.
+
+### Se usar Nginx na frente do Node (ex.: VPS, jp-sistemas.com)
+
+No arquivo de configuração do site (ex.: `/etc/nginx/sites-available/jp-sistemas` ou dentro do `server { ... }`), adicione ou altere:
+
+```nginx
+client_max_body_size 70M;
+```
+
+Exemplo completo dentro do `server`:
+
+```nginx
+server {
+    listen 80;
+    server_name jp-sistemas.com www.jp-sistemas.com;
+    client_max_body_size 70M;   # permite upload de até 70 MB (backup por e-mail)
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+Depois, recarregue o Nginx:
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+### Já ajustado no Node
+
+No `server.js` o limite de corpo da requisição foi aumentado para **70 MB** (`express.json` e `express.urlencoded`). O 413 em produção costuma vir do Nginx; ajuste o `client_max_body_size` como acima.
+
+---
+
 ## Onde fica o botão
 
 O botão **“Backup via E-mail”** está na tela **Empréstimos** (`emprestimos.html`), ao lado de “Backup Excel” e “Backup PDF”. Ao clicar, o sistema gera os 4 arquivos (Empréstimos Excel/PDF e Carteira de Clientes Excel/PDF) e envia para o e-mail cadastrado do usuário logado.

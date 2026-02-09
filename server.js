@@ -26,7 +26,8 @@ const multer = require('multer');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: '70mb' }));
+app.use(express.urlencoded({ extended: true, limit: '70mb' }));
 app.all('/api/empresa', empresaHandler);
 // app.use('/api/cobrancas', cobrancasHandler);
 
@@ -42,7 +43,6 @@ app.use(cors({
 
 // Middleware
 app.use(express.static('public'));
-app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Configuração de sessão para VPS
