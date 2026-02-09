@@ -14,6 +14,8 @@
   <!-- jsPDF para exportação PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+  <!-- JSZip para compactar backup antes de enviar por e-mail (evita erro 413) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body class="app-layout">
   <header>
@@ -1115,11 +1117,16 @@
         const blobCliPdf = docCli.output('blob');
         const nomeCliPdf = `Backup_Carteira_Clientes_${dataHora.toISOString().slice(0, 10)}.pdf`;
 
+        const zip = new JSZip();
+        zip.file(nomeEmpExcel, blobEmpExcel);
+        zip.file(nomeEmpPdf || 'Backup_Emprestimos.pdf', blobEmpPdf);
+        zip.file(nomeCliExcel, blobCliExcel);
+        zip.file(nomeCliPdf, blobCliPdf);
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        const nomeZip = 'Backup_JP_Cobrancas_' + dataHora.getFullYear() + '-' + String(dataHora.getMonth() + 1).padStart(2, '0') + '-' + String(dataHora.getDate()).padStart(2, '0') + '_' + String(dataHora.getHours()).padStart(2, '0') + String(dataHora.getMinutes()).padStart(2, '0') + '.zip';
+
         const formData = new FormData();
-        formData.append('emprestimos_excel', blobEmpExcel, nomeEmpExcel);
-        formData.append('emprestimos_pdf', blobEmpPdf, nomeEmpPdf || 'Backup_Emprestimos.pdf');
-        formData.append('clientes_excel', blobCliExcel, nomeCliExcel);
-        formData.append('clientes_pdf', blobCliPdf, nomeCliPdf);
+        formData.append('backup_zip', zipBlob, nomeZip);
 
         const res = await fetch('/api/cobrancas/backup-email', {
           method: 'POST',
