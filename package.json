@@ -29,7 +29,8 @@
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.7",
     "cookie-parser": "^1.4.6",
-    "adm-zip": "^0.5.10"
+    "adm-zip": "^0.5.10",
+    "mercadopago": "^2.0.17"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

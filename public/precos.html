@@ -1176,19 +1176,34 @@
         <input type="tel" id="telefone" name="telefone" required placeholder="(99) 99999-9999" maxlength="15">
         </div>
       </form>
-      <div class="qr-section">
+      <!-- Escolha da forma de pagamento -->
+      <div class="payment-method-select" id="payment-method-select" style="margin:1rem 0;">
+        <label style="display:block;margin-bottom:0.6rem;font-weight:600;color:var(--primary-blue);">Escolha a forma de pagamento</label>
+        <div style="display:flex;gap:0.8rem;flex-wrap:wrap;justify-content:center;">
+          <button type="button" class="btn-payment-method" id="btn-pix" style="flex:1;min-width:140px;padding:0.8rem 1rem;border:2px solid rgba(0,230,255,0.4);background:rgba(0,230,255,0.08);border-radius:12px;cursor:pointer;font-weight:600;color:var(--primary-blue);transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:0.5rem;">
+            <i class="fas fa-qrcode" style="font-size:1.3rem;"></i> PIX
+          </button>
+          <button type="button" class="btn-payment-method" id="btn-cartao" style="flex:1;min-width:140px;padding:0.8rem 1rem;border:2px solid rgba(0,230,255,0.4);background:rgba(0,230,255,0.08);border-radius:12px;cursor:pointer;font-weight:600;color:var(--primary-blue);transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:0.5rem;">
+            <i class="fas fa-credit-card" style="font-size:1.3rem;"></i> Cartão / Boleto
+          </button>
+        </div>
+      </div>
+      <!-- Seção PIX (QR Code) - visível ao escolher PIX -->
+      <div class="qr-section" id="qr-section" style="display:none;">
         <img src="https://i.imgur.com/NX8HTd3.png" alt="QR Code Pagamento R$ 150" />
         <div style="font-size:0.98rem;color:var(--primary-blue);font-weight:600;">Escaneie para pagar R$ 150</div>
       </div>
-      <div class="bank-info">
+      <div class="bank-info" id="bank-info" style="display:none;">
         <div><strong>Agência:</strong> 0001</div>
         <div><strong>Conta:</strong> 48342465-6</div>
         <div><strong>Banco:</strong> 0260 - Nu Pagamento S.A</div>
         <div><strong>Nome:</strong> Juliano Salm Passing Junior</div>
       </div>
-      <a href="https://wa.me/5548996852138?text=Ol%C3%A1%2C%20acabei%20de%20efetuar%20a%20compra%2C%20segue%20comprovante." target="_blank" rel="noopener" class="whatsapp-btn" style="display:inline-flex;align-items:center;gap:0.5rem;margin-top:1.3rem;padding:0.7rem 1.2rem;background:#25d366;color:#fff;font-weight:700;font-size:1.08rem;border-radius:8px;text-decoration:none;box-shadow:0 2px 8px rgba(37,211,102,0.13);transition:background 0.2s;">
-        <i class="fab fa-whatsapp" style="font-size:1.3rem;"></i> Enviar comprovante pelo WhatsApp
-      </a>
+      <div id="whatsapp-section" style="display:none;">
+        <a href="https://wa.me/5548996852138?text=Ol%C3%A1%2C%20acabei%20de%20efetuar%20a%20compra%2C%20segue%20comprovante." target="_blank" rel="noopener" class="whatsapp-btn" style="display:inline-flex;align-items:center;gap:0.5rem;margin-top:1.3rem;padding:0.7rem 1.2rem;background:#25d366;color:#fff;font-weight:700;font-size:1.08rem;border-radius:8px;text-decoration:none;box-shadow:0 2px 8px rgba(37,211,102,0.13);transition:background 0.2s;">
+          <i class="fab fa-whatsapp" style="font-size:1.3rem;"></i> Enviar comprovante pelo WhatsApp
+        </a>
+      </div>
     </div>
   </div>
   <footer>
@@ -1208,37 +1223,94 @@
     const closeModal = document.getElementById('close-modal');
     const planoCards = document.querySelectorAll('.plano-card');
     const modalTitle = document.querySelector('.modal h2');
-    const qrImg = document.querySelector('.qr-section img');
-    const qrText = document.querySelector('.qr-section div');
+    const qrImg = document.querySelector('#qr-section img');
+    const qrText = document.querySelector('#qr-section div');
+    const qrSection = document.getElementById('qr-section');
+    const bankInfo = document.getElementById('bank-info');
+    const whatsappSection = document.getElementById('whatsapp-section');
+    const paymentMethodSelect = document.getElementById('payment-method-select');
+    const btnPix = document.getElementById('btn-pix');
+    const btnCartao = document.getElementById('btn-cartao');
+
+    const planos = [
+      { nome: 'Plano Mensal', valor: 150, qr: 'https://i.imgur.com/NX8HTd3.png' },
+      { nome: 'Plano Trimestral', valor: 405, qr: 'https://i.imgur.com/TPgSWtn.png' },
+      { nome: 'Plano Semestral', valor: 720, qr: 'https://i.imgur.com/f7R4ggi.png' },
+      { nome: 'Plano Anual', valor: 1000, qr: 'https://i.imgur.com/Nk3GYzp.png' }
+    ];
+
+    let planoAtual = planos[0];
+
+    function resetModalPayment() {
+      paymentMethodSelect.style.display = 'block';
+      qrSection.style.display = 'none';
+      bankInfo.style.display = 'none';
+      whatsappSection.style.display = 'none';
+      btnPix.style.borderColor = 'rgba(0,230,255,0.4)';
+      btnPix.style.background = 'rgba(0,230,255,0.08)';
+      btnCartao.style.borderColor = 'rgba(0,230,255,0.4)';
+      btnCartao.style.background = 'rgba(0,230,255,0.08)';
+    }
 
     planoCards.forEach((card, idx) => {
       card.style.cursor = 'pointer';
       card.addEventListener('click', () => {
-        // Definir QR e texto conforme o card
-        if(idx === 1) { // Trimestral
-          modalTitle.textContent = 'Pagamento - Plano Trimestral';
-          qrImg.src = 'https://i.imgur.com/TPgSWtn.png';
-          qrImg.alt = 'QR Code Pagamento R$ 405';
-          qrText.textContent = 'Escaneie para pagar R$ 405';
-        } else if(idx === 2) { // Semestral
-          modalTitle.textContent = 'Pagamento - Plano Semestral';
-          qrImg.src = 'https://i.imgur.com/f7R4ggi.png';
-          qrImg.alt = 'QR Code Pagamento R$ 720';
-          qrText.textContent = 'Escaneie para pagar R$ 720';
-        } else if(idx === 3) { // Anual
-          modalTitle.textContent = 'Pagamento - Plano Anual';
-          qrImg.src = 'https://i.imgur.com/Nk3GYzp.png';
-          qrImg.alt = 'QR Code Pagamento R$ 1.000';
-          qrText.textContent = 'Escaneie para pagar R$ 1.000';
-        } else {
-          modalTitle.textContent = 'Pagamento - Plano Mensal';
-          qrImg.src = 'https://i.imgur.com/NX8HTd3.png';
-          qrImg.alt = 'QR Code Pagamento R$ 150';
-          qrText.textContent = 'Escaneie para pagar R$ 150';
-        }
+        planoAtual = planos[idx];
+        modalTitle.textContent = 'Pagamento - ' + planoAtual.nome;
+        qrImg.src = planoAtual.qr;
+        qrImg.alt = 'QR Code Pagamento R$ ' + planoAtual.valor;
+        qrText.textContent = 'Escaneie para pagar R$ ' + planoAtual.valor.toLocaleString('pt-BR');
+        resetModalPayment();
         modalBg.classList.add('active');
       });
     });
+
+    btnPix.addEventListener('click', () => {
+      qrSection.style.display = 'flex';
+      bankInfo.style.display = 'block';
+      whatsappSection.style.display = 'block';
+      btnPix.style.borderColor = 'var(--accent-blue)';
+      btnPix.style.background = 'rgba(0,230,255,0.2)';
+      btnCartao.style.borderColor = 'rgba(0,230,255,0.4)';
+      btnCartao.style.background = 'rgba(0,230,255,0.08)';
+    });
+
+    btnCartao.addEventListener('click', async () => {
+      const nome = document.getElementById('nome').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const telefone = document.getElementById('telefone').value.trim();
+      if (!nome || !email) {
+        alert('Por favor, preencha nome e e-mail para pagar com cartão ou boleto.');
+        return;
+      }
+      btnCartao.disabled = true;
+      btnCartao.textContent = 'Abrindo...';
+      try {
+        const baseUrl = window.location.origin;
+        const res = await fetch(baseUrl + '/api/mercadopago/preference', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            planName: planoAtual.nome,
+            amount: planoAtual.valor,
+            quantity: 1,
+            payer: { name: nome.split(' ')[0], surname: nome.split(' ').slice(1).join(' ') || '', email, phone: telefone }
+          })
+        });
+        const data = await res.json();
+        if (data.init_point) {
+          window.location.href = data.init_point;
+        } else {
+          throw new Error(data.error || 'Erro ao gerar pagamento');
+        }
+      } catch (err) {
+        alert(err.message || 'Erro ao conectar com Mercado Pago. Tente novamente ou use PIX.');
+      } finally {
+        btnCartao.disabled = false;
+        btnCartao.innerHTML = '<i class="fas fa-credit-card" style="font-size:1.3rem;"></i> Cartão / Boleto';
+      }
+    });
+
     closeModal.addEventListener('click', () => {
       modalBg.classList.remove('active');
     });

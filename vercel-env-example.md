@@ -17,6 +17,11 @@ DB_PORT=3306
 SESSION_SECRET=sua_chave_secreta_muito_forte
 ```
 
+### **Mercado Pago (opcional - pagamentos em precos.html)**
+```
+MP_ACCESS_TOKEN=seu_access_token_mercadopago
+```
+
 ## 📋 **Como Configurar**
 
 ### **Opção 1: Via Painel Web do Vercel**

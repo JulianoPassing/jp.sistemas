@@ -75,6 +75,7 @@ app.use(session({
 }));
 
 app.use('/api/cobrancas', cobrancasHandler);
+app.use('/api/mercadopago', require('./api/mercadopago'));
 
 // Função utilitária para converter undefined para null
 function safeValue(value) {
