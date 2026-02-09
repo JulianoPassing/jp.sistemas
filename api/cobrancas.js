@@ -4,21 +4,17 @@ const path = require('path');
 const fs = require('fs').promises;
 const multer = require('multer');
 const nodemailer = require('nodemailer');
+const AdmZip = require('adm-zip');
 const { getCobrancasDatabaseConfig } = require('../database-config');
 const bcrypt = require('bcryptjs');
 
 const router = express.Router();
 
-// Multer para backup por e-mail (4 arquivos em memória)
+// Multer para backup por e-mail: 1 arquivo ZIP (reduz tamanho do upload e evita 413)
 const uploadBackupEmail = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 15 * 1024 * 1024 }
-}).fields([
-  { name: 'emprestimos_excel', maxCount: 1 },
-  { name: 'emprestimos_pdf', maxCount: 1 },
-  { name: 'clientes_excel', maxCount: 1 },
-  { name: 'clientes_pdf', maxCount: 1 }
-]);
+  limits: { fileSize: 25 * 1024 * 1024 }
+}).single('backup_zip');
 
 // Função para criar conexão com banco de cobranças do usuário
 async function createCobrancasConnection(username) {
@@ -2589,13 +2585,40 @@ router.post('/backup-email', ensureDatabase, uploadBackupEmail, async (req, res)
     }
     const destinoEmail = String(rows[0].email).trim();
 
-    const files = req.files;
-    if (!files || !files.emprestimos_excel || !files.emprestimos_pdf || !files.clientes_excel || !files.clientes_pdf) {
+    if (!req.file || !req.file.buffer) {
       return res.status(400).json({
-        error: 'Arquivos incompletos.',
-        message: 'Envie os 4 arquivos: Empréstimos (Excel e PDF) e Carteira de Clientes (Excel e PDF).'
+        error: 'Arquivo não enviado.',
+        message: 'Envie o backup em um único arquivo ZIP (gerado pelo sistema).'
       });
     }
+
+    const zip = new AdmZip(req.file.buffer);
+    const entries = zip.getEntries().filter(function (e) { return !e.isDirectory; });
+
+    const findByPattern = function (pattern) {
+      const entry = entries.find(function (e) {
+        const name = (e.entryName || '').split('/').pop() || '';
+        return pattern.test(name);
+      });
+      if (!entry) return null;
+      const name = (entry.entryName || '').split('/').pop() || 'arquivo';
+      return { filename: name, content: entry.getData() };
+    };
+
+    const a1 = findByPattern(/Backup_Emprestimos.*\.xlsx$/i);
+    const a2 = findByPattern(/Backup_Emprestimos.*\.pdf$/i);
+    const a3 = findByPattern(/Backup_Carteira_Clientes.*\.xlsx$/i);
+    const a4 = findByPattern(/Backup_Carteira_Clientes.*\.pdf$/i);
+
+    if (!a1 || !a2 || !a3 || !a4) {
+      const names = entries.map(function (e) { return (e.entryName || '').split('/').pop(); });
+      return res.status(400).json({
+        error: 'ZIP inválido.',
+        message: 'O ZIP deve conter os 4 arquivos (Empréstimos e Carteira de Clientes em Excel e PDF). Encontrados: ' + (names.join(', ') || 'nenhum')
+      });
+    }
+
+    const attachments = [a1, a2, a3, a4];
 
     const smtpUser = process.env.SMTP_USER || process.env.BACKUP_EMAIL_USER || 'suporte.jpsistemas@gmail.com';
     const smtpPass = process.env.SMTP_PASS || process.env.BACKUP_EMAIL_APP_PASSWORD;
@@ -2669,13 +2692,6 @@ router.post('/backup-email', ensureDatabase, uploadBackupEmail, async (req, res)
       secure: false,
       auth: { user: smtpUser, pass: smtpPass }
     });
-
-    const attachments = [
-      { filename: (files.emprestimos_excel[0].originalname || 'Backup_Emprestimos.xlsx'), content: files.emprestimos_excel[0].buffer },
-      { filename: (files.emprestimos_pdf[0].originalname || 'Backup_Emprestimos.pdf'), content: files.emprestimos_pdf[0].buffer },
-      { filename: (files.clientes_excel[0].originalname || 'Backup_Carteira_Clientes.xlsx'), content: files.clientes_excel[0].buffer },
-      { filename: (files.clientes_pdf[0].originalname || 'Backup_Carteira_Clientes.pdf'), content: files.clientes_pdf[0].buffer }
-    ];
 
     await transporter.sendMail({
       from: `"JP-Cobranças Suporte" <${smtpUser}>`,
