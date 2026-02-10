@@ -30,6 +30,40 @@ async function ensurePrecosDatabase() {
   await precosConn.end();
 }
 
+// GET /api/precos/testar-email - Testa se o SMTP está funcionando (enviar para julianosalm@gmail.com)
+router.get('/testar-email', async (req, res) => {
+  const smtpUser = (process.env.SMTP_USER || process.env.BACKUP_EMAIL_USER || 'suporte.jpsistemas@gmail.com').trim();
+  const smtpPass = (process.env.SMTP_PASS || process.env.BACKUP_EMAIL_APP_PASSWORD || '').trim();
+
+  if (!smtpPass) {
+    return res.json({ ok: false, erro: 'SMTP_PASS não configurado no .env' });
+  }
+
+  try {
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransport({
+      host: (process.env.SMTP_HOST || 'smtp.gmail.com').trim(),
+      port: parseInt(process.env.SMTP_PORT || '587', 10),
+      secure: false,
+      auth: { user: smtpUser, pass: smtpPass }
+    });
+    await transporter.sendMail({
+      from: `"JP Sistemas" <${smtpUser}>`,
+      to: 'julianosalm@gmail.com',
+      subject: 'Teste de email - JP Sistemas',
+      html: '<p>Se você recebeu este email, o SMTP está funcionando corretamente.</p>'
+    });
+    res.json({ ok: true, msg: 'Email de teste enviado para julianosalm@gmail.com. Verifique a caixa de entrada.' });
+  } catch (err) {
+    console.error('[Precos] Erro no teste de email:', err.message);
+    res.json({
+      ok: false,
+      erro: err.message,
+      dica: err.code === 'EAUTH' ? 'Use Senha de app do Gmail, não a senha normal.' : ''
+    });
+  }
+});
+
 // GET /api/precos/confirmar - Busca dados e envia email (chamado na página de sucesso)
 router.get('/confirmar', async (req, res) => {
   try {
@@ -51,15 +85,27 @@ router.get('/confirmar', async (req, res) => {
     }
 
     const pag = rows[0];
-    const envioEmail = await enviarEmailConfirmacao(pag);
-
-    if (envioEmail) {
-      const conn2 = await mysql.createConnection(getPrecosDatabaseConfig());
-      await conn2.execute(
-        "UPDATE pagamentos_precos SET status = 'email_sent' WHERE ref_id = ?",
-        [ref]
-      );
-      await conn2.end();
+    let envioEmail = false;
+    try {
+      envioEmail = await enviarEmailConfirmacao(pag);
+      if (envioEmail) {
+        const conn2 = await mysql.createConnection(getPrecosDatabaseConfig());
+        await conn2.execute(
+          "UPDATE pagamentos_precos SET status = 'email_sent' WHERE ref_id = ?",
+          [ref]
+        );
+        await conn2.end();
+      }
+    } catch (emailErr) {
+      console.error('[Precos] Falha no envio do email:', emailErr.message);
+      res.json({
+        success: true,
+        plano: pag.plano,
+        valor: pag.valor_final,
+        emailEnviado: false,
+        emailErro: 'Falha ao enviar. Verifique SMTP_PASS no servidor (use Senha de app do Gmail).'
+      });
+      return;
     }
 
     res.json({
@@ -76,11 +122,11 @@ router.get('/confirmar', async (req, res) => {
 
 // Envia email de confirmação para julianosalm@gmail.com
 async function enviarEmailConfirmacao(pag) {
-  const smtpUser = process.env.SMTP_USER || process.env.BACKUP_EMAIL_USER || 'suporte.jpsistemas@gmail.com';
-  const smtpPass = process.env.SMTP_PASS || process.env.BACKUP_EMAIL_APP_PASSWORD;
+  const smtpUser = (process.env.SMTP_USER || process.env.BACKUP_EMAIL_USER || 'suporte.jpsistemas@gmail.com').trim();
+  const smtpPass = (process.env.SMTP_PASS || process.env.BACKUP_EMAIL_APP_PASSWORD || '').trim();
 
   if (!smtpPass) {
-    console.warn('SMTP não configurado - email de confirmação não enviado');
+    console.warn('[Precos] SMTP não configurado - SMTP_PASS ou BACKUP_EMAIL_APP_PASSWORD ausente no .env');
     return false;
   }
 
@@ -154,21 +200,30 @@ async function enviarEmailConfirmacao(pag) {
 </html>
 `;
 
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587', 10),
-    secure: false,
-    auth: { user: smtpUser, pass: smtpPass }
-  });
+  try {
+    const transporter = nodemailer.createTransport({
+      host: (process.env.SMTP_HOST || 'smtp.gmail.com').trim(),
+      port: parseInt(process.env.SMTP_PORT || '587', 10),
+      secure: false,
+      auth: { user: smtpUser, pass: smtpPass }
+    });
 
-  await transporter.sendMail({
-    from: `"JP Sistemas" <${smtpUser}>`,
-    to: 'julianosalm@gmail.com',
-    subject: `Novo pagamento: ${pag.plano} - ${valorFormatado} - ${pag.nome}`,
-    html: htmlBody
-  });
+    await transporter.sendMail({
+      from: `"JP Sistemas" <${smtpUser}>`,
+      to: 'julianosalm@gmail.com',
+      subject: `Novo pagamento: ${pag.plano} - ${valorFormatado} - ${pag.nome}`,
+      html: htmlBody
+    });
 
-  return true;
+    console.log('[Precos] Email de confirmação enviado para julianosalm@gmail.com');
+    return true;
+  } catch (err) {
+    console.error('[Precos] Erro ao enviar email de confirmação:', err.message);
+    if (err.code === 'EAUTH' || err.responseCode === 535) {
+      console.error('[Precos] Falha de autenticação SMTP. Use "Senha de app" do Gmail (não a senha normal): https://myaccount.google.com/apppasswords');
+    }
+    throw err; // Propaga para o chamador retornar info ao cliente
+  }
 }
 
 module.exports = router;

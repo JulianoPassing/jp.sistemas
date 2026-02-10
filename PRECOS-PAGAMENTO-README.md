@@ -36,7 +36,17 @@ const CUPONS = {
 
 ### Email (para envio de confirmação)
 - `SMTP_USER` ou `BACKUP_EMAIL_USER` – ex: `suporte.jpsistemas@gmail.com`
-- `SMTP_PASS` ou `BACKUP_EMAIL_APP_PASSWORD` – senha de app do Gmail
+- `SMTP_PASS` ou `BACKUP_EMAIL_APP_PASSWORD` – **obrigatório usar Senha de app do Gmail** (não a senha normal da conta)
+
+**Gmail:** A senha normal não funciona. Crie uma "Senha de app" em: https://myaccount.google.com/apppasswords
+
+**Formato no .env (sem espaços):**
+```
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=suporte.jpsistemas@gmail.com
+SMTP_PASS=xxxx xxxx xxxx xxxx
+```
 
 Se o SMTP não estiver configurado, o pagamento funciona normalmente, mas o email não é enviado.
 
