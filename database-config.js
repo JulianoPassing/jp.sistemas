@@ -174,6 +174,20 @@ function getCobrancasDatabaseConfig() {
   };
 }
 
+// Configuração para banco de pagamentos precos (site público)
+function getPrecosDatabaseConfig() {
+  const config = getDatabaseConfig();
+  return {
+    host: config.host,
+    port: config.port || 3306,
+    user: config.user,
+    password: config.password,
+    database: process.env.DB_PRECOS_DATABASE || 'jpsistemas_sessions',
+    ssl: config.ssl,
+    charset: config.charset
+  };
+}
+
 module.exports = {
   getDatabaseConfig,
   getSessionConfig,
@@ -181,5 +195,6 @@ module.exports = {
   getUserDatabaseConfig,
   getRootConfig,
   getCobrancasDatabaseConfig,
+  getPrecosDatabaseConfig,
   databaseConfigs
 }; 

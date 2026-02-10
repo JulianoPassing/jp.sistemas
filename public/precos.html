@@ -394,6 +394,75 @@
       border-top: 8px solid var(--accent-blue);
       border: 2px solid rgba(0, 230, 255, 0.2);
     }
+    .modal-pagamento { max-width: 440px; text-align: left; }
+    .resumo-compra {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1rem;
+      border: 1px solid rgba(0, 230, 255, 0.2);
+    }
+    .resumo-linha { display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 0.4rem; }
+    .resumo-linha.total { margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid rgba(0,47,75,0.15); font-size: 1.1rem; color: var(--primary-blue); }
+    .form-secao { margin-bottom: 1rem; }
+    .form-row-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .cupom-input-group { display: flex; gap: 0.5rem; align-items: stretch; }
+    .cupom-input-group input { flex: 1; }
+    .btn-cupom {
+      padding: 0.5rem 1rem;
+      background: var(--primary-blue);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .btn-cupom:hover { background: #003d60; }
+    .cupom-msg { font-size: 0.85rem; margin-top: 0.3rem; display: block; }
+    .cupom-msg.success { color: #059669; }
+    .cupom-msg.error { color: #dc2626; }
+    .payment-cta { margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
+    .payment-info { font-size: 0.9rem; color: #64748b; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-pagar-mp {
+      width: 100%;
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, #009ee3 0%, #00b4d8 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(0,158,227,0.35);
+    }
+    .btn-pagar-mp:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,158,227,0.45); }
+    .btn-pagar-mp:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+    .toast-success {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      color: #fff;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(5,150,105,0.4);
+      z-index: 9999;
+      animation: slideUp 0.4s ease;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translate(-50%, 20px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    .toast-content { display: flex; align-items: center; gap: 1rem; }
+    .toast-content i { font-size: 2rem; }
     @keyframes fadeDown {
       from { opacity: 0; transform: translateY(-30px) scale(0.95); }
       to { opacity: 1; transform: translateY(0) scale(1); }
@@ -838,6 +907,7 @@
       }
     }
     @media (max-width: 600px) {
+      .form-row-duo { grid-template-columns: 1fr; }
       .modal.sistema-modal {
         max-width: 95vw;
         padding: 1.5rem 1rem;
@@ -1155,54 +1225,83 @@
 
   <!-- Modal de Pagamento -->
   <div class="modal-bg" id="modal-bg">
-    <div class="modal">
+    <div class="modal modal-pagamento">
       <button class="close-btn" id="close-modal" title="Fechar">&times;</button>
-      <h2>Pagamento - Plano Mensal</h2>
-      <form autocomplete="off" onsubmit="return false;">
-        <label for="nome">Nome e Sobrenome</label>
-        <div class="modal-input-group"><i class="fas fa-user"></i>
-        <input type="text" id="nome" name="nome" required placeholder="Seu nome completo">
+      <h2 id="modal-titulo">Pagamento - Plano Mensal</h2>
+      <div class="resumo-compra" id="resumo-compra">
+        <div class="resumo-linha">
+          <span>Plano:</span>
+          <strong id="resumo-plano">Plano Mensal</strong>
         </div>
-        <label for="cpf">CPF</label>
-        <div class="modal-input-group"><i class="fas fa-id-card"></i>
-        <input type="text" id="cpf" name="cpf" required placeholder="000.000.000-00" maxlength="14">
+        <div class="resumo-linha">
+          <span>Subtotal:</span>
+          <span id="resumo-subtotal">R$ 150,00</span>
         </div>
-        <label for="email">E-mail</label>
-        <div class="modal-input-group"><i class="fas fa-envelope"></i>
-        <input type="email" id="email" name="email" required placeholder="seu@email.com">
+        <div class="resumo-linha cupom-linha" id="resumo-desconto-linha" style="display:none;">
+          <span>Desconto (<span id="resumo-cupom-nome"></span>):</span>
+          <span id="resumo-desconto" style="color:#059669;">- R$ 0,00</span>
         </div>
-        <label for="telefone">Telefone</label>
-        <div class="modal-input-group"><i class="fas fa-phone"></i>
-        <input type="tel" id="telefone" name="telefone" required placeholder="(99) 99999-9999" maxlength="15">
+        <div class="resumo-linha total">
+          <span>Total:</span>
+          <strong id="resumo-total">R$ 150,00</strong>
+        </div>
+      </div>
+      <form id="form-pagamento" autocomplete="off" onsubmit="return false;">
+        <div class="form-secao">
+          <label for="nome">Nome completo *</label>
+          <div class="modal-input-group">
+            <i class="fas fa-user"></i>
+            <input type="text" id="nome" name="nome" required placeholder="Seu nome completo">
+          </div>
+        </div>
+        <div class="form-secao">
+          <label for="email">E-mail *</label>
+          <div class="modal-input-group">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="email" name="email" required placeholder="seu@email.com">
+          </div>
+        </div>
+        <div class="form-row-duo">
+          <div class="form-secao">
+            <label for="cpf">CPF *</label>
+            <div class="modal-input-group">
+              <i class="fas fa-id-card"></i>
+              <input type="text" id="cpf" name="cpf" required placeholder="000.000.000-00" maxlength="14">
+            </div>
+          </div>
+          <div class="form-secao">
+            <label for="telefone">Telefone *</label>
+            <div class="modal-input-group">
+              <i class="fas fa-phone"></i>
+              <input type="tel" id="telefone" name="telefone" required placeholder="(99) 99999-9999" maxlength="16">
+            </div>
+          </div>
+        </div>
+        <div class="form-secao cupom-secao">
+          <label for="cupom">Cupom de desconto</label>
+          <div class="cupom-input-group">
+            <input type="text" id="cupom" name="cupom" placeholder="Digite o código do cupom" maxlength="20">
+            <button type="button" id="btn-aplicar-cupom" class="btn-cupom">Aplicar</button>
+          </div>
+          <span class="cupom-msg" id="cupom-msg"></span>
         </div>
       </form>
-      <!-- Escolha da forma de pagamento -->
-      <div class="payment-method-select" id="payment-method-select" style="margin:1rem 0;">
-        <label style="display:block;margin-bottom:0.6rem;font-weight:600;color:var(--primary-blue);">Escolha a forma de pagamento</label>
-        <div style="display:flex;gap:0.8rem;flex-wrap:wrap;justify-content:center;">
-          <button type="button" class="btn-payment-method" id="btn-pix" style="flex:1;min-width:140px;padding:0.8rem 1rem;border:2px solid rgba(0,230,255,0.4);background:rgba(0,230,255,0.08);border-radius:12px;cursor:pointer;font-weight:600;color:var(--primary-blue);transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:0.5rem;">
-            <i class="fas fa-qrcode" style="font-size:1.3rem;"></i> PIX
-          </button>
-          <button type="button" class="btn-payment-method" id="btn-cartao" style="flex:1;min-width:140px;padding:0.8rem 1rem;border:2px solid rgba(0,230,255,0.4);background:rgba(0,230,255,0.08);border-radius:12px;cursor:pointer;font-weight:600;color:var(--primary-blue);transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:0.5rem;">
-            <i class="fas fa-credit-card" style="font-size:1.3rem;"></i> Cartão / Boleto
-          </button>
-        </div>
+      <div class="payment-cta">
+        <p class="payment-info"><i class="fas fa-shield-alt"></i> Pague com PIX, cartão ou boleto via Mercado Pago</p>
+        <button type="button" id="btn-pagar" class="btn-pagar-mp">
+          <i class="fas fa-lock"></i> Ir para pagamento seguro
+        </button>
       </div>
-      <!-- Seção PIX (QR Code) - visível ao escolher PIX -->
-      <div class="qr-section" id="qr-section" style="display:none;">
-        <img src="https://i.imgur.com/NX8HTd3.png" alt="QR Code Pagamento R$ 150" />
-        <div style="font-size:0.98rem;color:var(--primary-blue);font-weight:600;">Escaneie para pagar R$ 150</div>
-      </div>
-      <div class="bank-info" id="bank-info" style="display:none;">
-        <div><strong>Agência:</strong> 0001</div>
-        <div><strong>Conta:</strong> 48342465-6</div>
-        <div><strong>Banco:</strong> 0260 - Nu Pagamento S.A</div>
-        <div><strong>Nome:</strong> Juliano Salm Passing Junior</div>
-      </div>
-      <div id="whatsapp-section" style="display:none;">
-        <a href="https://wa.me/5548996852138?text=Ol%C3%A1%2C%20acabei%20de%20efetuar%20a%20compra%2C%20segue%20comprovante." target="_blank" rel="noopener" class="whatsapp-btn" style="display:inline-flex;align-items:center;gap:0.5rem;margin-top:1.3rem;padding:0.7rem 1.2rem;background:#25d366;color:#fff;font-weight:700;font-size:1.08rem;border-radius:8px;text-decoration:none;box-shadow:0 2px 8px rgba(37,211,102,0.13);transition:background 0.2s;">
-          <i class="fab fa-whatsapp" style="font-size:1.3rem;"></i> Enviar comprovante pelo WhatsApp
-        </a>
+    </div>
+  </div>
+
+  <!-- Toast de sucesso (aparece ao retornar do MP) -->
+  <div class="toast-success" id="toast-success" style="display:none;">
+    <div class="toast-content">
+      <i class="fas fa-check-circle"></i>
+      <div>
+        <strong>Pagamento confirmado!</strong>
+        <p id="toast-mensagem">Obrigado pela compra. Em breve entraremos em contato.</p>
       </div>
     </div>
   </div>
@@ -1212,79 +1311,151 @@
   <script>
     window.addEventListener('scroll', function() {
         const header = document.querySelector('header');
-        if (window.scrollY > 50) { 
-            header.classList.add('scrolled');
-        } else {
-            header.classList.remove('scrolled');
-        }
+        if (window.scrollY > 50) { header.classList.add('scrolled'); }
+        else { header.classList.remove('scrolled'); }
     });
-    // Modal de Pagamento
-    const modalBg = document.getElementById('modal-bg');
-    const closeModal = document.getElementById('close-modal');
-    const planoCards = document.querySelectorAll('.plano-card');
-    const modalTitle = document.querySelector('.modal h2');
-    const qrImg = document.querySelector('#qr-section img');
-    const qrText = document.querySelector('#qr-section div');
-    const qrSection = document.getElementById('qr-section');
-    const bankInfo = document.getElementById('bank-info');
-    const whatsappSection = document.getElementById('whatsapp-section');
-    const paymentMethodSelect = document.getElementById('payment-method-select');
-    const btnPix = document.getElementById('btn-pix');
-    const btnCartao = document.getElementById('btn-cartao');
 
+    // --- Cupons de desconto (adicionar novos conforme necessário) ---
+    const CUPONS = {
+      'PROMO10': { desconto: 10, desc: '10%' },
+      'PROMO20': { desconto: 20, desc: '20%' },
+      'BEMVINDO': { desconto: 5, desc: '5%' },
+      'ANUAL2025': { desconto: 15, desc: '15%' }
+    };
+
+    // --- Planos ---
     const planos = [
-      { nome: 'Plano Mensal', valor: 150, qr: 'https://i.imgur.com/NX8HTd3.png' },
-      { nome: 'Plano Trimestral', valor: 405, qr: 'https://i.imgur.com/TPgSWtn.png' },
-      { nome: 'Plano Semestral', valor: 720, qr: 'https://i.imgur.com/f7R4ggi.png' },
-      { nome: 'Plano Anual', valor: 1000, qr: 'https://i.imgur.com/Nk3GYzp.png' }
+      { nome: 'Plano Mensal', valor: 150 },
+      { nome: 'Plano Trimestral', valor: 405 },
+      { nome: 'Plano Semestral', valor: 720 },
+      { nome: 'Plano Anual', valor: 1000 }
     ];
 
     let planoAtual = planos[0];
+    let cupomAtivo = null;
 
-    function resetModalPayment() {
-      paymentMethodSelect.style.display = 'block';
-      qrSection.style.display = 'none';
-      bankInfo.style.display = 'none';
-      whatsappSection.style.display = 'none';
-      btnPix.style.borderColor = 'rgba(0,230,255,0.4)';
-      btnPix.style.background = 'rgba(0,230,255,0.08)';
-      btnCartao.style.borderColor = 'rgba(0,230,255,0.4)';
-      btnCartao.style.background = 'rgba(0,230,255,0.08)';
+    // --- Utilitários ---
+    function formatarMoeda(v) {
+      return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+    function formatarCPF(v) {
+      return v.replace(/\D/g, '').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
+    function formatarTelefone(v) {
+      return v.replace(/\D/g, '').replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2').slice(0, 15);
+    }
+    function validarCPF(cpf) {
+      cpf = cpf.replace(/\D/g, '');
+      if (cpf.length !== 11) return false;
+      if (/^(\d)\1{10}$/.test(cpf)) return false;
+      let s = 0; for (let i = 0; i < 9; i++) s += parseInt(cpf[i]) * (10 - i);
+      let r = s % 11; if (r < 2) r = 0; else r = 11 - r;
+      if (r !== parseInt(cpf[9])) return false;
+      s = 0; for (let i = 0; i < 10; i++) s += parseInt(cpf[i]) * (11 - i);
+      r = s % 11; if (r < 2) r = 0; else r = 11 - r;
+      return r === parseInt(cpf[10]);
     }
 
-    planoCards.forEach((card, idx) => {
+    // --- Máscaras ---
+    document.getElementById('cpf').addEventListener('input', function(e) {
+      e.target.value = formatarCPF(e.target.value);
+    });
+    document.getElementById('telefone').addEventListener('input', function(e) {
+      e.target.value = formatarTelefone(e.target.value);
+    });
+
+    // --- Atualizar resumo ---
+    function atualizarResumo() {
+      const subtotal = planoAtual.valor;
+      const desconto = cupomAtivo ? (subtotal * cupomAtivo.desconto / 100) : 0;
+      const total = subtotal - desconto;
+
+      document.getElementById('resumo-plano').textContent = planoAtual.nome;
+      document.getElementById('resumo-subtotal').textContent = formatarMoeda(subtotal);
+      document.getElementById('resumo-total').textContent = formatarMoeda(total);
+
+      const ln = document.getElementById('resumo-desconto-linha');
+      if (cupomAtivo) {
+        ln.style.display = 'flex';
+        document.getElementById('resumo-cupom-nome').textContent = cupomAtivo.desc;
+        document.getElementById('resumo-desconto').textContent = '- ' + formatarMoeda(desconto);
+      } else {
+        ln.style.display = 'none';
+      }
+    }
+
+    // --- Cupom ---
+    document.getElementById('btn-aplicar-cupom').addEventListener('click', function() {
+      const input = document.getElementById('cupom');
+      const msg = document.getElementById('cupom-msg');
+      const codigo = (input.value || '').trim().toUpperCase();
+      msg.className = 'cupom-msg';
+      msg.textContent = '';
+
+      if (!codigo) {
+        cupomAtivo = null;
+        atualizarResumo();
+        return;
+      }
+
+      const cupom = CUPONS[codigo];
+      if (cupom) {
+        cupomAtivo = cupom;
+        msg.textContent = 'Cupom aplicado com sucesso!';
+        msg.classList.add('success');
+      } else {
+        cupomAtivo = null;
+        msg.textContent = 'Cupom inválido.';
+        msg.classList.add('error');
+      }
+      atualizarResumo();
+    });
+
+    // --- Abrir modal ao clicar no plano ---
+    const modalBg = document.getElementById('modal-bg');
+    const closeModal = document.getElementById('close-modal');
+
+    document.querySelectorAll('.plano-card').forEach((card, idx) => {
       card.style.cursor = 'pointer';
       card.addEventListener('click', () => {
         planoAtual = planos[idx];
-        modalTitle.textContent = 'Pagamento - ' + planoAtual.nome;
-        qrImg.src = planoAtual.qr;
-        qrImg.alt = 'QR Code Pagamento R$ ' + planoAtual.valor;
-        qrText.textContent = 'Escaneie para pagar R$ ' + planoAtual.valor.toLocaleString('pt-BR');
-        resetModalPayment();
+        cupomAtivo = null;
+        document.getElementById('cupom').value = '';
+        document.getElementById('cupom-msg').textContent = '';
+        document.getElementById('modal-titulo').textContent = 'Pagamento - ' + planoAtual.nome;
+        atualizarResumo();
         modalBg.classList.add('active');
       });
     });
 
-    btnPix.addEventListener('click', () => {
-      qrSection.style.display = 'flex';
-      bankInfo.style.display = 'block';
-      whatsappSection.style.display = 'block';
-      btnPix.style.borderColor = 'var(--accent-blue)';
-      btnPix.style.background = 'rgba(0,230,255,0.2)';
-      btnCartao.style.borderColor = 'rgba(0,230,255,0.4)';
-      btnCartao.style.background = 'rgba(0,230,255,0.08)';
-    });
-
-    btnCartao.addEventListener('click', async () => {
+    // --- Pagar com Mercado Pago ---
+    document.getElementById('btn-pagar').addEventListener('click', async function() {
       const nome = document.getElementById('nome').value.trim();
       const email = document.getElementById('email').value.trim();
+      const cpf = document.getElementById('cpf').value.trim();
       const telefone = document.getElementById('telefone').value.trim();
+
       if (!nome || !email) {
-        alert('Por favor, preencha nome e e-mail para pagar com cartão ou boleto.');
+        alert('Por favor, preencha nome e e-mail.');
         return;
       }
-      btnCartao.disabled = true;
-      btnCartao.textContent = 'Abrindo...';
+      if (!validarCPF(cpf)) {
+        alert('Por favor, informe um CPF válido.');
+        return;
+      }
+      if (!telefone || telefone.replace(/\D/g, '').length < 10) {
+        alert('Por favor, informe um telefone válido.');
+        return;
+      }
+
+      const subtotal = planoAtual.valor;
+      const desconto = cupomAtivo ? (subtotal * cupomAtivo.desconto / 100) : 0;
+      const valorFinal = subtotal - desconto;
+
+      const btn = this;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redirecionando...';
+
       try {
         const baseUrl = window.location.origin;
         const res = await fetch(baseUrl + '/api/mercadopago/preference', {
@@ -1292,9 +1463,16 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             planName: planoAtual.nome,
-            amount: planoAtual.valor,
+            amount: valorFinal,
             quantity: 1,
-            payer: { name: nome.split(' ')[0], surname: nome.split(' ').slice(1).join(' ') || '', email, phone: telefone }
+            payer: {
+              name: nome.split(' ')[0] || nome,
+              surname: nome.split(' ').slice(1).join(' ') || '',
+              email,
+              phone: telefone.replace(/\D/g, '').slice(-11),
+              cpf: cpf.replace(/\D/g, ''),
+              cupom: cupomAtivo ? Object.keys(CUPONS).find(k => CUPONS[k] === cupomAtivo) : null
+            }
           })
         });
         const data = await res.json();
@@ -1304,19 +1482,45 @@
           throw new Error(data.error || 'Erro ao gerar pagamento');
         }
       } catch (err) {
-        alert(err.message || 'Erro ao conectar com Mercado Pago. Tente novamente ou use PIX.');
+        alert(err.message || 'Erro ao conectar com Mercado Pago. Tente novamente.');
       } finally {
-        btnCartao.disabled = false;
-        btnCartao.innerHTML = '<i class="fas fa-credit-card" style="font-size:1.3rem;"></i> Cartão / Boleto';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-lock"></i> Ir para pagamento seguro';
       }
     });
 
-    closeModal.addEventListener('click', () => {
-      modalBg.classList.remove('active');
-    });
-    modalBg.addEventListener('click', (e) => {
-      if (e.target === modalBg) modalBg.classList.remove('active');
-    });
+    closeModal.addEventListener('click', () => modalBg.classList.remove('active'));
+    modalBg.addEventListener('click', (e) => { if (e.target === modalBg) modalBg.classList.remove('active'); });
+
+    // --- Tratar retorno de sucesso e enviar email ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get('status');
+    const ref = urlParams.get('ref');
+
+    if (status === 'success' && ref) {
+      (async () => {
+        try {
+          const baseUrl = window.location.origin;
+          const res = await fetch(baseUrl + '/api/precos/confirmar?ref=' + encodeURIComponent(ref));
+          const data = await res.json();
+          if (data.success) {
+            const toast = document.getElementById('toast-success');
+            document.getElementById('toast-mensagem').textContent =
+              'Obrigado pela compra de ' + data.plano + '! ' +
+              (data.emailEnviado ? 'Recebemos sua confirmação e entraremos em contato em breve.' : '');
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 8000);
+            window.history.replaceState({}, '', window.location.pathname);
+          }
+        } catch (e) { console.warn('Erro ao confirmar pagamento:', e); }
+      })();
+    } else if (status === 'failure') {
+      alert('O pagamento não foi aprovado. Tente novamente ou escolha outra forma de pagamento.');
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (status === 'pending') {
+      alert('Pagamento pendente. Assim que for confirmado, entraremos em contato.');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
     // Configurar partículas de fundo
     particlesJS('particles-js', {
       "particles": {
