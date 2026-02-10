@@ -1516,7 +1516,7 @@
 
       const subtotal = planoAtual.valor;
       const desconto = cupomAtivo ? (subtotal * cupomAtivo.desconto / 100) : 0;
-      const valorFinal = subtotal - desconto;
+      const valorFinal = Math.round((subtotal - desconto) * 100) / 100;
 
       const btn = this;
       btn.disabled = true;

@@ -42,6 +42,10 @@ router.post('/preference', async (req, res) => {
       return res.status(400).json({ error: 'planName e amount são obrigatórios' });
     }
 
+    // Garantir precisão de 2 casas decimais e valor mínimo R$ 1,00 (MP pode rejeitar valores menores)
+    let amountClean = Math.round(parseFloat(amount) * 100) / 100;
+    if (amountClean > 0 && amountClean < 1) amountClean = 1;
+
     const accessToken = process.env.MP_ACCESS_TOKEN;
     if (!accessToken) {
       console.error('MP_ACCESS_TOKEN não configurado no .env');
@@ -67,8 +71,8 @@ router.post('/preference', async (req, res) => {
         payer?.phone || null,
         payer?.cpf || null,
         planName,
-        parseFloat(amount),
-        parseFloat(amount),
+        amountClean,
+        amountClean,
         payer?.cupom || null
       ]
     );
@@ -90,7 +94,7 @@ router.post('/preference', async (req, res) => {
             id: planName.replace(/\s/g, '_').toLowerCase(),
             title: planName,
             quantity: parseInt(quantity) || 1,
-            unit_price: parseFloat(amount),
+            unit_price: amountClean,
             currency_id: 'BRL'
           }
         ],
