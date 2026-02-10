@@ -444,25 +444,84 @@
     }
     .btn-pagar-mp:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,158,227,0.45); }
     .btn-pagar-mp:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
-    .toast-success {
-      position: fixed;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%);
+    /* Modal de resultado do pagamento */
+    .modal-resultado {
+      max-width: 420px;
+      text-align: center;
+      padding: 2rem;
+    }
+    .modal-resultado .resultado-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+    }
+    .modal-resultado.success .resultado-icon {
       background: linear-gradient(135deg, #059669 0%, #047857 100%);
       color: #fff;
+      box-shadow: 0 8px 25px rgba(5,150,105,0.4);
+    }
+    .modal-resultado.failure .resultado-icon {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+      color: #fff;
+      box-shadow: 0 8px 25px rgba(220,38,38,0.4);
+    }
+    .modal-resultado.pending .resultado-icon {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #fff;
+      box-shadow: 0 8px 25px rgba(245,158,11,0.4);
+    }
+    .resultado-titulo {
+      font-size: 1.4rem;
+      margin-bottom: 0.8rem;
+      font-weight: 800;
+    }
+    .modal-resultado.success .resultado-titulo { color: #059669; }
+    .modal-resultado.failure .resultado-titulo { color: #dc2626; }
+    .modal-resultado.pending .resultado-titulo { color: #d97706; }
+    .resultado-mensagem {
+      color: #64748b;
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+    .resultado-acoes {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      align-items: stretch;
+    }
+    .btn-whatsapp-sucesso {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
       padding: 1rem 1.5rem;
+      background: #25d366;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1rem;
       border-radius: 12px;
-      box-shadow: 0 10px 40px rgba(5,150,105,0.4);
-      z-index: 9999;
-      animation: slideUp 0.4s ease;
+      text-decoration: none;
+      box-shadow: 0 4px 15px rgba(37,211,102,0.4);
+      transition: all 0.3s;
     }
-    @keyframes slideUp {
-      from { opacity: 0; transform: translate(-50%, 20px); }
-      to { opacity: 1; transform: translate(-50%, 0); }
+    .btn-whatsapp-sucesso:hover { background: #20bd5a; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,211,102,0.5); }
+    .btn-fechar-resultado {
+      padding: 0.75rem 1.5rem;
+      background: var(--primary-blue);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
     }
-    .toast-content { display: flex; align-items: center; gap: 1rem; }
-    .toast-content i { font-size: 2rem; }
+    .btn-fechar-resultado:hover { background: #003d60; }
     @keyframes fadeDown {
       from { opacity: 0; transform: translateY(-30px) scale(0.95); }
       to { opacity: 1; transform: translateY(0) scale(1); }
@@ -1295,13 +1354,20 @@
     </div>
   </div>
 
-  <!-- Toast de sucesso (aparece ao retornar do MP) -->
-  <div class="toast-success" id="toast-success" style="display:none;">
-    <div class="toast-content">
-      <i class="fas fa-check-circle"></i>
-      <div>
-        <strong>Pagamento confirmado!</strong>
-        <p id="toast-mensagem">Obrigado pela compra. Em breve entraremos em contato.</p>
+  <!-- Modal de Resultado do Pagamento (sucesso/recusado) -->
+  <div class="modal-bg" id="resultado-pagamento-bg">
+    <div class="modal modal-resultado" id="modal-resultado">
+      <button class="close-btn" id="resultado-close-btn" title="Fechar">&times;</button>
+      <div class="resultado-icon" id="resultado-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h2 class="resultado-titulo" id="resultado-titulo">Pagamento confirmado</h2>
+      <p class="resultado-mensagem" id="resultado-mensagem"></p>
+      <div class="resultado-acoes" id="resultado-acoes">
+        <a href="https://wa.me/5548996852138" target="_blank" rel="noopener" class="btn-whatsapp-sucesso" id="btn-whatsapp">
+          <i class="fab fa-whatsapp"></i> Entrar em contato via WhatsApp
+        </a>
+        <button type="button" class="btn-fechar-resultado" id="btn-fechar-resultado">Fechar</button>
       </div>
     </div>
   </div>
@@ -1492,7 +1558,34 @@
     closeModal.addEventListener('click', () => modalBg.classList.remove('active'));
     modalBg.addEventListener('click', (e) => { if (e.target === modalBg) modalBg.classList.remove('active'); });
 
-    // --- Tratar retorno de sucesso e enviar email ---
+    // --- Tratar retorno do pagamento e exibir modal ---
+    function exibirModalResultado(tipo, titulo, mensagem, mostrarWhatsApp) {
+      const bg = document.getElementById('resultado-pagamento-bg');
+      const modal = document.getElementById('modal-resultado');
+      const icon = document.getElementById('resultado-icon');
+      const tituloEl = document.getElementById('resultado-titulo');
+      const msgEl = document.getElementById('resultado-mensagem');
+      const acoesEl = document.getElementById('resultado-acoes');
+      const btnWhats = document.getElementById('btn-whatsapp');
+
+      modal.className = 'modal modal-resultado ' + tipo;
+      icon.innerHTML = tipo === 'success' ? '<i class="fas fa-check-circle"></i>' : tipo === 'failure' ? '<i class="fas fa-times-circle"></i>' : '<i class="fas fa-clock"></i>';
+      tituloEl.textContent = titulo;
+      msgEl.textContent = mensagem;
+      btnWhats.style.display = mostrarWhatsApp ? 'inline-flex' : 'none';
+      document.getElementById('btn-fechar-resultado').textContent = tipo === 'failure' ? 'Tentar novamente' : 'Fechar';
+      bg.classList.add('active');
+    }
+
+    function fecharModalResultado() {
+      document.getElementById('resultado-pagamento-bg').classList.remove('active');
+    }
+    document.getElementById('btn-fechar-resultado').addEventListener('click', fecharModalResultado);
+    document.getElementById('resultado-close-btn').addEventListener('click', fecharModalResultado);
+    document.getElementById('resultado-pagamento-bg').addEventListener('click', function(e) {
+      if (e.target === this) fecharModalResultado();
+    });
+
     const urlParams = new URLSearchParams(window.location.search);
     const status = urlParams.get('status');
     const ref = urlParams.get('ref');
@@ -1504,21 +1597,36 @@
           const res = await fetch(baseUrl + '/api/precos/confirmar?ref=' + encodeURIComponent(ref));
           const data = await res.json();
           if (data.success) {
-            const toast = document.getElementById('toast-success');
-            document.getElementById('toast-mensagem').textContent =
-              'Obrigado pela compra de ' + data.plano + '! ' +
-              (data.emailEnviado ? 'Recebemos sua confirmação e entraremos em contato em breve.' : '');
-            toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, 8000);
-            window.history.replaceState({}, '', window.location.pathname);
+            exibirModalResultado(
+              'success',
+              'Pagamento confirmado!',
+              'Obrigado pela compra de ' + data.plano + '! Entre em contato conosco via WhatsApp para ativar seu acesso ao sistema.',
+              true
+            );
+          } else {
+            exibirModalResultado('success', 'Pagamento confirmado!', 'Obrigado pela compra! Entre em contato via WhatsApp para ativar seu acesso.', true);
           }
-        } catch (e) { console.warn('Erro ao confirmar pagamento:', e); }
+          window.history.replaceState({}, '', window.location.pathname);
+        } catch (e) {
+          exibirModalResultado('success', 'Pagamento confirmado!', 'Obrigado pela compra! Entre em contato via WhatsApp (48) 99685-2138 para ativar seu acesso.', true);
+          window.history.replaceState({}, '', window.location.pathname);
+        }
       })();
     } else if (status === 'failure') {
-      alert('O pagamento não foi aprovado. Tente novamente ou escolha outra forma de pagamento.');
+      exibirModalResultado(
+        'failure',
+        'Pagamento recusado',
+        'O pagamento não foi aprovado. Verifique os dados do cartão ou tente outra forma de pagamento e tente novamente.',
+        false
+      );
       window.history.replaceState({}, '', window.location.pathname);
     } else if (status === 'pending') {
-      alert('Pagamento pendente. Assim que for confirmado, entraremos em contato.');
+      exibirModalResultado(
+        'pending',
+        'Pagamento pendente',
+        'Seu pagamento está em análise. Assim que for confirmado, entraremos em contato. Você também pode entrar em contato via WhatsApp para saber o status.',
+        true
+      );
       window.history.replaceState({}, '', window.location.pathname);
     }
     // Configurar partículas de fundo
