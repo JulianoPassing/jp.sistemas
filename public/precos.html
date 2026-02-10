@@ -1524,6 +1524,7 @@
 
       try {
         const baseUrl = window.location.origin;
+        const cupomCodigo = cupomAtivo ? Object.keys(CUPONS).find(k => CUPONS[k] === cupomAtivo) : null;
         const res = await fetch(baseUrl + '/api/mercadopago/preference', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1531,13 +1532,17 @@
             planName: planoAtual.nome,
             amount: valorFinal,
             quantity: 1,
+            valorOriginal: subtotal,
+            valorDesconto: desconto,
+            cupomCodigo: cupomCodigo,
+            cupomPercent: cupomAtivo ? cupomAtivo.desconto : null,
             payer: {
               name: nome.split(' ')[0] || nome,
               surname: nome.split(' ').slice(1).join(' ') || '',
               email,
               phone: telefone.replace(/\D/g, '').slice(-11),
               cpf: cpf.replace(/\D/g, ''),
-              cupom: cupomAtivo ? Object.keys(CUPONS).find(k => CUPONS[k] === cupomAtivo) : null
+              cupom: cupomCodigo
             }
           })
         });
