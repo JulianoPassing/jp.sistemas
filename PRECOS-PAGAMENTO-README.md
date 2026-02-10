@@ -11,12 +11,11 @@ A página de preços (`precos.html`) foi refatorada com:
 
 ## Cupons disponíveis
 
-| Código     | Desconto |
-|-----------|----------|
-| PROMO10   | 10%      |
-| PROMO20   | 20%      |
-| BEMVINDO  | 5%       |
-| ANUAL2025 | 15%      |
+| Código      | Desconto |
+|-------------|----------|
+| PROMO10     | 10%      |
+| 20PROMO     | 20%      |
+| JPSISTEMAS50| 50%      |
 
 ### Como adicionar novos cupons
 
