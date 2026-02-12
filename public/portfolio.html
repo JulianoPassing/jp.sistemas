@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfólio - J.P Sistemas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png">
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <link rel="stylesheet" href="mobile.css">
+  <style>
+    :root {
+      --primary-blue: #002f4b;
+      --accent-blue: #00e6ff;
+      --light-gray: #f0f2f5;
+      --dark-text: #2c3e50;
+      --light-text: #ecf0f1;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 40%, rgba(240, 242, 245, 0.7) 100%);
+      color: var(--dark-text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    body { flex: 1 0 auto; min-height: 100vh; background: none; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 4vw;
+      background: linear-gradient(135deg, var(--primary-blue) 0%, #003d60 100%);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2), 0 0 40px rgba(0, 230, 255, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      animation: fadeDown 0.7s cubic-bezier(.4,0,.2,1);
+      transition: all 0.3s ease;
+      border-bottom: 2px solid rgba(0, 230, 255, 0.2);
+    }
+    header.scrolled {
+      background: linear-gradient(135deg, rgba(0, 47, 75, 0.98) 0%, rgba(0, 61, 96, 0.98) 100%);
+      box-shadow: 0 6px 30px rgba(0,0,0,0.3), 0 0 50px rgba(0, 230, 255, 0.15);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      cursor: pointer;
+    }
+    .logo img { height: 55px; transition: transform 0.3s ease; }
+    .logo:hover img { transform: scale(1.05); }
+    .logo span {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--light-text);
+      text-transform: uppercase;
+    }
+    nav a {
+      color: var(--light-text);
+      text-decoration: none;
+      margin-left: 2rem;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      transition: color 0.2s ease, transform 0.2s ease;
+      position: relative;
+    }
+    nav a::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -5px;
+      left: 0;
+      background-color: var(--accent-blue);
+      transition: width 0.3s ease-out;
+    }
+    nav a:hover::after { width: 100%; }
+    nav a:hover {
+      color: var(--accent-blue);
+      transform: translateY(-2px);
+    }
+    .portfolio-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2.5rem 1rem 1.5rem 1rem;
+      position: relative;
+      z-index: 1;
+    }
+    .portfolio-hero h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, var(--primary-blue), #005580);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.3;
+      animation: fadeInUp 0.8s ease-out;
+    }
+    .portfolio-hero p {
+      font-size: 1.1rem;
+      max-width: 800px;
+      margin: 0 auto 2rem auto;
+      color: var(--dark-text);
+      line-height: 1.7;
+      animation: fadeInUp 1s ease-out;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      max-width: 1200px;
+      margin: 0 auto 4rem;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 1;
+    }
+    .portfolio-card {
+      position: relative;
+      background: linear-gradient(145deg, #003a5e 0%, var(--primary-blue) 100%);
+      border: 2px solid rgba(0, 230, 255, 0.2);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15), 0 2px 8px rgba(0,230,255,0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: var(--light-text);
+      animation: fadeInUp 0.8s ease-out;
+    }
+    .portfolio-card:nth-child(2) { animation-delay: 0.1s; opacity: 0; animation-fill-mode: forwards; }
+    .portfolio-card:nth-child(3) { animation-delay: 0.2s; opacity: 0; animation-fill-mode: forwards; }
+    .portfolio-card:nth-child(4) { animation-delay: 0.3s; opacity: 0; animation-fill-mode: forwards; }
+    .portfolio-card:nth-child(5) { animation-delay: 0.4s; opacity: 0; animation-fill-mode: forwards; }
+    .portfolio-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-blue), #00b8d4);
+      transform: scaleX(0);
+      transition: transform 0.4s ease;
+    }
+    .portfolio-card:hover {
+      transform: translateY(-12px);
+      box-shadow: 0 15px 50px rgba(0,230,255,0.25), 0 5px 15px rgba(0,0,0,0.2);
+      border-color: var(--accent-blue);
+    }
+    .portfolio-card:hover::before { transform: scaleX(1); }
+    .portfolio-card-media {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      background: #f0f2f5;
+      cursor: pointer;
+    }
+    .portfolio-card-media img,
+    .portfolio-card-media video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .portfolio-card-media .play-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 47, 75, 0.4);
+      transition: background 0.3s ease;
+    }
+    .portfolio-card-media .play-overlay:hover { background: rgba(0, 47, 75, 0.5); }
+    .portfolio-card-media .play-overlay i {
+      font-size: 4rem;
+      color: rgba(255, 255, 255, 0.95);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s ease;
+    }
+    .portfolio-card-media .play-overlay:hover i { transform: scale(1.15); }
+    .portfolio-card-media.playing .play-overlay { display: none; }
+    .portfolio-card-body {
+      padding: 1.5rem;
+      text-align: center;
+      width: 100%;
+    }
+    .portfolio-card-body h3 {
+      font-size: 1.25rem;
+      color: var(--light-text);
+      margin-bottom: 0.5rem;
+    }
+    .portfolio-card-body h3 i {
+      margin-right: 8px;
+      color: var(--accent-blue);
+    }
+    .portfolio-card-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+      color: var(--accent-blue);
+      margin-top: 0.75rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+    .portfolio-card-link:hover {
+      color: #00ffff;
+      text-shadow: 0 0 10px rgba(0, 230, 255, 0.5);
+    }
+    footer {
+      text-align: center;
+      padding: 3rem 0 2rem 0;
+      color: var(--light-text);
+      font-size: 1rem;
+      background: linear-gradient(180deg, var(--primary-blue) 0%, #001a2e 100%);
+      margin-top: auto;
+      font-family: 'Inter', sans-serif;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+      border-top: 2px solid rgba(0, 230, 255, 0.2);
+    }
+    footer a {
+      color: var(--accent-blue);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+    footer a:hover {
+      color: #00ffff;
+      text-shadow: 0 0 10px rgba(0, 230, 255, 0.5);
+    }
+    /* Modal de mídia */
+    .modal-midia-bg {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+    .modal-midia-bg.active { display: flex; }
+    .modal-midia-content {
+      max-width: 90vw;
+      max-height: 90vh;
+      position: relative;
+    }
+    .modal-midia-content img,
+    .modal-midia-content video {
+      max-width: 100%;
+      max-height: 85vh;
+      border-radius: 12px;
+      box-shadow: 0 0 60px rgba(0, 230, 255, 0.2);
+    }
+    .modal-midia-close {
+      position: absolute;
+      top: -45px;
+      right: 0;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      font-size: 1.8rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .modal-midia-close:hover {
+      background: var(--accent-blue);
+      color: var(--primary-blue);
+    }
+    /* Modal sistema */
+    .modal-bg {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-bg.active { display: flex; }
+    .modal.sistema-modal {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      border-radius: 24px;
+      padding: 1.5rem 1.2rem;
+      max-width: 420px;
+      width: 95vw;
+      box-shadow: 0 12px 50px rgba(0,47,75,0.25);
+      position: relative;
+      text-align: center;
+      border: 2px solid rgba(0, 230, 255, 0.2);
+      border-top: 8px solid var(--accent-blue);
+    }
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 1.5rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #666;
+    }
+    .sistema-opcoes { display: flex; flex-direction: column; gap: 0.5rem; }
+    .sistema-opcao {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.2rem;
+      background: #f0f2f5;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      color: var(--primary-blue);
+      text-align: left;
+    }
+    .sistema-opcao:hover {
+      background: rgba(0, 230, 255, 0.15);
+      border: 1px solid var(--accent-blue);
+    }
+    .sistema-opcao h3 { font-size: 1rem; margin: 0; }
+    .sistema-opcao p { font-size: 0.85rem; color: #666; margin: 0.25rem 0 0 0; }
+    #particles-js {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+    @media (max-width: 768px) {
+      header { flex-direction: column; gap: 1rem; }
+      nav a { margin-left: 1rem; margin-right: 1rem; }
+      .portfolio-grid { grid-template-columns: 1fr; }
+      .portfolio-hero h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="particles-js"></div>
+  <header>
+    <div class="logo" onclick="window.location.href='index.html'">
+      <img src="https://i.imgur.com/6N82fk2.png" alt="JP Sistemas Logo" />
+      <span>J.P SISTEMAS</span>
+    </div>
+    <nav>
+      <a href="index.html">Início</a>
+      <a href="#" id="acessar-sistema-btn">Acessar Sistema</a>
+      <a href="portfolio.html">Portfólio</a>
+      <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" rel="noopener">Contato</a>
+      <a href="precos.html">Planos</a>
+    </nav>
+  </header>
+
+  <section class="portfolio-hero">
+    <h1>Nossos Sistemas</h1>
+    <p>Soluções desenvolvidas pela J.P Sistemas: gestão empresarial, cobranças e sistemas personalizados. Clique na mídia para ampliar.</p>
+  </section>
+
+  <div class="portfolio-grid">
+    <!-- 1. J.P Sistemas -->
+    <div class="portfolio-card">
+      <div class="portfolio-card-media" onclick="abrirModalMidia('img', 'midia/jpsistemas.png')">
+        <img src="midia/jpsistemas.png" alt="J.P Sistemas" />
+      </div>
+      <div class="portfolio-card-body">
+        <h3><i class="fas fa-cogs"></i> J.P Sistemas</h3>
+        <a href="https://jp-sistemas.com/sistema.html" target="_blank" rel="noopener" class="portfolio-card-link">Acessar sistema <i class="fas fa-external-link-alt"></i></a>
+      </div>
+    </div>
+
+    <!-- 2. JP Cobranças -->
+    <div class="portfolio-card">
+      <div class="portfolio-card-media" onclick="abrirModalMidia('img', 'midia/jpcobrancas.png')">
+        <img src="midia/jpcobrancas.png" alt="JP Cobranças" />
+      </div>
+      <div class="portfolio-card-body">
+        <h3><i class="fas fa-money-bill-wave"></i> JP Cobranças</h3>
+        <a href="https://jp-sistemas.com/jp.cobrancas/login.html" target="_blank" rel="noopener" class="portfolio-card-link">Acessar sistema <i class="fas fa-external-link-alt"></i></a>
+      </div>
+    </div>
+
+    <!-- 3. G8 Representações -->
+    <div class="portfolio-card">
+      <div class="portfolio-card-media" onclick="abrirModalMidia('img', 'midia/g8representacoes.png')">
+        <img src="midia/g8representacoes.png" alt="G8 Representações" />
+      </div>
+      <div class="portfolio-card-body">
+        <h3><i class="fas fa-building"></i> G8 Representações</h3>
+        <a href="https://g8sistema.vercel.app/" target="_blank" rel="noopener" class="portfolio-card-link">Acessar sistema <i class="fas fa-external-link-alt"></i></a>
+      </div>
+    </div>
+
+    <!-- 4. G8 Representações Site -->
+    <div class="portfolio-card">
+      <div class="portfolio-card-media" onclick="abrirModalMidia('img', 'midia/g8representacoessite.png')">
+        <img src="midia/g8representacoessite.png" alt="G8 Representações Site" />
+      </div>
+      <div class="portfolio-card-body">
+        <h3><i class="fas fa-globe"></i> G8 Representações Site</h3>
+        <a href="https://g8representacoes.vercel.app/" target="_blank" rel="noopener" class="portfolio-card-link">Acessar site <i class="fas fa-external-link-alt"></i></a>
+      </div>
+    </div>
+
+    <!-- 5. LC Representações -->
+    <div class="portfolio-card">
+      <div class="portfolio-card-media" id="lc-media" onclick="abrirModalMidia('video', 'midia/lcrepresentacoes.mp4')">
+        <video id="lc-video" muted playsinline>
+          <source src="midia/lcrepresentacoes.mp4" type="video/mp4">
+        </video>
+        <div class="play-overlay" id="lc-play">
+          <i class="fas fa-play-circle"></i>
+        </div>
+      </div>
+      <div class="portfolio-card-body">
+        <h3><i class="fas fa-building"></i> LC Representações</h3>
+        <a href="https://lcrepresentacoes.vercel.app/index.html" target="_blank" rel="noopener" class="portfolio-card-link">Acessar sistema <i class="fas fa-external-link-alt"></i></a>
+      </div>
+    </div>
+  </div>
+
+  <footer id="contato">
+    © 2025 JP. Sistemas. Todos os direitos reservados. | <a href="https://jp-sistemas.com/">jp-sistemas.com</a>
+  </footer>
+
+  <!-- Modal de mídia ampliada -->
+  <div class="modal-midia-bg" id="modal-midia-bg">
+    <div class="modal-midia-content">
+      <button class="modal-midia-close" id="modal-midia-close" title="Fechar">&times;</button>
+      <div id="modal-midia-inner"></div>
+    </div>
+  </div>
+
+  <!-- Modal de Seleção de Sistema -->
+  <div class="modal-bg" id="sistema-modal-bg">
+    <div class="modal sistema-modal">
+      <button class="modal-close" id="sistema-modal-close" title="Fechar">&times;</button>
+      <h2>Escolha o Sistema</h2>
+      <div class="sistema-opcoes">
+        <div class="sistema-opcao" onclick="window.location.href='sistema.html'">
+          <div><h3>Sistema de Gestão</h3><p>Clientes, produtos, pedidos e relatórios</p></div>
+          <i class="fas fa-arrow-right"></i>
+        </div>
+        <div class="sistema-opcao" onclick="window.location.href='jp.cobrancas/index.html'">
+          <div><h3>Sistema de Empréstimos</h3><p>Empréstimos, cobranças e gestão financeira</p></div>
+          <i class="fas fa-arrow-right"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    particlesJS('particles-js', {
+      particles: { number: { value: 80, density: { enable: true, value_area: 800 } }, color: { value: "#00e6ff" },
+        shape: { type: "circle" }, opacity: { value: 0.5 }, size: { value: 3, random: true },
+        line_linked: { enable: true, distance: 150, color: "#00e6ff", opacity: 0.4, width: 1 },
+        move: { enable: true, speed: 3, direction: "none", random: false, straight: false, out_mode: "out" }
+      },
+      interactivity: { detect_on: "canvas", events: { onhover: { enable: true, mode: "grab" }, onclick: { enable: true, mode: "push" } },
+        modes: { grab: { distance: 140, line_linked: { opacity: 0.5 } }, push: { particles_nb: 4 } }
+      }
+    });
+
+    function abrirModalMidia(tipo, src) {
+      const modal = document.getElementById('modal-midia-bg');
+      const inner = document.getElementById('modal-midia-inner');
+      inner.innerHTML = '';
+      if (tipo === 'img') {
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = 'Preview';
+        inner.appendChild(img);
+      } else {
+        const video = document.createElement('video');
+        video.controls = true;
+        video.autoplay = true;
+        video.src = src;
+        video.style.maxWidth = '100%';
+        video.style.maxHeight = '85vh';
+        inner.appendChild(video);
+      }
+      modal.classList.add('active');
+    }
+
+    document.getElementById('modal-midia-close').onclick = function() {
+      const modal = document.getElementById('modal-midia-bg');
+      const video = modal.querySelector('video');
+      if (video) video.pause();
+      modal.classList.remove('active');
+    };
+    document.getElementById('modal-midia-bg').onclick = function(e) {
+      if (e.target === this) {
+        const video = this.querySelector('video');
+        if (video) video.pause();
+        this.classList.remove('active');
+      }
+    };
+
+    document.getElementById('acessar-sistema-btn').onclick = function(e) {
+      e.preventDefault();
+      document.getElementById('sistema-modal-bg').classList.add('active');
+    };
+    document.getElementById('sistema-modal-close').onclick = function() {
+      document.getElementById('sistema-modal-bg').classList.remove('active');
+    };
+    document.getElementById('sistema-modal-bg').onclick = function(e) {
+      if (e.target === this) this.classList.remove('active');
+    };
+
+    window.addEventListener('scroll', function() {
+      const header = document.querySelector('header');
+      if (window.scrollY > 50) header.classList.add('scrolled');
+      else header.classList.remove('scrolled');
+    });
+  </script>
+</body>
+</html>
