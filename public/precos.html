@@ -511,6 +511,45 @@
       transition: all 0.3s;
     }
     .btn-whatsapp-sucesso:hover { background: #20bd5a; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,211,102,0.5); }
+    
+    .btn-personalizado-whatsapp {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+      padding: 1rem 2rem;
+      background: #25d366;
+      color: #fff;
+      font-weight: 700;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      font-size: 1.1rem;
+      border: 2px solid rgba(37, 211, 102, 0.3);
+    }
+    .btn-personalizado-whatsapp:hover {
+      background: #20bd5a;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
+    }
+    .plano-card-personalizado .btn-personalizado-whatsapp {
+      margin-top: 1.2rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid rgba(0, 230, 255, 0.2);
+    }
+    .personalizados-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 1rem;
+      width: 100%;
+    }
+    .plano-card-personalizado {
+      width: 100%;
+      max-width: 100%;
+      min-width: unset;
+      padding: 2.5rem 2rem;
+    }
     .btn-fechar-resultado {
       padding: 0.75rem 1.5rem;
       background: var(--primary-blue);
@@ -1209,8 +1248,20 @@
       <div class="plano-obs">✓ Acesso a um sistema completo<br>✓ Suporte técnico<br>✓ Atualizações gratuitas</div>
     </div>
     </div>
-    
-    <!-- Informação sobre escolha do sistema -->
+  </section>
+  
+  <!-- Seção de Sistemas Personalizados -->
+  <section class="planos-section personalizados-section">
+    <div class="personalizados-container">
+      <div class="plano-card plano-card-personalizado">
+        <div class="plano-titulo"><i class="fas fa-code"></i> Sistema Personalizado</div>
+        <div class="plano-detalhe">Desenvolvemos sistemas sob medida para necessidades específicas do seu negócio.</div>
+        <div class="plano-obs">✓ Solução personalizada<br>✓ Suporte técnico<br>✓ Atualizações incluídas</div>
+        <a href="https://wa.me/5548996852138?text=Quero%20um%20sistema%20personalizado%20para%20minha%20empresa" target="_blank" rel="noopener" class="btn-personalizado-whatsapp">
+          <i class="fab fa-whatsapp"></i> Entrar em contato
+        </a>
+      </div>
+    </div>
     <div class="contato-container">
       <p class="contato-msg">
         <span>💬 Após a compra, entre em contato conosco para ativar o sistema desejado</span>
