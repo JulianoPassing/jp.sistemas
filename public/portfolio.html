@@ -7,7 +7,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png">
-  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
   <link rel="stylesheet" href="mobile.css">
   <style>
     :root {
@@ -343,12 +342,6 @@
     }
     .sistema-opcao h3 { font-size: 1rem; margin: 0; }
     .sistema-opcao p { font-size: 0.85rem; color: #666; margin: 0.25rem 0 0 0; }
-    #particles-js {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      z-index: 0;
-      pointer-events: none;
-    }
     @media (max-width: 768px) {
       header { flex-direction: column; gap: 1rem; }
       nav a { margin-left: 1rem; margin-right: 1rem; }
@@ -358,7 +351,6 @@
   </style>
 </head>
 <body>
-  <div id="particles-js"></div>
   <header>
     <div class="logo" onclick="window.location.href='index.html'">
       <img src="https://i.imgur.com/6N82fk2.png" alt="JP Sistemas Logo" />
@@ -471,17 +463,6 @@
   </div>
 
   <script>
-    particlesJS('particles-js', {
-      particles: { number: { value: 80, density: { enable: true, value_area: 800 } }, color: { value: "#00e6ff" },
-        shape: { type: "circle" }, opacity: { value: 0.5 }, size: { value: 3, random: true },
-        line_linked: { enable: true, distance: 150, color: "#00e6ff", opacity: 0.4, width: 1 },
-        move: { enable: true, speed: 3, direction: "none", random: false, straight: false, out_mode: "out" }
-      },
-      interactivity: { detect_on: "canvas", events: { onhover: { enable: true, mode: "grab" }, onclick: { enable: true, mode: "push" } },
-        modes: { grab: { distance: 140, line_linked: { opacity: 0.5 } }, push: { particles_nb: 4 } }
-      }
-    });
-
     function abrirModalMidia(tipo, src) {
       const modal = document.getElementById('modal-midia-bg');
       const inner = document.getElementById('modal-midia-inner');
