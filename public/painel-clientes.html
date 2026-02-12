@@ -673,9 +673,16 @@
     async function carregarClientes() {
       try {
         const resp = await fetch(API_URL, { credentials: 'include' });
+        if (resp.status === 401) {
+          sessionStorage.removeItem('loggedIn');
+          sessionStorage.removeItem('username');
+          alert('Sessao expirada. Por favor, faca login novamente.');
+          window.location.href = 'sistema.html';
+          return;
+        }
         if (!resp.ok) throw new Error('Erro ao buscar clientes na API');
         clientes = await resp.json();
-        clientesFiltrados = clientes;
+        clientesFiltrados = Array.isArray(clientes) ? clientes : [];
         renderTabela();
       } catch (e) {
         alert('Erro ao carregar os dados dos clientes. Verifique se a API esta disponivel.');
@@ -802,11 +809,13 @@
     document.addEventListener('DOMContentLoaded', () => {
       if (sessionStorage.getItem('loggedIn') !== 'true') {
         alert('Acesso negado. Por favor, realize o login.');
-        window.location.href = 'index.html';
+        window.location.href = 'sistema.html';
+        return;
       }
       
       const username = sessionStorage.getItem('username') || 'Usuário';
-      document.getElementById('userDisplay').textContent = username;
+      const userDisplayEl = document.getElementById('userDisplay');
+      if (userDisplayEl) userDisplayEl.textContent = username;
       
       carregarClientes();
       document.getElementById('btn-exportar-pdf').onclick = exportarClientesPDF;

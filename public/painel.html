@@ -561,7 +561,8 @@
       document.addEventListener('DOMContentLoaded', () => {
         // Verificar se esta logado
         if (sessionStorage.getItem('loggedIn') !== 'true') {
-          window.location.href = 'index.html';
+          window.location.href = 'sistema.html';
+          return;
         }
 
         // Exibir nome do usuario

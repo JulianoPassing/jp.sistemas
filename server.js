@@ -322,13 +322,15 @@ app.post('/api/auth/login', async (req, res) => {
         console.error('Erro ao salvar sessão:', err);
         return res.status(500).json({ error: 'Erro ao salvar sessão' });
       }
-      res.cookie('token', token, {
+      const isProduction = process.env.NODE_ENV === 'production' || /jp-sistemas\.com/i.test(req.get('host') || '');
+      const cookieOptions = {
         httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-        domain: '.jp-sistemas.com',
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
         maxAge: 24 * 60 * 60 * 1000
-      });
+      };
+      if (isProduction) cookieOptions.domain = '.jp-sistemas.com';
+      res.cookie('token', token, cookieOptions);
       res.json({ success: true, user: userPayload });
     });
   } catch (error) {
