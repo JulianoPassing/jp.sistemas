@@ -1093,7 +1093,7 @@
           for (let i = 0; i < input.files.length; i++) {
             formData.append('arquivo', input.files[i]);
           }
-          const resp = await fetch(\`/api/clientes/\${clienteId}/documentos\`, {
+          const resp = await fetch(`/api/clientes/${clienteId}/documentos`, {
             method: 'POST',
             credentials: 'include',
             body: formData
@@ -1129,7 +1129,7 @@
       if (!ul) return;
       ul.innerHTML = '<li style="padding:12px;color:#64748b;"><i class="fas fa-spinner fa-spin"></i> Carregando...</li>';
       try {
-        const resp = await fetch(\`/api/clientes/\${clienteId}/documentos\`, { credentials: 'include' });
+        const resp = await fetch(`/api/clientes/${clienteId}/documentos`, { credentials: 'include' });
         const docs = await resp.json();
         if (!resp.ok) {
           ul.innerHTML = '<li style="padding:12px;color:#dc2626;">Erro ao carregar documentos.</li>';
@@ -1142,19 +1142,19 @@
         ul.innerHTML = docs.map(d => {
           const data = d.created_at ? new Date(d.created_at).toLocaleDateString('pt-BR') : '';
           const tipo = (d.tipo_mime || '').includes('pdf') ? 'file-pdf' : 'file-image';
-          return \`<li style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f1f5f9;">
-            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="\${escapeHtml(d.nome_original)}"><i class="fas fa-\${tipo}" style="margin-right:8px;color:#0d9488;"></i>\${escapeHtml(d.nome_original)}</span>
-            <span style="font-size:0.85rem;color:#64748b;margin-right:8px;">\${data}</span>
-            <button type="button" class="btn btn-abrir-doc" data-cliente-id="\${clienteId}" data-doc-id="\${d.id}" style="margin-right:8px;padding:4px 10px;background:#0d9488!important;color:#fff!important;border:none;border-radius:6px;cursor:pointer;" title="Abrir"><i class="fas fa-external-link-alt"></i> Abrir</button>
-            <button type="button" class="btn btn-danger btn-excluir-doc" data-cliente-id="\${clienteId}" data-doc-id="\${d.id}" style="padding:4px 10px;font-size:0.85rem;"><i class="fas fa-trash"></i></button>
-          </li>\`;
+          return `<li style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f1f5f9;">
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(d.nome_original)}"><i class="fas fa-${tipo}" style="margin-right:8px;color:#0d9488;"></i>${escapeHtml(d.nome_original)}</span>
+            <span style="font-size:0.85rem;color:#64748b;margin-right:8px;">${data}</span>
+            <button type="button" class="btn btn-abrir-doc" data-cliente-id="${clienteId}" data-doc-id="${d.id}" style="margin-right:8px;padding:4px 10px;background:#0d9488!important;color:#fff!important;border:none;border-radius:6px;cursor:pointer;" title="Abrir"><i class="fas fa-external-link-alt"></i> Abrir</button>
+            <button type="button" class="btn btn-danger btn-excluir-doc" data-cliente-id="${clienteId}" data-doc-id="${d.id}" style="padding:4px 10px;font-size:0.85rem;"><i class="fas fa-trash"></i></button>
+          </li>`;
         }).join('');
         document.querySelectorAll('.btn-abrir-doc').forEach(btn => {
           btn.onclick = async function() {
             const cid = this.getAttribute('data-cliente-id');
             const did = this.getAttribute('data-doc-id');
             try {
-              const r = await fetch(\`/api/clientes/\${cid}/documentos/\${did}/arquivo\`, { credentials: 'include' });
+              const r = await fetch(`/api/clientes/${cid}/documentos/${did}/arquivo`, { credentials: 'include' });
               if (!r.ok) { alert('Erro ao abrir documento.'); return; }
               const blob = await r.blob();
               const url = URL.createObjectURL(blob);
@@ -1168,7 +1168,7 @@
             const did = this.getAttribute('data-doc-id');
             if (!confirm('Remover este documento?')) return;
             try {
-              const r = await fetch(\`/api/clientes/\${cid}/documentos/\${did}\`, { method: 'DELETE', credentials: 'include' });
+              const r = await fetch(`/api/clientes/${cid}/documentos/${did}`, { method: 'DELETE', credentials: 'include' });
               if (r.ok) await carregarListaDocumentos(cid);
               else alert('Erro ao remover.');
             } catch (_) { alert('Erro ao remover.'); }
