@@ -402,7 +402,7 @@
       background: transparent;
       opacity: 25%;
     }
-    body > *:not(#particles-js):not(.modal-bg) {
+    body > *:not(#particles-js):not(.modal-bg):not(.cupom-modal-bg) {
       position: relative; 
       z-index: 1; 
     }
@@ -756,6 +756,208 @@
       transform: translateY(-3px) scale(1.05);
       box-shadow: 0 8px 25px rgba(0,230,255,0.4);
     }
+
+    /* Pop-up Cupom Promocional */
+    .cupom-modal-bg {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.85);
+      z-index: 999999 !important;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+      animation: fadeIn 0.4s ease;
+    }
+    .cupom-modal-bg.active {
+      display: flex;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+    .cupom-modal-box {
+      background: linear-gradient(145deg, #0a1a2e 0%, #001f3f 50%, #0a3552 100%);
+      border: 3px solid var(--accent-blue);
+      border-radius: 28px;
+      padding: 2.5rem 3rem;
+      min-width: 420px;
+      max-width: 95vw;
+      color: var(--light-text);
+      font-family: 'Inter', sans-serif;
+      text-align: center;
+      position: relative;
+      animation: cupomPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 25px 80px rgba(0,0,0,0.5), 0 0 60px rgba(0, 230, 255, 0.25), inset 0 0 40px rgba(0,230,255,0.05);
+      overflow: hidden;
+    }
+    .cupom-modal-box::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(0,230,255,0.08) 0%, transparent 50%);
+      animation: pulseGlow 3s ease-in-out infinite;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    @keyframes cupomPop {
+      from { opacity: 0; transform: scale(0.7) translateY(-30px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .cupom-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #ff6b35, #f7931e);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 800;
+      padding: 0.4rem 1.2rem;
+      border-radius: 50px;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      animation: badgePulse 1.5s ease-in-out infinite;
+    }
+    @keyframes badgePulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(255,107,53,0.4); }
+      50% { transform: scale(1.05); box-shadow: 0 6px 25px rgba(255,107,53,0.6); }
+    }
+    .cupom-modal-box h2 {
+      color: var(--accent-blue);
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 0 20px rgba(0,230,255,0.5);
+      position: relative;
+    }
+    .cupom-code {
+      font-size: 2.8rem;
+      font-weight: 900;
+      letter-spacing: 4px;
+      background: linear-gradient(135deg, #00e6ff, #00ffff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 1rem 0;
+      padding: 0.8rem 1.5rem;
+      border: 2px dashed var(--accent-blue);
+      border-radius: 12px;
+      display: inline-block;
+      animation: codeShine 2s ease-in-out infinite;
+      position: relative;
+    }
+    @keyframes codeShine {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.3); }
+    }
+    .cupom-desconto {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #4ade80;
+      margin-bottom: 0.5rem;
+      position: relative;
+    }
+    .cupom-msg {
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.9);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+      position: relative;
+    }
+    .cupom-countdown {
+      display: flex;
+      justify-content: center;
+      gap: 0.8rem;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+      position: relative;
+    }
+    .countdown-item {
+      background: linear-gradient(145deg, #003a5e, var(--primary-blue));
+      border: 2px solid rgba(0,230,255,0.4);
+      border-radius: 12px;
+      padding: 0.8rem 1rem;
+      min-width: 70px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .countdown-item span {
+      display: block;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--accent-blue);
+      line-height: 1.2;
+    }
+    .countdown-item small {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .cupom-cta {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 1.2rem 2.5rem;
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      color: #001a2e;
+      font-weight: 800;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 50px;
+      text-decoration: none;
+      box-shadow: 0 8px 30px rgba(74,222,128,0.5);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      position: relative;
+    }
+    .cupom-cta:hover {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 0 12px 40px rgba(74,222,128,0.6);
+    }
+    .cupom-modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1.2rem;
+      background: rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,255,255,0.3);
+      color: #fff;
+      font-size: 1.4rem;
+      cursor: pointer;
+      width: 2.2rem;
+      height: 2.2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      z-index: 10;
+    }
+    .cupom-modal-close:hover {
+      background: rgba(255,255,255,0.2);
+      transform: rotate(90deg);
+    }
+    @media (max-width: 600px) {
+      .cupom-modal-box {
+        min-width: unset;
+        padding: 2rem 1.5rem;
+      }
+      .cupom-code {
+        font-size: 1.8rem;
+        letter-spacing: 2px;
+      }
+      .cupom-countdown { gap: 0.5rem; }
+      .countdown-item {
+        min-width: 55px;
+        padding: 0.5rem 0.6rem;
+      }
+      .countdown-item span { font-size: 1.4rem; }
+    }
   </style>
 </head>
 <body>
@@ -812,6 +1014,26 @@
   <footer id="contato">
     © 2025 JP. Sistemas. Todos os direitos reservados. | <a href="https://jp-sistemas.com/" style="color:var(--accent-blue);">jp-sistemas.com</a>
   </footer>
+  <!-- Pop-up Cupom Promocional -->
+  <div class="cupom-modal-bg" id="cupom-modal-bg">
+    <div class="cupom-modal-box">
+      <button class="cupom-modal-close" id="cupom-modal-close" title="Fechar">&times;</button>
+      <span class="cupom-badge">🔥 Oferta Limitada</span>
+      <h2>Não perca essa oportunidade!</h2>
+      <div class="cupom-code">JPSISTEMAS50</div>
+      <div class="cupom-desconto">50% DE DESCONTO</div>
+      <p class="cupom-msg">Aproveite! Use o cupom no checkout e garanta metade do valor. Oferta por tempo limitado!</p>
+      <div class="cupom-countdown">
+        <div class="countdown-item"><span id="cd-days">00</span><small>Dias</small></div>
+        <div class="countdown-item"><span id="cd-hours">00</span><small>Horas</small></div>
+        <div class="countdown-item"><span id="cd-mins">00</span><small>Min</small></div>
+        <div class="countdown-item"><span id="cd-secs">00</span><small>Seg</small></div>
+      </div>
+      <p style="font-size:0.85rem;color:rgba(255,255,255,0.6);margin-top:0.5rem;">Encerra em 28/02/2026 às 23:59</p>
+      <a href="precos.html" class="cupom-cta">Compre Agora - Aproveite! 🚀</a>
+    </div>
+  </div>
+
   <!-- Modal de Seleção de Sistema -->
   <div class="modal-bg" id="sistema-modal-bg">
     <div class="modal-box sistema-modal">
@@ -1065,6 +1287,41 @@
         if (e.target === sistemaModalBg) {
           sistemaModalBg.classList.remove('active');
         }
+      });
+    }
+
+    // Pop-up Cupom - Exibe ao carregar a página
+    const cupomModal = document.getElementById('cupom-modal-bg');
+    const cupomClose = document.getElementById('cupom-modal-close');
+    const cupomEndDate = new Date('2026-02-28T23:59:59').getTime();
+
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const diff = cupomEndDate - now;
+      if (diff <= 0) {
+        document.getElementById('cd-days').textContent = '00';
+        document.getElementById('cd-hours').textContent = '00';
+        document.getElementById('cd-mins').textContent = '00';
+        document.getElementById('cd-secs').textContent = '00';
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((diff % (1000 * 60)) / 1000);
+      document.getElementById('cd-days').textContent = String(days).padStart(2, '0');
+      document.getElementById('cd-hours').textContent = String(hours).padStart(2, '0');
+      document.getElementById('cd-mins').textContent = String(mins).padStart(2, '0');
+      document.getElementById('cd-secs').textContent = String(secs).padStart(2, '0');
+    }
+
+    if (cupomModal && cupomClose) {
+      setTimeout(() => cupomModal.classList.add('active'), 800);
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+      cupomClose.addEventListener('click', () => cupomModal.classList.remove('active'));
+      cupomModal.addEventListener('click', (e) => {
+        if (e.target === cupomModal) cupomModal.classList.remove('active');
       });
     }
   </script>
