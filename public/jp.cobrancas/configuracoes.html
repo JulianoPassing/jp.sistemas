@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="./css/style.css">
   <style>
     .config-section {
@@ -178,15 +179,20 @@
   </header>
   <main>
     <div class="container">
-      <div class="dashboard-header">
-        <div class="dashboard-title">Configurações</div>
-        <div class="dashboard-subtitle">Personalize suas mensagens de cobrança e chave PIX</div>
+      <div class="page-header">
+        <div class="page-header-icon">
+          <i class="fas fa-cog"></i>
+        </div>
+        <div class="page-header-text">
+          <h1 class="dashboard-title">Configurações</h1>
+          <p class="dashboard-subtitle">Personalize suas mensagens de cobrança e chave PIX</p>
+        </div>
       </div>
 
       <form id="form-configuracoes">
         <!-- Dados da conta -->
         <div class="config-section">
-          <h3>Dados da conta</h3>
+          <h3><i class="fas fa-user-cog" style="margin-right: 0.5rem; color: #0d9488;"></i>Dados da conta</h3>
           <p style="color: #6b7280; margin-bottom: 1rem;">Altere seu e-mail e senha de acesso.</p>
           <p style="margin-bottom: 0.5rem;"><strong>Usuário:</strong> <span id="perfil-username-cobrancas"></span></p>
           <p style="margin-bottom: 1.5rem;"><strong>E-mail atual:</strong> <span id="perfil-email-cobrancas"></span></p>
@@ -213,7 +219,7 @@
 
         <!-- Chave PIX -->
         <div class="config-section">
-          <h3>Chave PIX</h3>
+          <h3><i class="fas fa-qrcode" style="margin-right: 0.5rem; color: #0d9488;"></i>Chave PIX</h3>
           <div class="form-group">
             <label for="chave_pix">Sua Chave PIX para Recebimentos</label>
             <input type="text" id="chave_pix" class="form-input" placeholder="CPF, CNPJ, E-mail, Telefone ou Chave Aleatória">
@@ -223,7 +229,7 @@
 
         <!-- 1ª Mensagem: Juros - sem diário -->
         <div class="config-section">
-          <h3>1. Mensagem de Empréstimo (sem juros diário)</h3>
+          <h3><i class="fas fa-comment-alt" style="margin-right: 0.5rem; color: #0d9488;"></i>1. Mensagem de Empréstimo (sem juros diário)</h3>
           <div class="form-group">
             <label for="msg_emprestimo_sem_juros">Mensagem para empréstimos sem cobrança de juros diário</label>
             <textarea id="msg_emprestimo_sem_juros" class="form-textarea" placeholder="Deixe em branco para usar a mensagem padrão"></textarea>
@@ -246,7 +252,7 @@
 
         <!-- 2ª Mensagem: Juros - com multa diária -->
         <div class="config-section">
-          <h3>2. Mensagem de Empréstimo (com juros/multa diária)</h3>
+          <h3><i class="fas fa-comment-dots" style="margin-right: 0.5rem; color: #0d9488;"></i>2. Mensagem de Empréstimo (com juros/multa diária)</h3>
           <div class="form-group">
             <label for="msg_emprestimo_com_juros">Mensagem para empréstimos com cobrança de juros diário</label>
             <textarea id="msg_emprestimo_com_juros" class="form-textarea" placeholder="Deixe em branco para usar a mensagem padrão"></textarea>
@@ -272,7 +278,7 @@
 
         <!-- 3ª Mensagem: Parcelado -->
         <div class="config-section">
-          <h3>3. Mensagem para Parcela (parcelado)</h3>
+          <h3><i class="fas fa-file-invoice" style="margin-right: 0.5rem; color: #0d9488;"></i>3. Mensagem para Parcela (parcelado)</h3>
           <div class="form-group">
             <label for="msg_parcela">Mensagem enviada para lembrar de parcelas</label>
             <textarea id="msg_parcela" class="form-textarea" placeholder="Deixe em branco para usar a mensagem padrão"></textarea>
@@ -295,7 +301,7 @@
 
         <!-- Mensagem de Parcelas Vencidas -->
         <div class="config-section">
-          <h3>Mensagem para Parcelas Vencidas</h3>
+          <h3><i class="fas fa-exclamation-circle" style="margin-right: 0.5rem; color: #ef4444;"></i>Mensagem para Parcelas Vencidas</h3>
           <div class="form-group">
             <label for="msg_parcelas_vencidas">Mensagem enviada quando há parcelas em atraso</label>
             <textarea id="msg_parcelas_vencidas" class="form-textarea" placeholder="Deixe em branco para usar a mensagem padrão"></textarea>

@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body class="app-layout">
@@ -35,12 +36,17 @@
   </header>
   <main>
     <div class="container">
-      <div class="dashboard-header">
-        <div class="welcome-message" id="welcomeMessage">Bem-vindo ao sistema JP-Cobranças!</div>
-        <div class="dashboard-title">Dashboard</div>
-        <div class="dashboard-subtitle">
-          <span id="currentDate"></span>
-          <small>(mês atual)</small>
+      <div class="page-header">
+        <div class="page-header-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="page-header-text">
+          <div class="welcome-message" id="welcomeMessage">Bem-vindo ao sistema JP-Cobranças!</div>
+          <h1 class="dashboard-title">Dashboard</h1>
+          <p class="dashboard-subtitle">
+            <span id="currentDate"></span>
+            <small>(mês atual)</small>
+          </p>
         </div>
       </div>
       <!-- Cards de Estatísticas -->
@@ -94,7 +100,7 @@
       <!-- Seção de Empréstimos Recentes -->
       <div class="section">
         <div class="section-header">
-          <h3 class="section-title">Empréstimos Recentes</h3>
+          <h3 class="section-title"><i class="fas fa-clock" style="margin-right: 0.5rem; color: #0d9488;"></i>Empréstimos Recentes</h3>
           <button id="toggleForm" class="btn btn-primary">Novo Empréstimo</button>
         </div>
         <div class="table-container">
@@ -119,7 +125,7 @@
       <!-- Seção Cobranças do Dia -->
       <div class="section">
         <div class="section-header">
-          <h3 class="section-title">Cobranças do Dia</h3>
+          <h3 class="section-title"><i class="fas fa-calendar-day" style="margin-right: 0.5rem; color: #f59e0b;"></i>Cobranças do Dia</h3>
           <span id="cobrancas-dia-subtitle" class="text-sm text-gray-500" style="align-self: center;"></span>
         </div>
         <div class="table-container">
@@ -144,7 +150,7 @@
       <!-- Seção de Todos os Empréstimos -->
       <div class="section">
         <div class="section-header">
-          <h3 class="section-title">Todos os Empréstimos</h3>
+          <h3 class="section-title"><i class="fas fa-list" style="margin-right: 0.5rem; color: #0d9488;"></i>Todos os Empréstimos</h3>
         </div>
         
         <!-- Caixa de Busca -->

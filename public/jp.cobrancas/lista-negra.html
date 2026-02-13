@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body class="app-layout">
@@ -35,17 +36,20 @@
   </header>
   <main>
     <div class="container">
-      <div class="dashboard-header">
-        <div class="welcome-message" id="welcomeMessage">Bem-vindo ao sistema JP-Cobranças!</div>
-        <div class="dashboard-title">Lista Negra</div>
-        <div class="dashboard-subtitle">
-          Gerencie clientes na lista negra do sistema.
+      <div class="page-header">
+        <div class="page-header-icon">
+          <i class="fas fa-user-slash"></i>
+        </div>
+        <div class="page-header-text">
+          <div class="welcome-message" id="welcomeMessage">Bem-vindo ao sistema JP-Cobranças!</div>
+          <h1 class="dashboard-title">Lista Negra</h1>
+          <p class="dashboard-subtitle">Gerencie clientes na lista negra do sistema.</p>
         </div>
       </div>
       <!-- Tabela da Lista Negra -->
       <div class="section">
         <div class="section-header">
-          <h3 class="section-title">Clientes na Lista Negra</h3>
+          <h3 class="section-title"><i class="fas fa-ban" style="margin-right: 0.5rem; color: #ef4444;"></i>Clientes na Lista Negra</h3>
           <a href="clientes.html" class="btn btn-primary">Gerenciar Clientes</a>
         </div>
         <div class="table-container table-lista-negra">

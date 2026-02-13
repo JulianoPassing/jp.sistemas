@@ -156,6 +156,54 @@ main {
   margin-bottom: 2rem;
 }
 
+/* Page header com ícone (estilo profissional - usado em todas as páginas) */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.page-header-icon {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #002f4b 0%, #004d73 100%);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 14px rgba(0, 47, 75, 0.25);
+  flex-shrink: 0;
+}
+
+.page-header-text h1,
+.page-header-text .dashboard-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #002f4b;
+  margin: 0 0 0.25rem 0;
+}
+
+.page-header-text p,
+.page-header-text .dashboard-subtitle {
+  font-size: 0.95rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.page-header .welcome-message {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 .dashboard-title {
   font-size: 2rem;
   font-weight: 700;

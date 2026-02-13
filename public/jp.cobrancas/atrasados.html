@@ -36,17 +36,20 @@
   </header>
   <main>
     <div class="container">
-      <div class="dashboard-header">
-        <div class="welcome-message" id="welcomeMessage">Bem-vindo ao sistema JP-Cobranças!</div>
-        <div class="dashboard-title">Atrasados</div>
-        <div class="dashboard-subtitle">
-          Gerencie clientes com pagamentos em atraso.
+      <div class="page-header">
+        <div class="page-header-icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="page-header-text">
+          <div class="welcome-message" id="welcomeMessage">Bem-vindo ao sistema JP-Cobranças!</div>
+          <h1 class="dashboard-title">Atrasados</h1>
+          <p class="dashboard-subtitle">Gerencie clientes com pagamentos em atraso.</p>
         </div>
       </div>
       <!-- Tabela de Atrasados -->
       <div class="section">
         <div class="section-header">
-          <h3 class="section-title">Empréstimos em Atraso</h3>
+          <h3 class="section-title"><i class="fas fa-clock" style="margin-right: 0.5rem; color: #ef4444;"></i>Empréstimos em Atraso</h3>
           <div class="section-actions">
             <button id="refresh-btn" class="btn btn-secondary" onclick="refreshAtrasados()">
               <i class="fas fa-sync-alt"></i> Atualizar
