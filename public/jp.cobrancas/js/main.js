@@ -4054,7 +4054,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="form-group">
             <label>Tipo de Empréstimo</label>
             <select name="tipo" id="modal-tipo" class="form-input">
-              <option value="fixo">Fixo</option>
+              <option value="fixo">Mensal</option>
               <option value="parcelado">Parcelado</option>
             </select>
           </div>
@@ -4141,6 +4141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
       // Controle de exibição dos campos baseado no tipo de cálculo
+      const tipoEmprestimoSelect = modal.querySelector('#modal-tipo');
       const tipoCalculoSelect = modal.querySelector('#modal-tipo-calculo');
       const grupoValorInicial = modal.querySelector('#grupo-valor-inicial');
       const grupoValorFinal = modal.querySelector('#grupo-valor-final');
@@ -4190,6 +4191,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             break;
         }
       });
+      // Atualizar opções de Tipo de Cálculo conforme Tipo de Empréstimo (parcelado = só Valor Final/Parcela Fixo; mensal = só Valor Inicial + Juros)
+      function atualizarTipoCalculoPorTipo() {
+        const tipo = tipoEmprestimoSelect.value;
+        if (tipo === 'parcelado') {
+          tipoCalculoSelect.innerHTML = `
+            <option value="valor_final">Valor Final Fixo</option>
+            <option value="parcela_fixa">Valor da Parcela Fixo</option>
+          `;
+        } else {
+          tipoCalculoSelect.innerHTML = `
+            <option value="valor_inicial">Valor Inicial + Juros</option>
+          `;
+        }
+        tipoCalculoSelect.dispatchEvent(new Event('change'));
+      }
+      tipoEmprestimoSelect.addEventListener('change', atualizarTipoCalculoPorTipo);
+      atualizarTipoCalculoPorTipo();
       
       // Máscara de moeda para todos os campos de valor
       
