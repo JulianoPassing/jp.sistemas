@@ -24,6 +24,7 @@
         --dark-text: #2c3e50; 
         --light-text: #ecf0f1; 
     }
+    html { scroll-behavior: smooth; }
     html, body {
       height: 100%;
       margin: 0;
@@ -1113,6 +1114,63 @@
       width: 100%;
       box-sizing: border-box;
     }
+    .btn-comprar-plano {
+      margin-top: 1.2rem;
+      padding: 0.8rem 2rem;
+      background: linear-gradient(135deg, var(--accent-blue), #00b8d4);
+      color: var(--primary-blue);
+      font-weight: 800;
+      border: none;
+      border-radius: 50px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,230,255,0.3);
+    }
+    .btn-comprar-plano:hover {
+      background: linear-gradient(135deg, #00ffff, #00e6ff);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,230,255,0.4);
+    }
+    .tabela-comparativa-wrapper {
+      overflow-x: auto;
+      margin: 0 auto 2rem;
+      max-width: 900px;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+      border: 1px solid rgba(0, 230, 255, 0.2);
+    }
+    .tabela-comparativa {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      font-size: 0.95rem;
+    }
+    .tabela-comparativa th, .tabela-comparativa td {
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .tabela-comparativa th {
+      background: linear-gradient(135deg, var(--primary-blue), #003d60);
+      color: var(--light-text);
+      font-weight: 700;
+    }
+    .tabela-comparativa tr:hover td {
+      background: rgba(0, 230, 255, 0.05);
+    }
+    .tabela-comparativa td:first-child {
+      text-align: left;
+      font-weight: 600;
+      color: var(--primary-blue);
+    }
+    .sistema-escolha-opcoes { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+    .sistema-escolha-opt { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; color: var(--dark-text); }
+    .sistema-escolha-opt input { margin: 0; }
+    @media (max-width: 700px) {
+      .tabela-comparativa { font-size: 0.85rem; }
+      .tabela-comparativa th, .tabela-comparativa td { padding: 0.6rem; }
+    }
     .planos-titulo {
       text-align: center;
       font-size: 2.5rem;
@@ -1123,6 +1181,15 @@
       background-clip: text;
       margin-bottom: 2rem;
       letter-spacing: 0.5px;
+    }
+    @media (max-width: 768px) {
+      .mobile-menu-btn { display: flex !important; align-items: center; justify-content: center; }
+      #main-nav { display: none; }
+      #main-nav.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: linear-gradient(135deg, var(--primary-blue) 0%, #003d60 100%); padding: 1rem; gap: 0.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+      header { flex-wrap: wrap; }
+    }
+    @media (min-width: 769px) {
+      .mobile-menu-btn { display: none !important; }
     }
     @media (max-width: 700px) {
       .planos-section {
@@ -1190,15 +1257,16 @@
 <body>
   <div id="particles-js"></div>
   <header>
-    <div class="logo">
+    <div class="logo" onclick="window.location.href='index.html'" style="cursor:pointer;" role="button" aria-label="Ir para início">
       <img src="https://i.imgur.com/6N82fk2.png" alt="JP Sistemas Logo" />
       <span class="tech-font">J.P SISTEMAS</span>
     </div>
-    <nav>
+    <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Abrir menu" style="display:none;background:none;border:none;color:var(--light-text);font-size:1.5rem;cursor:pointer;padding:0.5rem;"><i class="fas fa-bars"></i></button>
+    <nav id="main-nav">
       <a href="index.html">Início</a>
       <a href="#" id="acessar-sistema-btn">Acessar Sistema</a>
       <a href="portfolio.html">Portfólio</a>
-      <a href="https://whatsa.me/5de548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" rel="noopener">Contato</a>
+      <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" rel="noopener">Contato</a>
       <a href="precos.html">Planos</a>
     </nav>
   </header>
@@ -1220,6 +1288,7 @@
       <div class="plano-mes">por mês (sem desconto)</div>
       <div class="plano-detalhe">Pagamento mensal, sem fidelidade.</div>
       <div class="plano-obs">✓ Acesso a um sistema completo<br>✓ Suporte técnico<br>✓ Atualizações gratuitas</div>
+      <button class="btn-comprar-plano" type="button">Comprar</button>
     </div>
     <div class="plano-card">
       <div class="plano-titulo"><i class="fas fa-calendar"></i> Plano Trimestral</div>
@@ -1228,6 +1297,7 @@
       <div class="plano-mes">(R$ 135/mês)</div>
       <div class="plano-detalhe">Pagamento único à vista para 3 meses.</div>
       <div class="plano-obs">✓ Acesso a um sistema completo<br>✓ Suporte técnico<br>✓ Atualizações gratuitas</div>
+      <button class="btn-comprar-plano" type="button">Comprar</button>
     </div>
     <div class="plano-card" style="border-color: rgba(255, 193, 7, 0.5);">
       <div class="plano-badge" style="background: linear-gradient(135deg, #ffc107, #ff9800);">MELHOR CUSTO</div>
@@ -1237,6 +1307,7 @@
       <div class="plano-mes">(R$ 120/mês)</div>
       <div class="plano-detalhe">Pagamento único à vista para 6 meses.</div>
       <div class="plano-obs">✓ Acesso a um sistema completo<br>✓ Suporte técnico<br>✓ Atualizações gratuitas</div>
+      <button class="btn-comprar-plano" type="button">Comprar</button>
     </div>
     <div class="plano-card" style="border-color: var(--accent-blue); box-shadow: 0 10px 40px rgba(0,230,255,0.25);">
       <div class="plano-badge">MAIS POPULAR</div>
@@ -1246,7 +1317,35 @@
       <div class="plano-mes">(R$ 83,33/mês)</div>
       <div class="plano-detalhe">Pagamento único à vista para 12 meses.</div>
       <div class="plano-obs">✓ Acesso a um sistema completo<br>✓ Suporte técnico<br>✓ Atualizações gratuitas</div>
+      <button class="btn-comprar-plano" type="button">Comprar</button>
     </div>
+    </div>
+  </section>
+
+  <!-- Tabela comparativa -->
+  <section class="planos-section">
+    <h2 class="planos-titulo">Compare os Planos</h2>
+    <div class="tabela-comparativa-wrapper">
+      <table class="tabela-comparativa">
+        <thead>
+          <tr>
+            <th>Recurso</th>
+            <th>Mensal</th>
+            <th>Trimestral</th>
+            <th>Semestral</th>
+            <th>Anual</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Valor total</td><td>R$ 150</td><td>R$ 405</td><td>R$ 720</td><td>R$ 1.000</td></tr>
+          <tr><td>Valor/mês</td><td>R$ 150</td><td>R$ 135</td><td>R$ 120</td><td>R$ 83,33</td></tr>
+          <tr><td>Desconto</td><td>—</td><td>10%</td><td>20%</td><td>44%</td></tr>
+          <tr><td>Acesso ao sistema</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+          <tr><td>Suporte técnico</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+          <tr><td>Atualizações</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+          <tr><td>Fidelidade</td><td>Não</td><td>3 meses</td><td>6 meses</td><td>12 meses</td></tr>
+        </tbody>
+      </table>
     </div>
   </section>
   
@@ -1269,6 +1368,14 @@
     </div>
   </section>
   
+  <!-- Garantia -->
+  <section class="info-container">
+    <div class="info-section" style="border-left-color: #22c55e;">
+      <h3>🛡️ Garantia</h3>
+      <p>Entre em contato conosco em até 7 dias após a compra caso não fique satisfeito. Avaliamos cada caso individualmente para sua tranquilidade.</p>
+    </div>
+  </section>
+
   <!-- Seção de Informações sobre Sistemas -->
   <section class="info-container">
     <div class="info-section">
@@ -1340,6 +1447,13 @@
     <div class="modal modal-pagamento">
       <button class="close-btn" id="close-modal" title="Fechar">&times;</button>
       <h2 id="modal-titulo">Pagamento - Plano Mensal</h2>
+      <div class="form-secao sistema-escolha" style="margin-bottom:1rem;">
+        <label>Qual sistema deseja ativar? *</label>
+        <div class="sistema-escolha-opcoes">
+          <label class="sistema-escolha-opt"><input type="radio" name="sistema-escolhido" value="gestao" checked> Sistema de Gestão (clientes, produtos, pedidos)</label>
+          <label class="sistema-escolha-opt"><input type="radio" name="sistema-escolhido" value="emprestimos"> Sistema de Empréstimos (cobranças, gestão financeira)</label>
+        </div>
+      </div>
       <div class="resumo-compra" id="resumo-compra">
         <div class="resumo-linha">
           <span>Plano:</span>
@@ -1425,7 +1539,7 @@
     </div>
   </div>
   <footer>
-    © 2025 JP. Sistemas. Todos os direitos reservados. | <a href="https://jp-sistemas.com/" style="color:var(--accent-blue);">jp-sistemas.com</a>
+    © 2026 JP. Sistemas. Todos os direitos reservados. | <a href="https://jp-sistemas.com/" style="color:var(--accent-blue);">jp-sistemas.com</a>
   </footer>
   <script>
     window.addEventListener('scroll', function() {
@@ -1534,9 +1648,10 @@
     const modalBg = document.getElementById('modal-bg');
     const closeModal = document.getElementById('close-modal');
 
-    document.querySelectorAll('.plano-card').forEach((card, idx) => {
+    document.querySelectorAll('.planos-container .plano-card').forEach((card, idx) => {
+      if (idx >= planos.length) return;
       card.style.cursor = 'pointer';
-      card.addEventListener('click', () => {
+      const openModal = () => {
         planoAtual = planos[idx];
         cupomAtivo = null;
         document.getElementById('cupom').value = '';
@@ -1544,7 +1659,13 @@
         document.getElementById('modal-titulo').textContent = 'Pagamento - ' + planoAtual.nome;
         atualizarResumo();
         modalBg.classList.add('active');
+      };
+      card.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-comprar-plano')) return;
+        openModal();
       });
+      const btn = card.querySelector('.btn-comprar-plano');
+      if (btn) btn.addEventListener('click', (e) => { e.stopPropagation(); openModal(); });
     });
 
     // --- Pagar com Mercado Pago ---
@@ -1578,11 +1699,13 @@
       try {
         const baseUrl = window.location.origin;
         const cupomCodigo = cupomAtivo ? Object.keys(CUPONS).find(k => CUPONS[k] === cupomAtivo) : null;
+        const sistemaEscolhido = document.querySelector('input[name="sistema-escolhido"]:checked')?.value || 'gestao';
         const res = await fetch(baseUrl + '/api/mercadopago/preference', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             planName: planoAtual.nome,
+            sistemaEscolhido: sistemaEscolhido,
             amount: valorFinal,
             quantity: 1,
             valorOriginal: subtotal,
@@ -1764,6 +1887,10 @@
     const sistemaModalBg = document.getElementById('sistema-modal-bg');
     const sistemaModalClose = document.getElementById('sistema-modal-close');
     const acessarSistemaBtn = document.getElementById('acessar-sistema-btn');
+
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', function() {
+      document.getElementById('main-nav').classList.toggle('open');
+    });
 
     if (acessarSistemaBtn && sistemaModalBg && sistemaModalClose) {
       acessarSistemaBtn.addEventListener('click', (e) => {

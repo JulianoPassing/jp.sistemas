@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JP. Sistemas - Tecnologia em Gestão</title>
+  <meta name="description" content="Sistema de Gestão e Sistema de Empréstimos 100% em nuvem. Soluções completas para sua empresa com tecnologia, segurança e suporte especializado.">
+  <meta property="og:title" content="JP. Sistemas - Tecnologia em Gestão">
+  <meta property="og:description" content="Sistema de Gestão e Sistema de Empréstimos 100% em nuvem. Soluções completas para sua empresa.">
+  <meta property="og:type" content="website">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png">
@@ -18,6 +22,7 @@
         --light-text: #ecf0f1; 
     }
 
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
       font-family: 'Inter', sans-serif;
@@ -320,6 +325,10 @@
         text-shadow: 0 0 10px rgba(0, 230, 255, 0.5);
     }
     @media (max-width: 900px) {
+      .mobile-menu-btn { display: flex !important; align-items: center; justify-content: center; }
+      #main-nav { display: none; }
+      #main-nav.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: linear-gradient(135deg, var(--primary-blue) 0%, #003d60 100%); padding: 1rem; gap: 0.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+      header { flex-wrap: wrap; }
       .features {
         flex-direction: column;
         align-items: center;
@@ -327,6 +336,9 @@
       .feature-card {
         width: 90vw;
       }
+    }
+    @media (min-width: 901px) {
+      .mobile-menu-btn { display: none !important; }
     }
     @media (max-width: 600px) {
       .hero h1 {
@@ -963,11 +975,14 @@
 <body>
   <div id="particles-js"></div>
   <header>
-    <div class="logo">
+    <div class="logo" onclick="window.location.href='index.html'" style="cursor:pointer;" role="button" aria-label="Ir para início">
       <img src="https://i.imgur.com/6N82fk2.png" alt="JP Sistemas Logo" />
       <span class="tech-font">J.P SISTEMAS</span>
     </div>
-    <nav>
+    <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Abrir menu" style="display:none;background:none;border:none;color:var(--light-text);font-size:1.5rem;cursor:pointer;padding:0.5rem;">
+      <i class="fas fa-bars"></i>
+    </button>
+    <nav id="main-nav">
       <a href="#" id="acessar-sistema-btn">Acessar Sistema</a>
       <a href="portfolio.html">Portfólio</a>
       <a href="https://whatsa.me/5548996852138/?t=Ol%C3%A1,%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20sistemas." target="_blank" rel="noopener">Contato</a>
@@ -1012,7 +1027,7 @@
     </div>
   </section>
   <footer id="contato">
-    © 2025 JP. Sistemas. Todos os direitos reservados. | <a href="https://jp-sistemas.com/" style="color:var(--accent-blue);">jp-sistemas.com</a>
+    © 2026 JP. Sistemas. Todos os direitos reservados. | <a href="https://jp-sistemas.com/" style="color:var(--accent-blue);">jp-sistemas.com</a>
   </footer>
   <!-- Pop-up Cupom Promocional -->
   <div class="cupom-modal-bg" id="cupom-modal-bg">
@@ -1314,6 +1329,10 @@
       document.getElementById('cd-mins').textContent = String(mins).padStart(2, '0');
       document.getElementById('cd-secs').textContent = String(secs).padStart(2, '0');
     }
+
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', function() {
+      document.getElementById('main-nav').classList.toggle('open');
+    });
 
     if (cupomModal && cupomClose) {
       setTimeout(() => cupomModal.classList.add('active'), 800);
