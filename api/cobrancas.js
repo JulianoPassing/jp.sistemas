@@ -5,6 +5,7 @@ const fs = require('fs').promises;
 const multer = require('multer');
 const nodemailer = require('nodemailer');
 const AdmZip = require('adm-zip');
+const XLSX = require('xlsx');
 const { getCobrancasDatabaseConfig } = require('../database-config');
 const bcrypt = require('bcryptjs');
 
@@ -2909,6 +2910,109 @@ router.post('/backup-email', ensureDatabase, uploadBackupEmail, async (req, res)
       error: 'Erro ao enviar backup.',
       message: err.message || 'Tente novamente mais tarde.'
     });
+  }
+});
+
+// Backup diário automático - chamado por cron com token
+// Ex: curl -X POST "http://localhost:3000/api/cobrancas/backup-diario-enviar?token=SEU_TOKEN"
+router.post('/backup-diario-enviar', async (req, res) => {
+  const token = req.query.token || req.body?.token;
+  const expectedToken = process.env.BACKUP_CRON_TOKEN || process.env.CRON_SECRET;
+  if (!expectedToken || token !== expectedToken) {
+    return res.status(403).json({ error: 'Token inválido ou não configurado.' });
+  }
+  const results = { enviados: 0, erros: [], ok: [] };
+  try {
+    const usersConn = await getUsersConnection();
+    await ensureEmailColumnUsuariosCobrancas(usersConn);
+    const [users] = await usersConn.execute('SELECT username, email FROM usuarios_cobrancas WHERE email IS NOT NULL AND TRIM(email) != "" AND email LIKE "%@%"');
+    await usersConn.end();
+    const smtpPass = process.env.SMTP_PASS || process.env.BACKUP_EMAIL_APP_PASSWORD;
+    if (!smtpPass) {
+      return res.status(503).json({ error: 'SMTP não configurado. Defina SMTP_PASS ou BACKUP_EMAIL_APP_PASSWORD.' });
+    }
+    const smtpUser = process.env.SMTP_USER || process.env.BACKUP_EMAIL_USER || 'suporte.jpsistemas@gmail.com';
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587', 10),
+      secure: false,
+      auth: { user: smtpUser, pass: smtpPass }
+    });
+    for (const row of users) {
+      const username = (row.username || '').trim();
+      const email = (row.email || '').trim();
+      if (!username || !email || !email.includes('@')) continue;
+      try {
+        const conn = await createCobrancasConnection(username);
+        let configRows = [];
+        try {
+          [configRows] = await conn.execute('SELECT backup_diario_ativo FROM configuracoes LIMIT 1');
+        } catch (_) {}
+        const backupAtivo = configRows.length > 0 && (configRows[0].backup_diario_ativo === 1 || configRows[0].backup_diario_ativo === '1');
+        if (!backupAtivo) {
+          await conn.end();
+          continue;
+        }
+        const [emprestimos] = await conn.execute(`
+          SELECT e.*, c.nome as cliente_nome, c.cpf_cnpj, c.telefone, c.email as cliente_email
+          FROM emprestimos e
+          LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
+          ORDER BY e.created_at DESC
+        `);
+        const [clientes] = await conn.execute('SELECT * FROM clientes_cobrancas ORDER BY nome ASC');
+        await conn.end();
+        const formatDate = (d) => d ? (d instanceof Date ? d.toISOString().slice(0, 10) : String(d).slice(0, 10)) : '-';
+        const formatMoney = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v) || 0);
+        const dadosEmp = (emprestimos || []).map(e => ({
+          'ID': e.id, 'Cliente': e.cliente_nome || '-', 'CPF/CNPJ': e.cpf_cnpj || '-', 'Telefone': e.telefone || '-',
+          'Valor': formatMoney(e.valor), 'Juros (%)': Number(e.juros_mensal || 0), 'Data Empréstimo': formatDate(e.data_emprestimo),
+          'Data Vencimento': formatDate(e.data_vencimento), 'Status': e.status || '-', 'Observações': (e.observacoes || '-').substring(0, 100)
+        }));
+        const dadosCli = (clientes || []).map(c => ({
+          'ID': c.id, 'Nome': c.nome || '-', 'CPF/CNPJ': c.cpf_cnpj || '-', 'Email': c.email || '-', 'Telefone': c.telefone || '-',
+          'Endereço': c.endereco || '-', 'Cidade': c.cidade || '-', 'Estado': c.estado || '-', 'Status': c.status || 'Ativo',
+          'Data Cadastro': formatDate(c.created_at)
+        }));
+        const dataHora = new Date();
+        const nomeEmp = `Backup_Emprestimos_${dataHora.getFullYear()}-${String(dataHora.getMonth() + 1).padStart(2, '0')}-${String(dataHora.getDate()).padStart(2, '0')}_${String(dataHora.getHours()).padStart(2, '0')}${String(dataHora.getMinutes()).padStart(2, '0')}.xlsx`;
+        const nomeCli = `Backup_Carteira_Clientes_${dataHora.getFullYear()}-${String(dataHora.getMonth() + 1).padStart(2, '0')}-${String(dataHora.getDate()).padStart(2, '0')}_${String(dataHora.getHours()).padStart(2, '0')}${String(dataHora.getMinutes()).padStart(2, '0')}.xlsx`;
+        const wbEmp = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wbEmp, XLSX.utils.json_to_sheet(dadosEmp), 'Empréstimos');
+        const wbCli = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wbCli, XLSX.utils.json_to_sheet(dadosCli), 'Carteira de Clientes');
+        const bufEmp = XLSX.write(wbEmp, { bookType: 'xlsx', type: 'buffer' });
+        const bufCli = XLSX.write(wbCli, { bookType: 'xlsx', type: 'buffer' });
+        const zip = new AdmZip();
+        zip.addFile(nomeEmp, Buffer.from(bufEmp));
+        zip.addFile(nomeCli, Buffer.from(bufCli));
+        const zipBuf = zip.toBuffer();
+        const dataHoraStr = dataHora.toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'medium' });
+        const htmlBody = `
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family:sans-serif;padding:20px;">
+<h2>Backup JP-Cobranças</h2>
+<p>Olá, <strong>${username}</strong>!</p>
+<p>Segue em anexo o backup diário automático (Empréstimos + Carteira de Clientes).</p>
+<p><strong>Data:</strong> ${dataHoraStr}</p>
+<p style="color:#666;font-size:12px;">Enviado automaticamente pelo sistema JP-Cobranças.</p>
+</body></html>`;
+        await transporter.sendMail({
+          from: `"JP-Cobranças" <${smtpUser}>`,
+          to: email,
+          subject: `Backup diário JP-Cobranças — ${dataHoraStr}`,
+          html: htmlBody,
+          attachments: [{ filename: 'backup.zip', content: zipBuf }]
+        });
+        results.enviados++;
+        results.ok.push(username);
+      } catch (err) {
+        results.erros.push({ username, erro: err.message || String(err) });
+        console.error('Erro backup diário para', username, err);
+      }
+    }
+    res.json({ success: true, ...results });
+  } catch (err) {
+    console.error('Erro geral backup diário:', err);
+    res.status(500).json({ error: err.message, ...results });
   }
 });
 

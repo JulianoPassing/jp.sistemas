@@ -13,7 +13,8 @@
     "init-vercel": "node scripts/init-vercel-db.js",
     "init-cobrancas": "node scripts/init-cobrancas-db.js",
     "backup": "bash scripts/backup.sh",
-    "backup-debian": "bash scripts/backup-debian.sh"
+    "backup-debian": "bash scripts/backup-debian.sh",
+    "backup-diario-cobrancas": "node scripts/backup-diario-cobrancas.js"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -30,7 +31,8 @@
     "nodemailer": "^6.9.7",
     "cookie-parser": "^1.4.6",
     "adm-zip": "^0.5.10",
-    "mercadopago": "^2.0.17"
+    "mercadopago": "^2.0.17",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

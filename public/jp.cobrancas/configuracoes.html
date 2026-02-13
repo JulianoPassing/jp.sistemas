@@ -288,6 +288,15 @@
           </div>
         </div>
 
+        <!-- Avisos -->
+        <div class="config-section">
+          <h3><i class="fas fa-bell" style="margin-right: 0.5rem; color: #0d9488;"></i>Avisos</h3>
+          <p style="color: #6b7280; margin-bottom: 1rem;">Se você escolheu "Não lembrar novamente" no aviso de PIX/e-mail, pode reativar aqui.</p>
+          <div class="form-group">
+            <button type="button" class="btn-save" id="btn-reativar-aviso-pix-email" style="background: #6b7280;">Exibir novamente avisos de configuração (PIX e e-mail)</button>
+          </div>
+        </div>
+
         <!-- Chave PIX -->
         <div class="config-section">
           <h3><i class="fas fa-qrcode" style="margin-right: 0.5rem; color: #0d9488;"></i>Chave PIX</h3>
@@ -425,6 +434,23 @@
       await carregarPerfilCobrancas();
       await carregarConfiguracoes();
       bindPerfilCobrancas();
+      const btnReativar = document.getElementById('btn-reativar-aviso-pix-email');
+      if (btnReativar) {
+        btnReativar.onclick = async function() {
+          try {
+            const res = await fetch('/api/cobrancas/perfil', { credentials: 'include' });
+            if (!res.ok) return;
+            const perfil = await res.json();
+            const username = (perfil.username || '').trim();
+            if (!username) return;
+            const key = 'jp-aviso-pix-email-nao-lembrar';
+            const dismissed = JSON.parse(localStorage.getItem(key) || '{}');
+            delete dismissed[username];
+            localStorage.setItem(key, JSON.stringify(dismissed));
+            if (typeof ui !== 'undefined') ui.showNotification('Avisos reativados. Eles aparecerão novamente ao entrar no sistema.', 'success');
+          } catch (e) { console.warn(e); }
+        };
+      }
     });
 
     async function carregarPerfilCobrancas() {
@@ -559,6 +585,14 @@
           backupToggle.checked = v === 1 || v === true || v === '1';
           // Auto-salvar ao alterar o toggle (evita precisar clicar em Salvar)
           backupToggle.addEventListener('change', async function() {
+            if (this.checked) {
+              const emailAtual = (document.getElementById('perfil-email-cobrancas')?.textContent || '').trim();
+              if (!emailAtual || emailAtual === '(não informado)' || !emailAtual.includes('@')) {
+                this.checked = false;
+                if (typeof ui !== 'undefined') ui.showNotification('Cadastre seu e-mail em "Dados da conta" antes de ativar o backup diário.', 'error');
+                return;
+              }
+            }
             try {
               const dados = {
                 chave_pix: (document.getElementById('chave_pix')?.value || '').trim() || null,
