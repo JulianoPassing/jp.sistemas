@@ -65,6 +65,46 @@ async function carregarConfiguracoesUsuario() {
   }
 }
 
+// Modal de aviso quando chave PIX ou e-mail não estão cadastrados
+const AVISO_PIX_EMAIL_NAO_LEMBRAR = 'jp-aviso-pix-email-nao-lembrar';
+async function verificarCadastroPixEmail() {
+  if (localStorage.getItem(AVISO_PIX_EMAIL_NAO_LEMBRAR) === 'true') return;
+  if (sessionStorage.getItem('jp-aviso-pix-email-visto') === 'true') return;
+  try {
+    const [configRes, perfilRes] = await Promise.all([
+      fetch(`${API_BASE_URL}/cobrancas/configuracoes`, { credentials: 'include' }),
+      fetch(`${API_BASE_URL}/cobrancas/perfil`, { credentials: 'include' })
+    ]);
+    const config = configRes.ok ? await configRes.json() : {};
+    const perfil = perfilRes.ok ? await perfilRes.json() : {};
+    const chavePix = (config.chave_pix || '').trim();
+    const email = (perfil.email || '').trim();
+    const faltaPix = !chavePix;
+    const faltaEmail = !email || !email.includes('@');
+    if (!faltaPix && !faltaEmail) return;
+    sessionStorage.setItem('jp-aviso-pix-email-visto', 'true');
+    let msg;
+    if (faltaPix && faltaEmail) {
+      msg = 'Recomendamos cadastrar os seguintes dados em Configurações:\n\n• Chave PIX — para receber pagamentos nas mensagens de cobrança enviadas aos clientes\n• E-mail — para receber o backup diário automático do sistema';
+    } else if (faltaPix) {
+      msg = 'Cadastre sua chave PIX em Configurações para receber pagamentos nas mensagens de cobrança enviadas aos clientes.';
+    } else {
+      msg = 'Cadastre seu e-mail em Configurações para receber o backup diário automático do sistema.';
+    }
+    const result = await ui.showConfirm(msg, {
+      title: 'Configuração incompleta',
+      confirmText: 'Ir para Configurações',
+      cancelText: 'Depois',
+      dismissText: 'Não lembrar novamente'
+    });
+    if (result === 'dismiss') {
+      localStorage.setItem(AVISO_PIX_EMAIL_NAO_LEMBRAR, 'true');
+      return;
+    }
+    if (result) window.location.href = 'configuracoes.html';
+  } catch (e) { console.warn('Erro ao verificar cadastro:', e); }
+}
+
 // Função helper para gerar mensagem de cobrança com base nas configurações
 function gerarMensagemCobranca(tipo, dados) {
   const config = appState.configuracoes;
@@ -812,8 +852,10 @@ const ui = {
   },
 
   // Modal de confirmação (substitui confirm nativo)
+  // options.dismissText: se informado, adiciona terceiro botão que resolve 'dismiss'
   showConfirm(message, options = {}) {
-    const { title = 'Confirmar', confirmText = 'Confirmar', cancelText = 'Cancelar', danger = false } = options;
+    const { title = 'Confirmar', confirmText = 'Confirmar', cancelText = 'Cancelar', danger = false, dismissText } = options;
+    const hasDismiss = !!dismissText;
     return new Promise((resolve) => {
       const modal = document.createElement('div');
       modal.className = 'modal modal-confirm';
@@ -827,6 +869,7 @@ const ui = {
           <div class="modal-body">
             <p class="modal-confirm-message">${message}</p>
             <div class="modal-confirm-actions">
+              ${hasDismiss ? `<button type="button" class="btn btn-link modal-confirm-dismiss">${dismissText}</button>` : ''}
               <button type="button" class="btn btn-secondary modal-confirm-cancel">${cancelText}</button>
               <button type="button" class="btn ${danger ? 'btn-danger' : 'btn-primary'} modal-confirm-ok">${confirmText}</button>
             </div>
@@ -842,6 +885,7 @@ const ui = {
 
       modal.querySelector('.modal-confirm-ok').onclick = () => close(true);
       modal.querySelector('.modal-confirm-cancel').onclick = () => close(false);
+      if (hasDismiss) modal.querySelector('.modal-confirm-dismiss').onclick = () => close('dismiss');
       modal.querySelector('.modal-close').onclick = () => close(false);
       modal.querySelector('.modal-overlay').onclick = () => close(false);
     });
@@ -4104,6 +4148,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Carregar configurações do usuário
   await carregarConfiguracoesUsuario();
+
+  // Verificar se chave PIX e e-mail estão cadastrados (modal de aviso)
+  setTimeout(verificarCadastroPixEmail, 800);
 
   // Event listener para busca na seção "Todos os Empréstimos" do Dashboard
   const searchTodosEmprestimos = document.getElementById('search-todos-emprestimos');

@@ -2926,10 +2926,12 @@ router.get('/configuracoes', ensureDatabase, async (req, res) => {
         msg_emprestimo_com_juros TEXT DEFAULT NULL,
         msg_emprestimo_sem_juros TEXT DEFAULT NULL,
         msg_parcelas_vencidas TEXT DEFAULT NULL,
+        backup_diario_ativo TINYINT(1) DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
+    try { await connection.execute('ALTER TABLE configuracoes ADD COLUMN backup_diario_ativo TINYINT(1) DEFAULT 0'); } catch (e) { if (e.code !== 'ER_DUP_FIELDNAME') throw e; }
     
     const [rows] = await connection.execute('SELECT * FROM configuracoes LIMIT 1');
     
@@ -2955,7 +2957,7 @@ router.get('/configuracoes', ensureDatabase, async (req, res) => {
 // Salvar configurações do usuário
 router.put('/configuracoes', ensureDatabase, async (req, res) => {
   try {
-    const { chave_pix, msg_parcela, msg_emprestimo_com_juros, msg_emprestimo_sem_juros, msg_parcelas_vencidas } = req.body;
+    const { chave_pix, msg_parcela, msg_emprestimo_com_juros, msg_emprestimo_sem_juros, msg_parcelas_vencidas, backup_diario_ativo } = req.body;
     const username = req.session.cobrancasUser;
     const connection = await createCobrancasConnection(username);
     
@@ -2963,13 +2965,11 @@ router.put('/configuracoes', ensureDatabase, async (req, res) => {
     const [rows] = await connection.execute('SELECT id FROM configuracoes LIMIT 1');
     
     if (rows.length === 0) {
-      // Inserir novo registro
       await connection.execute(`
-        INSERT INTO configuracoes (chave_pix, msg_parcela, msg_emprestimo_com_juros, msg_emprestimo_sem_juros, msg_parcelas_vencidas) 
-        VALUES (?, ?, ?, ?, ?)
-      `, [chave_pix || null, msg_parcela || null, msg_emprestimo_com_juros || null, msg_emprestimo_sem_juros || null, msg_parcelas_vencidas || null]);
+        INSERT INTO configuracoes (chave_pix, msg_parcela, msg_emprestimo_com_juros, msg_emprestimo_sem_juros, msg_parcelas_vencidas, backup_diario_ativo) 
+        VALUES (?, ?, ?, ?, ?, ?)
+      `, [chave_pix || null, msg_parcela || null, msg_emprestimo_com_juros || null, msg_emprestimo_sem_juros || null, msg_parcelas_vencidas || null, backup_diario_ativo ? 1 : 0]);
     } else {
-      // Atualizar registro existente
       await connection.execute(`
         UPDATE configuracoes SET 
           chave_pix = ?, 
@@ -2977,9 +2977,10 @@ router.put('/configuracoes', ensureDatabase, async (req, res) => {
           msg_emprestimo_com_juros = ?, 
           msg_emprestimo_sem_juros = ?, 
           msg_parcelas_vencidas = ?,
+          backup_diario_ativo = ?,
           updated_at = NOW()
         WHERE id = ?
-      `, [chave_pix || null, msg_parcela || null, msg_emprestimo_com_juros || null, msg_emprestimo_sem_juros || null, msg_parcelas_vencidas || null, rows[0].id]);
+      `, [chave_pix || null, msg_parcela || null, msg_emprestimo_com_juros || null, msg_emprestimo_sem_juros || null, msg_parcelas_vencidas || null, backup_diario_ativo ? 1 : 0, rows[0].id]);
     }
     
     // Buscar configuração atualizada

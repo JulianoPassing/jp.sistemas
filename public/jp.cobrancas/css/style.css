@@ -1423,6 +1423,7 @@ footer {
   color: var(--gray-700);
   margin-bottom: 1.5rem;
   line-height: 1.6;
+  white-space: pre-line;
 }
 
 .modal-confirm-actions {
@@ -1430,10 +1431,25 @@ footer {
   gap: 0.75rem;
   justify-content: flex-end;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .modal-confirm-actions .btn {
   min-width: 100px;
+}
+
+.modal-confirm-actions .btn-link {
+  background: none;
+  border: none;
+  color: var(--secondary);
+  min-width: auto;
+  margin-right: auto;
+  text-decoration: underline;
+}
+
+.modal-confirm-actions .btn-link:hover {
+  color: var(--primary);
+  transform: none;
 }
 
 /* Paginação */
