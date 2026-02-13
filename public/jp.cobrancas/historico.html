@@ -59,7 +59,7 @@
           <i class="fas fa-history"></i>
         </div>
         <div class="page-header-text">
-          <div class="welcome-message" id="welcomeMessage">Bem-vindo ao sistema JP-Cobranças!</div>
+        <div class="welcome-message" id="welcomeMessage">Bem-vindo ao sistema JP-Cobranças!</div>
           <h1 class="dashboard-title">Histórico</h1>
           <p class="dashboard-subtitle">Visualize o histórico de pagamentos (parcelas e juros) registrados ao marcar como pago. Todas as datas de pagamento são gravadas automaticamente.</p>
         </div>
@@ -77,9 +77,9 @@
 
       <!-- Painel: Histórico de Pagamentos -->
       <div id="panel-pagamentos" class="historico-panel active">
-        <div class="section">
+      <div class="section">
           <div class="search-container" style="margin-bottom: 1rem;">
-            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+          <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
               <input type="date" id="filter-pag-data-inicio" class="form-input" style="min-width: 140px;" title="Data início">
               <input type="date" id="filter-pag-data-fim" class="form-input" style="min-width: 140px;" title="Data fim">
               <select id="filter-pag-tipo" class="form-input" style="min-width: 140px;">
@@ -133,33 +133,33 @@
               <input type="date" id="filter-data-inicio" class="form-input" style="min-width: 140px;">
               <input type="date" id="filter-data-fim" class="form-input" style="min-width: 140px;">
               <button id="clear-filters" class="btn btn-secondary">Limpar</button>
-            </div>
-            <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">
-              <span id="results-info">Mostrando todos os empréstimos</span>
-            </div>
           </div>
-          <div class="section-header">
-            <h3 class="section-title">Empréstimos</h3>
-            <button id="btn-novo-emprestimo" class="btn btn-primary">Novo Empréstimo</button>
+          <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">
+            <span id="results-info">Mostrando todos os empréstimos</span>
           </div>
-          <div class="table-container">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Cliente</th>
+        </div>
+        <div class="section-header">
+          <h3 class="section-title">Empréstimos</h3>
+          <button id="btn-novo-emprestimo" class="btn btn-primary">Novo Empréstimo</button>
+        </div>
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
                   <th>Valor emprestado</th>
                   <th>Valor final</th>
                   <th>Data do empréstimo</th>
-                  <th>Vencimento</th>
-                  <th>Status</th>
+                <th>Vencimento</th>
+                <th>Status</th>
                   <th>Histórico (pagas/pend/atrasadas)</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="emprestimos-tbody">
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="emprestimos-tbody">
                 <tr><td colspan="8"><div class="table-skeleton"><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></div></td></tr>
-              </tbody>
-            </table>
+            </tbody>
+          </table>
           </div>
         </div>
       </div>
@@ -186,21 +186,21 @@
             <div><label class="form-label">Vencimento:</label><p id="modal-vencimento"></p></div>
             <div><label class="form-label">Juros Mensal:</label><p id="modal-juros"></p></div>
             <div><label class="form-label">Status:</label><p id="modal-status"></p></div>
-          </div>
+            </div>
           <div><label class="form-label">Observações:</label><p id="modal-observacoes" class="modal-observacoes"></p></div>
-        </div>
+            </div>
         <div class="section">
           <h4 class="section-title">Parcelas (com datas de pagamento)</h4>
           <div id="parcelas-container" class="parcelas-detalhadas"></div>
-        </div>
+          </div>
         <div class="section">
           <h4 class="section-title">Resumo de Pagamentos</h4>
           <div class="grid grid-cols-3">
             <div class="resumo-card resumo-pagas"><div class="text-sm text-gray-600">Parcelas Pagas</div><div id="resumo-pagas" class="text-lg font-semibold text-green-600">0</div></div>
             <div class="resumo-card resumo-pendentes"><div class="text-sm text-gray-600">Parcelas Pendentes</div><div id="resumo-pendentes" class="text-lg font-semibold text-yellow-500">0</div></div>
             <div class="resumo-card resumo-atrasadas"><div class="text-sm text-gray-600">Parcelas Atrasadas</div><div id="resumo-atrasadas" class="text-lg font-semibold text-red-600">0</div></div>
-          </div>
-        </div>
+            </div>
+            </div>
       </div>
     </div>
   </div>
@@ -386,7 +386,7 @@
                     status = 'ATRASADO';
                     parcelasAtrasadas.sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
                     vencimentoExibir = parcelasAtrasadas[0].data_vencimento;
-                  } else {
+                } else {
                     status = 'ATIVO';
                     parcelasNaoPagas.sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
                     if (parcelasNaoPagas.length > 0) vencimentoExibir = parcelasNaoPagas[0].data_vencimento;
@@ -524,7 +524,7 @@
             <td><span class="badge badge-${emp.statusCalculado === 'QUITADO' ? 'info' : emp.statusCalculado === 'ATRASADO' ? 'danger' : 'success'}">${status}</span></td>
             <td><div class="text-sm"><span class="text-green-600">${resumo.pagas} pagas</span> · <span class="text-yellow-500">${resumo.pendentes} pend.</span> · <span class="text-red-600">${resumo.atrasadas} atrasadas</span></div></td>
             <td><button class="btn btn-primary btn-sm" onclick="abrirDetalhes(${emp.id})">Ver Detalhes</button></td>
-          `;
+        `;
           tbody.appendChild(row);
         });
       }
@@ -594,17 +594,17 @@
           const dataPgto = p.data_pagamento ? `<div class="text-sm text-green-600">Pago em: ${utils.formatDate(p.data_pagamento)}</div>` : '';
           return `
             <div class="parcela-item ${(p.status || '').toLowerCase()}" style="padding: 0.75rem; background: #f8f9fa; border-radius: 8px; margin-bottom: 0.5rem;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
                   <div class="font-semibold">Parcela ${p.numero_parcela}</div>
                   <div class="text-sm text-gray-600">Vencimento: ${utils.formatDate(p.data_vencimento)}</div>
                   ${dataPgto}
-                </div>
-                <div style="text-align: right;">
+            </div>
+            <div style="text-align: right;">
                   <div class="font-semibold">${utils.formatCurrency(p.valor_parcela)}</div>
                   <span class="badge ${statusClass}">${p.status}</span>
-                </div>
-              </div>
+            </div>
+          </div>
             </div>
           `;
         }).join('');
