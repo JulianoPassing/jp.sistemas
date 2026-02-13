@@ -295,28 +295,42 @@ Solicitamos a regularização o mais breve possível.`;
       <span style="color: #92400e; font-size: 0.9rem;"><b>Atenção:</b> Cliente sem telefone cadastrado. Edite o empréstimo para adicionar.</span>
     </div>
   ` : '';
+  // Blocos de opções separados para ordenar conforme o tipo de empréstimo
+  const opcaoParcela = `
+    <div style="border: 2px solid #25d366; border-radius: 12px; padding: 1rem; background: #f0fff4;">
+      <h4 style="color: #25d366; margin-bottom: 0.5rem;">📋 ${tituloParcela}</h4>
+      <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">Vencimento: <b>${dadosNotificacao.dataParcela}</b> • Valor: <b>${utils.formatCurrency(dadosNotificacao.valorParcela)}</b></div>
+      <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb;">${msgParcelado}</p>
+      <a href="${linkParcelado || 'javascript:void(0)'}" ${linkParcelado ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #25d366; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">Enviar via WhatsApp</a>
+    </div>
+  `;
+  const opcaoEmprestimoSemDiario = `
+    <div style="border: 2px solid #8b5cf6; border-radius: 12px; padding: 1rem; background: #f5f3ff;">
+      <h4 style="color: #8b5cf6; margin-bottom: 0.5rem;">💵 Empréstimo (sem juros diário)</h4>
+      <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgEmprestimoSemDiario}</p>
+      <a href="${linkEmprestimoSemDiario || 'javascript:void(0)'}" ${linkEmprestimoSemDiario ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #8b5cf6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">Enviar via WhatsApp</a>
+    </div>
+  `;
+  const opcaoEmprestimoComDiario = `
+    <div style="border: 2px solid #3b82f6; border-radius: 12px; padding: 1rem; background: #eff6ff;">
+      <h4 style="color: #3b82f6; margin-bottom: 0.5rem;">💰 Empréstimo (com juros/multa diária)</h4>
+      <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgEmprestimo}</p>
+      <a href="${linkEmprestimo || 'javascript:void(0)'}" ${linkEmprestimo ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #3b82f6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">Enviar via WhatsApp</a>
+    </div>
+  `;
+  // Ordenar opções: parcelado = msgs parceladas em cima; juros = msgs de juros em cima
+  const opcoesOrdenadas = dadosNotificacao.isParcelado
+    ? `${opcaoTodasVencidas}${opcaoParcela}${opcaoEmprestimoSemDiario}${opcaoEmprestimoComDiario}`
+    : `${opcaoEmprestimoSemDiario}${opcaoEmprestimoComDiario}${opcaoTodasVencidas}${opcaoParcela}`;
   const modalNotificacao = `
     <div style="padding: 1.5rem; max-width: 500px; margin: 0 auto; max-height: 80vh; overflow-y: auto;">
       <h3 style="margin-bottom: 1.5rem; color: #002f4b; text-align: center;">Escolha o tipo de mensagem</h3>
       ${avisoSemTelefone}
+      <div style="margin-bottom: 0.5rem; font-size: 0.85rem; color: #6b7280; text-align: center;">
+        ${dadosNotificacao.isParcelado ? '📦 Empréstimo parcelado' : '💵 Empréstimo com juros'}
+      </div>
       <div style="display: flex; flex-direction: column; gap: 1rem;">
-        ${opcaoTodasVencidas}
-        <div style="border: 2px solid #8b5cf6; border-radius: 12px; padding: 1rem; background: #f5f3ff;">
-          <h4 style="color: #8b5cf6; margin-bottom: 0.5rem;">1. 💵 Empréstimo (sem juros diário)</h4>
-          <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgEmprestimoSemDiario}</p>
-          <a href="${linkEmprestimoSemDiario || 'javascript:void(0)'}" ${linkEmprestimoSemDiario ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #8b5cf6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">Enviar via WhatsApp</a>
-        </div>
-        <div style="border: 2px solid #3b82f6; border-radius: 12px; padding: 1rem; background: #eff6ff;">
-          <h4 style="color: #3b82f6; margin-bottom: 0.5rem;">2. 💰 Empréstimo (com juros/multa diária)</h4>
-          <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgEmprestimo}</p>
-          <a href="${linkEmprestimo || 'javascript:void(0)'}" ${linkEmprestimo ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #3b82f6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">Enviar via WhatsApp</a>
-        </div>
-        <div style="border: 2px solid #25d366; border-radius: 12px; padding: 1rem; background: #f0fff4;">
-          <h4 style="color: #25d366; margin-bottom: 0.5rem;">3. 📋 ${tituloParcela}</h4>
-          <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">Vencimento: <b>${dadosNotificacao.dataParcela}</b> • Valor: <b>${utils.formatCurrency(dadosNotificacao.valorParcela)}</b></div>
-          <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb;">${msgParcelado}</p>
-          <a href="${linkParcelado || 'javascript:void(0)'}" ${linkParcelado ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #25d366; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">Enviar via WhatsApp</a>
-        </div>
+        ${opcoesOrdenadas}
       </div>
       <button type="button" class="btn" style="width: 100%; margin-top: 1.5rem; background: #6b7280; color: #fff; padding: 0.75rem; border-radius: 8px;" onclick="this.closest('.modal').remove()">Cancelar</button>
     </div>
