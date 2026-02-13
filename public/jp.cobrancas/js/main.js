@@ -141,6 +141,189 @@ Solicitamos o pagamento até a data de vencimento.`;
   }
 }
 
+// Abre o modal de cobrança para escolher tipo de mensagem (reutilizado em viewEmprestimo e Cobranças do Dia)
+function showModalNotificacaoCobranca(dadosNotificacao) {
+  const chavePix = appState.configuracoes.chave_pix || '(Chave PIX não configurada)';
+  const infoParcela = dadosNotificacao.isParcelado ? ` (parcela ${dadosNotificacao.numeroParcelaAtual}/${dadosNotificacao.totalParcelas})` : '';
+  let msgParcelado;
+  const msgParcelaPersonalizada = gerarMensagemCobranca('parcela', {
+    nome: dadosNotificacao.primeiroNome,
+    parcelaAtual: dadosNotificacao.numeroParcelaAtual,
+    totalParcelas: dadosNotificacao.totalParcelas,
+    dataVencimento: dadosNotificacao.dataParcela,
+    valor: utils.formatCurrency(dadosNotificacao.valorParcela),
+    isParcelado: dadosNotificacao.isParcelado
+  });
+  if (msgParcelaPersonalizada) {
+    msgParcelado = msgParcelaPersonalizada;
+  } else {
+    msgParcelado = `Olá, ${dadosNotificacao.primeiroNome}, a sua parcela${infoParcela} vence ${dadosNotificacao.dataParcela}. Você pode pagar o valor de ${utils.formatCurrency(dadosNotificacao.valorParcela)}.
+
+Chave PIX: ${chavePix}
+
+Solicitamos o pagamento até a data de vencimento.`;
+  }
+  const jurosTotalMaisDiario = dadosNotificacao.jurosTotal + dadosNotificacao.jurosDiario;
+  const jurosMensalMaisAtraso = dadosNotificacao.jurosTotal + dadosNotificacao.jurosAplicado;
+  const infoJurosMsg = dadosNotificacao.diasAtraso > 0
+    ? `\n📊 *Detalhes:*
+• Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
+• Juros mensal (${dadosNotificacao.jurosPercent}%): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
+• Juros diário: ${utils.formatCurrency(dadosNotificacao.jurosDiario)}/dia
+• Dias em atraso: ${dadosNotificacao.diasAtraso} dia(s)
+• Juros por atraso: ${utils.formatCurrency(dadosNotificacao.jurosAplicado)}
+• Total de juros: ${utils.formatCurrency(jurosMensalMaisAtraso)}
+
+💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotal)}*`
+    : `\n📊 *Detalhes:*
+• Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
+• Juros mensal (${dadosNotificacao.jurosPercent}%): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
+• Juros diário: ${utils.formatCurrency(dadosNotificacao.jurosDiario)}/dia
+• Juros + diário: ${utils.formatCurrency(jurosTotalMaisDiario)}
+
+💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotal)}*
+💵 *Apenas juros (com diário): ${utils.formatCurrency(jurosTotalMaisDiario)}*`;
+  let msgEmprestimo;
+  const msgEmprestimoPersonalizada = gerarMensagemCobranca('emprestimo_com_juros', {
+    nome: dadosNotificacao.primeiroNome,
+    dataVencimento: dadosNotificacao.dataVencimento,
+    valorInvestido: utils.formatCurrency(dadosNotificacao.valorInvestido),
+    jurosPercent: dadosNotificacao.jurosPercent,
+    jurosTotal: utils.formatCurrency(dadosNotificacao.jurosTotal),
+    jurosDiario: utils.formatCurrency(dadosNotificacao.jurosDiario),
+    diasAtraso: dadosNotificacao.diasAtraso,
+    jurosAtraso: utils.formatCurrency(dadosNotificacao.jurosAplicado),
+    valorTotal: utils.formatCurrency(dadosNotificacao.valorTotal)
+  });
+  if (msgEmprestimoPersonalizada) {
+    msgEmprestimo = msgEmprestimoPersonalizada;
+  } else {
+    msgEmprestimo = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.
+${infoJurosMsg}
+
+Chave PIX: ${chavePix}
+
+Lembramos que, em caso de atraso, será cobrada uma multa diária de ${utils.formatCurrency(dadosNotificacao.jurosDiario)}.`;
+  }
+  const valorTotalSemDiario = dadosNotificacao.valorInvestido + dadosNotificacao.jurosTotal;
+  const infoJurosSemDiario = dadosNotificacao.diasAtraso > 0
+    ? `\n📊 *Detalhes:*
+• Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
+• Juros mensal (${dadosNotificacao.jurosPercent}%): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
+
+💰 *Total a pagar: ${utils.formatCurrency(valorTotalSemDiario)}*`
+    : `\n📊 *Detalhes:*
+• Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
+• Juros mensal (${dadosNotificacao.jurosPercent}%): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
+
+💰 *Total a pagar: ${utils.formatCurrency(valorTotalSemDiario)}*
+💵 *Apenas juros: ${utils.formatCurrency(dadosNotificacao.jurosTotal)}*`;
+  let msgEmprestimoSemDiario;
+  const msgEmprestimoSemJurosPersonalizada = gerarMensagemCobranca('emprestimo_sem_juros', {
+    nome: dadosNotificacao.primeiroNome,
+    dataVencimento: dadosNotificacao.dataVencimento,
+    valorInvestido: utils.formatCurrency(dadosNotificacao.valorInvestido),
+    jurosPercent: dadosNotificacao.jurosPercent,
+    jurosTotal: utils.formatCurrency(dadosNotificacao.jurosTotal),
+    valorTotal: utils.formatCurrency(valorTotalSemDiario)
+  });
+  if (msgEmprestimoSemJurosPersonalizada) {
+    msgEmprestimoSemDiario = msgEmprestimoSemJurosPersonalizada;
+  } else {
+    msgEmprestimoSemDiario = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.
+${infoJurosSemDiario}
+
+Chave PIX: ${chavePix}
+
+Solicitamos o pagamento até a data de vencimento.`;
+  }
+  const telefoneNumeros = (dadosNotificacao.telefone || '').replace(/\D/g, '');
+  const telefoneFinal = telefoneNumeros.startsWith('55') ? telefoneNumeros : `55${telefoneNumeros}`;
+  const semTelefone = !telefoneNumeros;
+  const btnDisabledStyle = semTelefone ? 'opacity: 0.5; cursor: not-allowed;' : '';
+  const btnOnClick = semTelefone ? `onclick="event.preventDefault(); ui.showNotification('⚠️ Cliente sem telefone cadastrado! Edite o empréstimo para adicionar o telefone.', 'error'); return false;"` : '';
+  let msgTodasVencidas = '';
+  let opcaoTodasVencidas = '';
+  if (dadosNotificacao.parcelasVencidas && dadosNotificacao.parcelasVencidas.length >= 1) {
+    const listaParcelasVencidas = dadosNotificacao.parcelasVencidas.map(p => {
+      const numParcela = p.numero_parcela || '?';
+      return `• Parcela ${numParcela}: ${utils.formatCurrency(Number(p.valor_parcela || 0))} (vencida em ${utils.formatDate(p.data_vencimento)})`;
+    }).join('\n');
+    const qtdParcelas = dadosNotificacao.parcelasVencidas.length;
+    const textoQtd = qtdParcelas === 1 ? '1 parcela em atraso' : `${qtdParcelas} parcelas em atraso`;
+    const msgVencidasPersonalizada = gerarMensagemCobranca('parcelas_vencidas', {
+      nome: dadosNotificacao.primeiroNome,
+      qtdParcelas: qtdParcelas.toString(),
+      listaParcelas: listaParcelasVencidas,
+      valorTotal: utils.formatCurrency(dadosNotificacao.valorTotalVencidas)
+    });
+    if (msgVencidasPersonalizada) {
+      msgTodasVencidas = msgVencidasPersonalizada;
+    } else {
+      msgTodasVencidas = `Olá, ${dadosNotificacao.primeiroNome}, você possui ${textoQtd}:
+
+${listaParcelasVencidas}
+
+💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotalVencidas)}*
+
+Chave PIX: ${chavePix}
+
+Solicitamos a regularização o mais breve possível.`;
+    }
+    const tituloVencidas = qtdParcelas === 1 ? '🚨 Parcela Vencida' : `🚨 Parcelas Vencidas (${qtdParcelas})`;
+    const linkVencidas = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgTodasVencidas)}` : '';
+    opcaoTodasVencidas = `
+      <div style="border: 2px solid #ef4444; border-radius: 12px; padding: 1rem; background: #fef2f2;">
+        <h4 style="color: #ef4444; margin-bottom: 0.5rem;">${tituloVencidas}</h4>
+        <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">Total em atraso: <b style="color: #ef4444;">${utils.formatCurrency(dadosNotificacao.valorTotalVencidas)}</b></div>
+        <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgTodasVencidas}</p>
+        <a href="${linkVencidas || 'javascript:void(0)'}" ${linkVencidas ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #ef4444; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">
+          Enviar via WhatsApp
+        </a>
+      </div>
+    `;
+  }
+  const linkParcelado = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgParcelado)}` : '';
+  const linkEmprestimo = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgEmprestimo)}` : '';
+  const linkEmprestimoSemDiario = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgEmprestimoSemDiario)}` : '';
+  const tituloParcela = dadosNotificacao.isParcelado
+    ? `📋 Próxima Parcela (${dadosNotificacao.numeroParcelaAtual}/${dadosNotificacao.totalParcelas})`
+    : '📋 Mensagem para Parcela';
+  const avisoSemTelefone = semTelefone ? `
+    <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+      <span style="font-size: 1.2rem;">⚠️</span>
+      <span style="color: #92400e; font-size: 0.9rem;"><b>Atenção:</b> Cliente sem telefone cadastrado. Edite o empréstimo para adicionar.</span>
+    </div>
+  ` : '';
+  const modalNotificacao = `
+    <div style="padding: 1.5rem; max-width: 500px; margin: 0 auto; max-height: 80vh; overflow-y: auto;">
+      <h3 style="margin-bottom: 1.5rem; color: #002f4b; text-align: center;">Escolha o tipo de mensagem</h3>
+      ${avisoSemTelefone}
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        ${opcaoTodasVencidas}
+        <div style="border: 2px solid #8b5cf6; border-radius: 12px; padding: 1rem; background: #f5f3ff;">
+          <h4 style="color: #8b5cf6; margin-bottom: 0.5rem;">1. 💵 Empréstimo (sem juros diário)</h4>
+          <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgEmprestimoSemDiario}</p>
+          <a href="${linkEmprestimoSemDiario || 'javascript:void(0)'}" ${linkEmprestimoSemDiario ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #8b5cf6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">Enviar via WhatsApp</a>
+        </div>
+        <div style="border: 2px solid #3b82f6; border-radius: 12px; padding: 1rem; background: #eff6ff;">
+          <h4 style="color: #3b82f6; margin-bottom: 0.5rem;">2. 💰 Empréstimo (com juros/multa diária)</h4>
+          <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgEmprestimo}</p>
+          <a href="${linkEmprestimo || 'javascript:void(0)'}" ${linkEmprestimo ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #3b82f6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">Enviar via WhatsApp</a>
+        </div>
+        <div style="border: 2px solid #25d366; border-radius: 12px; padding: 1rem; background: #f0fff4;">
+          <h4 style="color: #25d366; margin-bottom: 0.5rem;">3. 📋 ${tituloParcela}</h4>
+          <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">Vencimento: <b>${dadosNotificacao.dataParcela}</b> • Valor: <b>${utils.formatCurrency(dadosNotificacao.valorParcela)}</b></div>
+          <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb;">${msgParcelado}</p>
+          <a href="${linkParcelado || 'javascript:void(0)'}" ${linkParcelado ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #25d366; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">Enviar via WhatsApp</a>
+        </div>
+      </div>
+      <button type="button" class="btn" style="width: 100%; margin-top: 1.5rem; background: #6b7280; color: #fff; padding: 0.75rem; border-radius: 8px;" onclick="this.closest('.modal').remove()">Cancelar</button>
+    </div>
+  `;
+  ui.showModal(modalNotificacao, 'Notificar Cliente');
+}
+
 // Sistema de autenticação usando o mesmo padrão do sistema principal
 const authSystem = {
   // Verificar se está logado (usando sessionStorage como o sistema principal)
@@ -937,6 +1120,7 @@ const dashboardController = {
                   valor: Number(p.valor_parcela || 0),
                   vencimentoExibir: p.data_vencimento,
                   parcelaInfo: `Parcela ${p.numero_parcela}`,
+                  numeroParcela: p.numero_parcela,
                   statusCalculado: 'Vence hoje'
                 });
               });
@@ -984,12 +1168,19 @@ const dashboardController = {
           const valor = utils.formatCurrency(item.valor);
           const card = document.createElement('div');
           card.style.cssText = 'padding: 1rem; background: #fef3c7; border-radius: 10px; border-left: 4px solid #f59e0b; box-shadow: 0 2px 8px rgba(0,0,0,0.06);';
+          const notificarArgs = item.numeroParcela ? `${item.id}, ${item.numeroParcela}` : item.id;
           card.innerHTML = `
             <div style="font-weight: 600; color: #1f2937;">${item.cliente_nome}</div>
             <div style="font-size: 0.8rem; color: #92400e; margin: 0.25rem 0;">${item.parcelaInfo}</div>
             <div style="font-size: 0.9rem; font-weight: 700; color: #059669;">${valor}</div>
             <div style="font-size: 0.75rem; color: #6b7280;">Venc: ${utils.formatDate(item.vencimentoExibir)}</div>
-            <button onclick="viewEmprestimo(${item.id})" class="btn btn-primary btn-sm" style="margin-top: 0.5rem; width: 100%;">Ver</button>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+              <button onclick="viewEmprestimo(${item.id})" class="btn btn-primary btn-sm" style="flex: 1;">Ver</button>
+              <button onclick="abrirModalCobranca(${notificarArgs})" class="btn btn-sm" style="flex: 1; background: #25d366; color: #fff; display: flex; align-items: center; justify-content: center; gap: 0.35rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                Notificar
+              </button>
+            </div>
           `;
           cardsContainer.appendChild(card);
         });
@@ -1001,6 +1192,7 @@ const dashboardController = {
         tbody.innerHTML = '';
         cobrancasDoDia.forEach(item => {
           const valor = utils.formatCurrency(item.valor);
+          const notificarArgs = item.numeroParcela ? `${item.id}, ${item.numeroParcela}` : item.id;
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>
@@ -1010,7 +1202,15 @@ const dashboardController = {
             <td class="font-semibold text-green-600">${valor}</td>
             <td>${utils.formatDate(item.vencimentoExibir)}</td>
             <td><span class="badge badge-warning">Vence hoje</span></td>
-            <td><button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${item.id})">Ver</button></td>
+            <td>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${item.id})">Ver</button>
+                <button class="btn btn-sm" onclick="abrirModalCobranca(${notificarArgs})" style="background: #25d366; color: #fff; display: inline-flex; align-items: center; gap: 0.35rem;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                  Notificar
+                </button>
+              </div>
+            </td>
           `;
           tbody.appendChild(row);
         });
@@ -2063,8 +2263,9 @@ const emprestimoController = {
 
 
 
-  async viewEmprestimo(id) {
+  async viewEmprestimo(id, opts) {
     try {
+      opts = opts || {};
       const emprestimos = await apiService.getEmprestimos();
       const emp = emprestimos.find(e => String(e.id) === String(id));
       console.log('DEBUG EMPRESTIMO:', emp);
@@ -2196,7 +2397,7 @@ const emprestimoController = {
         }
         
         // Guardar dados para o modal de notificação
-        const dadosNotificacao = {
+        let dadosNotificacao = {
           telefone,
           primeiroNome,
           valorTotal: valorAtualizado,
@@ -2209,7 +2410,6 @@ const emprestimoController = {
           totalParcelas,
           parcelasVencidas,
           valorTotalVencidas,
-          // Dados adicionais para mensagem detalhada
           valorInvestido,
           jurosTotal,
           jurosDiario,
@@ -2217,6 +2417,21 @@ const emprestimoController = {
           jurosAplicado,
           jurosPercent
         };
+        // Se chamado de Cobranças do Dia com parcela específica, usar dados dessa parcela
+        if (opts.numeroParcela && parcelas.length > 0) {
+          const parcelaEspecifica = parcelas.find(p => String(p.numero_parcela) === String(opts.numeroParcela));
+          if (parcelaEspecifica) {
+            dadosNotificacao = { ...dadosNotificacao,
+              valorParcela: Number(parcelaEspecifica.valor_parcela || 0),
+              dataParcela: utils.formatDate(parcelaEspecifica.data_vencimento),
+              numeroParcelaAtual: parcelaEspecifica.numero_parcela || opts.numeroParcela
+            };
+          }
+        }
+        if (opts.abreDiretoNotificar) {
+          showModalNotificacaoCobranca(dadosNotificacao);
+          return;
+        }
         const detalhes = `
           <div class="emprestimo-modal-box" style="padding: 1.5rem; max-width: 420px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 2px 16px #002f4b22;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
@@ -2265,251 +2480,7 @@ const emprestimoController = {
         btnWhats.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          
-          // Obter chave PIX das configurações ou usar padrão
-          const chavePix = appState.configuracoes.chave_pix || '(Chave PIX não configurada)';
-          
-          // Mensagem para empréstimo parcelado (sem juros diário)
-          const infoParcela = dadosNotificacao.isParcelado ? ` (parcela ${dadosNotificacao.numeroParcelaAtual}/${dadosNotificacao.totalParcelas})` : '';
-          
-          // Verificar se há mensagem personalizada para parcela
-          let msgParcelado;
-          const msgParcelaPersonalizada = gerarMensagemCobranca('parcela', {
-            nome: dadosNotificacao.primeiroNome,
-            parcelaAtual: dadosNotificacao.numeroParcelaAtual,
-            totalParcelas: dadosNotificacao.totalParcelas,
-            dataVencimento: dadosNotificacao.dataParcela,
-            valor: utils.formatCurrency(dadosNotificacao.valorParcela),
-            isParcelado: dadosNotificacao.isParcelado
-          });
-          
-          if (msgParcelaPersonalizada) {
-            msgParcelado = msgParcelaPersonalizada;
-          } else {
-            msgParcelado = `Olá, ${dadosNotificacao.primeiroNome}, a sua parcela${infoParcela} vence ${dadosNotificacao.dataParcela}. Você pode pagar o valor de ${utils.formatCurrency(dadosNotificacao.valorParcela)}.
-
-Chave PIX: ${chavePix}
-
-Solicitamos o pagamento até a data de vencimento.`;
-          }
-
-          // Informações de juros para a mensagem
-          // Calcular juros total + juros diário (para quando não tem atraso)
-          const jurosTotalMaisDiario = dadosNotificacao.jurosTotal + dadosNotificacao.jurosDiario;
-          // Calcular soma total: juros mensal + juros por atraso (para quando tem atraso)
-          const jurosMensalMaisAtraso = dadosNotificacao.jurosTotal + dadosNotificacao.jurosAplicado;
-          
-          const infoJurosMsg = dadosNotificacao.diasAtraso > 0 
-            ? `\n📊 *Detalhes:*
-• Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
-• Juros mensal (${dadosNotificacao.jurosPercent}%): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
-• Juros diário: ${utils.formatCurrency(dadosNotificacao.jurosDiario)}/dia
-• Dias em atraso: ${dadosNotificacao.diasAtraso} dia(s)
-• Juros por atraso: ${utils.formatCurrency(dadosNotificacao.jurosAplicado)}
-• Total de juros: ${utils.formatCurrency(jurosMensalMaisAtraso)}
-
-💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotal)}*`
-            : `\n📊 *Detalhes:*
-• Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
-• Juros mensal (${dadosNotificacao.jurosPercent}%): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
-• Juros diário: ${utils.formatCurrency(dadosNotificacao.jurosDiario)}/dia
-• Juros + diário: ${utils.formatCurrency(jurosTotalMaisDiario)}
-
-💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotal)}*
-💵 *Apenas juros (com diário): ${utils.formatCurrency(jurosTotalMaisDiario)}*`;
-
-          // Verificar se há mensagem personalizada para empréstimo com juros diário
-          let msgEmprestimo;
-          const msgEmprestimoPersonalizada = gerarMensagemCobranca('emprestimo_com_juros', {
-            nome: dadosNotificacao.primeiroNome,
-            dataVencimento: dadosNotificacao.dataVencimento,
-            valorInvestido: utils.formatCurrency(dadosNotificacao.valorInvestido),
-            jurosPercent: dadosNotificacao.jurosPercent,
-            jurosTotal: utils.formatCurrency(dadosNotificacao.jurosTotal),
-            jurosDiario: utils.formatCurrency(dadosNotificacao.jurosDiario),
-            diasAtraso: dadosNotificacao.diasAtraso,
-            jurosAtraso: utils.formatCurrency(dadosNotificacao.jurosAplicado),
-            valorTotal: utils.formatCurrency(dadosNotificacao.valorTotal)
-          });
-          
-          if (msgEmprestimoPersonalizada) {
-            msgEmprestimo = msgEmprestimoPersonalizada;
-          } else {
-            msgEmprestimo = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.
-${infoJurosMsg}
-
-Chave PIX: ${chavePix}
-
-Lembramos que, em caso de atraso, será cobrada uma multa diária de ${utils.formatCurrency(dadosNotificacao.jurosDiario)}.`;
-          }
-
-          // Mensagem para empréstimo sem juros diário
-          // Calcular valor total SEM juros diário (só valor investido + juros mensal)
-          const valorTotalSemDiario = dadosNotificacao.valorInvestido + dadosNotificacao.jurosTotal;
-          
-          const infoJurosSemDiario = dadosNotificacao.diasAtraso > 0 
-            ? `\n📊 *Detalhes:*
-• Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
-• Juros mensal (${dadosNotificacao.jurosPercent}%): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
-
-💰 *Total a pagar: ${utils.formatCurrency(valorTotalSemDiario)}*`
-            : `\n📊 *Detalhes:*
-• Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
-• Juros mensal (${dadosNotificacao.jurosPercent}%): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
-
-💰 *Total a pagar: ${utils.formatCurrency(valorTotalSemDiario)}*
-💵 *Apenas juros: ${utils.formatCurrency(dadosNotificacao.jurosTotal)}*`;
-
-          // Verificar se há mensagem personalizada para empréstimo sem juros diário
-          let msgEmprestimoSemDiario;
-          const msgEmprestimoSemJurosPersonalizada = gerarMensagemCobranca('emprestimo_sem_juros', {
-            nome: dadosNotificacao.primeiroNome,
-            dataVencimento: dadosNotificacao.dataVencimento,
-            valorInvestido: utils.formatCurrency(dadosNotificacao.valorInvestido),
-            jurosPercent: dadosNotificacao.jurosPercent,
-            jurosTotal: utils.formatCurrency(dadosNotificacao.jurosTotal),
-            valorTotal: utils.formatCurrency(valorTotalSemDiario)
-          });
-          
-          if (msgEmprestimoSemJurosPersonalizada) {
-            msgEmprestimoSemDiario = msgEmprestimoSemJurosPersonalizada;
-          } else {
-            msgEmprestimoSemDiario = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.
-${infoJurosSemDiario}
-
-Chave PIX: ${chavePix}
-
-Solicitamos o pagamento até a data de vencimento.`;
-          }
-
-          // Limpar telefone - remover todos os caracteres não numéricos
-          const telefoneNumeros = (dadosNotificacao.telefone || '').replace(/\D/g, '');
-          // Se já começar com 55, não adicionar novamente
-          const telefoneFinal = telefoneNumeros.startsWith('55') ? telefoneNumeros : `55${telefoneNumeros}`;
-
-          // Estilo e comportamento para quando não tem telefone (mover para cima para usar em todos os links)
-          const semTelefone = !telefoneNumeros;
-          const btnDisabledStyle = semTelefone ? 'opacity: 0.5; cursor: not-allowed;' : '';
-          const btnOnClick = semTelefone ? `onclick="event.preventDefault(); ui.showNotification('⚠️ Cliente sem telefone cadastrado! Edite o empréstimo para adicionar o telefone.', 'error'); return false;"` : '';
-          
-          // Mensagem para todas as parcelas vencidas
-          let msgTodasVencidas = '';
-          let opcaoTodasVencidas = '';
-          
-          if (dadosNotificacao.parcelasVencidas && dadosNotificacao.parcelasVencidas.length >= 1) {
-            const listaParcelasVencidas = dadosNotificacao.parcelasVencidas.map(p => {
-              const numParcela = p.numero_parcela || '?';
-              return `• Parcela ${numParcela}: ${utils.formatCurrency(Number(p.valor_parcela || 0))} (vencida em ${utils.formatDate(p.data_vencimento)})`;
-            }).join('\n');
-            
-            // Mensagem para parcelas vencidas (sem juros diário)
-            const qtdParcelas = dadosNotificacao.parcelasVencidas.length;
-            const textoQtd = qtdParcelas === 1 ? '1 parcela em atraso' : `${qtdParcelas} parcelas em atraso`;
-            
-            // Verificar se há mensagem personalizada para parcelas vencidas
-            const msgVencidasPersonalizada = gerarMensagemCobranca('parcelas_vencidas', {
-              nome: dadosNotificacao.primeiroNome,
-              qtdParcelas: qtdParcelas.toString(),
-              listaParcelas: listaParcelasVencidas,
-              valorTotal: utils.formatCurrency(dadosNotificacao.valorTotalVencidas)
-            });
-            
-            if (msgVencidasPersonalizada) {
-              msgTodasVencidas = msgVencidasPersonalizada;
-            } else {
-              msgTodasVencidas = `Olá, ${dadosNotificacao.primeiroNome}, você possui ${textoQtd}:
-
-${listaParcelasVencidas}
-
-💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotalVencidas)}*
-
-Chave PIX: ${chavePix}
-
-Solicitamos a regularização o mais breve possível.`;
-            }
-
-            const tituloVencidas = qtdParcelas === 1 ? '🚨 Parcela Vencida' : `🚨 Parcelas Vencidas (${qtdParcelas})`;
-            const linkVencidas = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgTodasVencidas)}` : '';
-            opcaoTodasVencidas = `
-                <!-- Opção Parcelas Vencidas -->
-                <div style="border: 2px solid #ef4444; border-radius: 12px; padding: 1rem; background: #fef2f2;">
-                  <h4 style="color: #ef4444; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                    ${tituloVencidas}
-                  </h4>
-                  <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">Total em atraso: <b style="color: #ef4444;">${utils.formatCurrency(dadosNotificacao.valorTotalVencidas)}</b></div>
-                  <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgTodasVencidas}</p>
-                  <a href="${linkVencidas || 'javascript:void(0)'}" ${linkVencidas ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #ef4444; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">
-                    Enviar via WhatsApp
-                  </a>
-                </div>
-            `;
-          }
-          
-          const linkParcelado = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgParcelado)}` : '';
-          const linkEmprestimo = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgEmprestimo)}` : '';
-          const linkEmprestimoSemDiario = telefoneNumeros ? `https://wa.me/${telefoneFinal}?text=${encodeURIComponent(msgEmprestimoSemDiario)}` : '';
-          
-          const tituloParcela = dadosNotificacao.isParcelado 
-            ? `📋 Próxima Parcela (${dadosNotificacao.numeroParcelaAtual}/${dadosNotificacao.totalParcelas})`
-            : '📋 Mensagem para Parcela';
-          
-          // Aviso de telefone não cadastrado
-          const avisoSemTelefone = semTelefone ? `
-            <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-              <span style="font-size: 1.2rem;">⚠️</span>
-              <span style="color: #92400e; font-size: 0.9rem;"><b>Atenção:</b> Cliente sem telefone cadastrado. Edite o empréstimo para adicionar.</span>
-            </div>
-          ` : '';
-          
-          const modalNotificacao = `
-            <div style="padding: 1.5rem; max-width: 500px; margin: 0 auto; max-height: 80vh; overflow-y: auto;">
-              <h3 style="margin-bottom: 1.5rem; color: #002f4b; text-align: center;">Escolha o tipo de mensagem</h3>
-              
-              ${avisoSemTelefone}
-              
-              <div style="display: flex; flex-direction: column; gap: 1rem;">
-                ${opcaoTodasVencidas}
-                
-                <!-- 1ª Opção: Juros - sem diário -->
-                <div style="border: 2px solid #8b5cf6; border-radius: 12px; padding: 1rem; background: #f5f3ff;">
-                  <h4 style="color: #8b5cf6; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                    1. 💵 Empréstimo (sem juros diário)
-                  </h4>
-                  <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgEmprestimoSemDiario}</p>
-                  <a href="${linkEmprestimoSemDiario || 'javascript:void(0)'}" ${linkEmprestimoSemDiario ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #8b5cf6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">
-                    Enviar via WhatsApp
-                  </a>
-                </div>
-                
-                <!-- 2ª Opção: Juros - com multa diária -->
-                <div style="border: 2px solid #3b82f6; border-radius: 12px; padding: 1rem; background: #eff6ff;">
-                  <h4 style="color: #3b82f6; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                    2. 💰 Empréstimo (com juros/multa diária)
-                  </h4>
-                  <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgEmprestimo}</p>
-                  <a href="${linkEmprestimo || 'javascript:void(0)'}" ${linkEmprestimo ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #3b82f6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">
-                    Enviar via WhatsApp
-                  </a>
-                </div>
-                
-                <!-- 3ª Opção: Parcelado -->
-                <div style="border: 2px solid #25d366; border-radius: 12px; padding: 1rem; background: #f0fff4;">
-                  <h4 style="color: #25d366; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                    3. 📋 ${tituloParcela}
-                  </h4>
-                  <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">Vencimento: <b>${dadosNotificacao.dataParcela}</b> • Valor: <b>${utils.formatCurrency(dadosNotificacao.valorParcela)}</b></div>
-                  <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb;">${msgParcelado}</p>
-                  <a href="${linkParcelado || 'javascript:void(0)'}" ${linkParcelado ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #25d366; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">
-                    Enviar via WhatsApp
-                  </a>
-                </div>
-              </div>
-              
-              <button type="button" class="btn" style="width: 100%; margin-top: 1.5rem; background: #6b7280; color: #fff; padding: 0.75rem; border-radius: 8px;" onclick="this.closest('.modal').remove()">Cancelar</button>
-            </div>
-          `;
-          
-          ui.showModal(modalNotificacao, 'Notificar Cliente');
+          showModalNotificacaoCobranca(dadosNotificacao);
         });
         
         // Botão Editar
@@ -4768,6 +4739,17 @@ function cobrar(id) {
   }
 }
 
+// Abre diretamente o modal de cobrança para escolher mensagem (usado em Cobranças do Dia)
+function abrirModalCobranca(id, numeroParcela) {
+  if (typeof emprestimoController !== 'undefined' && emprestimoController.viewEmprestimo) {
+    return emprestimoController.viewEmprestimo(id, {
+      abreDiretoNotificar: true,
+      numeroParcela: numeroParcela || undefined
+    });
+  }
+  console.error('emprestimoController não está disponível');
+}
+
 // Disponibilizar funções globalmente
 window.renderHistoricoEmprestimos = renderHistoricoEmprestimos;
 window.viewEmprestimo = viewEmprestimo;
@@ -4775,6 +4757,7 @@ window.viewCliente = viewCliente;
 window.deleteCliente = deleteCliente;
 window.editCliente = editCliente;
 window.cobrar = cobrar;
+window.abrirModalCobranca = abrirModalCobranca;
 
 // Funções para controle de status das parcelas
 async function marcarParcelaPaga(emprestimoId, numeroParcela) {
