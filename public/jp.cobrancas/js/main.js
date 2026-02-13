@@ -645,6 +645,7 @@ const dashboardController = {
       appState.data.dashboard = data;
       this.updateDashboardCards(data);
       await this.updateRecentEmprestimos(data.emprestimosRecentes || []);
+      await this.updateCobrancasDoDia();
       await this.updateCobrancasPendentes();
       
       // Usar o valor calculado pela API que já considera parcelas corretamente
@@ -898,6 +899,128 @@ const dashboardController = {
   // Variável para armazenar todos os empréstimos processados (para filtragem)
   todosEmprestimosProcessados: [],
   
+  // Cobranças do dia - empréstimos/parcelas que vencem hoje
+  async updateCobrancasDoDia() {
+    const tbody = document.getElementById('cobrancas-do-dia');
+    const subtitle = document.getElementById('cobrancas-dia-subtitle');
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Carregando...</td></tr>';
+
+    try {
+      const emprestimos = await apiService.getEmprestimos();
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const hojeStr = hoje.toISOString().split('T')[0]; // YYYY-MM-DD
+
+      const cobrancasDoDia = [];
+
+      for (const emp of (emprestimos || [])) {
+        const status = (emp.status || '').toUpperCase();
+        if (status === 'QUITADO') continue;
+
+        if (emp.tipo_emprestimo === 'in_installments' && emp.numero_parcelas > 1) {
+          try {
+            const parcelas = await apiService.getParcelasEmprestimo(emp.id);
+            if (parcelas && parcelas.length > 0) {
+              const parcelasVencemHoje = parcelas.filter(p => {
+                if (p.status === 'Paga') return false;
+                const dv = utils.createValidDate(p.data_vencimento);
+                if (!dv) return false;
+                const dvStr = dv.toISOString().split('T')[0];
+                return dvStr === hojeStr;
+              });
+              parcelasVencemHoje.forEach(p => {
+                cobrancasDoDia.push({
+                  ...emp,
+                  cliente_nome: emp.cliente_nome || 'N/A',
+                  valor: Number(p.valor_parcela || 0),
+                  vencimentoExibir: p.data_vencimento,
+                  parcelaInfo: `Parcela ${p.numero_parcela}`,
+                  statusCalculado: 'Vence hoje'
+                });
+              });
+            }
+          } catch (e) { /* ignorar */ }
+        } else {
+          const dv = utils.createValidDate(emp.data_vencimento);
+          if (dv) {
+            const dvStr = dv.toISOString().split('T')[0];
+            if (dvStr === hojeStr) {
+              cobrancasDoDia.push({
+                ...emp,
+                cliente_nome: emp.cliente_nome || 'N/A',
+                valor: Number(emp.valor_final || emp.valor || 0),
+                vencimentoExibir: emp.data_vencimento,
+                parcelaInfo: 'Empréstimo',
+                statusCalculado: 'Vence hoje'
+              });
+            }
+          }
+        }
+      }
+
+      if (subtitle) {
+        subtitle.textContent = cobrancasDoDia.length === 0
+          ? 'Nenhuma cobrança vence hoje'
+          : `${cobrancasDoDia.length} cobrança(s) vencem hoje`;
+      }
+
+      if (cobrancasDoDia.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhuma cobrança vence hoje</td></tr>';
+        return;
+      }
+
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile) {
+        tbody.parentElement.style.display = 'none';
+        const container = tbody.closest('.section');
+        const oldCards = container.querySelector('.mobile-cobrancas-dia-cards');
+        if (oldCards) oldCards.remove();
+        const cardsContainer = document.createElement('div');
+        cardsContainer.className = 'mobile-cobrancas-dia-cards';
+        cardsContainer.style.cssText = 'display: flex; flex-direction: column; gap: 0.75rem; padding: 0.5rem;';
+        cobrancasDoDia.forEach(item => {
+          const valor = utils.formatCurrency(item.valor);
+          const card = document.createElement('div');
+          card.style.cssText = 'padding: 1rem; background: #fef3c7; border-radius: 10px; border-left: 4px solid #f59e0b; box-shadow: 0 2px 8px rgba(0,0,0,0.06);';
+          card.innerHTML = `
+            <div style="font-weight: 600; color: #1f2937;">${item.cliente_nome}</div>
+            <div style="font-size: 0.8rem; color: #92400e; margin: 0.25rem 0;">${item.parcelaInfo}</div>
+            <div style="font-size: 0.9rem; font-weight: 700; color: #059669;">${valor}</div>
+            <div style="font-size: 0.75rem; color: #6b7280;">Venc: ${utils.formatDate(item.vencimentoExibir)}</div>
+            <button onclick="viewEmprestimo(${item.id})" class="btn btn-primary btn-sm" style="margin-top: 0.5rem; width: 100%;">Ver</button>
+          `;
+          cardsContainer.appendChild(card);
+        });
+        container.appendChild(cardsContainer);
+      } else {
+        const oldCards = tbody.closest('.section').querySelector('.mobile-cobrancas-dia-cards');
+        if (oldCards) oldCards.remove();
+        tbody.parentElement.style.display = '';
+        tbody.innerHTML = '';
+        cobrancasDoDia.forEach(item => {
+          const valor = utils.formatCurrency(item.valor);
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>
+              <div class="font-semibold">${item.cliente_nome}</div>
+              <div class="text-sm text-gray-500">${item.parcelaInfo}</div>
+            </td>
+            <td class="font-semibold text-green-600">${valor}</td>
+            <td>${utils.formatDate(item.vencimentoExibir)}</td>
+            <td><span class="badge badge-warning">Vence hoje</span></td>
+            <td><button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${item.id})">Ver</button></td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao carregar cobranças do dia:', error);
+      if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center text-red-500">Erro ao carregar</td></tr>';
+    }
+  },
+
   async updateCobrancasPendentes() {
     const tbody = document.getElementById('cobrancas-pendentes');
     if (!tbody) return;
