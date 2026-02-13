@@ -888,6 +888,61 @@ router.put('/emprestimos/:emprestimo_id/parcelas/:numero_parcela/data', ensureDa
   }
 });
 
+// Atualizar valor de uma parcela específica
+router.put('/emprestimos/:emprestimo_id/parcelas/:numero_parcela/valor', ensureDatabase, async (req, res) => {
+  try {
+    const { emprestimo_id, numero_parcela } = req.params;
+    const { valor_parcela } = req.body;
+    
+    const valorNum = parseFloat(valor_parcela);
+    if (isNaN(valorNum) || valorNum <= 0) {
+      return res.status(400).json({ error: 'Valor da parcela deve ser um número positivo' });
+    }
+    
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
+    
+    const [parcelas] = await connection.execute(`
+      SELECT p.*, c.id as cobranca_id
+      FROM parcelas p
+      LEFT JOIN cobrancas c ON c.emprestimo_id = p.emprestimo_id AND c.data_vencimento = p.data_vencimento
+      WHERE p.emprestimo_id = ? AND p.numero_parcela = ?
+    `, [emprestimo_id, numero_parcela]);
+    
+    if (parcelas.length === 0) {
+      await connection.end();
+      return res.status(404).json({ error: 'Parcela não encontrada' });
+    }
+    
+    const parcela = parcelas[0];
+    
+    if (parcela.status === 'Paga') {
+      await connection.end();
+      return res.status(400).json({ error: 'Não é possível alterar o valor de uma parcela já paga' });
+    }
+    
+    await connection.execute(`
+      UPDATE parcelas 
+      SET valor_parcela = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE emprestimo_id = ? AND numero_parcela = ?
+    `, [valorNum, emprestimo_id, numero_parcela]);
+    
+    if (parcela.cobranca_id) {
+      await connection.execute(`
+        UPDATE cobrancas 
+        SET valor_original = ?, valor_atualizado = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `, [valorNum, valorNum, parcela.cobranca_id]);
+    }
+    
+    await connection.end();
+    res.json({ message: 'Valor da parcela atualizado com sucesso' });
+  } catch (error) {
+    console.error('Erro ao atualizar valor da parcela:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Atualizar empréstimo
 router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
   try {

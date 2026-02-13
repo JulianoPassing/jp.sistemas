@@ -1923,6 +1923,9 @@ const emprestimoController = {
                     <button class="btn" style="background: #3b82f6; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1; min-width: 70px;" onclick="editarDataParcela(${parcela.emprestimo_id}, ${parcela.numero_parcela}, '${parcela.data_vencimento ? parcela.data_vencimento.split('T')[0] : ''}')">
                       Alterar Data
                     </button>
+                    <button class="btn" style="background: #8b5cf6; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1; min-width: 70px;" onclick="editarValorParcela(${parcela.emprestimo_id}, ${parcela.numero_parcela}, '${valorParcela.toFixed(2).replace('.', ',')}')">
+                      Alterar Valor
+                    </button>
                   ` : `
                     <button class="btn" style="background: #6b7280; color: #fff; font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 6px; flex: 1;" onclick="marcarParcelaPendente(${parcela.emprestimo_id}, ${parcela.numero_parcela})">
                       Desfazer
@@ -4949,11 +4952,78 @@ async function editarDataParcela(emprestimoId, numeroParcela, dataAtual) {
   });
 }
 
+// Função para editar valor da parcela
+async function editarValorParcela(emprestimoId, numeroParcela, valorAtual) {
+  const valorFormatado = (valorAtual || '0').replace(',', '.');
+  const modalContent = `
+    <div style="padding: 1.5rem; max-width: 400px; margin: 0 auto;">
+      <h3 style="margin-bottom: 1.5rem; color: #002f4b; text-align: center;">Alterar Valor da Parcela ${numeroParcela}</h3>
+      <form id="form-alterar-valor-parcela">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Novo Valor da Parcela (R$)</label>
+          <input type="text" id="novo-valor-parcela" class="form-input" value="${valorFormatado.replace('.', ',')}" required placeholder="ex.: 1000,00" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;">
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+          <button type="button" class="btn" style="flex: 1; background: #6b7280; color: #fff; padding: 0.75rem; border-radius: 8px; font-size: 1rem;" onclick="ui.closeModal()">Cancelar</button>
+          <button type="submit" class="btn" style="flex: 1; background: #8b5cf6; color: #fff; padding: 0.75rem; border-radius: 8px; font-size: 1rem;">Salvar</button>
+        </div>
+      </form>
+    </div>
+  `;
+  
+  ui.showModal(modalContent, 'Alterar Valor da Parcela');
+  
+  const form = document.getElementById('form-alterar-valor-parcela');
+  const inputValor = document.getElementById('novo-valor-parcela');
+  if (inputValor) {
+    inputValor.addEventListener('input', (e) => {
+      let v = e.target.value.replace(/\D/g, '');
+      v = (parseInt(v, 10) / 100).toFixed(2);
+      e.target.value = v.replace('.', ',');
+    });
+  }
+  
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const valorStr = document.getElementById('novo-valor-parcela').value.replace(',', '.');
+    const valorNum = parseFloat(valorStr);
+    
+    if (isNaN(valorNum) || valorNum <= 0) {
+      ui.showNotification('Informe um valor válido para a parcela', 'error');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/cobrancas/emprestimos/${emprestimoId}/parcelas/${numeroParcela}/valor`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ valor_parcela: valorNum })
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Erro ao atualizar valor');
+      }
+      
+      ui.closeModal();
+      ui.showNotification('Valor da parcela atualizado com sucesso!', 'success');
+      
+      await emprestimoController.viewEmprestimo(emprestimoId);
+      
+    } catch (error) {
+      console.error('Erro ao atualizar valor da parcela:', error);
+      ui.showNotification(error.message || 'Erro ao atualizar valor da parcela', 'error');
+    }
+  });
+}
+
 // Disponibilizar funções de parcelas globalmente
 window.marcarParcelaPaga = marcarParcelaPaga;
 window.marcarParcelaAtrasada = marcarParcelaAtrasada;
 window.marcarParcelaPendente = marcarParcelaPendente;
 window.editarDataParcela = editarDataParcela;
+window.editarValorParcela = editarValorParcela;
 
 // ========== FUNÇÃO PARA OCULTAR/MOSTRAR VALORES ==========
 function toggleValoresOcultos() {
