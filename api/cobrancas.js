@@ -1495,7 +1495,6 @@ router.get('/historico-pagamentos', ensureDatabase, async (req, res) => {
         e.cliente_id,
         cl.nome as cliente_nome,
         e.valor as valor_inicial_emprestimo,
-        e.valor_final,
         'Parcela' as tipo_pagamento
       FROM parcelas p
       INNER JOIN emprestimos e ON p.emprestimo_id = e.id
@@ -1517,7 +1516,6 @@ router.get('/historico-pagamentos', ensureDatabase, async (req, res) => {
         c.cliente_id,
         cl.nome as cliente_nome,
         e.valor as valor_inicial_emprestimo,
-        e.valor_final,
         'Juros' as tipo_pagamento
       FROM pagamentos pg
       INNER JOIN cobrancas c ON pg.cobranca_id = c.id
