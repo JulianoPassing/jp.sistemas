@@ -3,13 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JP-Cobranças - Histórico de Empréstimos</title>
+  <title>JP-Cobranças - Histórico de Pagamentos</title>
   <link rel="icon" type="image/png" href="https://i.imgur.com/6N82fk2.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="./css/style.css">
+  <style>
+    .historico-tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border-bottom: 2px solid #e5e7eb; }
+    .historico-tab { padding: 0.75rem 1.5rem; cursor: pointer; font-weight: 600; color: #6b7280; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+    .historico-tab:hover { color: #002f4b; }
+    .historico-tab.active { color: #002f4b; border-bottom-color: #00e6ff; }
+    .historico-panel { display: none; }
+    .historico-panel.active { display: block; }
+    .pagamento-badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+    .pagamento-badge.parcela { background: #d1fae5; color: #059669; }
+    .pagamento-badge.juros { background: #dbeafe; color: #2563eb; }
+  </style>
 </head>
 <body class="app-layout">
   <header>
@@ -39,88 +50,107 @@
     <div class="container">
       <div class="dashboard-header">
         <div class="welcome-message" id="welcomeMessage">Bem-vindo ao sistema JP-Cobranças!</div>
-        <div class="dashboard-title">Histórico de Empréstimos</div>
+        <div class="dashboard-title">Histórico de Pagamentos e Empréstimos</div>
         <div class="dashboard-subtitle">
-          Visualize todo o histórico detalhado de empréstimos, parcelas e status de pagamento.
+          Visualize o histórico de pagamentos (parcelas e juros) registrados ao marcar como pago no Dashboard ou Empréstimos. Todas as datas de pagamento são gravadas automaticamente.
         </div>
       </div>
 
-      <!-- Filtros de Busca -->
-      <div class="section">
-        <div class="search-container">
-          <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 250px;">
-              <input 
-                type="text" 
-                id="search-input" 
-                class="form-input" 
-                placeholder="Buscar por cliente, valor, observações..."
-                style="width: 100%;"
-              >
+      <!-- Abas -->
+      <div class="historico-tabs">
+        <div class="historico-tab active" data-tab="pagamentos">
+          <i class="fas fa-money-bill-wave" style="margin-right: 0.5rem;"></i>Histórico de Pagamentos
+        </div>
+        <div class="historico-tab" data-tab="emprestimos">
+          <i class="fas fa-list" style="margin-right: 0.5rem;"></i>Empréstimos
+        </div>
+      </div>
+
+      <!-- Painel: Histórico de Pagamentos -->
+      <div id="panel-pagamentos" class="historico-panel active">
+        <div class="section">
+          <div class="search-container" style="margin-bottom: 1rem;">
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+              <input type="date" id="filter-pag-data-inicio" class="form-input" style="min-width: 140px;" title="Data início">
+              <input type="date" id="filter-pag-data-fim" class="form-input" style="min-width: 140px;" title="Data fim">
+              <select id="filter-pag-tipo" class="form-input" style="min-width: 140px;">
+                <option value="">Todos os tipos</option>
+                <option value="parcela">Parcela</option>
+                <option value="juros">Juros</option>
+              </select>
+              <select id="filter-pag-cliente" class="form-input" style="min-width: 180px;">
+                <option value="">Todos os clientes</option>
+              </select>
+              <button id="btn-buscar-pagamentos" class="btn btn-primary">Buscar</button>
+              <button id="btn-limpar-pagamentos" class="btn btn-secondary">Limpar</button>
             </div>
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">
+              <span id="info-pagamentos">Carregando histórico de pagamentos...</span>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Data Pagamento</th>
+                  <th>Cliente</th>
+                  <th>Empréstimo</th>
+                  <th>Tipo</th>
+                  <th>Valor</th>
+                  <th>Detalhes</th>
+                </tr>
+              </thead>
+              <tbody id="historico-pagamentos-tbody">
+                <tr><td colspan="6" class="text-center text-gray-500">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Painel: Empréstimos -->
+      <div id="panel-emprestimos" class="historico-panel">
+        <div class="section">
+          <div class="search-container" style="margin-bottom: 1rem;">
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+              <input type="text" id="search-emprestimos" class="form-input" placeholder="Buscar por cliente, valor..." style="flex: 1; min-width: 200px;">
               <select id="filter-status" class="form-input" style="min-width: 120px;">
                 <option value="">Todos os Status</option>
                 <option value="Ativo">Ativo</option>
                 <option value="Quitado">Quitado</option>
                 <option value="Em Atraso">Em Atraso</option>
-                <option value="Cancelado">Cancelado</option>
               </select>
-              <select id="filter-tipo" class="form-input" style="min-width: 120px;">
-                <option value="">Todos os Tipos</option>
-                <option value="fixed">Valor Fixo</option>
-                <option value="in_installments">Parcelado</option>
-              </select>
-              <input 
-                type="date" 
-                id="filter-data-inicio" 
-                class="form-input" 
-                style="min-width: 140px;"
-                title="Data de início"
-              >
-              <input 
-                type="date" 
-                id="filter-data-fim" 
-                class="form-input" 
-                style="min-width: 140px;"
-                title="Data de fim"
-              >
-              <button id="clear-filters" class="btn btn-secondary" style="white-space: nowrap;">Limpar</button>
+              <input type="date" id="filter-data-inicio" class="form-input" style="min-width: 140px;">
+              <input type="date" id="filter-data-fim" class="form-input" style="min-width: 140px;">
+              <button id="clear-filters" class="btn btn-secondary">Limpar</button>
+            </div>
+            <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">
+              <span id="results-info">Mostrando todos os empréstimos</span>
             </div>
           </div>
-          <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">
-            <span id="results-info">Mostrando todos os empréstimos</span>
+          <div class="section-header">
+            <h3 class="section-title">Empréstimos</h3>
+            <button id="btn-novo-emprestimo" class="btn btn-primary">Novo Empréstimo</button>
           </div>
-        </div>
-      </div>
-
-      <!-- Tabela de Empréstimos -->
-      <div class="section">
-        <div class="section-header">
-          <h3 class="section-title">Empréstimos</h3>
-          <button id="btn-novo-emprestimo" class="btn btn-primary">Novo Empréstimo</button>
-        </div>
-        
-        <div class="table-container">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Cliente</th>
-                <th>Valor Inicial</th>
-                <th>Valor Final</th>
-                <th>Data Empréstimo</th>
-                <th>Vencimento</th>
-                <th>Status</th>
-                <th>Parcelas</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="emprestimos-tbody">
-              <tr>
-                <td colspan="8" class="text-center text-gray-500">Carregando...</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Valor Inicial</th>
+                  <th>Valor Final</th>
+                  <th>Data Empréstimo</th>
+                  <th>Vencimento</th>
+                  <th>Status</th>
+                  <th>Parcelas</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="emprestimos-tbody">
+                <tr><td colspan="8" class="text-center text-gray-500">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -135,77 +165,32 @@
         <button class="modal-close" onclick="fecharModal()">&times;</button>
       </div>
       <div class="modal-body">
-        <!-- Informações do Empréstimo -->
         <div class="section">
           <h4 class="section-title">Informações Gerais</h4>
           <div class="grid grid-cols-2">
-            <div>
-              <label class="form-label">Cliente:</label>
-              <p id="modal-cliente" class="font-semibold"></p>
-            </div>
-            <div>
-              <label class="form-label">Telefone:</label>
-              <p id="modal-telefone"></p>
-            </div>
-            <div>
-              <label class="form-label">Valor Inicial:</label>
-              <p id="modal-valor-inicial" class="font-semibold text-green-600"></p>
-            </div>
-            <div>
-              <label class="form-label">Valor Final:</label>
-              <p id="modal-valor-final" class="font-semibold text-terciary"></p>
-            </div>
-            <div>
-              <label class="form-label">Data do Empréstimo:</label>
-              <p id="modal-data-emprestimo"></p>
-            </div>
-            <div>
-              <label class="form-label">Vencimento:</label>
-              <p id="modal-vencimento"></p>
-            </div>
-            <div>
-              <label class="form-label">Juros Mensal:</label>
-              <p id="modal-juros"></p>
-            </div>
-            <div>
-              <label class="form-label">Status:</label>
-              <p id="modal-status"></p>
-            </div>
+            <div><label class="form-label">Cliente:</label><p id="modal-cliente" class="font-semibold"></p></div>
+            <div><label class="form-label">Telefone:</label><p id="modal-telefone"></p></div>
+            <div><label class="form-label">Valor Inicial:</label><p id="modal-valor-inicial" class="font-semibold text-green-600"></p></div>
+            <div><label class="form-label">Valor Final:</label><p id="modal-valor-final" class="font-semibold text-terciary"></p></div>
+            <div><label class="form-label">Data do Empréstimo:</label><p id="modal-data-emprestimo"></p></div>
+            <div><label class="form-label">Vencimento:</label><p id="modal-vencimento"></p></div>
+            <div><label class="form-label">Juros Mensal:</label><p id="modal-juros"></p></div>
+            <div><label class="form-label">Status:</label><p id="modal-status"></p></div>
           </div>
-          <div>
-            <label class="form-label">Observações:</label>
-            <p id="modal-observacoes" class="modal-observacoes"></p>
-          </div>
+          <div><label class="form-label">Observações:</label><p id="modal-observacoes" class="modal-observacoes"></p></div>
         </div>
-
-        <!-- Parcelas -->
         <div class="section">
-          <h4 class="section-title">Parcelas</h4>
-          <div id="parcelas-container" class="parcelas-detalhadas">
-            <!-- Parcelas serão inseridas aqui -->
-          </div>
+          <h4 class="section-title">Parcelas (com datas de pagamento)</h4>
+          <div id="parcelas-container" class="parcelas-detalhadas"></div>
         </div>
-
-        <!-- Resumo de Pagamentos -->
         <div class="section">
           <h4 class="section-title">Resumo de Pagamentos</h4>
           <div class="grid grid-cols-3">
-            <div class="resumo-card resumo-pagas">
-              <div class="text-sm text-gray-600">Parcelas Pagas</div>
-              <div id="resumo-pagas" class="text-lg font-semibold text-green-600">0</div>
-            </div>
-            <div class="resumo-card resumo-pendentes">
-              <div class="text-sm text-gray-600">Parcelas Pendentes</div>
-              <div id="resumo-pendentes" class="text-lg font-semibold text-yellow-500">0</div>
-            </div>
-            <div class="resumo-card resumo-atrasadas">
-              <div class="text-sm text-gray-600">Parcelas Atrasadas</div>
-              <div id="resumo-atrasadas" class="text-lg font-semibold text-red-600">0</div>
-            </div>
+            <div class="resumo-card resumo-pagas"><div class="text-sm text-gray-600">Parcelas Pagas</div><div id="resumo-pagas" class="text-lg font-semibold text-green-600">0</div></div>
+            <div class="resumo-card resumo-pendentes"><div class="text-sm text-gray-600">Parcelas Pendentes</div><div id="resumo-pendentes" class="text-lg font-semibold text-yellow-500">0</div></div>
+            <div class="resumo-card resumo-atrasadas"><div class="text-sm text-gray-600">Parcelas Atrasadas</div><div id="resumo-atrasadas" class="text-lg font-semibold text-red-600">0</div></div>
           </div>
         </div>
-
-
       </div>
     </div>
   </div>
@@ -216,268 +201,183 @@
 
   <script src="./js/main.js"></script>
   <script>
-    // Variáveis globais
     let todosEmprestimos = [];
     let emprestimosFiltrados = [];
+    let historicoPagamentos = [];
 
-    // Inicialização
     document.addEventListener('DOMContentLoaded', function() {
-      // Menu mobile
       const menuBtn = document.getElementById('mobile-menu-toggle');
       const navWrapper = document.querySelector('.nav-wrapper');
       if (menuBtn && navWrapper) {
-        menuBtn.addEventListener('click', function() {
-          navWrapper.classList.toggle('open');
-        });
+        menuBtn.addEventListener('click', () => navWrapper.classList.toggle('open'));
       }
 
-      // Carregar dados iniciais
-      carregarEmprestimos();
-      carregarEstatisticas();
-      
-      // Configurar mensagem de boas-vindas
-      carregarMensagemBoasVindas();
-      
-      // Função para recarregar dados manualmente se necessário
-      window.recarregarDados = async function() {
-        await carregarEmprestimos();
-        await carregarEstatisticas();
-        mostrarNotificacao('Dados recarregados com sucesso!', 'success');
-      };
+      // Abas
+      document.querySelectorAll('.historico-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.historico-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.historico-panel').forEach(p => p.classList.remove('active'));
+          tab.classList.add('active');
+          document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+        });
+      });
 
-      // Event listeners para filtros
-      document.getElementById('search-input').addEventListener('input', aplicarFiltros);
+      // Histórico de Pagamentos
+      carregarHistoricoPagamentos();
+      carregarClientesParaFiltro();
+      document.getElementById('btn-buscar-pagamentos').addEventListener('click', carregarHistoricoPagamentos);
+      document.getElementById('btn-limpar-pagamentos').addEventListener('click', () => {
+        document.getElementById('filter-pag-data-inicio').value = '';
+        document.getElementById('filter-pag-data-fim').value = '';
+        document.getElementById('filter-pag-tipo').value = '';
+        document.getElementById('filter-pag-cliente').value = '';
+        carregarHistoricoPagamentos();
+      });
+
+      // Empréstimos
+      carregarEmprestimos();
+      document.getElementById('search-emprestimos').addEventListener('input', aplicarFiltros);
       document.getElementById('filter-status').addEventListener('change', aplicarFiltros);
-      document.getElementById('filter-tipo').addEventListener('change', aplicarFiltros);
       document.getElementById('filter-data-inicio').addEventListener('change', aplicarFiltros);
       document.getElementById('filter-data-fim').addEventListener('change', aplicarFiltros);
       document.getElementById('clear-filters').addEventListener('click', limparFiltros);
-      
-      // Event listener para novo empréstimo
-      document.getElementById('btn-novo-emprestimo').addEventListener('click', novoEmprestimo);
+      document.getElementById('btn-novo-emprestimo').addEventListener('click', () => { if (window.novoEmprestimo) window.novoEmprestimo(); else window.location.href = 'emprestimos.html'; });
 
-      // Atualizar layout (tabela vs cards) ao redimensionar a tela
-      window.addEventListener('resize', function() {
-        if (emprestimosFiltrados.length > 0) {
-          renderizarEmprestimos();
-        }
+      window.addEventListener('resize', () => {
+        if (emprestimosFiltrados.length > 0) renderizarEmprestimos();
       });
     });
 
-
-
-    // Função para carregar mensagem de boas-vindas
-    async function carregarMensagemBoasVindas() {
-      // Mensagem de boas-vindas
-      document.getElementById('welcomeMessage').textContent = 'Bem-vindo ao sistema JP-Cobranças!';
+    async function carregarClientesParaFiltro() {
+      try {
+        const clientes = await apiService.getClientes();
+        const sel = document.getElementById('filter-pag-cliente');
+        sel.innerHTML = '<option value="">Todos os clientes</option>';
+        (clientes || []).forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = c.nome || c.razao || 'N/A';
+          sel.appendChild(opt);
+        });
+      } catch (e) { console.error(e); }
     }
 
-    // Função para carregar empréstimos
+    async function carregarHistoricoPagamentos() {
+      const tbody = document.getElementById('historico-pagamentos-tbody');
+      const info = document.getElementById('info-pagamentos');
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center">Carregando...</td></tr>';
+      try {
+        const params = {};
+        const di = document.getElementById('filter-pag-data-inicio').value;
+        const df = document.getElementById('filter-pag-data-fim').value;
+        const tipo = document.getElementById('filter-pag-tipo').value;
+        const cliente = document.getElementById('filter-pag-cliente').value;
+        if (di) params.data_inicio = di;
+        if (df) params.data_fim = df;
+        if (tipo) params.tipo = tipo;
+        if (cliente) params.cliente_id = cliente;
+
+        historicoPagamentos = await apiService.getHistoricoPagamentos(params);
+
+        if (!historicoPagamentos || historicoPagamentos.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum pagamento registrado. Os pagamentos são gravados automaticamente quando você marca parcelas ou juros como pagos no Dashboard ou Empréstimos.</td></tr>';
+          info.textContent = 'Nenhum pagamento encontrado';
+        } else {
+          tbody.innerHTML = '';
+          historicoPagamentos.forEach(p => {
+            const dataStr = p.data_pagamento ? formatarData(p.data_pagamento) : '-';
+            const valorStr = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.valor || 0);
+            const tipoClass = (p.tipo_pagamento || '').toLowerCase() === 'juros' ? 'juros' : 'parcela';
+            const detalhes = p.numero_parcela ? `Parcela ${p.numero_parcela}` : (p.observacoes || '-');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td><strong>${dataStr}</strong></td>
+              <td>${p.cliente_nome || 'N/A'}</td>
+              <td>#${p.emprestimo_id || '-'}</td>
+              <td><span class="pagamento-badge ${tipoClass}">${p.tipo_pagamento || 'Parcela'}</span></td>
+              <td class="font-semibold text-green-600">${valorStr}</td>
+              <td class="text-sm text-gray-600">${detalhes}</td>
+            `;
+            tbody.appendChild(row);
+          });
+          info.textContent = `Mostrando ${historicoPagamentos.length} pagamento(s)`;
+        }
+      } catch (err) {
+        console.error(err);
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar histórico. Tente novamente.</td></tr>';
+        info.textContent = 'Erro ao carregar';
+      }
+    }
+
     async function carregarEmprestimos() {
       try {
-        // Primeiro, tentar corrigir inconsistências no backend
-        await fetch('/api/cobrancas/corrigir-status-emprestimos', {
-          method: 'POST',
-          credentials: 'include'
-        }).catch(() => {
-          // Se falhar, não bloquear o carregamento
-        });
+        await fetch('/api/cobrancas/corrigir-status-emprestimos', { method: 'POST', credentials: 'include' }).catch(() => {});
 
-        const response = await fetch('/api/cobrancas/emprestimos', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include'
-        });
-
-        if (!response.ok) {
-          throw new Error('Erro ao carregar empréstimos');
-        }
-
+        const response = await fetch('/api/cobrancas/emprestimos', { method: 'GET', headers: { 'Content-Type': 'application/json' }, credentials: 'include' });
+        if (!response.ok) throw new Error('Erro ao carregar empréstimos');
         const rawList = await response.json();
-        // Mesma lista que Empréstimos e Dashboard: deduplicar por id (uma entrada por empréstimo)
         const byId = new Map();
-        (Array.isArray(rawList) ? rawList : []).forEach(function(e) {
-          if (e && e.id != null && !byId.has(e.id)) byId.set(e.id, e);
-        });
+        (Array.isArray(rawList) ? rawList : []).forEach(e => { if (e && e.id != null && !byId.has(e.id)) byId.set(e.id, e); });
         todosEmprestimos = Array.from(byId.values());
         emprestimosFiltrados = [...todosEmprestimos];
 
-        // Buscar parcelas para cada empréstimo
-        await Promise.all(todosEmprestimos.map(async (emprestimo) => {
+        await Promise.all(todosEmprestimos.map(async (emp) => {
           try {
-            const parcelasResponse = await fetch(`/api/cobrancas/emprestimos/${emprestimo.id}/parcelas`, {
-              credentials: 'include'
-            });
-            if (parcelasResponse.ok) {
-              emprestimo.parcelas = await parcelasResponse.json();
-              
-              // Marcar parcelas atrasadas automaticamente no frontend
-              if (emprestimo.parcelas && emprestimo.parcelas.length > 0) {
-                const hoje = new Date();
-                emprestimo.parcelas.forEach(parcela => {
-                  if (parcela.status === 'Pendente') {
-                    const dataVencimento = criarDataValida(parcela.data_vencimento);
-                    if (dataVencimento && hoje > dataVencimento) {
-                      parcela.status = 'Atrasada';
-                    }
-                  }
-                });
-              }
-            } else {
-              emprestimo.parcelas = [];
+            const parcelasRes = await fetch(`/api/cobrancas/emprestimos/${emp.id}/parcelas`, { credentials: 'include' });
+            emp.parcelas = parcelasRes.ok ? await parcelasRes.json() : [];
+            if (emp.parcelas && emp.parcelas.length > 0) {
+              const hoje = new Date();
+              emp.parcelas.forEach(p => {
+                if (p.status === 'Pendente') {
+                  const dv = criarDataValida(p.data_vencimento);
+                  if (dv && hoje > dv) p.status = 'Atrasada';
+                }
+              });
             }
-          } catch (error) {
-            console.error(`Erro ao carregar parcelas do empréstimo ${emprestimo.id}:`, error);
-            emprestimo.parcelas = [];
-          }
+          } catch (e) { emp.parcelas = []; }
         }));
 
         renderizarEmprestimos();
         atualizarInfoResultados();
-      } catch (error) {
-        console.error('Erro ao carregar empréstimos:', error);
-        mostrarNotificacao('Erro ao carregar empréstimos', 'error');
+      } catch (err) {
+        console.error(err);
+        document.getElementById('emprestimos-tbody').innerHTML = '<tr><td colspan="8" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
       }
     }
 
-    // Função para carregar estatísticas do dashboard
-    async function carregarEstatisticas() {
-      try {
-        // Primeiro, tentar corrigir inconsistências no backend
-        await fetch('/api/cobrancas/corrigir-status-emprestimos', {
-          method: 'POST',
-          credentials: 'include'
-        }).catch(() => {
-          // Se falhar, não bloquear o carregamento das estatísticas
-        });
-
-        const response = await fetch('/api/cobrancas/dashboard', {
-          credentials: 'include'
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('📊 Dados do dashboard recebidos:', data);
-          
-          // Atualizar cards com os mesmos dados do dashboard
-          const cards = {
-            'total-investido': data.emprestimos?.valor_total_emprestimos || 0,
-            'total-emprestimos': data.emprestimosAtivos || 0,
-            'valor-receber': data.cobrancas?.valor_total_cobrancas || 0,
-            'emprestimos-atraso': data.emprestimosEmAtraso || 0
-          };
-
-          Object.entries(cards).forEach(([id, value]) => {
-            const element = document.getElementById(id);
-            if (element) {
-              if (id === 'valor-receber' || id === 'total-investido') {
-                // Garantir que o valor seja sempre um número válido
-                const safeValue = Number(value);
-                const formattedValue = new Intl.NumberFormat('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL'
-                }).format(isNaN(safeValue) ? 0 : safeValue);
-                element.textContent = formattedValue;
-              } else {
-                // Animar números
-                const startValue = parseInt(element.textContent) || 0;
-                const duration = 1000;
-                const startTime = performance.now();
-                
-                function animateNumber(currentTime) {
-                  const elapsed = currentTime - startTime;
-                  const progress = Math.min(elapsed / duration, 1);
-                  
-                  const currentValue = Math.floor(startValue + (value - startValue) * progress);
-                  element.textContent = currentValue;
-                  
-                  if (progress < 1) {
-                    requestAnimationFrame(animateNumber);
-                  }
-                }
-                
-                requestAnimationFrame(animateNumber);
-              }
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Erro ao carregar estatísticas:', error);
-        // Fallback para o endpoint do dashboard
-        try {
-          const fallbackResponse = await fetch('/api/cobrancas/dashboard', {
-            credentials: 'include'
-          });
-
-          if (fallbackResponse.ok) {
-            const fallbackData = await fallbackResponse.json();
-            console.log('📊 Dados do dashboard (fallback):', fallbackData);
-            
-            // Atualizar cards com os mesmos dados do dashboard (fallback)
-            const cards = {
-              'total-investido': fallbackData.emprestimos?.valor_total_emprestimos || 0,
-              'total-emprestimos': fallbackData.emprestimosAtivos || 0,
-              'valor-receber': fallbackData.cobrancas?.valor_total_cobrancas || 0,
-              'emprestimos-atraso': fallbackData.emprestimosEmAtraso || 0
-            };
-
-            Object.entries(cards).forEach(([id, value]) => {
-              const element = document.getElementById(id);
-              if (element) {
-                if (id === 'valor-receber' || id === 'total-investido') {
-                  const safeValue = Number(value);
-                  const formattedValue = new Intl.NumberFormat('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL'
-                  }).format(isNaN(safeValue) ? 0 : safeValue);
-                  element.textContent = formattedValue;
-                } else {
-                  element.textContent = value || 0;
-                }
-              }
-            });
-          }
-        } catch (fallbackError) {
-          console.error('Erro ao carregar estatísticas do fallback:', fallbackError);
-        }
-      }
+    function obterDataVencimentoExibir(emp) {
+      if (!emp.parcelas || emp.parcelas.length === 0) return emp.data_vencimento;
+      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+      const naoPagas = emp.parcelas.filter(p => p.status !== 'Paga');
+      if (naoPagas.length === 0) return emp.data_vencimento;
+      const atrasadas = naoPagas.filter(p => { const dv = criarDataValida(p.data_vencimento); return dv && dv < hoje; });
+      const lista = atrasadas.length > 0 ? atrasadas : naoPagas;
+      lista.sort((a, b) => criarDataValida(a.data_vencimento) - criarDataValida(b.data_vencimento));
+      return lista[0].data_vencimento;
     }
 
-    // Função para obter a data da próxima parcela a vencer (para empréstimos parcelados)
-    function obterDataVencimentoExibir(emprestimo) {
-      if (!emprestimo.parcelas || emprestimo.parcelas.length === 0) {
-        return emprestimo.data_vencimento;
+    function determinarStatus(emp) {
+      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+      if (emp.parcelas && emp.parcelas.length > 0) {
+        const todasPagas = emp.parcelas.every(p => p.status === 'Paga');
+        if (todasPagas) return 'Quitado';
+        const temAtrasada = emp.parcelas.some(p => { const dv = criarDataValida(p.data_vencimento); return p.status !== 'Paga' && dv && dv < hoje; });
+        return temAtrasada ? 'Em Atraso' : 'Ativo';
       }
-      
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      
-      const parcelasNaoPagas = emprestimo.parcelas.filter(p => p.status !== 'Paga');
-      
-      if (parcelasNaoPagas.length === 0) {
-        return emprestimo.data_vencimento; // Todas pagas
-      }
-      
-      // Verificar se há parcelas atrasadas
-      const parcelasAtrasadas = parcelasNaoPagas.filter(p => {
-        const dataVenc = criarDataValida(p.data_vencimento);
-        return dataVenc && dataVenc < hoje;
-      });
-      
-      if (parcelasAtrasadas.length > 0) {
-        // Retornar a mais antiga atrasada
-        parcelasAtrasadas.sort((a, b) => criarDataValida(a.data_vencimento) - criarDataValida(b.data_vencimento));
-        return parcelasAtrasadas[0].data_vencimento;
-      }
-      
-      // Retornar a próxima parcela a vencer
-      parcelasNaoPagas.sort((a, b) => criarDataValida(a.data_vencimento) - criarDataValida(b.data_vencimento));
-      return parcelasNaoPagas[0].data_vencimento;
+      if (emp.status === 'Quitado') return 'Quitado';
+      const dv = criarDataValida(emp.data_vencimento);
+      if (dv && hoje > dv && emp.status === 'Ativo') return 'Em Atraso';
+      return emp.status || 'Ativo';
     }
 
-    // Função para renderizar empréstimos
+    function calcularResumoParcelas(parcelas) {
+      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+      const pagas = (parcelas || []).filter(p => p.status === 'Paga').length;
+      const naoPagas = (parcelas || []).filter(p => p.status !== 'Paga');
+      const atrasadas = naoPagas.filter(p => { const dv = criarDataValida(p.data_vencimento); return dv && dv < hoje; }).length;
+      return { pagas, pendentes: naoPagas.length - atrasadas, atrasadas };
+    }
+
     function renderizarEmprestimos() {
       const tbody = document.getElementById('emprestimos-tbody');
       const container = tbody.parentElement.parentElement;
@@ -490,227 +390,94 @@
         return;
       }
 
-      // Ordenar: quitados separados no final, por data de vencimento da próxima parcela (mais antigo primeiro)
-      const emprestimosOrdenados = [...emprestimosFiltrados].sort((a, b) => {
-        const statusA = determinarStatus(a);
-        const statusB = determinarStatus(b);
-        const isQuitadoA = statusA === 'Quitado';
-        const isQuitadoB = statusB === 'Quitado';
-        // Separar quitados no final
-        if (isQuitadoA && !isQuitadoB) return 1;
-        if (!isQuitadoA && isQuitadoB) return -1;
-        // Ordenar por data de vencimento da próxima parcela (mais antigo primeiro)
-        const dataA = criarDataValida(obterDataVencimentoExibir(a));
-        const dataB = criarDataValida(obterDataVencimentoExibir(b));
-        if (!dataA && !dataB) return 0;
-        if (!dataA) return 1;
-        if (!dataB) return -1;
-        return dataA - dataB;
+      const ordenados = [...emprestimosFiltrados].sort((a, b) => {
+        const sa = determinarStatus(a), sb = determinarStatus(b);
+        if (sa === 'Quitado' && sb !== 'Quitado') return 1;
+        if (sa !== 'Quitado' && sb === 'Quitado') return -1;
+        const da = criarDataValida(obterDataVencimentoExibir(a));
+        const db = criarDataValida(obterDataVencimentoExibir(b));
+        if (!da && !db) return 0;
+        if (!da) return 1;
+        if (!db) return -1;
+        return da - db;
       });
 
       const isMobile = window.innerWidth <= 768;
-
       if (isMobile) {
-        // Layout de cards para mobile
         tbody.parentElement.style.display = 'none';
-
         const oldCards = container.querySelector('.mobile-historico-cards');
         if (oldCards) oldCards.remove();
-
-        const cardsContainer = document.createElement('div');
-        cardsContainer.className = 'mobile-historico-cards';
-        cardsContainer.style.cssText = 'display: flex; flex-direction: column; gap: 0.75rem; padding: 0.5rem;';
-
-        emprestimosOrdenados.forEach(emprestimo => {
-          const status = determinarStatus(emprestimo);
-          const statusClass = getStatusClass(status);
-          const resumoParcelas = calcularResumoParcelas(emprestimo.parcelas || []);
-          const vencimentoExibir = obterDataVencimentoExibir(emprestimo);
-
-          let statusColor = '#6b7280';
-          if (status === 'Em Atraso') statusColor = '#ef4444';
-          else if (status === 'Ativo') statusColor = '#10b981';
-          else if (status === 'Quitado') statusColor = '#3b82f6';
-          else if (status === 'Cancelado') statusColor = '#6b7280';
-
+        const cards = document.createElement('div');
+        cards.className = 'mobile-historico-cards';
+        cards.style.cssText = 'display: flex; flex-direction: column; gap: 0.75rem; padding: 0.5rem;';
+        ordenados.forEach(emp => {
+          const status = determinarStatus(emp);
+          const resumo = calcularResumoParcelas(emp.parcelas || []);
+          const venc = obterDataVencimentoExibir(emp);
+          let cor = '#6b7280';
+          if (status === 'Em Atraso') cor = '#ef4444';
+          else if (status === 'Ativo') cor = '#10b981';
+          else if (status === 'Quitado') cor = '#3b82f6';
           const card = document.createElement('div');
-          card.style.cssText = `
-            padding: 1rem;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border-left: 4px solid ${statusColor};
-          `;
+          card.style.cssText = `padding: 1rem; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid ${cor};`;
           card.innerHTML = `
-            <div style="margin-bottom: 0.5rem;">
-              <div style="font-weight: 600; color: #1f2937; font-size: 0.95rem;">${emprestimo.cliente_nome || 'N/A'}</div>
-              ${emprestimo.telefone ? `<div style="font-size: 0.8rem; color: #6b7280;">${emprestimo.telefone}</div>` : ''}
+            <div style="font-weight: 600; color: #1f2937;">${emp.cliente_nome || 'N/A'}</div>
+            <div style="font-size: 0.8rem; color: #4b5563; margin: 0.5rem 0;">
+              Inicial: R$ ${formatarMoeda(emp.valor_inicial ?? emp.valor ?? 0)} | Final: R$ ${formatarMoeda(emp.valor_final ?? emp.valor ?? 0)}
             </div>
-            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.8rem; color: #4b5563; margin-bottom: 0.5rem;">
-              <span><strong>Inicial:</strong> R$ ${formatarMoeda(emprestimo.valor_inicial ?? emprestimo.valor ?? 0)}</span>
-              <span><strong>Final:</strong> R$ ${formatarMoeda(emprestimo.valor_final ?? emprestimo.valor ?? 0)}</span>
-              <span><strong>Empréstimo:</strong> ${formatarData(emprestimo.data_emprestimo)}</span>
-              <span><strong>Venc:</strong> ${formatarData(vencimentoExibir)}</span>
-            </div>
-            <div style="font-size: 0.8rem; margin-bottom: 0.5rem;">
-              <span class="badge ${statusClass}">${status}</span>
-              <span style="color: #6b7280; margin-left: 0.5rem;">
-                ${resumoParcelas.pagas} pagas · ${resumoParcelas.pendentes} pend. · ${resumoParcelas.atrasadas} atrasadas
-              </span>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="abrirDetalhes(${emprestimo.id})" style="width: 100%; margin-top: 0.25rem;">
-              Ver Detalhes
-            </button>
+            <div style="font-size: 0.8rem;"><span class="badge badge-${status === 'Quitado' ? 'info' : status === 'Em Atraso' ? 'danger' : 'success'}">${status}</span> ${resumo.pagas} pagas · ${resumo.pendentes} pend. · ${resumo.atrasadas} atrasadas</div>
+            <button class="btn btn-primary btn-sm" onclick="abrirDetalhes(${emp.id})" style="width: 100%; margin-top: 0.5rem;">Ver Detalhes</button>
           `;
-          cardsContainer.appendChild(card);
+          cards.appendChild(card);
         });
-
-        container.appendChild(cardsContainer);
+        container.appendChild(cards);
       } else {
-        // Layout de tabela para desktop
         tbody.parentElement.style.display = '';
         const oldCards = container.querySelector('.mobile-historico-cards');
         if (oldCards) oldCards.remove();
-
         tbody.innerHTML = '';
-        emprestimosOrdenados.forEach(emprestimo => {
-          const status = determinarStatus(emprestimo);
-          const statusClass = getStatusClass(status);
-          const resumoParcelas = calcularResumoParcelas(emprestimo.parcelas || []);
-          const vencimentoExibir = obterDataVencimentoExibir(emprestimo);
-
+        ordenados.forEach(emp => {
+          const status = determinarStatus(emp);
+          const resumo = calcularResumoParcelas(emp.parcelas || []);
+          const venc = obterDataVencimentoExibir(emp);
           const row = document.createElement('tr');
           row.innerHTML = `
-          <td>
-            <div class="font-semibold">${emprestimo.cliente_nome || 'N/A'}</div>
-            <div class="text-sm text-gray-500">${emprestimo.telefone || ''}</div>
-          </td>
-          <td class="font-semibold text-green-600">R$ ${formatarMoeda(emprestimo.valor_inicial ?? emprestimo.valor ?? 0)}</td>
-          <td class="font-semibold text-terciary">R$ ${formatarMoeda(emprestimo.valor_final ?? emprestimo.valor ?? 0)}</td>
-          <td>${formatarData(emprestimo.data_emprestimo)}</td>
-          <td>${formatarData(vencimentoExibir)}</td>
-          <td><span class="badge ${statusClass}">${status}</span></td>
-          <td>
-            <div class="text-sm">
-              <div class="text-green-600">${resumoParcelas.pagas} pagas</div>
-              <div class="text-yellow-500">${resumoParcelas.pendentes} pendentes</div>
-              <div class="text-red-600">${resumoParcelas.atrasadas} atrasadas</div>
-            </div>
-          </td>
-          <td>
-            <button class="btn btn-primary btn-sm" onclick="abrirDetalhes(${emprestimo.id})">
-              Ver Detalhes
-            </button>
-          </td>
-        `;
+            <td><div class="font-semibold">${emp.cliente_nome || 'N/A'}</div><div class="text-sm text-gray-500">${emp.telefone || ''}</div></td>
+            <td class="font-semibold text-green-600">R$ ${formatarMoeda(emp.valor_inicial ?? emp.valor ?? 0)}</td>
+            <td class="font-semibold text-terciary">R$ ${formatarMoeda(emp.valor_final ?? emp.valor ?? 0)}</td>
+            <td>${formatarData(emp.data_emprestimo)}</td>
+            <td>${formatarData(venc)}</td>
+            <td><span class="badge badge-${status === 'Quitado' ? 'info' : status === 'Em Atraso' ? 'danger' : 'success'}">${status}</span></td>
+            <td><div class="text-sm"><span class="text-green-600">${resumo.pagas} pagas</span><br><span class="text-yellow-500">${resumo.pendentes} pend.</span><br><span class="text-red-600">${resumo.atrasadas} atrasadas</span></div></td>
+            <td><button class="btn btn-primary btn-sm" onclick="abrirDetalhes(${emp.id})">Ver Detalhes</button></td>
+          `;
           tbody.appendChild(row);
         });
       }
     }
 
-    // Função para determinar status do empréstimo
-    function determinarStatus(emprestimo) {
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      
-      // Se é empréstimo parcelado (tem parcelas)
-      if (emprestimo.parcelas && emprestimo.parcelas.length > 0) {
-        const parcelas = emprestimo.parcelas;
-        const todasPagas = parcelas.every(p => p.status === 'Paga');
-
-        if (todasPagas) return 'Quitado';
-        
-        // Calcular dinamicamente quais parcelas estão atrasadas (baseado na data, não no status do banco)
-        const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
-        const temAtrasada = parcelasNaoPagas.some(p => {
-          const dataVencParcela = criarDataValida(p.data_vencimento);
-          return dataVencParcela && dataVencParcela < hoje;
-        });
-
-        if (temAtrasada) return 'Em Atraso';
-        return 'Ativo';
-      }
-
-      // Se é empréstimo de valor fixo (sem parcelas)
-      // Verificar se está vencido e se foi pago
-      const dataVencimento = criarDataValida(emprestimo.data_vencimento);
-      
-      if (emprestimo.status === 'Quitado') {
-        return 'Quitado';
-      }
-      
-      if (dataVencimento && hoje > dataVencimento && emprestimo.status === 'Ativo') {
-        // Empréstimo vencido - considerado em atraso apenas se não foi pago
-        return 'Em Atraso';
-      }
-      
-      return emprestimo.status || 'Ativo';
-    }
-
-    // Função para calcular resumo das parcelas
-    function calcularResumoParcelas(parcelas) {
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      
-      const pagas = parcelas.filter(p => p.status === 'Paga').length;
-      
-      // Calcular atrasadas dinamicamente baseado na data de vencimento
-      const parcelasNaoPagas = parcelas.filter(p => p.status !== 'Paga');
-      const atrasadas = parcelasNaoPagas.filter(p => {
-        const dataVenc = criarDataValida(p.data_vencimento);
-        return dataVenc && dataVenc < hoje;
-      }).length;
-      
-      const pendentes = parcelasNaoPagas.length - atrasadas;
-      
-      return { pagas, pendentes, atrasadas };
-    }
-
-    // Função para aplicar filtros
     function aplicarFiltros() {
-      const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
-      const statusFilter = document.getElementById('filter-status').value;
-      const tipoFilter = document.getElementById('filter-tipo').value;
-      const dataInicio = document.getElementById('filter-data-inicio').value;
-      const dataFim = document.getElementById('filter-data-fim').value;
+      const termo = document.getElementById('search-emprestimos').value.toLowerCase().trim();
+      const statusF = document.getElementById('filter-status').value;
+      const di = document.getElementById('filter-data-inicio').value;
+      const df = document.getElementById('filter-data-fim').value;
 
-      emprestimosFiltrados = todosEmprestimos.filter(emprestimo => {
-        // Filtro por termo de busca
-        const valorInicial = (emprestimo.valor_inicial ?? emprestimo.valor ?? 0).toString();
-        const valorFinal = (emprestimo.valor_final ?? emprestimo.valor ?? 0).toString();
-        const matchSearch = !searchTerm || 
-          (emprestimo.cliente_nome && emprestimo.cliente_nome.toLowerCase().includes(searchTerm)) ||
-          (valorInicial && valorInicial.includes(searchTerm)) ||
-          (valorFinal && valorFinal.includes(searchTerm)) ||
-          (emprestimo.observacoes && emprestimo.observacoes.toLowerCase().includes(searchTerm));
-
-        // Filtro por status
-        const statusEmprestimo = determinarStatus(emprestimo);
-        const matchStatus = !statusFilter || statusEmprestimo === statusFilter;
-
-        // Filtro por tipo
-        const matchTipo = !tipoFilter || emprestimo.tipo_emprestimo === tipoFilter;
-
-        // Filtro por data
-        const dataEmprestimo = criarDataValida(emprestimo.data_emprestimo);
-        const dataInicioObj = dataInicio ? new Date(dataInicio) : null;
-        const dataFimObj = dataFim ? new Date(dataFim) : null;
-        
-        const matchDataInicio = !dataInicioObj || !dataEmprestimo || dataEmprestimo >= dataInicioObj;
-        const matchDataFim = !dataFimObj || !dataEmprestimo || dataEmprestimo <= dataFimObj;
-
-        return matchSearch && matchStatus && matchTipo && matchDataInicio && matchDataFim;
+      emprestimosFiltrados = todosEmprestimos.filter(emp => {
+        const matchSearch = !termo || (emp.cliente_nome && emp.cliente_nome.toLowerCase().includes(termo)) || String(emp.valor_inicial ?? emp.valor ?? '').includes(termo) || String(emp.valor_final ?? emp.valor ?? '').includes(termo) || (emp.observacoes && emp.observacoes.toLowerCase().includes(termo));
+        const statusEmp = determinarStatus(emp);
+        const matchStatus = !statusF || statusEmp === statusF;
+        const dataEmp = criarDataValida(emp.data_emprestimo);
+        const matchDi = !di || !dataEmp || dataEmp >= new Date(di);
+        const matchDf = !df || !dataEmp || dataEmp <= new Date(df);
+        return matchSearch && matchStatus && matchDi && matchDf;
       });
-
       renderizarEmprestimos();
       atualizarInfoResultados();
     }
 
-    // Função para limpar filtros
     function limparFiltros() {
-      document.getElementById('search-input').value = '';
+      document.getElementById('search-emprestimos').value = '';
       document.getElementById('filter-status').value = '';
-      document.getElementById('filter-tipo').value = '';
       document.getElementById('filter-data-inicio').value = '';
       document.getElementById('filter-data-fim').value = '';
       emprestimosFiltrados = [...todosEmprestimos];
@@ -718,747 +485,95 @@
       atualizarInfoResultados();
     }
 
-    // Função para atualizar informações de resultados
     function atualizarInfoResultados() {
       const total = todosEmprestimos.length;
       const filtrado = emprestimosFiltrados.length;
-      const infoElement = document.getElementById('results-info');
-      
-      if (filtrado === total) {
-        infoElement.textContent = `Mostrando todos os ${total} empréstimos`;
-      } else {
-        infoElement.textContent = `Mostrando ${filtrado} de ${total} empréstimos`;
-      }
+      document.getElementById('results-info').textContent = filtrado === total ? `Mostrando todos os ${total} empréstimos` : `Mostrando ${filtrado} de ${total} empréstimos`;
     }
 
-    // Função para abrir detalhes do empréstimo
     function abrirDetalhes(emprestimoId) {
-      const emprestimo = todosEmprestimos.find(e => e.id === emprestimoId);
-      if (!emprestimo) return;
+      const emp = todosEmprestimos.find(e => e.id === emprestimoId);
+      if (!emp) return;
 
-      // Preencher informações gerais
-      document.getElementById('modal-cliente').textContent = emprestimo.cliente_nome || 'N/A';
-      document.getElementById('modal-telefone').textContent = emprestimo.telefone || 'N/A';
-      document.getElementById('modal-valor-inicial').textContent = 'R$ ' + formatarMoeda(emprestimo.valor_inicial ?? emprestimo.valor ?? 0);
-      document.getElementById('modal-valor-final').textContent = 'R$ ' + formatarMoeda(emprestimo.valor_final ?? emprestimo.valor ?? 0);
-      document.getElementById('modal-data-emprestimo').textContent = formatarData(emprestimo.data_emprestimo);
-      document.getElementById('modal-vencimento').textContent = formatarData(emprestimo.data_vencimento);
-      document.getElementById('modal-juros').textContent = (emprestimo.juros_mensal || 0) + '%';
-      
-      const status = determinarStatus(emprestimo);
-      const statusClass = getStatusClass(status);
-      document.getElementById('modal-status').innerHTML = `<span class="badge ${statusClass}">${status}</span>`;
-      document.getElementById('modal-observacoes').textContent = emprestimo.observacoes || 'Nenhuma observação';
+      document.getElementById('modal-cliente').textContent = emp.cliente_nome || 'N/A';
+      document.getElementById('modal-telefone').textContent = emp.telefone || 'N/A';
+      document.getElementById('modal-valor-inicial').textContent = 'R$ ' + formatarMoeda(emp.valor_inicial ?? emp.valor ?? 0);
+      document.getElementById('modal-valor-final').textContent = 'R$ ' + formatarMoeda(emp.valor_final ?? emp.valor ?? 0);
+      document.getElementById('modal-data-emprestimo').textContent = formatarData(emp.data_emprestimo);
+      document.getElementById('modal-vencimento').textContent = formatarData(emp.data_vencimento);
+      document.getElementById('modal-juros').textContent = (emp.juros_mensal || 0) + '%';
+      const status = determinarStatus(emp);
+      document.getElementById('modal-status').innerHTML = `<span class="badge badge-${status === 'Quitado' ? 'info' : status === 'Em Atraso' ? 'danger' : 'success'}">${status}</span>`;
+      document.getElementById('modal-observacoes').textContent = emp.observacoes || 'Nenhuma';
 
-      // Renderizar parcelas
-      renderizarParcelas(emprestimo.parcelas || []);
-      
-      // Calcular resumo
-      const resumo = calcularResumoParcelas(emprestimo.parcelas || []);
+      const parcelas = emp.parcelas || [];
+      const container = document.getElementById('parcelas-container');
+      if (parcelas.length === 0) {
+        container.innerHTML = '<p class="text-gray-500">Nenhuma parcela (empréstimo valor fixo)</p>';
+      } else {
+        container.innerHTML = parcelas.map(p => {
+          const statusClass = p.status === 'Paga' ? 'badge-success' : p.status === 'Atrasada' ? 'badge-danger' : 'badge-warning';
+          const dataPgto = p.data_pagamento ? `<div class="text-sm text-green-600">Pago em: ${formatarData(p.data_pagamento)}</div>` : '';
+          return `
+            <div class="parcela-item ${(p.status || '').toLowerCase()}" style="padding: 0.75rem; background: #f8f9fa; border-radius: 8px; margin-bottom: 0.5rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div class="font-semibold">Parcela ${p.numero_parcela}</div>
+                  <div class="text-sm text-gray-600">Vencimento: ${formatarData(p.data_vencimento)}</div>
+                  ${dataPgto}
+                </div>
+                <div style="text-align: right;">
+                  <div class="font-semibold">R$ ${formatarMoeda(p.valor_parcela)}</div>
+                  <span class="badge ${statusClass}">${p.status}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const resumo = calcularResumoParcelas(parcelas);
       document.getElementById('resumo-pagas').textContent = resumo.pagas;
       document.getElementById('resumo-pendentes').textContent = resumo.pendentes;
       document.getElementById('resumo-atrasadas').textContent = resumo.atrasadas;
 
-      // Mostrar modal
       document.getElementById('modal-detalhes').style.display = 'block';
     }
 
-    // Função para renderizar parcelas
-    function renderizarParcelas(parcelas) {
-      const container = document.getElementById('parcelas-container');
-      
-      if (parcelas.length === 0) {
-        container.innerHTML = '<p class="text-gray-500">Nenhuma parcela encontrada</p>';
-        return;
-      }
-
-      container.innerHTML = '';
-      parcelas.forEach((parcela, index) => {
-        const statusClass = getParcelaStatusClass(parcela.status);
-        const diasAtraso = calcularDiasAtraso(parcela.data_vencimento);
-        const isAtrasada = parcela.status === 'Pendente' && diasAtraso > 0;
-
-        const parcelaDiv = document.createElement('div');
-        parcelaDiv.className = `parcela-item ${parcela.status.toLowerCase()}`;
-        parcelaDiv.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <div class="font-semibold">Parcela ${parcela.numero_parcela}</div>
-              <div class="text-sm text-gray-600">
-                Vencimento: ${formatarData(parcela.data_vencimento)}
-                ${isAtrasada ? `<span class="text-red-600">(${diasAtraso} dias de atraso)</span>` : ''}
-              </div>
-              ${parcela.data_pagamento ? `<div class="text-sm text-green-600">Pago em: ${formatarData(parcela.data_pagamento)}</div>` : ''}
-            </div>
-            <div style="text-align: right;">
-              <div class="font-semibold">R$ ${formatarMoeda(parcela.valor_parcela)}</div>
-              ${parcela.valor_pago > 0 ? `<div class="text-sm text-green-600">Pago: R$ ${formatarMoeda(parcela.valor_pago)}</div>` : ''}
-              <span class="badge ${statusClass}">${parcela.status}</span>
-            </div>
-          </div>
-          ${parcela.juros_aplicados > 0 || parcela.multa_aplicada > 0 ? `
-            <div class="text-sm text-gray-600" style="margin-top: 0.5rem;">
-              ${parcela.juros_aplicados > 0 ? `Juros: R$ ${formatarMoeda(parcela.juros_aplicados)}` : ''}
-              ${parcela.multa_aplicada > 0 ? `Multa: R$ ${formatarMoeda(parcela.multa_aplicada)}` : ''}
-            </div>
-          ` : ''}
-        `;
-        container.appendChild(parcelaDiv);
-      });
-    }
-
-    // Função para calcular dias de atraso
-    function calcularDiasAtraso(dataVencimento) {
-      if (!dataVencimento) return 0;
-      
-      const hoje = new Date();
-      const vencimento = criarDataValida(dataVencimento);
-      
-      if (!vencimento) {
-        console.warn('Data de vencimento inválida:', dataVencimento);
-        return 0;
-      }
-      
-      const diffTime = hoje - vencimento;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays > 0 ? diffDays : 0;
-    }
-
-    // Função para fechar modal
     function fecharModal() {
       document.getElementById('modal-detalhes').style.display = 'none';
     }
 
-    // Função utilitária para criar objeto Date válido
     function criarDataValida(data) {
       if (!data) return null;
-      
       try {
-        // Se a data já é um objeto Date válido
-        if (data instanceof Date && !isNaN(data)) {
-          // Corrigir anos errados
-          const year = data.getFullYear();
-          if (year < 100) {
-            data.setFullYear(year + 2000);
-          } else if (year < 1950) {
-            data.setFullYear(year + 100);
-          }
-          return data;
+        if (data instanceof Date && !isNaN(data)) return data;
+        const str = String(data).trim();
+        if (str.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          const [y, m, d] = str.split('-').map(Number);
+          return new Date(y, m - 1, d);
         }
-        
-        // Se é uma string, tentar diferentes formatos
-        let dataObj;
-        const dataStr = String(data).trim();
-        
-        // Se a data vem no formato YYYY-MM-DD (MySQL DATE)
-        if (dataStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-          const parts = dataStr.split('-');
-          let year = parseInt(parts[0], 10);
-          const month = parseInt(parts[1], 10) - 1;
-          const day = parseInt(parts[2], 10);
-          
-          // Corrigir anos errados
-          if (year < 100) year += 2000;
-          else if (year < 1950) year += 100;
-          
-          dataObj = new Date(2000, month, day);
-          dataObj.setFullYear(year);
-        }
-        // Se a data vem no formato YYYY-MM-DD HH:MM:SS (MySQL DATETIME)
-        else if (dataStr.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-          dataObj = new Date(dataStr.replace(' ', 'T'));
-        }
-        // Se a data vem no formato YYYY-MM-DDTHH:MM:SS (ISO)
-        else if (dataStr.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)) {
-          dataObj = new Date(dataStr);
-        }
-        // Se a data vem no formato DD/MM/YYYY ou DD/MM/YY
-        else if (dataStr.match(/^\d{2}\/\d{2}\/\d{2,4}$/)) {
-          const [dia, mes, ano] = dataStr.split('/');
-          let year = parseInt(ano, 10);
-          
-          // Corrigir anos com 2 dígitos
-          if (year < 100) year += 2000;
-          else if (year < 1950) year += 100;
-          
-          dataObj = new Date(2000, parseInt(mes, 10) - 1, parseInt(dia, 10));
-          dataObj.setFullYear(year);
-        }
-        // Tentar criar diretamente
-        else {
-          dataObj = new Date(data);
-        }
-        
-        // Verificar se a data é válida
-        if (isNaN(dataObj.getTime())) {
-          return null;
-        }
-        
-        // Corrigir anos errados no resultado final
-        const year = dataObj.getFullYear();
-        if (year < 100) {
-          dataObj.setFullYear(year + 2000);
-        } else if (year < 1950) {
-          dataObj.setFullYear(year + 100);
-        }
-        
-        return dataObj;
-      } catch (error) {
-        console.error('Erro ao criar data válida:', data, error);
-        return null;
-      }
+        if (str.match(/^\d{4}-\d{2}-\d{2} /)) return new Date(str.replace(' ', 'T'));
+        return new Date(data);
+      } catch (e) { return null; }
     }
 
-    // Funções auxiliares
-    function getStatusClass(status) {
-      switch(status) {
-        case 'Ativo': return 'badge-success';
-        case 'Quitado': return 'badge-info';
-        case 'Em Atraso': return 'badge-danger';
-        case 'Cancelado': return 'badge-secondary';
-        default: return 'badge-secondary';
-      }
-    }
-
-    function getParcelaStatusClass(status) {
-      switch(status) {
-        case 'Paga': return 'badge-success';
-        case 'Pendente': return 'badge-warning';
-        case 'Atrasada': return 'badge-danger';
-        default: return 'badge-secondary';
-      }
-    }
-
-    function formatarMoeda(valor) {
-      return new Intl.NumberFormat('pt-BR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }).format(valor);
+    function formatarMoeda(v) {
+      return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
     }
 
     function formatarData(data) {
       if (!data) return 'N/A';
-      
-      const dataObj = criarDataValida(data);
-      
-      if (!dataObj) {
-        console.warn('Data inválida:', data);
-        return 'Data inválida';
-      }
-      
-      return dataObj.toLocaleDateString('pt-BR');
+      const d = criarDataValida(data);
+      return d ? d.toLocaleDateString('pt-BR') : 'N/A';
     }
 
-    function mostrarNotificacao(mensagem, tipo) {
-      // Criar elemento de notificação
-      const notification = document.createElement('div');
-      notification.className = `notification notification-${tipo}`;
-      notification.innerHTML = `
-        <div class="notification-content">
-          ${mensagem}
-        </div>
-        <button class="notification-close" onclick="this.parentElement.remove()">&times;</button>
-      `;
-      
-      // Adicionar ao body
-      document.body.appendChild(notification);
-      
-      // Remover automaticamente após 5 segundos
-      setTimeout(() => {
-        if (notification && notification.parentElement) {
-          notification.remove();
-        }
-      }, 5000);
-      
-      console.log(mensagem);
+    function mostrarNotificacao(msg, tipo) {
+      if (typeof ui !== 'undefined' && ui.showNotification) ui.showNotification(msg, tipo);
+      else console.log(msg);
     }
 
-
-
-    // Função para criar novo empréstimo (modal)
-    async function novoEmprestimo() {
-      // Buscar clientes
-      let clientes = [];
-      try {
-        const response = await fetch('/api/cobrancas/clientes', {
-          credentials: 'include'
-        });
-        if (response.ok) {
-          clientes = await response.json();
-        }
-      } catch (e) {
-        mostrarNotificacao('Erro ao carregar clientes', 'error');
-      }
-      
-      const clienteOptions = clientes.map(c => `<option value="${c.id}">${c.nome || c.razao || c.name}</option>`).join('');
-      
-      const modalContent = `
-        <form id="modal-emprestimo-form">
-          <div class="form-group">
-            <label>Cliente (selecione ou preencha manualmente)</label>
-            <select name="clienteId" id="modal-cliente-select" class="form-input">
-              <option value="">Novo cliente (preencher abaixo)</option>
-              ${clienteOptions}
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Nome *</label>
-            <input type="text" name="nome" id="modal-nome" class="form-input" required placeholder="Nome do cliente">
-          </div>
-          <div class="form-group">
-            <label>CPF (Opcional)</label>
-            <input type="text" name="cpf" id="modal-cpf" class="form-input" placeholder="CPF do cliente">
-          </div>
-          <div class="form-group">
-            <label>Telefone</label>
-            <input type="text" name="telefone" id="modal-telefone" class="form-input" placeholder="Telefone do cliente">
-          </div>
-          <div class="form-group">
-            <label>Tipo de Empréstimo</label>
-            <select name="tipo" id="modal-tipo" class="form-input">
-              <option value="fixo">Fixo</option>
-              <option value="parcelado">Parcelado</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Tipo de Cálculo</label>
-            <select name="tipoCalculo" id="modal-tipo-calculo" class="form-input">
-              <option value="valor_inicial">Valor Inicial + Juros</option>
-              <option value="valor_final">Valor Final Fixo</option>
-              <option value="parcela_fixa">Valor da Parcela Fixo</option>
-            </select>
-          </div>
-          <div class="form-group" id="grupo-valor-inicial">
-            <label>Valor Inicial (R$)</label>
-            <input type="text" name="valor" id="modal-valor" class="form-input" required placeholder="ex.: 1000">
-          </div>
-          <div class="form-group" id="grupo-valor-final" style="display: none;">
-            <label>Valor Inicial (R$)</label>
-            <input type="text" name="valorInicialFinal" id="modal-valor-inicial-final" class="form-input" placeholder="ex.: 1000">
-            <label>Valor Final (R$)</label>
-            <input type="text" name="valorFinal" id="modal-valor-final" class="form-input" placeholder="ex.: 1500">
-          </div>
-          <div class="form-group" id="grupo-valor-parcela" style="display: none;">
-            <label>Valor Inicial (R$)</label>
-            <input type="text" name="valorInicialParcela" id="modal-valor-inicial-parcela" class="form-input" placeholder="ex.: 8000">
-            <label>Valor da Parcela (R$)</label>
-            <input type="text" name="valorParcela" id="modal-valor-parcela" class="form-input" placeholder="ex.: 1000">
-          </div>
-          <div class="form-group" id="grupo-porcentagem">
-            <label>Porcentagem de Juros (%)</label>
-            <input type="number" name="porcentagem" id="modal-porcentagem" class="form-input" step="0.01" min="0" placeholder="ex.: 20">
-          </div>
-          <div class="form-group">
-            <label>Multa por Atraso (%)</label>
-            <input type="number" name="multa" id="modal-multa" class="form-input" step="0.01" min="0" required placeholder="ex.: 2">
-          </div>
-          <div class="form-group">
-            <label>Data de Vencimento</label>
-            <input type="date" name="dataVencimento" id="modal-data-vencimento" class="form-input" required>
-          </div>
-          <div class="form-group">
-            <label>Frequência</label>
-            <select name="frequencia" id="modal-frequencia" class="form-input">
-              <option value="monthly">Mensal</option>
-              <option value="daily">Diário</option>
-              <option value="weekly">Semanal</option>
-              <option value="biweekly">Quinzenal</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Nº de Parcelas</label>
-            <input type="number" name="parcelas" id="modal-parcelas" class="form-input" min="1" value="1" required>
-          </div>
-          <div class="form-group">
-            <label>Observações (opcional)</label>
-            <textarea name="observacoes" class="form-input" rows="2"></textarea>
-          </div>
-          <div class="form-group">
-            <button type="button" id="btn-simular" class="btn btn-secondary">Simular</button>
-          </div>
-          <div id="simulador-preview" class="form-group" style="display:none;"></div>
-          <div class="form-group">
-            <button type="submit" id="btn-adicionar-emprestimo" class="btn btn-primary">Adicionar Empréstimo</button>
-          </div>
-        </form>
-      `;
-      
-      // Criar modal
-      const modalDiv = document.createElement('div');
-      modalDiv.className = 'modal';
-      modalDiv.style.display = 'flex';
-      modalDiv.style.position = 'fixed';
-      modalDiv.style.top = '0';
-      modalDiv.style.left = '0';
-      modalDiv.style.width = '100%';
-      modalDiv.style.height = '100%';
-      modalDiv.style.alignItems = 'center';
-      modalDiv.style.justifyContent = 'center';
-      modalDiv.style.zIndex = '9999';
-      modalDiv.innerHTML = `
-        <div class="modal-overlay" onclick="this.parentElement.remove()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);"></div>
-        <div class="modal-content" style="max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; position: relative; z-index: 10000; margin: 2rem;">
-          <div class="modal-header">
-            <h3>Adicionar Empréstimo</h3>
-            <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
-          </div>
-          <div class="modal-body">
-            ${modalContent}
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modalDiv);
-      
-      const form = modalDiv.querySelector('#modal-emprestimo-form');
-      
-      // Preencher campos ao selecionar cliente
-      const select = modalDiv.querySelector('#modal-cliente-select');
-      const nomeInput = modalDiv.querySelector('#modal-nome');
-      const cpfInput = modalDiv.querySelector('#modal-cpf');
-      const telefoneInput = modalDiv.querySelector('#modal-telefone');
-      
-      select.addEventListener('change', () => {
-        const selectedId = select.value;
-        if (!selectedId) {
-          nomeInput.value = '';
-          cpfInput.value = '';
-          telefoneInput.value = '';
-        } else {
-          const cliente = clientes.find(c => String(c.id) === String(selectedId));
-          nomeInput.value = cliente?.nome || cliente?.razao || cliente?.name || '';
-          cpfInput.value = cliente?.cpf || cliente?.cpf_cnpj || '';
-          telefoneInput.value = cliente?.telefone || cliente?.phone || '';
-        }
-      });
-      
-      // Controle de exibição dos campos baseado no tipo de cálculo
-      const tipoCalculoSelect = modalDiv.querySelector('#modal-tipo-calculo');
-      const grupoValorInicial = modalDiv.querySelector('#grupo-valor-inicial');
-      const grupoValorFinal = modalDiv.querySelector('#grupo-valor-final');
-      const grupoValorParcela = modalDiv.querySelector('#grupo-valor-parcela');
-      const grupoPorcentagem = modalDiv.querySelector('#grupo-porcentagem');
-      const porcentagemInput = modalDiv.querySelector('#modal-porcentagem');
-      const valorInput = modalDiv.querySelector('#modal-valor');
-      const valorFinalInput = modalDiv.querySelector('#modal-valor-final');
-      const valorParcelaInput = modalDiv.querySelector('#modal-valor-parcela');
-      const valorInicialFinalInput = modalDiv.querySelector('#modal-valor-inicial-final');
-      const valorInicialParcelaInput = modalDiv.querySelector('#modal-valor-inicial-parcela');
-
-      tipoCalculoSelect.addEventListener('change', () => {
-        const tipo = tipoCalculoSelect.value;
-
-        // Esconder todos os grupos
-        grupoValorInicial.style.display = 'none';
-        grupoValorFinal.style.display = 'none';
-        grupoValorParcela.style.display = 'none';
-        grupoPorcentagem.style.display = 'none';
-
-        // Remover required de todos os campos
-        valorInput.required = false;
-        valorFinalInput.required = false;
-        valorParcelaInput.required = false;
-        valorInicialFinalInput.required = false;
-        valorInicialParcelaInput.required = false;
-        porcentagemInput.required = false;
-
-        // Mostrar grupos baseado no tipo e definir required apenas nos visíveis
-        switch(tipo) {
-          case 'valor_inicial':
-            grupoValorInicial.style.display = 'block';
-            grupoPorcentagem.style.display = 'block';
-            valorInput.required = true;
-            porcentagemInput.required = true;
-            break;
-          case 'valor_final':
-            grupoValorFinal.style.display = 'block';
-            valorInicialFinalInput.required = true;
-            valorFinalInput.required = true;
-            break;
-          case 'parcela_fixa':
-            grupoValorParcela.style.display = 'block';
-            valorInicialParcelaInput.required = true;
-            valorParcelaInput.required = true;
-            break;
-        }
-      });
-      
-      // Máscara de moeda para todos os campos de valor
-      function aplicarMascaraMoedaModal(input) {
-        input.addEventListener('input', (e) => {
-          let v = e.target.value.replace(/\D/g, '');
-          v = (parseInt(v, 10) / 100).toFixed(2);
-          e.target.value = v.replace('.', ',');
-        });
-      }
-      
-      aplicarMascaraMoedaModal(valorInput);
-      aplicarMascaraMoedaModal(valorFinalInput);
-      aplicarMascaraMoedaModal(valorParcelaInput);
-      aplicarMascaraMoedaModal(valorInicialFinalInput);
-      aplicarMascaraMoedaModal(valorInicialParcelaInput);
-      
-      // Simulador de parcelas
-      const btnSimular = modalDiv.querySelector('#btn-simular');
-      const previewDiv = modalDiv.querySelector('#simulador-preview');
-      
-      btnSimular.addEventListener('click', () => {
-        // Pega valores do formulário
-        const tipoCalculo = tipoCalculoSelect.value;
-        const parcelas = parseInt(modalDiv.querySelector('#modal-parcelas').value) || 1;
-        
-        let valorInicial = 0;
-        let valorFinal = 0;
-        let valorParcela = 0;
-        let juros = 0;
-        let jurosValor = 0;
-        
-        switch(tipoCalculo) {
-          case 'valor_inicial':
-            valorInicial = parseFloat(valorInput.value.replace(',', '.')) || 0;
-            juros = parseFloat(porcentagemInput.value) || 0;
-            jurosValor = valorInicial * (juros / 100);
-            valorFinal = valorInicial + jurosValor;
-            valorParcela = valorFinal / parcelas;
-            break;
-            
-          case 'valor_final':
-            valorInicial = parseFloat(valorInicialFinalInput.value.replace(',', '.')) || 0;
-            valorFinal = parseFloat(valorFinalInput.value.replace(',', '.')) || 0;
-            valorParcela = valorFinal / parcelas;
-            jurosValor = valorFinal - valorInicial;
-            juros = valorInicial > 0 ? (jurosValor / valorInicial) * 100 : 0;
-            break;
-            
-          case 'parcela_fixa':
-            valorInicial = parseFloat(valorInicialParcelaInput.value.replace(',', '.')) || 0;
-            valorParcela = parseFloat(valorParcelaInput.value.replace(',', '.')) || 0;
-            valorFinal = valorParcela * parcelas;
-            jurosValor = valorFinal - valorInicial;
-            juros = valorInicial > 0 ? (jurosValor / valorInicial) * 100 : 0;
-            break;
-        }
-        
-        previewDiv.style.display = 'block';
-        let simulacaoHTML = `
-          <div class="simulador-preview-box" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #007bff;">
-            <strong>Resumo da Simulação:</strong><br><br>
-        `;
-        
-        switch(tipoCalculo) {
-          case 'valor_inicial':
-            simulacaoHTML += `
-              Valor Inicial: <b>R$ ${valorInicial.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
-              Juros: <b>${juros}%</b> (R$ ${jurosValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})})<br>
-            `;
-            break;
-            
-          case 'valor_final':
-            simulacaoHTML += `
-              Valor Inicial: <b>R$ ${valorInicial.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
-              Valor Final Fixo: <b>R$ ${valorFinal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
-              Juros Implícitos: <b>${juros.toFixed(2)}%</b> (R$ ${jurosValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})})<br>
-            `;
-            break;
-            
-          case 'parcela_fixa':
-            simulacaoHTML += `
-              Valor Inicial: <b>R$ ${valorInicial.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
-              Valor da Parcela Fixo: <b>R$ ${valorParcela.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
-              Juros Implícitos: <b>${juros.toFixed(2)}%</b> (R$ ${jurosValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})})<br>
-            `;
-            break;
-        }
-        
-        simulacaoHTML += `
-            Total a pagar: <b>R$ ${valorFinal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b><br>
-            Nº de Parcelas: <b>${parcelas}</b><br>
-            Valor da Parcela: <b>R$ ${valorParcela.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b>
-          </div>
-        `;
-        
-        previewDiv.innerHTML = simulacaoHTML;
-      });
-      
-      // Processar formulário
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = Object.fromEntries(new FormData(form).entries());
-        
-        // Validação baseada no tipo de cálculo
-        const tipoCalculo = formData.tipoCalculo;
-        let isValid = true;
-        let errorMessage = '';
-        
-        switch(tipoCalculo) {
-          case 'valor_inicial':
-            if (!formData.valor || parseFloat(formData.valor.replace(',', '.')) <= 0) {
-              isValid = false;
-              errorMessage = 'Preencha o valor inicial corretamente';
-            } else if (!formData.porcentagem || parseFloat(formData.porcentagem) < 0) {
-              isValid = false;
-              errorMessage = 'Preencha a porcentagem de juros corretamente';
-            }
-            break;
-            
-          case 'valor_final':
-            if (!formData.valorInicialFinal || parseFloat(formData.valorInicialFinal.replace(',', '.')) <= 0) {
-              isValid = false;
-              errorMessage = 'Preencha o valor inicial corretamente';
-            } else if (!formData.valorFinal || parseFloat(formData.valorFinal.replace(',', '.')) <= 0) {
-              isValid = false;
-              errorMessage = 'Preencha o valor final corretamente';
-            }
-            break;
-            
-          case 'parcela_fixa':
-            if (!formData.valorInicialParcela || parseFloat(formData.valorInicialParcela.replace(',', '.')) <= 0) {
-              isValid = false;
-              errorMessage = 'Preencha o valor inicial corretamente';
-            } else if (!formData.valorParcela || parseFloat(formData.valorParcela.replace(',', '.')) <= 0) {
-              isValid = false;
-              errorMessage = 'Preencha o valor da parcela corretamente';
-            }
-            break;
-        }
-        
-        if (!isValid) {
-          mostrarNotificacao(errorMessage, 'error');
-          return;
-        }
-        
-        let cliente_id = formData.clienteId;
-        
-        // Se não selecionou cliente, criar cliente
-        if (!cliente_id) {
-          // Validação do nome do cliente
-          if (!formData.nome || formData.nome.trim() === '' || formData.nome === 'undefined') {
-            mostrarNotificacao('Preencha o nome do cliente corretamente!', 'error');
-            return;
-          }
-          
-          try {
-            const clientePayload = {
-              nome: formData.nome,
-              cpf_cnpj: formData.cpf || '',
-              telefone: formData.telefone || '',
-              email: '',
-              endereco: '',
-              cidade: '',
-              estado: '',
-              cep: ''
-            };
-            
-            const resp = await fetch('/api/cobrancas/clientes', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify(clientePayload)
-            });
-            
-            const data = await resp.json();
-            if (!resp.ok || !data.id) throw new Error('Erro ao criar cliente');
-            cliente_id = data.id;
-            
-          } catch (err) {
-            mostrarNotificacao('Erro ao criar cliente', 'error');
-            return;
-          }
-        }
-        
-        // Garantir que cliente_id seja inteiro
-        cliente_id = parseInt(cliente_id, 10);
-        
-        // Calcular valores baseado no tipo de cálculo
-        let valorInicial = 0;
-        let valorFinal = 0;
-        let valorParcela = 0;
-        let jurosMensal = 0;
-        
-        switch(tipoCalculo) {
-          case 'valor_inicial':
-            valorInicial = parseFloat(formData.valor.replace(',', '.')) || 0;
-            jurosMensal = parseFloat(formData.porcentagem) || 0;
-            valorFinal = valorInicial * (1 + jurosMensal / 100);
-            valorParcela = valorFinal / parseInt(formData.parcelas);
-            break;
-            
-          case 'valor_final':
-            valorInicial = parseFloat(formData.valorInicialFinal.replace(',', '.')) || 0;
-            valorFinal = parseFloat(formData.valorFinal.replace(',', '.')) || 0;
-            valorParcela = valorFinal / parseInt(formData.parcelas);
-            jurosMensal = valorInicial > 0 ? ((valorFinal - valorInicial) / valorInicial) * 100 : 0;
-            break;
-            
-          case 'parcela_fixa':
-            valorInicial = parseFloat(formData.valorInicialParcela.replace(',', '.')) || 0;
-            valorParcela = parseFloat(formData.valorParcela.replace(',', '.')) || 0;
-            valorFinal = valorParcela * parseInt(formData.parcelas);
-            jurosMensal = valorInicial > 0 ? ((valorFinal - valorInicial) / valorInicial) * 100 : 0;
-            break;
-        }
-        
-        // Montar payload do empréstimo
-        const hoje = new Date().toISOString().split('T')[0]; // Data atual para data_emprestimo
-        const payload = {
-          cliente_id,
-          valor: valorInicial,
-          valor_final: valorFinal,
-          valor_parcela: valorParcela,
-          data_emprestimo: hoje,
-          data_vencimento: formData.dataVencimento,
-          data_primeira_parcela: formData.dataVencimento,
-          juros_mensal: jurosMensal,
-          multa_atraso: formData.multa,
-          observacoes: formData.observacoes || '',
-          tipo_emprestimo: parseInt(formData.parcelas) > 1 ? 'in_installments' : 'fixed',
-          numero_parcelas: parseInt(formData.parcelas) || 1,
-          frequencia: formData.frequencia || 'monthly',
-          tipo_calculo: tipoCalculo
-        };
-        
-        try {
-          const response = await fetch('/api/cobrancas/emprestimos', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify(payload)
-          });
-          
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Erro ao criar empréstimo');
-          }
-          
-          mostrarNotificacao('Empréstimo adicionado com sucesso!', 'success');
-          modalDiv.remove();
-          
-          // Recarregar dados
-          setTimeout(async () => {
-            await carregarEmprestimos();
-            await carregarEstatisticas();
-          }, 500);
-          
-        } catch (err) {
-          console.error('Erro ao criar empréstimo:', err);
-          mostrarNotificacao(`Erro ao adicionar empréstimo: ${err.message}`, 'error');
-        }
-      });
-    }
-
-
-
-
-
-
-
-
-
-    // Fechar modal com ESC
-    document.addEventListener('keydown', function(event) {
-      if (event.key === 'Escape') {
-        fecharModal();
-      }
-    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModal(); });
   </script>
 </body>
 </html>

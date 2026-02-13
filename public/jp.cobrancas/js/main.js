@@ -484,6 +484,12 @@ const apiService = {
     return this.request(`/cobrancas/emprestimos/${emprestimoId}/parcelas`);
   },
 
+  // Histórico de pagamentos (parcelas + juros)
+  async getHistoricoPagamentos(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return this.request(`/cobrancas/historico-pagamentos${qs ? '?' + qs : ''}`);
+  },
+
   // Cobranças
   async getCobrancas() {
     return this.request('/cobrancas');

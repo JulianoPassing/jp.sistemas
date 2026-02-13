@@ -1474,6 +1474,122 @@ router.post('/corrigir-status-emprestimos', ensureDatabase, async (req, res) => 
   }
 });
 
+// Histórico de pagamentos - parcelas pagas + juros pagos (mesma base do dashboard/emprestimos)
+router.get('/historico-pagamentos', ensureDatabase, async (req, res) => {
+  try {
+    const username = req.session.cobrancasUser;
+    const connection = await createCobrancasConnection(username);
+    const { data_inicio, data_fim, cliente_id, tipo } = req.query;
+
+    // 1. Pagamentos de PARCELAS (quando marca como pago no dashboard/emprestimos)
+    const [parcelasPagas] = await connection.execute(`
+      SELECT 
+        p.id as parcela_id,
+        p.emprestimo_id,
+        p.numero_parcela,
+        p.valor_parcela as valor,
+        p.data_pagamento,
+        p.valor_pago,
+        p.juros_aplicados,
+        p.multa_aplicada,
+        e.cliente_id,
+        cl.nome as cliente_nome,
+        e.valor as valor_inicial_emprestimo,
+        e.valor_final,
+        'Parcela' as tipo_pagamento
+      FROM parcelas p
+      INNER JOIN emprestimos e ON p.emprestimo_id = e.id
+      LEFT JOIN clientes_cobrancas cl ON e.cliente_id = cl.id
+      WHERE p.status = 'Paga' AND p.data_pagamento IS NOT NULL
+      ORDER BY p.data_pagamento DESC, p.emprestimo_id, p.numero_parcela
+    `);
+
+    // 2. Pagamentos de JUROS (tabela pagamentos - quando paga juros separadamente)
+    const [pagamentosJuros] = await connection.execute(`
+      SELECT 
+        pg.id as pagamento_id,
+        pg.cobranca_id,
+        pg.valor_pago as valor,
+        pg.data_pagamento,
+        pg.forma_pagamento,
+        pg.observacoes,
+        c.emprestimo_id,
+        c.cliente_id,
+        cl.nome as cliente_nome,
+        e.valor as valor_inicial_emprestimo,
+        e.valor_final,
+        'Juros' as tipo_pagamento
+      FROM pagamentos pg
+      INNER JOIN cobrancas c ON pg.cobranca_id = c.id
+      LEFT JOIN emprestimos e ON c.emprestimo_id = e.id
+      LEFT JOIN clientes_cobrancas cl ON c.cliente_id = cl.id
+      WHERE (pg.observacoes LIKE '%juros%' OR pg.observacoes LIKE '%Juros%')
+      ORDER BY pg.data_pagamento DESC
+    `);
+
+    // Unificar e formatar
+    const historico = [];
+    parcelasPagas.forEach(p => {
+      historico.push({
+        id: `parcela_${p.parcela_id}`,
+        origem: 'parcela',
+        emprestimo_id: p.emprestimo_id,
+        cliente_id: p.cliente_id,
+        cliente_nome: p.cliente_nome || 'N/A',
+        tipo_pagamento: 'Parcela',
+        numero_parcela: p.numero_parcela,
+        valor: Number(p.valor || p.valor_pago || 0),
+        data_pagamento: p.data_pagamento ? (p.data_pagamento.toISOString ? p.data_pagamento.toISOString().split('T')[0] : String(p.data_pagamento).split('T')[0]) : null,
+        juros_aplicados: Number(p.juros_aplicados || 0),
+        multa_aplicada: Number(p.multa_aplicada || 0),
+        observacoes: p.numero_parcela ? `Parcela ${p.numero_parcela}` : null
+      });
+    });
+    pagamentosJuros.forEach(p => {
+      historico.push({
+        id: `pagamento_${p.pagamento_id}`,
+        origem: 'pagamento',
+        emprestimo_id: p.emprestimo_id,
+        cliente_id: p.cliente_id,
+        cliente_nome: p.cliente_nome || 'N/A',
+        tipo_pagamento: 'Juros',
+        valor: Number(p.valor || 0),
+        data_pagamento: p.data_pagamento ? (p.data_pagamento.toISOString ? p.data_pagamento.toISOString().split('T')[0] : String(p.data_pagamento).split('T')[0]) : null,
+        forma_pagamento: p.forma_pagamento,
+        observacoes: p.observacoes || 'Pagamento de juros'
+      });
+    });
+
+    // Ordenar por data (mais recente primeiro)
+    historico.sort((a, b) => {
+      const da = a.data_pagamento ? new Date(a.data_pagamento) : new Date(0);
+      const db = b.data_pagamento ? new Date(b.data_pagamento) : new Date(0);
+      return db - da;
+    });
+
+    // Aplicar filtros
+    let resultado = historico;
+    if (data_inicio) {
+      resultado = resultado.filter(h => h.data_pagamento && h.data_pagamento >= data_inicio);
+    }
+    if (data_fim) {
+      resultado = resultado.filter(h => h.data_pagamento && h.data_pagamento <= data_fim);
+    }
+    if (cliente_id) {
+      resultado = resultado.filter(h => String(h.cliente_id) === String(cliente_id));
+    }
+    if (tipo) {
+      resultado = resultado.filter(h => h.tipo_pagamento.toLowerCase() === tipo.toLowerCase());
+    }
+
+    await connection.end();
+    res.json(resultado);
+  } catch (error) {
+    console.error('Erro ao buscar histórico de pagamentos:', error);
+    res.status(500).json({ error: 'Erro ao buscar histórico de pagamentos' });
+  }
+});
+
 // Parcelas de um empréstimo
 router.get('/emprestimos/:id/parcelas', ensureDatabase, async (req, res) => {
   try {
