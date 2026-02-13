@@ -139,12 +139,12 @@
               <thead>
                 <tr>
                   <th>Cliente</th>
-                  <th>Valor Inicial</th>
-                  <th>Valor Final</th>
-                  <th>Data Empréstimo</th>
+                  <th>Valor emprestado</th>
+                  <th>Valor final</th>
+                  <th>Data do empréstimo</th>
                   <th>Vencimento</th>
                   <th>Status</th>
-                  <th>Parcelas</th>
+                  <th>Histórico (pagas/pend/atrasadas)</th>
                   <th>Ações</th>
                 </tr>
               </thead>
@@ -205,6 +205,7 @@
   <script>
     let todosEmprestimos = [];
     let emprestimosFiltrados = [];
+    let emprestimosProcessados = [];
     let historicoPagamentos = [];
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -287,7 +288,7 @@
         } else {
           tbody.innerHTML = '';
           historicoPagamentos.forEach(p => {
-            const dataStr = p.data_pagamento ? formatarData(p.data_pagamento) : '-';
+            const dataStr = p.data_pagamento ? utils.formatDate(p.data_pagamento) : '-';
             const valorStr = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.valor || 0);
             const tipo = (p.tipo_pagamento || '').toLowerCase();
             const tipoClass = tipo === 'juros' ? 'juros' : tipo === 'emprestimo' ? 'emprestimo' : 'parcela';
@@ -312,34 +313,72 @@
       }
     }
 
+    // Mesma lógica do emprestimos.html - status e datas corretos
     async function carregarEmprestimos() {
       try {
         await fetch('/api/cobrancas/corrigir-status-emprestimos', { method: 'POST', credentials: 'include' }).catch(() => {});
 
-        const response = await fetch('/api/cobrancas/emprestimos', { method: 'GET', headers: { 'Content-Type': 'application/json' }, credentials: 'include' });
-        if (!response.ok) throw new Error('Erro ao carregar empréstimos');
-        const rawList = await response.json();
+        const rawList = await apiService.getEmprestimos();
         const byId = new Map();
         (Array.isArray(rawList) ? rawList : []).forEach(e => { if (e && e.id != null && !byId.has(e.id)) byId.set(e.id, e); });
-        todosEmprestimos = Array.from(byId.values());
-        emprestimosFiltrados = [...todosEmprestimos];
+        const lista = Array.from(byId.values());
 
-        await Promise.all(todosEmprestimos.map(async (emp) => {
-          try {
-            const parcelasRes = await fetch(`/api/cobrancas/emprestimos/${emp.id}/parcelas`, { credentials: 'include' });
-            emp.parcelas = parcelasRes.ok ? await parcelasRes.json() : [];
-            if (emp.parcelas && emp.parcelas.length > 0) {
-              const hoje = new Date();
-              emp.parcelas.forEach(p => {
-                if (p.status === 'Pendente') {
-                  const dv = criarDataValida(p.data_vencimento);
-                  if (dv && hoje > dv) p.status = 'Atrasada';
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+
+        emprestimosProcessados = [];
+        for (const emp of lista) {
+          const valorFinal = Number(emp.valor_final || emp.valor || 0);
+          const valorInicial = Number(emp.valor_inicial || emp.valor || 0);
+          let vencimentoExibir = emp.data_vencimento;
+          let status = (emp.status || '').toUpperCase();
+
+          if (emp.tipo_emprestimo === 'in_installments' && emp.numero_parcelas > 1) {
+            try {
+              const parcelas = await apiService.getParcelasEmprestimo(emp.id);
+              emp.parcelas = parcelas || [];
+              if (emp.parcelas.length > 0) {
+                const todasPagas = emp.parcelas.every(p => p.status === 'Paga');
+                const parcelasNaoPagas = emp.parcelas.filter(p => p.status !== 'Paga');
+                if (todasPagas) {
+                  status = 'QUITADO';
+                } else {
+                  const parcelasAtrasadas = parcelasNaoPagas.filter(p => {
+                    const dv = utils.createValidDate(p.data_vencimento);
+                    return dv && dv < hoje;
+                  });
+                  if (parcelasAtrasadas.length > 0) {
+                    status = 'ATRASADO';
+                    parcelasAtrasadas.sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
+                    vencimentoExibir = parcelasAtrasadas[0].data_vencimento;
+                  } else {
+                    status = 'ATIVO';
+                    parcelasNaoPagas.sort((a, b) => utils.createValidDate(a.data_vencimento) - utils.createValidDate(b.data_vencimento));
+                    if (parcelasNaoPagas.length > 0) vencimentoExibir = parcelasNaoPagas[0].data_vencimento;
+                  }
                 }
-              });
+              }
+            } catch (e) { emp.parcelas = []; }
+          } else {
+            emp.parcelas = [];
+            if (status !== 'QUITADO' && emp.data_vencimento) {
+              const venc = utils.createValidDate(emp.data_vencimento);
+              if (venc && venc < hoje) status = 'ATRASADO';
+              else if (status !== 'QUITADO') status = 'ATIVO';
             }
-          } catch (e) { emp.parcelas = []; }
-        }));
+          }
 
+          emprestimosProcessados.push({
+            ...emp,
+            valorFinal,
+            valorInicial,
+            vencimentoExibir,
+            statusCalculado: status
+          });
+        }
+
+        todosEmprestimos = emprestimosProcessados;
+        emprestimosFiltrados = [...todosEmprestimos];
         renderizarEmprestimos();
         atualizarInfoResultados();
       } catch (err) {
@@ -348,37 +387,22 @@
       }
     }
 
-    function obterDataVencimentoExibir(emp) {
-      if (!emp.parcelas || emp.parcelas.length === 0) return emp.data_vencimento;
-      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-      const naoPagas = emp.parcelas.filter(p => p.status !== 'Paga');
-      if (naoPagas.length === 0) return emp.data_vencimento;
-      const atrasadas = naoPagas.filter(p => { const dv = criarDataValida(p.data_vencimento); return dv && dv < hoje; });
-      const lista = atrasadas.length > 0 ? atrasadas : naoPagas;
-      lista.sort((a, b) => criarDataValida(a.data_vencimento) - criarDataValida(b.data_vencimento));
-      return lista[0].data_vencimento;
-    }
-
-    function determinarStatus(emp) {
-      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-      if (emp.parcelas && emp.parcelas.length > 0) {
-        const todasPagas = emp.parcelas.every(p => p.status === 'Paga');
-        if (todasPagas) return 'Quitado';
-        const temAtrasada = emp.parcelas.some(p => { const dv = criarDataValida(p.data_vencimento); return p.status !== 'Paga' && dv && dv < hoje; });
-        return temAtrasada ? 'Em Atraso' : 'Ativo';
-      }
-      if (emp.status === 'Quitado') return 'Quitado';
-      const dv = criarDataValida(emp.data_vencimento);
-      if (dv && hoje > dv && emp.status === 'Ativo') return 'Em Atraso';
-      return emp.status || 'Ativo';
-    }
-
     function calcularResumoParcelas(parcelas) {
-      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
       const pagas = (parcelas || []).filter(p => p.status === 'Paga').length;
       const naoPagas = (parcelas || []).filter(p => p.status !== 'Paga');
-      const atrasadas = naoPagas.filter(p => { const dv = criarDataValida(p.data_vencimento); return dv && dv < hoje; }).length;
+      const atrasadas = naoPagas.filter(p => {
+        const dv = utils.createValidDate(p.data_vencimento);
+        return dv && dv < hoje;
+      }).length;
       return { pagas, pendentes: naoPagas.length - atrasadas, atrasadas };
+    }
+
+    function statusParaExibir(status) {
+      if (status === 'ATRASADO') return 'Em Atraso';
+      if (status === 'QUITADO') return 'Quitado';
+      return 'Ativo';
     }
 
     function renderizarEmprestimos() {
@@ -394,11 +418,11 @@
       }
 
       const ordenados = [...emprestimosFiltrados].sort((a, b) => {
-        const sa = determinarStatus(a), sb = determinarStatus(b);
-        if (sa === 'Quitado' && sb !== 'Quitado') return 1;
-        if (sa !== 'Quitado' && sb === 'Quitado') return -1;
-        const da = criarDataValida(obterDataVencimentoExibir(a));
-        const db = criarDataValida(obterDataVencimentoExibir(b));
+        const sa = a.statusCalculado || '', sb = b.statusCalculado || '';
+        if (sa === 'QUITADO' && sb !== 'QUITADO') return 1;
+        if (sa !== 'QUITADO' && sb === 'QUITADO') return -1;
+        const da = utils.createValidDate(a.vencimentoExibir);
+        const db = utils.createValidDate(b.vencimentoExibir);
         if (!da && !db) return 0;
         if (!da) return 1;
         if (!db) return -1;
@@ -414,21 +438,18 @@
         cards.className = 'mobile-historico-cards';
         cards.style.cssText = 'display: flex; flex-direction: column; gap: 0.75rem; padding: 0.5rem;';
         ordenados.forEach(emp => {
-          const status = determinarStatus(emp);
+          const status = statusParaExibir(emp.statusCalculado);
           const resumo = calcularResumoParcelas(emp.parcelas || []);
-          const venc = obterDataVencimentoExibir(emp);
-          let cor = '#6b7280';
-          if (status === 'Em Atraso') cor = '#ef4444';
-          else if (status === 'Ativo') cor = '#10b981';
-          else if (status === 'Quitado') cor = '#3b82f6';
+          let cor = emp.statusCalculado === 'ATRASADO' ? '#ef4444' : emp.statusCalculado === 'ATIVO' ? '#10b981' : '#3b82f6';
           const card = document.createElement('div');
           card.style.cssText = `padding: 1rem; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid ${cor};`;
           card.innerHTML = `
             <div style="font-weight: 600; color: #1f2937;">${emp.cliente_nome || 'N/A'}</div>
             <div style="font-size: 0.8rem; color: #4b5563; margin: 0.5rem 0;">
-              Inicial: R$ ${formatarMoeda(emp.valor_inicial ?? emp.valor ?? 0)} | Final: R$ ${formatarMoeda(emp.valor_final ?? emp.valor ?? 0)}
+              Emprestado: R$ ${utils.formatCurrency(emp.valorInicial)} | Final: R$ ${utils.formatCurrency(emp.valorFinal)}
             </div>
-            <div style="font-size: 0.8rem;"><span class="badge badge-${status === 'Quitado' ? 'info' : status === 'Em Atraso' ? 'danger' : 'success'}">${status}</span> ${resumo.pagas} pagas · ${resumo.pendentes} pend. · ${resumo.atrasadas} atrasadas</div>
+            <div style="font-size: 0.8rem;">Venc: ${utils.formatDate(emp.vencimentoExibir)} • <span class="badge badge-${emp.statusCalculado === 'QUITADO' ? 'info' : emp.statusCalculado === 'ATRASADO' ? 'danger' : 'success'}">${status}</span></div>
+            <div style="font-size: 0.8rem; margin-top: 0.25rem;">${resumo.pagas} pagas · ${resumo.pendentes} pend. · ${resumo.atrasadas} atrasadas</div>
             <button class="btn btn-primary btn-sm" onclick="abrirDetalhes(${emp.id})" style="width: 100%; margin-top: 0.5rem;">Ver Detalhes</button>
           `;
           cards.appendChild(card);
@@ -440,18 +461,17 @@
         if (oldCards) oldCards.remove();
         tbody.innerHTML = '';
         ordenados.forEach(emp => {
-          const status = determinarStatus(emp);
+          const status = statusParaExibir(emp.statusCalculado);
           const resumo = calcularResumoParcelas(emp.parcelas || []);
-          const venc = obterDataVencimentoExibir(emp);
           const row = document.createElement('tr');
           row.innerHTML = `
             <td><div class="font-semibold">${emp.cliente_nome || 'N/A'}</div><div class="text-sm text-gray-500">${emp.telefone || ''}</div></td>
-            <td class="font-semibold text-green-600">R$ ${formatarMoeda(emp.valor_inicial ?? emp.valor ?? 0)}</td>
-            <td class="font-semibold text-terciary">R$ ${formatarMoeda(emp.valor_final ?? emp.valor ?? 0)}</td>
-            <td>${formatarData(emp.data_emprestimo)}</td>
-            <td>${formatarData(venc)}</td>
-            <td><span class="badge badge-${status === 'Quitado' ? 'info' : status === 'Em Atraso' ? 'danger' : 'success'}">${status}</span></td>
-            <td><div class="text-sm"><span class="text-green-600">${resumo.pagas} pagas</span><br><span class="text-yellow-500">${resumo.pendentes} pend.</span><br><span class="text-red-600">${resumo.atrasadas} atrasadas</span></div></td>
+            <td class="font-semibold text-green-600">${utils.formatCurrency(emp.valorInicial)}</td>
+            <td class="font-semibold text-terciary">${utils.formatCurrency(emp.valorFinal)}</td>
+            <td>${utils.formatDate(emp.data_emprestimo)}</td>
+            <td>${utils.formatDate(emp.vencimentoExibir)}</td>
+            <td><span class="badge badge-${emp.statusCalculado === 'QUITADO' ? 'info' : emp.statusCalculado === 'ATRASADO' ? 'danger' : 'success'}">${status}</span></td>
+            <td><div class="text-sm"><span class="text-green-600">${resumo.pagas} pagas</span> · <span class="text-yellow-500">${resumo.pendentes} pend.</span> · <span class="text-red-600">${resumo.atrasadas} atrasadas</span></div></td>
             <td><button class="btn btn-primary btn-sm" onclick="abrirDetalhes(${emp.id})">Ver Detalhes</button></td>
           `;
           tbody.appendChild(row);
@@ -465,11 +485,13 @@
       const di = document.getElementById('filter-data-inicio').value;
       const df = document.getElementById('filter-data-fim').value;
 
+      const statusFilterMap = { 'Ativo': 'ATIVO', 'Quitado': 'QUITADO', 'Em Atraso': 'ATRASADO' };
+      const statusInterno = statusFilterMap[statusF] || statusF;
+
       emprestimosFiltrados = todosEmprestimos.filter(emp => {
-        const matchSearch = !termo || (emp.cliente_nome && emp.cliente_nome.toLowerCase().includes(termo)) || String(emp.valor_inicial ?? emp.valor ?? '').includes(termo) || String(emp.valor_final ?? emp.valor ?? '').includes(termo) || (emp.observacoes && emp.observacoes.toLowerCase().includes(termo));
-        const statusEmp = determinarStatus(emp);
-        const matchStatus = !statusF || statusEmp === statusF;
-        const dataEmp = criarDataValida(emp.data_emprestimo);
+        const matchSearch = !termo || (emp.cliente_nome && emp.cliente_nome.toLowerCase().includes(termo)) || String(emp.valorInicial ?? emp.valor ?? '').includes(termo) || String(emp.valorFinal ?? '').includes(termo) || (emp.observacoes && emp.observacoes.toLowerCase().includes(termo));
+        const matchStatus = !statusF || (emp.statusCalculado || '') === statusInterno;
+        const dataEmp = utils.createValidDate(emp.data_emprestimo);
         const matchDi = !di || !dataEmp || dataEmp >= new Date(di);
         const matchDf = !df || !dataEmp || dataEmp <= new Date(df);
         return matchSearch && matchStatus && matchDi && matchDf;
@@ -500,13 +522,13 @@
 
       document.getElementById('modal-cliente').textContent = emp.cliente_nome || 'N/A';
       document.getElementById('modal-telefone').textContent = emp.telefone || 'N/A';
-      document.getElementById('modal-valor-inicial').textContent = 'R$ ' + formatarMoeda(emp.valor_inicial ?? emp.valor ?? 0);
-      document.getElementById('modal-valor-final').textContent = 'R$ ' + formatarMoeda(emp.valor_final ?? emp.valor ?? 0);
-      document.getElementById('modal-data-emprestimo').textContent = formatarData(emp.data_emprestimo);
-      document.getElementById('modal-vencimento').textContent = formatarData(emp.data_vencimento);
+      document.getElementById('modal-valor-inicial').textContent = utils.formatCurrency(emp.valorInicial ?? emp.valor ?? 0);
+      document.getElementById('modal-valor-final').textContent = utils.formatCurrency(emp.valorFinal ?? emp.valor ?? 0);
+      document.getElementById('modal-data-emprestimo').textContent = utils.formatDate(emp.data_emprestimo);
+      document.getElementById('modal-vencimento').textContent = utils.formatDate(emp.data_vencimento);
       document.getElementById('modal-juros').textContent = (emp.juros_mensal || 0) + '%';
-      const status = determinarStatus(emp);
-      document.getElementById('modal-status').innerHTML = `<span class="badge badge-${status === 'Quitado' ? 'info' : status === 'Em Atraso' ? 'danger' : 'success'}">${status}</span>`;
+      const status = statusParaExibir(emp.statusCalculado);
+      document.getElementById('modal-status').innerHTML = `<span class="badge badge-${emp.statusCalculado === 'QUITADO' ? 'info' : emp.statusCalculado === 'ATRASADO' ? 'danger' : 'success'}">${status}</span>`;
       document.getElementById('modal-observacoes').textContent = emp.observacoes || 'Nenhuma';
 
       const parcelas = emp.parcelas || [];
@@ -516,17 +538,17 @@
       } else {
         container.innerHTML = parcelas.map(p => {
           const statusClass = p.status === 'Paga' ? 'badge-success' : p.status === 'Atrasada' ? 'badge-danger' : 'badge-warning';
-          const dataPgto = p.data_pagamento ? `<div class="text-sm text-green-600">Pago em: ${formatarData(p.data_pagamento)}</div>` : '';
+          const dataPgto = p.data_pagamento ? `<div class="text-sm text-green-600">Pago em: ${utils.formatDate(p.data_pagamento)}</div>` : '';
           return `
             <div class="parcela-item ${(p.status || '').toLowerCase()}" style="padding: 0.75rem; background: #f8f9fa; border-radius: 8px; margin-bottom: 0.5rem;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                   <div class="font-semibold">Parcela ${p.numero_parcela}</div>
-                  <div class="text-sm text-gray-600">Vencimento: ${formatarData(p.data_vencimento)}</div>
+                  <div class="text-sm text-gray-600">Vencimento: ${utils.formatDate(p.data_vencimento)}</div>
                   ${dataPgto}
                 </div>
                 <div style="text-align: right;">
-                  <div class="font-semibold">R$ ${formatarMoeda(p.valor_parcela)}</div>
+                  <div class="font-semibold">${utils.formatCurrency(p.valor_parcela)}</div>
                   <span class="badge ${statusClass}">${p.status}</span>
                 </div>
               </div>
@@ -545,30 +567,6 @@
 
     function fecharModal() {
       document.getElementById('modal-detalhes').style.display = 'none';
-    }
-
-    function criarDataValida(data) {
-      if (!data) return null;
-      try {
-        if (data instanceof Date && !isNaN(data)) return data;
-        const str = String(data).trim();
-        if (str.match(/^\d{4}-\d{2}-\d{2}$/)) {
-          const [y, m, d] = str.split('-').map(Number);
-          return new Date(y, m - 1, d);
-        }
-        if (str.match(/^\d{4}-\d{2}-\d{2} /)) return new Date(str.replace(' ', 'T'));
-        return new Date(data);
-      } catch (e) { return null; }
-    }
-
-    function formatarMoeda(v) {
-      return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
-    }
-
-    function formatarData(data) {
-      if (!data) return 'N/A';
-      const d = criarDataValida(data);
-      return d ? d.toLocaleDateString('pt-BR') : 'N/A';
     }
 
     function mostrarNotificacao(msg, tipo) {
