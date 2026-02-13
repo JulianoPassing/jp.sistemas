@@ -278,12 +278,13 @@
         <div class="config-section">
           <h3><i class="fas fa-calendar-check" style="margin-right: 0.5rem; color: #0d9488;"></i>Backup diário</h3>
           <p style="color: #6b7280; margin-bottom: 1rem;">Receba automaticamente um backup (Empréstimos + Clientes) por e-mail todos os dias. É necessário ter o e-mail cadastrado em "Dados da conta" acima.</p>
-          <div class="form-group" style="display: flex; align-items: center; gap: 1rem;">
+          <div class="form-group" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
             <label for="backup-diario-toggle" style="margin-bottom: 0;">Ativar backup diário por e-mail</label>
             <label class="toggle-switch">
               <input type="checkbox" id="backup-diario-toggle">
               <span class="toggle-slider"></span>
             </label>
+            <small style="width: 100%; margin-top: 0.25rem; color: #6b7280;">Salva automaticamente ao alterar.</small>
           </div>
         </div>
 
@@ -553,7 +554,39 @@
         document.getElementById('msg_emprestimo_sem_juros').value = config.msg_emprestimo_sem_juros || '';
         document.getElementById('msg_parcelas_vencidas').value = config.msg_parcelas_vencidas || '';
         const backupToggle = document.getElementById('backup-diario-toggle');
-        if (backupToggle) backupToggle.checked = config.backup_diario_ativo === 1 || config.backup_diario_ativo === true;
+        if (backupToggle) {
+          const v = config.backup_diario_ativo;
+          backupToggle.checked = v === 1 || v === true || v === '1';
+          // Auto-salvar ao alterar o toggle (evita precisar clicar em Salvar)
+          backupToggle.addEventListener('change', async function() {
+            try {
+              const dados = {
+                chave_pix: (document.getElementById('chave_pix')?.value || '').trim() || null,
+                msg_parcela: (document.getElementById('msg_parcela')?.value || '').trim() || null,
+                msg_emprestimo_com_juros: (document.getElementById('msg_emprestimo_com_juros')?.value || '').trim() || null,
+                msg_emprestimo_sem_juros: (document.getElementById('msg_emprestimo_sem_juros')?.value || '').trim() || null,
+                msg_parcelas_vencidas: (document.getElementById('msg_parcelas_vencidas')?.value || '').trim() || null,
+                backup_diario_ativo: this.checked
+              };
+              const res = await fetch('/api/cobrancas/configuracoes', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(dados)
+              });
+              if (res.ok) {
+                config.backup_diario_ativo = this.checked ? 1 : 0;
+                if (typeof ui !== 'undefined') ui.showNotification('Backup diário ' + (this.checked ? 'ativado' : 'desativado') + '.', 'success');
+              } else {
+                this.checked = !this.checked;
+                if (typeof ui !== 'undefined') ui.showNotification('Erro ao salvar. Tente novamente.', 'error');
+              }
+            } catch (e) {
+              this.checked = !this.checked;
+              if (typeof ui !== 'undefined') ui.showNotification('Erro ao salvar. Tente novamente.', 'error');
+            }
+          });
+        }
         
       } catch (error) {
         console.error('Erro ao carregar configurações:', error);
