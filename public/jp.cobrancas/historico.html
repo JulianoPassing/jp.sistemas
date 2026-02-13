@@ -207,6 +207,7 @@
     let emprestimosFiltrados = [];
     let emprestimosProcessados = [];
     let historicoPagamentos = [];
+    let historicoCompletoParaEmprestimos = []; // Histórico sem filtros, usado na coluna Histórico da aba Empréstimos
 
     document.addEventListener('DOMContentLoaded', function() {
       const menuBtn = document.getElementById('mobile-menu-toggle');
@@ -314,9 +315,14 @@
     }
 
     // Mesma lógica do emprestimos.html - status e datas corretos
+    // Histórico (pagas/pend/atrasadas) puxa do mesmo lugar: historico de pagamentos
     async function carregarEmprestimos() {
       try {
         await fetch('/api/cobrancas/corrigir-status-emprestimos', { method: 'POST', credentials: 'include' }).catch(() => {});
+
+        // Carregar histórico de pagamentos (sem filtros) para usar na coluna Histórico - mesma fonte da aba Histórico de Pagamentos
+        const historicoCompleto = await apiService.getHistoricoPagamentos({}).catch(() => []);
+        historicoCompletoParaEmprestimos = Array.isArray(historicoCompleto) ? historicoCompleto : [];
 
         const rawList = await apiService.getEmprestimos();
         const byId = new Map();
@@ -387,16 +393,34 @@
       }
     }
 
-    function calcularResumoParcelas(parcelas) {
+    // Resumo a partir do histórico de pagamentos (mesma fonte da aba Histórico de Pagamentos)
+    function calcularResumoDoHistorico(emprestimoId, parcelas, dataVencimentoEmp) {
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
-      const pagas = (parcelas || []).filter(p => p.status === 'Paga').length;
-      const naoPagas = (parcelas || []).filter(p => p.status !== 'Paga');
-      const atrasadas = naoPagas.filter(p => {
-        const dv = utils.createValidDate(p.data_vencimento);
-        return dv && dv < hoje;
-      }).length;
-      return { pagas, pendentes: naoPagas.length - atrasadas, atrasadas };
+      const historico = historicoCompletoParaEmprestimos;
+
+      // Pagas: contar do histórico de pagamentos (Parcela ou Empréstimo)
+      const pagas = historico.filter(p =>
+        String(p.emprestimo_id) === String(emprestimoId) &&
+        ((p.tipo_pagamento || '').toLowerCase() === 'parcela' || (p.tipo_pagamento || '').toLowerCase() === 'emprestimo')
+      ).length;
+
+      // Pendentes e atrasadas: das parcelas não pagas (não estão no histórico)
+      if (parcelas && parcelas.length > 0) {
+        const naoPagas = parcelas.filter(p => p.status !== 'Paga');
+        const atrasadas = naoPagas.filter(p => {
+          const dv = utils.createValidDate(p.data_vencimento);
+          return dv && dv < hoje;
+        }).length;
+        const pendentes = naoPagas.length - atrasadas;
+        return { pagas, pendentes, atrasadas };
+      }
+
+      // Empréstimo valor fixo (sem parcelas): 0 ou 1 pagamento
+      if (pagas >= 1) return { pagas, pendentes: 0, atrasadas: 0 };
+      const venc = utils.createValidDate(dataVencimentoEmp);
+      if (venc && venc < hoje) return { pagas: 0, pendentes: 0, atrasadas: 1 };
+      return { pagas: 0, pendentes: 1, atrasadas: 0 };
     }
 
     function statusParaExibir(status) {
@@ -439,7 +463,7 @@
         cards.style.cssText = 'display: flex; flex-direction: column; gap: 0.75rem; padding: 0.5rem;';
         ordenados.forEach(emp => {
           const status = statusParaExibir(emp.statusCalculado);
-          const resumo = calcularResumoParcelas(emp.parcelas || []);
+          const resumo = calcularResumoDoHistorico(emp.id, emp.parcelas || [], emp.data_vencimento);
           let cor = emp.statusCalculado === 'ATRASADO' ? '#ef4444' : emp.statusCalculado === 'ATIVO' ? '#10b981' : '#3b82f6';
           const card = document.createElement('div');
           card.style.cssText = `padding: 1rem; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid ${cor};`;
@@ -462,7 +486,7 @@
         tbody.innerHTML = '';
         ordenados.forEach(emp => {
           const status = statusParaExibir(emp.statusCalculado);
-          const resumo = calcularResumoParcelas(emp.parcelas || []);
+          const resumo = calcularResumoDoHistorico(emp.id, emp.parcelas || [], emp.data_vencimento);
           const row = document.createElement('tr');
           row.innerHTML = `
             <td><div class="font-semibold">${emp.cliente_nome || 'N/A'}</div><div class="text-sm text-gray-500">${emp.telefone || ''}</div></td>
@@ -557,7 +581,7 @@
         }).join('');
       }
 
-      const resumo = calcularResumoParcelas(parcelas);
+      const resumo = calcularResumoDoHistorico(emp.id, parcelas, emp.data_vencimento);
       document.getElementById('resumo-pagas').textContent = resumo.pagas;
       document.getElementById('resumo-pendentes').textContent = resumo.pendentes;
       document.getElementById('resumo-atrasadas').textContent = resumo.atrasadas;
