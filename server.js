@@ -13,6 +13,7 @@ const {
 } = require('./database-config');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
 const empresaHandler = require('./api/empresa');
 const cobrancasHandler = require('./api/cobrancas');
 require('dotenv').config({ path: __dirname + '/.env' });
@@ -47,6 +48,10 @@ app.use(cors({
 }));
 
 // Middleware
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
 app.use(express.static('public'));
 app.use(cookieParser());
 

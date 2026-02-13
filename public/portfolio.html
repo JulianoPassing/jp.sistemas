@@ -8,12 +8,15 @@
   <meta property="og:title" content="Portfólio - J.P Sistemas">
   <meta property="og:description" content="Projetos desenvolvidos pela J.P Sistemas: Sistema de Gestão, JP-Cobranças e soluções personalizadas em tecnologia.">
   <meta property="og:type" content="website">
+  <link rel="canonical" href="https://jp-sistemas.com/portfolio.html">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#002f4b">
   <link rel="stylesheet" href="mobile.css">
   <style>
     :root {
@@ -95,6 +98,27 @@
       color: var(--accent-blue);
       transform: translateY(-2px);
     }
+    .btn-topo {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      color: var(--primary-blue);
+      border: none;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 12px rgba(0, 230, 255, 0.4);
+      z-index: 999;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .btn-topo:hover { opacity: 0.9; transform: scale(1.05); }
+    .btn-topo.visible { display: flex; }
     .portfolio-hero {
       display: flex;
       flex-direction: column;
@@ -463,6 +487,8 @@
     © 2026 JP. Sistemas. Todos os direitos reservados. | <a href="https://jp-sistemas.com/">jp-sistemas.com</a>
   </footer>
 
+  <button id="btn-topo" class="btn-topo" aria-label="Voltar ao topo" title="Voltar ao topo"><i class="fas fa-chevron-up"></i></button>
+
   <!-- Modal de mídia ampliada -->
   <div class="modal-midia-bg" id="modal-midia-bg">
     <div class="modal-midia-content">
@@ -542,9 +568,17 @@
 
     window.addEventListener('scroll', function() {
       const header = document.querySelector('header');
+      const btnTopo = document.getElementById('btn-topo');
       if (window.scrollY > 50) header.classList.add('scrolled');
       else header.classList.remove('scrolled');
+      if (btnTopo) btnTopo.classList.toggle('visible', window.scrollY > 400);
     });
+    document.getElementById('btn-topo')?.addEventListener('click', function() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
   </script>
 </body>
 </html>
