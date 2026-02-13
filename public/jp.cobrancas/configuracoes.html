@@ -152,6 +152,46 @@
       font-size: 0.9rem;
       display: none;
     }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 52px;
+      height: 28px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #cbd5e1;
+      border-radius: 28px;
+      transition: 0.3s;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      border-radius: 50%;
+      transition: 0.3s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: #0d9488;
+    }
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(24px);
+    }
   </style>
 </head>
 <body class="app-layout">
@@ -160,6 +200,10 @@
       <a href="index.html" class="logo" style="display: flex; align-items: center;">
         <img src="https://i.imgur.com/EQ1tjZX.png" alt="JP-Cobranças" style="height: 5rem; width: auto; object-fit: contain;">
       </a>
+      <div class="header-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="header-global-search" placeholder="Buscar clientes ou empréstimos..." autocomplete="off">
+      </div>
       <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Abrir menu"><span class="menu-icon"></span></button>
       <div class="nav-wrapper">
         <nav>
@@ -195,6 +239,18 @@
       </div>
 
       <form id="form-configuracoes">
+        <!-- Aparência -->
+        <div class="config-section">
+          <h3><i class="fas fa-moon" style="margin-right: 0.5rem; color: #0d9488;"></i>Aparência</h3>
+          <div class="form-group" style="display: flex; align-items: center; gap: 1rem;">
+            <label for="dark-mode-toggle" style="margin-bottom: 0;">Modo escuro</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="dark-mode-toggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
         <!-- Dados da conta -->
         <div class="config-section">
           <h3><i class="fas fa-user-cog" style="margin-right: 0.5rem; color: #0d9488;"></i>Dados da conta</h3>
@@ -455,6 +511,16 @@
       };
     }
 
+    // Dark mode toggle
+    const darkToggle = document.getElementById('dark-mode-toggle');
+    if (darkToggle) {
+      darkToggle.checked = localStorage.getItem('jp-dark-mode') === 'true';
+      darkToggle.addEventListener('change', function() {
+        localStorage.setItem('jp-dark-mode', this.checked ? 'true' : 'false');
+        document.body.classList.toggle('dark-mode', this.checked);
+      });
+    }
+
     async function carregarConfiguracoes() {
       try {
         const response = await fetch('/api/cobrancas/configuracoes', {
@@ -489,6 +555,8 @@
     // Salvar configurações
     document.getElementById('form-configuracoes').addEventListener('submit', async function(e) {
       e.preventDefault();
+      const submitBtn = this.querySelector('button[type="submit"]');
+      ui.setButtonLoading(submitBtn, true, 'Salvando...');
       
       const dados = {
         chave_pix: document.getElementById('chave_pix').value.trim() || null,
@@ -525,12 +593,15 @@
           if (typeof ui !== 'undefined' && ui.showNotification) ui.showNotification('Erro ao salvar configurações', 'error');
           else alert('Erro ao salvar configurações');
         }
+      } finally {
+        ui.setButtonLoading(submitBtn, false);
       }
     });
 
     // Restaurar configurações padrão
-    function resetarPadrao() {
-      if (confirm('Tem certeza que deseja restaurar as configurações padrão? Todas as suas mensagens personalizadas serão removidas.')) {
+    async function resetarPadrao() {
+      const ok = await ui.showConfirm('Tem certeza que deseja restaurar as configurações padrão? Todas as suas mensagens personalizadas serão removidas.', { title: 'Restaurar padrão', confirmText: 'Restaurar', danger: true });
+      if (ok) {
         document.getElementById('chave_pix').value = '';
         document.getElementById('msg_parcela').value = '';
         document.getElementById('msg_emprestimo_com_juros').value = '';

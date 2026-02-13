@@ -24,6 +24,10 @@
       <a href="index.html" class="logo" style="display: flex; align-items: center;">
         <img src="https://i.imgur.com/EQ1tjZX.png" alt="JP-Cobranças" style="height: 5rem; width: auto; object-fit: contain;">
       </a>
+      <div class="header-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="header-global-search" placeholder="Buscar clientes ou empréstimos..." autocomplete="off">
+      </div>
       <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Abrir menu"><span class="menu-icon"></span></button>
       <div class="nav-wrapper">
         <nav>
@@ -97,7 +101,7 @@
           </div>
         </div>
         
-        <div class="table-container">
+        <div class="table-container" id="emprestimos-table-container">
           <table class="table">
             <thead>
               <tr>
@@ -112,10 +116,11 @@
             </thead>
             <tbody id="historico-emprestimos">
               <tr>
-                <td colspan="7" class="text-center text-gray-500">Carregando...</td>
+                <td colspan="7"><div class="table-skeleton"><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></div></td>
               </tr>
             </tbody>
           </table>
+          <div id="pagination-emprestimos"></div>
         </div>
       </div>
     </div>
@@ -1105,6 +1110,7 @@
       const tbody = document.getElementById('historico-emprestimos');
       let allEmprestimos = [];
       let emprestimosProcessados = [];
+      let currentPageEmprestimos = 1;
 
       // Função para buscar e renderizar todos os empréstimos
       async function fetchAndRenderEmprestimos() {
@@ -1184,7 +1190,8 @@
       }
 
       // Função para renderizar os empréstimos filtrados
-      function renderEmprestimosFiltrados() {
+      function renderEmprestimosFiltrados(page) {
+        if (page) currentPageEmprestimos = page;
         const termo = (searchInput.value || '').toLowerCase();
         const emprestimosFiltrados = emprestimosProcessados.filter(emp => {
           return !termo ||
@@ -1196,6 +1203,7 @@
         
         if (emprestimosFiltrados.length === 0) {
           tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-search empty-state-icon"></i><div class="empty-state-title">Nenhum empréstimo encontrado</div><div class="empty-state-text">Tente ajustar os filtros de busca ou adicione um novo empréstimo.</div></div></td></tr>';
+          document.getElementById('pagination-emprestimos').innerHTML = '';
           return;
         }
         
@@ -1244,6 +1252,12 @@
           return dataA - dataB;
         });
         
+        const perPage = typeof ITEMS_PER_PAGE !== 'undefined' ? ITEMS_PER_PAGE : 20;
+        const totalPages = Math.ceil(emprestimosUnicos.length / perPage) || 1;
+        if (currentPageEmprestimos > totalPages) currentPageEmprestimos = totalPages;
+        const start = (currentPageEmprestimos - 1) * perPage;
+        const toRender = emprestimosUnicos.slice(start, start + perPage);
+
         // Verificar se é mobile
         const isMobile = window.innerWidth <= 768;
         const container = tbody.parentElement.parentElement;
@@ -1260,7 +1274,7 @@
           cardsContainer.className = 'mobile-emprestimos-cards';
           cardsContainer.style.cssText = 'display: flex; flex-direction: column; gap: 0.75rem; padding: 0.5rem;';
           
-          emprestimosUnicos.forEach(emp => {
+          toRender.forEach(emp => {
             let statusColor = '#6b7280';
             if (emp.status === 'ATRASADO') statusColor = '#ef4444';
             else if (emp.status === 'ATIVO') statusColor = '#10b981';
@@ -1298,7 +1312,7 @@
           if (oldCards) oldCards.remove();
           
           tbody.innerHTML = '';
-          emprestimosUnicos.forEach(emp => {
+          toRender.forEach(emp => {
           const row = document.createElement('tr');
           row.innerHTML = `
               <td>${emp.cliente_nome || 'N/A'}</td>
@@ -1314,10 +1328,19 @@
           tbody.appendChild(row);
           });
         }
+        
+        const pagEl = document.getElementById('pagination-emprestimos');
+        if (pagEl && emprestimosUnicos.length > perPage) {
+          pagEl.innerHTML = `<div class="pagination">
+            <button type="button" class="btn btn-secondary btn-sm" ${currentPageEmprestimos <= 1 ? 'disabled' : ''} onclick="renderEmprestimosFiltrados(${currentPageEmprestimos - 1})">‹ Anterior</button>
+            <span class="pagination-info">${start + 1}-${start + toRender.length} de ${emprestimosUnicos.length}</span>
+            <button type="button" class="btn btn-secondary btn-sm" ${currentPageEmprestimos >= totalPages ? 'disabled' : ''} onclick="renderEmprestimosFiltrados(${currentPageEmprestimos + 1})">Próxima ›</button>
+          </div>`;
+        } else if (pagEl) pagEl.innerHTML = '';
       }
 
       if (searchInput) {
-        searchInput.addEventListener('input', renderEmprestimosFiltrados);
+        searchInput.addEventListener('input', () => { currentPageEmprestimos = 1; renderEmprestimosFiltrados(); });
       }
       
       // Atualizar layout ao redimensionar a tela

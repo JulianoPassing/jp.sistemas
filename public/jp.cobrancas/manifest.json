@@ -1,0 +1,24 @@
+{
+  "name": "JP-Cobranças",
+  "short_name": "JP-Cobranças",
+  "description": "Sistema de controle de empréstimos e cobranças",
+  "start_url": "./dashboard.html",
+  "display": "standalone",
+  "background_color": "#002f4b",
+  "theme_color": "#002f4b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://i.imgur.com/6N82fk2.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://i.imgur.com/6N82fk2.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

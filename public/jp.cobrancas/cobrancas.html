@@ -17,6 +17,10 @@
       <a href="index.html" class="logo" style="display: flex; align-items: center;">
         <img src="https://i.imgur.com/EQ1tjZX.png" alt="JP-Cobranças" style="height: 5rem; width: auto; object-fit: contain;">
       </a>
+      <div class="header-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="header-global-search" placeholder="Buscar clientes ou empréstimos..." autocomplete="off">
+      </div>
       <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Abrir menu"><span class="menu-icon"></span></button>
       <div class="nav-wrapper">
         <nav>
@@ -77,7 +81,7 @@
             </thead>
             <tbody id="cobrancas-pendentes">
               <tr>
-                <td colspan="7" class="text-center text-gray-500">Carregando...</td>
+                <td colspan="7"><div class="table-skeleton"><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></div></td>
               </tr>
             </tbody>
           </table>
@@ -268,9 +272,7 @@
             
             try {
               const submitBtn = form.querySelector('#btn-criar-cobranca');
-              const originalText = submitBtn.textContent;
-              submitBtn.textContent = 'Criando...';
-              submitBtn.disabled = true;
+              ui.setButtonLoading(submitBtn, true, 'Criando...');
               
               let clienteIdFinal = clienteId;
               
@@ -355,8 +357,7 @@
               else alert('Erro ao criar cobrança: ' + error.message);
             } finally {
               const submitBtn = form.querySelector('#btn-criar-cobranca');
-              submitBtn.textContent = originalText;
-              submitBtn.disabled = false;
+              if (submitBtn) ui.setButtonLoading(submitBtn, false);
             }
           });
           

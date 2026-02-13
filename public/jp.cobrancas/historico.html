@@ -29,6 +29,10 @@
       <a href="index.html" class="logo" style="display: flex; align-items: center;">
         <img src="https://i.imgur.com/EQ1tjZX.png" alt="JP-Cobranças" style="height: 5rem; width: auto; object-fit: contain;">
       </a>
+      <div class="header-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="header-global-search" placeholder="Buscar clientes ou empréstimos..." autocomplete="off">
+      </div>
       <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Abrir menu"><span class="menu-icon"></span></button>
       <div class="nav-wrapper">
         <nav>
@@ -111,7 +115,7 @@
                 </tr>
               </thead>
               <tbody id="historico-pagamentos-tbody">
-                <tr><td colspan="6" class="text-center text-gray-500">Carregando...</td></tr>
+                <tr><td colspan="6"><div class="table-skeleton"><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></div></td></tr>
               </tbody>
             </table>
           </div>
@@ -157,7 +161,7 @@
                 </tr>
               </thead>
               <tbody id="emprestimos-tbody">
-                <tr><td colspan="8" class="text-center text-gray-500">Carregando...</td></tr>
+                <tr><td colspan="8"><div class="table-skeleton"><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></div></td></tr>
               </tbody>
             </table>
           </div>
@@ -234,15 +238,36 @@
         });
       });
 
+      // Restaurar filtros salvos
+      const fPag = typeof loadFilters === 'function' ? loadFilters('historico-pagamentos') : {};
+      if (fPag.data_inicio) document.getElementById('filter-pag-data-inicio').value = fPag.data_inicio;
+      if (fPag.data_fim) document.getElementById('filter-pag-data-fim').value = fPag.data_fim;
+      if (fPag.tipo) document.getElementById('filter-pag-tipo').value = fPag.tipo;
+      if (fPag.cliente_id) document.getElementById('filter-pag-cliente').value = fPag.cliente_id;
+      const fEmp = typeof loadFilters === 'function' ? loadFilters('historico-emprestimos') : {};
+      if (fEmp.search) document.getElementById('search-emprestimos').value = fEmp.search;
+      if (fEmp.status) document.getElementById('filter-status').value = fEmp.status;
+      if (fEmp.data_inicio) document.getElementById('filter-data-inicio').value = fEmp.data_inicio;
+      if (fEmp.data_fim) document.getElementById('filter-data-fim').value = fEmp.data_fim;
+
       // Histórico de Pagamentos
       carregarHistoricoPagamentos();
       carregarClientesParaFiltro();
-      document.getElementById('btn-buscar-pagamentos').addEventListener('click', carregarHistoricoPagamentos);
+      document.getElementById('btn-buscar-pagamentos').addEventListener('click', () => {
+        if (typeof saveFilters === 'function') saveFilters('historico-pagamentos', {
+          data_inicio: document.getElementById('filter-pag-data-inicio').value,
+          data_fim: document.getElementById('filter-pag-data-fim').value,
+          tipo: document.getElementById('filter-pag-tipo').value,
+          cliente_id: document.getElementById('filter-pag-cliente').value
+        });
+        carregarHistoricoPagamentos();
+      });
       document.getElementById('btn-limpar-pagamentos').addEventListener('click', () => {
         document.getElementById('filter-pag-data-inicio').value = '';
         document.getElementById('filter-pag-data-fim').value = '';
         document.getElementById('filter-pag-tipo').value = '';
         document.getElementById('filter-pag-cliente').value = '';
+        if (typeof saveFilters === 'function') saveFilters('historico-pagamentos', {});
         carregarHistoricoPagamentos();
       });
 
@@ -277,7 +302,7 @@
     async function carregarHistoricoPagamentos() {
       const tbody = document.getElementById('historico-pagamentos-tbody');
       const info = document.getElementById('info-pagamentos');
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center">Carregando...</td></tr>';
+      tbody.innerHTML = typeof getSkeletonRows === 'function' ? getSkeletonRows(6, 3) : '<tr><td colspan="6" class="text-center">Carregando...</td></tr>';
       try {
         const params = {};
         const di = document.getElementById('filter-pag-data-inicio').value;
@@ -392,9 +417,7 @@
         }
 
         todosEmprestimos = emprestimosProcessados;
-        emprestimosFiltrados = [...todosEmprestimos];
-        renderizarEmprestimos();
-        atualizarInfoResultados();
+        aplicarFiltros();
       } catch (err) {
         console.error(err);
         document.getElementById('emprestimos-tbody').innerHTML = '<tr><td colspan="8" class="text-center text-red-500">Erro ao carregar empréstimos</td></tr>';
@@ -516,6 +539,7 @@
       const statusF = document.getElementById('filter-status').value;
       const di = document.getElementById('filter-data-inicio').value;
       const df = document.getElementById('filter-data-fim').value;
+      if (typeof saveFilters === 'function') saveFilters('historico-emprestimos', { search: document.getElementById('search-emprestimos').value, status: statusF, data_inicio: di, data_fim: df });
 
       const statusFilterMap = { 'Ativo': 'ATIVO', 'Quitado': 'QUITADO', 'Em Atraso': 'ATRASADO' };
       const statusInterno = statusFilterMap[statusF] || statusF;
@@ -537,6 +561,7 @@
       document.getElementById('filter-status').value = '';
       document.getElementById('filter-data-inicio').value = '';
       document.getElementById('filter-data-fim').value = '';
+      if (typeof saveFilters === 'function') saveFilters('historico-emprestimos', {});
       emprestimosFiltrados = [...todosEmprestimos];
       renderizarEmprestimos();
       atualizarInfoResultados();

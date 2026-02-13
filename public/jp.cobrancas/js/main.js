@@ -1,6 +1,31 @@
 // Configurações da API
 const API_BASE_URL = '/api';
 
+// Filtros salvos (localStorage)
+const FILTERS_KEY = 'jp-cobrancas-filters';
+function saveFilters(page, filters) {
+  try {
+    const all = JSON.parse(localStorage.getItem(FILTERS_KEY) || '{}');
+    all[page] = filters;
+    localStorage.setItem(FILTERS_KEY, JSON.stringify(all));
+  } catch (e) { console.warn('Erro ao salvar filtros:', e); }
+}
+function loadFilters(page) {
+  try {
+    const all = JSON.parse(localStorage.getItem(FILTERS_KEY) || '{}');
+    return all[page] || {};
+  } catch (e) { return {}; }
+}
+
+// Skeleton loading para tabelas
+function getSkeletonRows(colspan, rows = 4) {
+  let html = '';
+  for (let i = 0; i < rows; i++) {
+    html += `<tr><td colspan="${colspan}"><div class="table-skeleton"><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></div></td></tr>`;
+  }
+  return html;
+}
+
 // Estado global da aplicação
 const appState = {
   isLoading: false,
@@ -276,6 +301,7 @@ Solicitamos a regularização o mais breve possível.`;
       <div style="border: 2px solid #ef4444; border-radius: 12px; padding: 1rem; background: #fef2f2;">
         <h4 style="color: #ef4444; margin-bottom: 0.5rem;">${tituloVencidas}</h4>
         <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">Total em atraso: <b style="color: #ef4444;">${utils.formatCurrency(dadosNotificacao.valorTotalVencidas)}</b></div>
+        <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">📱 Preview da mensagem (será enviada ao clicar no botão abaixo):</div>
         <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgTodasVencidas}</p>
         <a href="${linkVencidas || 'javascript:void(0)'}" ${linkVencidas ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #ef4444; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">
           Enviar via WhatsApp
@@ -296,10 +322,12 @@ Solicitamos a regularização o mais breve possível.`;
     </div>
   ` : '';
   // Blocos de opções separados para ordenar conforme o tipo de empréstimo
+  const previewLabel = '<div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">📱 Preview da mensagem (será enviada ao clicar no botão abaixo):</div>';
   const opcaoParcela = `
     <div style="border: 2px solid #25d366; border-radius: 12px; padding: 1rem; background: #f0fff4;">
       <h4 style="color: #25d366; margin-bottom: 0.5rem;">📋 ${tituloParcela}</h4>
       <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">Vencimento: <b>${dadosNotificacao.dataParcela}</b> • Valor: <b>${utils.formatCurrency(dadosNotificacao.valorParcela)}</b></div>
+      ${previewLabel}
       <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb;">${msgParcelado}</p>
       <a href="${linkParcelado || 'javascript:void(0)'}" ${linkParcelado ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #25d366; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">Enviar via WhatsApp</a>
     </div>
@@ -307,6 +335,7 @@ Solicitamos a regularização o mais breve possível.`;
   const opcaoEmprestimoSemDiario = `
     <div style="border: 2px solid #8b5cf6; border-radius: 12px; padding: 1rem; background: #f5f3ff;">
       <h4 style="color: #8b5cf6; margin-bottom: 0.5rem;">💵 Empréstimo (sem juros diário)</h4>
+      ${previewLabel}
       <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgEmprestimoSemDiario}</p>
       <a href="${linkEmprestimoSemDiario || 'javascript:void(0)'}" ${linkEmprestimoSemDiario ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #8b5cf6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">Enviar via WhatsApp</a>
     </div>
@@ -314,6 +343,7 @@ Solicitamos a regularização o mais breve possível.`;
   const opcaoEmprestimoComDiario = `
     <div style="border: 2px solid #3b82f6; border-radius: 12px; padding: 1rem; background: #eff6ff;">
       <h4 style="color: #3b82f6; margin-bottom: 0.5rem;">💰 Empréstimo (com juros/multa diária)</h4>
+      ${previewLabel}
       <p style="font-size: 0.9rem; color: #444; margin-bottom: 1rem; white-space: pre-line; background: #fff; padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e7eb; max-height: 150px; overflow-y: auto;">${msgEmprestimo}</p>
       <a href="${linkEmprestimo || 'javascript:void(0)'}" ${linkEmprestimo ? 'target="_blank" rel="noopener noreferrer"' : ''} ${btnOnClick} class="btn" style="display: block; background: #3b82f6; color: #fff; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; text-decoration: none; ${btnDisabledStyle}">Enviar via WhatsApp</a>
     </div>
@@ -708,6 +738,20 @@ const ui = {
     }
   },
 
+  // Loading state em botões
+  setButtonLoading(btn, loading, loadingText = 'Salvando...') {
+    if (!btn) return;
+    if (loading) {
+      btn.dataset.originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>${loadingText}`;
+    } else {
+      btn.disabled = false;
+      btn.innerHTML = btn.dataset.originalHtml || btn.innerHTML;
+      delete btn.dataset.originalHtml;
+    }
+  },
+
   // Notificações
   showNotification(message, type = 'info') {
     const notification = document.createElement('div');
@@ -765,6 +809,42 @@ const ui = {
     if (modal) {
       modal.remove();
     }
+  },
+
+  // Modal de confirmação (substitui confirm nativo)
+  showConfirm(message, options = {}) {
+    const { title = 'Confirmar', confirmText = 'Confirmar', cancelText = 'Cancelar', danger = false } = options;
+    return new Promise((resolve) => {
+      const modal = document.createElement('div');
+      modal.className = 'modal modal-confirm';
+      modal.innerHTML = `
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-confirm-content">
+          <div class="modal-header">
+            <h3>${title}</h3>
+            <button class="modal-close" type="button">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p class="modal-confirm-message">${message}</p>
+            <div class="modal-confirm-actions">
+              <button type="button" class="btn btn-secondary modal-confirm-cancel">${cancelText}</button>
+              <button type="button" class="btn ${danger ? 'btn-danger' : 'btn-primary'} modal-confirm-ok">${confirmText}</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const close = (result) => {
+        modal.remove();
+        resolve(result);
+      };
+
+      modal.querySelector('.modal-confirm-ok').onclick = () => close(true);
+      modal.querySelector('.modal-confirm-cancel').onclick = () => close(false);
+      modal.querySelector('.modal-close').onclick = () => close(false);
+      modal.querySelector('.modal-overlay').onclick = () => close(false);
+    });
   },
 
   // Table helpers (mantido para compatibilidade)
@@ -1102,7 +1182,7 @@ const dashboardController = {
     const subtitle = document.getElementById('cobrancas-dia-subtitle');
     if (!tbody) return;
 
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Carregando...</td></tr>';
+    tbody.innerHTML = getSkeletonRows(5, 3);
 
     try {
       const emprestimos = await apiService.getEmprestimos();
@@ -1239,7 +1319,7 @@ const dashboardController = {
     const tbody = document.getElementById('cobrancas-pendentes');
     if (!tbody) return;
 
-    tbody.innerHTML = '<tr><td colspan="7">Carregando...</td></tr>';
+    tbody.innerHTML = getSkeletonRows(7, 3);
 
     try {
       // Buscar todos os empréstimos
@@ -2677,7 +2757,8 @@ const emprestimoController = {
         // Botão Remover
         modal.querySelector('#modal-btn-remover').onclick = async (e) => {
           e.preventDefault();
-          if (!confirm('Tem certeza que deseja remover este empréstimo?')) return;
+          const ok = await ui.showConfirm('Tem certeza que deseja remover este empréstimo?', { title: 'Remover empréstimo', confirmText: 'Remover', danger: true });
+          if (!ok) return;
           try {
             await fetch(`/api/cobrancas/emprestimos/${emp.id}`, {
               method: 'DELETE',
@@ -2711,9 +2792,8 @@ const cobrancaController = {
 // Função para adicionar cliente à lista negra
 async function adicionarListaNegra(id) {
   try {
-    if (!confirm('Tem certeza que deseja adicionar este cliente à lista negra?')) {
-      return;
-    }
+    const ok = await ui.showConfirm('Tem certeza que deseja adicionar este cliente à lista negra?', { title: 'Lista Negra', confirmText: 'Adicionar', danger: true });
+    if (!ok) return;
     
     const response = await fetch(`/api/cobrancas/clientes/${id}/lista-negra`, {
       method: 'PUT',
@@ -3065,8 +3145,9 @@ const clienteController = {
   },
 
   async deleteCliente(id) {
-    if (!confirm('Tem certeza que deseja remover este cliente?')) return;
-    
+    const ok = await ui.showConfirm('Tem certeza que deseja remover este cliente?', { title: 'Remover cliente', confirmText: 'Remover', danger: true });
+    if (!ok) return;
+
     try {
       const response = await fetch(`/api/cobrancas/clientes/${id}`, {
         method: 'DELETE',
@@ -3090,11 +3171,31 @@ const clienteController = {
   }
 };
 
+// Paginação - 20 itens por página
+const ITEMS_PER_PAGE = 20;
+function paginateArray(arr, page) {
+  const start = (page - 1) * ITEMS_PER_PAGE;
+  return arr.slice(start, start + ITEMS_PER_PAGE);
+}
+function getPaginationHtml(total, currentPage, onPageChange) {
+  const totalPages = Math.ceil(total / ITEMS_PER_PAGE) || 1;
+  const start = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const end = Math.min(currentPage * ITEMS_PER_PAGE, total);
+  if (total <= ITEMS_PER_PAGE) return '';
+  return `
+    <div class="pagination">
+      <button type="button" class="btn btn-secondary btn-sm" ${currentPage <= 1 ? 'disabled' : ''} onclick="(${onPageChange})(${currentPage - 1})">‹ Anterior</button>
+      <span class="pagination-info">${start}-${end} de ${total}</span>
+      <button type="button" class="btn btn-secondary btn-sm" ${currentPage >= totalPages ? 'disabled' : ''} onclick="(${onPageChange})(${currentPage + 1})">Próxima ›</button>
+    </div>
+  `;
+}
+
 // Função para renderizar o histórico de empréstimos
 async function renderHistoricoEmprestimos() {
   const tbody = document.getElementById('historico-emprestimos');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="6">Carregando...</td></tr>';
+  tbody.innerHTML = getSkeletonRows(6, 3);
   try {
     const emprestimos = await apiService.getEmprestimos();
     if (!emprestimos || emprestimos.length === 0) {
@@ -3228,7 +3329,7 @@ async function renderHistoricoEmprestimos() {
 async function renderEmprestimosLista() {
   const tbody = document.getElementById('emprestimos-lista');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="7">Carregando...</td></tr>';
+  tbody.innerHTML = getSkeletonRows(7, 3);
   try {
     const emprestimos = await apiService.getEmprestimos();
     // Filtrar apenas empréstimos ativos
@@ -3417,7 +3518,7 @@ async function renderEmprestimosLista() {
 async function renderClientesLista() {
   const tbody = document.getElementById('lista-clientes');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
+  tbody.innerHTML = getSkeletonRows(5, 3);
   try {
     const clientes = await apiService.getClientes();
     const emprestimos = await apiService.getEmprestimos();
@@ -3559,7 +3660,8 @@ async function carregarListaDocumentosCobrancas(clienteId) {
       btn.onclick = async () => {
         const cid = btn.getAttribute('data-cliente-id');
         const did = btn.getAttribute('data-doc-id');
-        if (!confirm('Remover este documento?')) return;
+        const ok = await ui.showConfirm('Remover este documento?', { title: 'Remover documento', confirmText: 'Remover', danger: true });
+        if (!ok) return;
         try {
           const r = await fetch(`/api/cobrancas/clientes/${cid}/documentos/${did}`, { method: 'DELETE', credentials: 'include' });
           if (r.ok) await carregarListaDocumentosCobrancas(cid);
@@ -3670,7 +3772,8 @@ async function initDocumentosModalVer(modal, clienteId) {
       });
       modal.querySelectorAll('.btn-excluir-doc-modal-ver').forEach(btn => {
         btn.onclick = async () => {
-          if (!confirm('Remover este documento?')) return;
+          const ok = await ui.showConfirm('Remover este documento?', { title: 'Remover documento', confirmText: 'Remover', danger: true });
+          if (!ok) return;
           try {
             const r = await fetch(`/api/cobrancas/clientes/${clienteId}/documentos/${btn.getAttribute('data-doc-id')}`, { method: 'DELETE', credentials: 'include' });
             if (r.ok) await renderDocs();
@@ -3714,7 +3817,7 @@ async function initDocumentosModalVer(modal, clienteId) {
 async function renderListaNegra() {
   const tbody = document.getElementById('lista-negra-clientes');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="6">Carregando...</td></tr>';
+  tbody.innerHTML = getSkeletonRows(6, 3);
   try {
     const clientes = await apiService.getClientes();
     if (!clientes || clientes.length === 0) {
@@ -3754,9 +3857,8 @@ async function renderListaNegra() {
 // Função para remover cliente da lista negra
 async function removerListaNegra(id) {
   try {
-    if (!confirm('Tem certeza que deseja remover este cliente da lista negra?')) {
-      return;
-    }
+    const ok = await ui.showConfirm('Tem certeza que deseja remover este cliente da lista negra?', { title: 'Remover da Lista Negra', confirmText: 'Remover' });
+    if (!ok) return;
     
     const response = await fetch(`/api/cobrancas/clientes/${id}/lista-negra`, {
       method: 'PUT',
@@ -3790,7 +3892,7 @@ async function removerListaNegra(id) {
 async function renderCobrancasEmAbertoLista() {
   const tbody = document.getElementById('cobrancas-lista');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
+  tbody.innerHTML = getSkeletonRows(5, 3);
   try {
     const emprestimos = await apiService.getEmprestimos();
     // Filtrar apenas em aberto (status Ativo ou Pendente)
@@ -3994,21 +4096,80 @@ async function recarregarDadosPagina() {
 }
 
 // Função para logout (mesmo padrão do sistema principal)
-function sair() {
-  if (confirm('Tem certeza que deseja sair?')) {
-    // Limpar sessionStorage (mesmo padrão do sistema principal)
+async function sair() {
+  const ok = await ui.showConfirm('Tem certeza que deseja sair?', { title: 'Sair', confirmText: 'Sair' });
+  if (ok) {
     sessionStorage.removeItem('loggedIn');
     sessionStorage.removeItem('username');
     sessionStorage.removeItem('loginTime');
-    
-    // Redirecionar para login
     window.location.href = 'login.html';
   }
 }
 
+// Busca global no header
+function initGlobalSearch() {
+  const input = document.getElementById('header-global-search');
+  if (!input) return;
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const termo = (input.value || '').trim();
+      if (termo) {
+        sessionStorage.setItem('jp-global-search-q', termo);
+        const path = window.location.pathname || '';
+        const isClientes = path.includes('clientes');
+        const isEmprestimos = path.includes('emprestimos');
+        const isHistorico = path.includes('historico');
+        if (isClientes && document.getElementById('search-clientes')) {
+          const el = document.getElementById('search-clientes');
+          el.value = termo;
+          el.dispatchEvent(new Event('input'));
+        } else if ((isEmprestimos || isHistorico) && document.getElementById('search-emprestimos')) {
+          const el = document.getElementById('search-emprestimos');
+          el.value = termo;
+          el.dispatchEvent(new Event('input'));
+        } else {
+          window.location.href = 'clientes.html';
+        }
+      }
+    }
+  });
+}
+
+// Aplicar busca global ao carregar página (para quando vem de redirect)
+function applyGlobalSearchOnLoad() {
+  const q = sessionStorage.getItem('jp-global-search-q');
+  if (!q) return;
+  sessionStorage.removeItem('jp-global-search-q');
+  const headerInput = document.getElementById('header-global-search');
+  if (headerInput) headerInput.value = q;
+  const path = window.location.pathname || '';
+  if (path.includes('clientes') && document.getElementById('search-clientes')) {
+    const el = document.getElementById('search-clientes');
+    if (el) { el.value = q; setTimeout(() => el.dispatchEvent(new Event('input')), 300); }
+  } else if ((path.includes('emprestimos') || path.includes('historico')) && document.getElementById('search-emprestimos')) {
+    const el = document.getElementById('search-emprestimos');
+    if (el) { el.value = q; setTimeout(() => el.dispatchEvent(new Event('input')), 500); }
+  }
+}
+
 // Inicializar quando o DOM estiver pronto
+// Registrar Service Worker para PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+// Dark mode - aplicar preferência salva
+function applyDarkMode() {
+  const dark = localStorage.getItem('jp-dark-mode') === 'true';
+  document.body.classList.toggle('dark-mode', dark);
+}
+applyDarkMode();
+
 document.addEventListener('DOMContentLoaded', async () => {
+  initGlobalSearch();
   app.init();
+  setTimeout(applyGlobalSearchOnLoad, 100);
   
   // Carregar configurações do usuário
   await carregarConfiguracoesUsuario();
@@ -4566,7 +4727,7 @@ function renderCobrancasResumo(lista, targetId) {
 async function renderAtrasadosLista() {
   const tbody = document.getElementById('atrasados-lista');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="7">Carregando...</td></tr>';
+  tbody.innerHTML = getSkeletonRows(7, 3);
   
   try {
     const emprestimos = await apiService.getEmprestimos();

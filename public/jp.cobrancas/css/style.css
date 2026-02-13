@@ -56,6 +56,71 @@ body {
   color: var(--gray-900);
   line-height: 1.6;
   min-height: 100vh;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Dark mode */
+body.dark-mode {
+  background-color: #1a1a2e;
+  color: #e2e8f0;
+}
+
+body.dark-mode .card,
+body.dark-mode .section,
+body.dark-mode .modal-content,
+body.dark-mode .config-section,
+body.dark-mode .form-card {
+  background-color: #16213e;
+  border-color: #2d3748;
+  color: #e2e8f0;
+}
+
+body.dark-mode .page-header-text .dashboard-title,
+body.dark-mode .page-header-text h1,
+body.dark-mode .config-section h3,
+body.dark-mode .section-title {
+  color: #e2e8f0;
+}
+
+body.dark-mode .dashboard-subtitle,
+body.dark-mode .form-label,
+body.dark-mode .empty-state-title {
+  color: #94a3b8;
+}
+
+body.dark-mode .empty-state-text,
+body.dark-mode .form-group small {
+  color: #64748b;
+}
+
+body.dark-mode .form-input,
+body.dark-mode .form-textarea,
+body.dark-mode .search-container input {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+body.dark-mode .form-input::placeholder {
+  color: #64748b;
+}
+
+body.dark-mode .table {
+  background-color: #16213e;
+  color: #e2e8f0;
+}
+
+body.dark-mode .table th,
+body.dark-mode .table td {
+  border-color: #334155;
+}
+
+body.dark-mode .breadcrumb span:last-child {
+  color: #94a3b8;
+}
+
+body.dark-mode .modal-confirm-message {
+  color: #94a3b8;
 }
 
 /* Layout principal */
@@ -78,10 +143,53 @@ header {
 
 .header-content {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   align-items: center;
   max-width: 1280px;
   margin: 0 auto;
+}
+
+/* Busca global no header */
+.header-search {
+  flex: 1;
+  max-width: 280px;
+  margin: 0 1rem;
+  position: relative;
+}
+
+.header-search input {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.header-search input::placeholder {
+  color: rgba(255,255,255,0.7);
+}
+
+.header-search input:focus {
+  outline: none;
+  background: rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.5);
+}
+
+.header-search i {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.8);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 992px) {
+  .header-search { display: none; }
 }
 
 .logo {
@@ -1306,6 +1414,53 @@ footer {
   padding: 1.5rem;
 }
 
+/* Modal de confirmação */
+.modal-confirm-content {
+  max-width: 420px;
+}
+
+.modal-confirm-message {
+  color: var(--gray-700);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.modal-confirm-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.modal-confirm-actions .btn {
+  min-width: 100px;
+}
+
+/* Paginação */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.pagination .btn {
+  min-width: 36px;
+  padding: 0.5rem 0.75rem;
+}
+
+.pagination .pagination-info {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  margin: 0 0.5rem;
+}
+
+body.dark-mode .pagination .pagination-info {
+  color: #94a3b8;
+}
+
 /* Responsividade do modal */
 @media (max-width: 768px) {
   .modal-content {
@@ -1467,6 +1622,69 @@ footer {
 table td .empty-state {
   display: block;
   width: 100%;
+}
+
+/* Skeleton loading */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-text {
+  height: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-text:last-child {
+  width: 60%;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.table-skeleton td {
+  padding: 1rem !important;
+  vertical-align: middle !important;
+}
+
+.table-skeleton .skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.table-skeleton .skeleton-row .skeleton {
+  flex: 1;
+  height: 1.25rem;
+}
+
+/* Validação em tempo real */
+.form-input.input-invalid {
+  border-color: var(--red-500);
+  box-shadow: 0 0 0 2px rgba(240, 82, 82, 0.2);
+}
+
+.form-input.input-valid {
+  border-color: var(--green-500);
+}
+
+.field-error {
+  font-size: 0.8rem;
+  color: var(--red-600);
+  margin-top: 0.25rem;
+  display: none;
+}
+
+.form-group.has-error .field-error {
+  display: block;
+}
+
+.form-group.has-error .form-input {
+  border-color: var(--red-500);
 }
 
 /* Estilos para caixa de busca */
