@@ -3171,26 +3171,6 @@ const clienteController = {
   }
 };
 
-// Paginação - 20 itens por página
-const ITEMS_PER_PAGE = 20;
-function paginateArray(arr, page) {
-  const start = (page - 1) * ITEMS_PER_PAGE;
-  return arr.slice(start, start + ITEMS_PER_PAGE);
-}
-function getPaginationHtml(total, currentPage, onPageChange) {
-  const totalPages = Math.ceil(total / ITEMS_PER_PAGE) || 1;
-  const start = (currentPage - 1) * ITEMS_PER_PAGE + 1;
-  const end = Math.min(currentPage * ITEMS_PER_PAGE, total);
-  if (total <= ITEMS_PER_PAGE) return '';
-  return `
-    <div class="pagination">
-      <button type="button" class="btn btn-secondary btn-sm" ${currentPage <= 1 ? 'disabled' : ''} onclick="(${onPageChange})(${currentPage - 1})">‹ Anterior</button>
-      <span class="pagination-info">${start}-${end} de ${total}</span>
-      <button type="button" class="btn btn-secondary btn-sm" ${currentPage >= totalPages ? 'disabled' : ''} onclick="(${onPageChange})(${currentPage + 1})">Próxima ›</button>
-    </div>
-  `;
-}
-
 // Função para renderizar o histórico de empréstimos
 async function renderHistoricoEmprestimos() {
   const tbody = document.getElementById('historico-emprestimos');
@@ -4106,53 +4086,6 @@ async function sair() {
   }
 }
 
-// Busca global no header
-function initGlobalSearch() {
-  const input = document.getElementById('header-global-search');
-  if (!input) return;
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const termo = (input.value || '').trim();
-      if (termo) {
-        sessionStorage.setItem('jp-global-search-q', termo);
-        const path = window.location.pathname || '';
-        const isClientes = path.includes('clientes');
-        const isEmprestimos = path.includes('emprestimos');
-        const isHistorico = path.includes('historico');
-        if (isClientes && document.getElementById('search-clientes')) {
-          const el = document.getElementById('search-clientes');
-          el.value = termo;
-          el.dispatchEvent(new Event('input'));
-        } else if ((isEmprestimos || isHistorico) && document.getElementById('search-emprestimos')) {
-          const el = document.getElementById('search-emprestimos');
-          el.value = termo;
-          el.dispatchEvent(new Event('input'));
-        } else {
-          window.location.href = 'clientes.html';
-        }
-      }
-    }
-  });
-}
-
-// Aplicar busca global ao carregar página (para quando vem de redirect)
-function applyGlobalSearchOnLoad() {
-  const q = sessionStorage.getItem('jp-global-search-q');
-  if (!q) return;
-  sessionStorage.removeItem('jp-global-search-q');
-  const headerInput = document.getElementById('header-global-search');
-  if (headerInput) headerInput.value = q;
-  const path = window.location.pathname || '';
-  if (path.includes('clientes') && document.getElementById('search-clientes')) {
-    const el = document.getElementById('search-clientes');
-    if (el) { el.value = q; setTimeout(() => el.dispatchEvent(new Event('input')), 300); }
-  } else if ((path.includes('emprestimos') || path.includes('historico')) && document.getElementById('search-emprestimos')) {
-    const el = document.getElementById('search-emprestimos');
-    if (el) { el.value = q; setTimeout(() => el.dispatchEvent(new Event('input')), 500); }
-  }
-}
-
 // Inicializar quando o DOM estiver pronto
 // Registrar Service Worker para PWA
 if ('serviceWorker' in navigator) {
@@ -4167,9 +4100,7 @@ function applyDarkMode() {
 applyDarkMode();
 
 document.addEventListener('DOMContentLoaded', async () => {
-  initGlobalSearch();
   app.init();
-  setTimeout(applyGlobalSearchOnLoad, 100);
   
   // Carregar configurações do usuário
   await carregarConfiguracoesUsuario();

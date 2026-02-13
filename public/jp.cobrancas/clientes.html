@@ -19,10 +19,6 @@
       <a href="index.html" class="logo" style="display: flex; align-items: center;">
         <img src="https://i.imgur.com/EQ1tjZX.png" alt="JP-Cobranças" style="height: 5rem; width: auto; object-fit: contain;">
       </a>
-      <div class="header-search">
-        <i class="fas fa-search"></i>
-        <input type="text" id="header-global-search" placeholder="Buscar clientes ou empréstimos..." autocomplete="off">
-      </div>
       <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Abrir menu"><span class="menu-icon"></span></button>
       <div class="nav-wrapper">
         <nav>
@@ -102,7 +98,6 @@
               </tr>
             </tbody>
           </table>
-          <div id="pagination-clientes"></div>
         </div>
       </div>
     </div>
@@ -138,7 +133,6 @@
       
       let allClientes = []; // Armazenar todos os clientes
       let filteredClientes = []; // Clientes filtrados
-      let currentPageClientes = 1;
       
       // Função para aplicar filtros
       function applyFilters() {
@@ -148,7 +142,6 @@
         }
         
         const searchTerm = searchInput.value.toLowerCase().trim();
-        currentPageClientes = 1;
         
         filteredClientes = allClientes.filter(cliente => {
           // Filtro por termo de busca
@@ -178,26 +171,17 @@
       }
       
       // Função para renderizar clientes filtrados
-      function renderFilteredClientes(page) {
-        if (page) currentPageClientes = page;
+      function renderFilteredClientes() {
         const tbody = document.getElementById('lista-clientes');
-        const pagEl = document.getElementById('pagination-clientes');
         if (!tbody) return;
         
         if (!filteredClientes || filteredClientes.length === 0) {
           tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-users-slash empty-state-icon"></i><div class="empty-state-title">Nenhum cliente encontrado</div><div class="empty-state-text">Cadastre clientes em "Adicionar Cliente" ou ajuste a busca.</div></div></td></tr>';
-          if (pagEl) pagEl.innerHTML = '';
           return;
         }
         
-        const perPage = typeof ITEMS_PER_PAGE !== 'undefined' ? ITEMS_PER_PAGE : 20;
-        const totalPages = Math.ceil(filteredClientes.length / perPage) || 1;
-        if (currentPageClientes > totalPages) currentPageClientes = totalPages;
-        const start = (currentPageClientes - 1) * perPage;
-        const toShow = filteredClientes.slice(start, start + perPage);
-        
         tbody.innerHTML = '';
-        toShow.forEach(cliente => {
+        filteredClientes.forEach(cliente => {
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${cliente.nome || 'N/A'}</td>
@@ -220,14 +204,6 @@
         document.querySelectorAll('.btn-documentos-cobrancas').forEach(btn => {
           btn.onclick = () => abrirModalDocumentosCobrancas(btn.getAttribute('data-cliente-id'), btn.getAttribute('data-cliente-nome') || '');
         });
-        
-        if (pagEl && filteredClientes.length > perPage) {
-          pagEl.innerHTML = `<div class="pagination">
-            <button type="button" class="btn btn-secondary btn-sm" ${currentPageClientes <= 1 ? 'disabled' : ''} onclick="renderFilteredClientes(${currentPageClientes - 1})">‹ Anterior</button>
-            <span class="pagination-info">${start + 1}-${start + toShow.length} de ${filteredClientes.length}</span>
-            <button type="button" class="btn btn-secondary btn-sm" ${currentPageClientes >= totalPages ? 'disabled' : ''} onclick="renderFilteredClientes(${currentPageClientes + 1})">Próxima ›</button>
-          </div>`;
-        } else if (pagEl) pagEl.innerHTML = '';
       }
       
       // Função para obter classe do badge baseado no status
