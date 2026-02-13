@@ -66,9 +66,9 @@ async function carregarConfiguracoesUsuario() {
 }
 
 // Modal de aviso quando chave PIX ou e-mail não estão cadastrados
+// "Não lembrar" é salvo por usuário (username), não global
 const AVISO_PIX_EMAIL_NAO_LEMBRAR = 'jp-aviso-pix-email-nao-lembrar';
 async function verificarCadastroPixEmail() {
-  if (localStorage.getItem(AVISO_PIX_EMAIL_NAO_LEMBRAR) === 'true') return;
   if (sessionStorage.getItem('jp-aviso-pix-email-visto') === 'true') return;
   try {
     const [configRes, perfilRes] = await Promise.all([
@@ -77,11 +77,17 @@ async function verificarCadastroPixEmail() {
     ]);
     const config = configRes.ok ? await configRes.json() : {};
     const perfil = perfilRes.ok ? await perfilRes.json() : {};
+    const username = (perfil.username || '').trim();
     const chavePix = (config.chave_pix || '').trim();
     const email = (perfil.email || '').trim();
     const faltaPix = !chavePix;
     const faltaEmail = !email || !email.includes('@');
     if (!faltaPix && !faltaEmail) return;
+    // Verificar se este usuário escolheu "não lembrar novamente"
+    try {
+      const dismissed = JSON.parse(localStorage.getItem(AVISO_PIX_EMAIL_NAO_LEMBRAR) || '{}');
+      if (username && dismissed[username]) return;
+    } catch (_) {}
     sessionStorage.setItem('jp-aviso-pix-email-visto', 'true');
     let msg;
     if (faltaPix && faltaEmail) {
@@ -97,8 +103,12 @@ async function verificarCadastroPixEmail() {
       cancelText: 'Depois',
       dismissText: 'Não lembrar novamente'
     });
-    if (result === 'dismiss') {
-      localStorage.setItem(AVISO_PIX_EMAIL_NAO_LEMBRAR, 'true');
+    if (result === 'dismiss' && username) {
+      try {
+        const dismissed = JSON.parse(localStorage.getItem(AVISO_PIX_EMAIL_NAO_LEMBRAR) || '{}');
+        dismissed[username] = true;
+        localStorage.setItem(AVISO_PIX_EMAIL_NAO_LEMBRAR, JSON.stringify(dismissed));
+      } catch (_) {}
       return;
     }
     if (result) window.location.href = 'configuracoes.html';
@@ -422,6 +432,7 @@ const authSystem = {
       sessionStorage.removeItem('loggedIn');
       sessionStorage.removeItem('username');
       sessionStorage.removeItem('loginTime');
+      sessionStorage.removeItem('jp-aviso-pix-email-visto');
       
       // Tentar fazer logout no servidor (opcional)
       try {
@@ -4126,6 +4137,7 @@ async function sair() {
     sessionStorage.removeItem('loggedIn');
     sessionStorage.removeItem('username');
     sessionStorage.removeItem('loginTime');
+    sessionStorage.removeItem('jp-aviso-pix-email-visto');
     window.location.href = 'login.html';
   }
 }
