@@ -1481,7 +1481,7 @@ router.get('/historico-pagamentos', ensureDatabase, async (req, res) => {
     const connection = await createCobrancasConnection(username);
     const { data_inicio, data_fim, cliente_id, tipo } = req.query;
 
-    // 1. Pagamentos de PARCELAS (quando marca como pago no dashboard/emprestimos)
+    // 1. Pagamentos de PARCELAS ou EMPRÉSTIMO (quando marca como pago no dashboard/emprestimos)
     const [parcelasPagas] = await connection.execute(`
       SELECT 
         p.id as parcela_id,
@@ -1493,9 +1493,10 @@ router.get('/historico-pagamentos', ensureDatabase, async (req, res) => {
         p.juros_aplicados,
         p.multa_aplicada,
         e.cliente_id,
+        e.tipo_emprestimo,
+        e.numero_parcelas,
         cl.nome as cliente_nome,
-        e.valor as valor_inicial_emprestimo,
-        'Parcela' as tipo_pagamento
+        e.valor as valor_inicial_emprestimo
       FROM parcelas p
       INNER JOIN emprestimos e ON p.emprestimo_id = e.id
       LEFT JOIN clientes_cobrancas cl ON e.cliente_id = cl.id
@@ -1528,19 +1529,23 @@ router.get('/historico-pagamentos', ensureDatabase, async (req, res) => {
     // Unificar e formatar
     const historico = [];
     parcelasPagas.forEach(p => {
+      // Empréstimo valor fixo/juros (não parcelado) = mostrar "Empréstimo", não "Parcela 1"
+      const ehParcelado = (p.tipo_emprestimo === 'in_installments' || p.tipo_emprestimo === 'parcelado') && (p.numero_parcelas || 0) > 1;
+      const tipoPagamento = ehParcelado ? 'Parcela' : 'Empréstimo';
+      const observacoes = ehParcelado ? `Parcela ${p.numero_parcela}` : 'Empréstimo';
       historico.push({
         id: `parcela_${p.parcela_id}`,
         origem: 'parcela',
         emprestimo_id: p.emprestimo_id,
         cliente_id: p.cliente_id,
         cliente_nome: p.cliente_nome || 'N/A',
-        tipo_pagamento: 'Parcela',
-        numero_parcela: p.numero_parcela,
+        tipo_pagamento: tipoPagamento,
+        numero_parcela: ehParcelado ? p.numero_parcela : null,
         valor: Number(p.valor || p.valor_pago || 0),
         data_pagamento: p.data_pagamento ? (p.data_pagamento.toISOString ? p.data_pagamento.toISOString().split('T')[0] : String(p.data_pagamento).split('T')[0]) : null,
         juros_aplicados: Number(p.juros_aplicados || 0),
         multa_aplicada: Number(p.multa_aplicada || 0),
-        observacoes: p.numero_parcela ? `Parcela ${p.numero_parcela}` : null
+        observacoes: observacoes
       });
     });
     pagamentosJuros.forEach(p => {

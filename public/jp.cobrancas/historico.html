@@ -20,6 +20,7 @@
     .pagamento-badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
     .pagamento-badge.parcela { background: #d1fae5; color: #059669; }
     .pagamento-badge.juros { background: #dbeafe; color: #2563eb; }
+    .pagamento-badge.emprestimo { background: #e0e7ff; color: #4f46e5; }
   </style>
 </head>
 <body class="app-layout">
@@ -76,6 +77,7 @@
               <select id="filter-pag-tipo" class="form-input" style="min-width: 140px;">
                 <option value="">Todos os tipos</option>
                 <option value="parcela">Parcela</option>
+                <option value="emprestimo">Empréstimo</option>
                 <option value="juros">Juros</option>
               </select>
               <select id="filter-pag-cliente" class="form-input" style="min-width: 180px;">
@@ -287,8 +289,9 @@
           historicoPagamentos.forEach(p => {
             const dataStr = p.data_pagamento ? formatarData(p.data_pagamento) : '-';
             const valorStr = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.valor || 0);
-            const tipoClass = (p.tipo_pagamento || '').toLowerCase() === 'juros' ? 'juros' : 'parcela';
-            const detalhes = p.numero_parcela ? `Parcela ${p.numero_parcela}` : (p.observacoes || '-');
+            const tipo = (p.tipo_pagamento || '').toLowerCase();
+            const tipoClass = tipo === 'juros' ? 'juros' : tipo === 'emprestimo' ? 'emprestimo' : 'parcela';
+            const detalhes = p.observacoes || '-';
             const row = document.createElement('tr');
             row.innerHTML = `
               <td><strong>${dataStr}</strong></td>
