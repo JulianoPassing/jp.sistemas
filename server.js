@@ -1204,6 +1204,11 @@ app.get('/ajuda', (req, res) => {
 
 app.use('/api/contas', require('./api/contas'));
 
+// Página 404 personalizada para rotas não encontradas
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(publicPath, '404.html'));
+});
+
 // Inicialização do servidor (apenas se executado diretamente)
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;

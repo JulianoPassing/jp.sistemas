@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Página não encontrada - J.P Sistemas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png">
+  <style>
+    :root {
+      --primary-blue: #002f4b;
+      --accent-blue: #00e6ff;
+      --light-text: #ecf0f1;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--primary-blue) 0%, #003d60 100%);
+      color: var(--light-text);
+      text-align: center;
+      padding: 2rem;
+    }
+    .error-code {
+      font-size: 6rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      text-shadow: 0 0 30px rgba(0, 230, 255, 0.5);
+      margin-bottom: 1rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      opacity: 0.9;
+      margin-bottom: 2rem;
+      max-width: 400px;
+    }
+    a {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background: var(--accent-blue);
+      color: var(--primary-blue);
+      text-decoration: none;
+      font-weight: 600;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+    a:hover {
+      background: #00ffff;
+      box-shadow: 0 0 20px rgba(0, 230, 255, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <div class="error-code">404</div>
+  <h1>Página não encontrada</h1>
+  <p>O endereço que você acessou não existe ou foi movido. Volte para a página inicial e continue navegando.</p>
+  <a href="/">Voltar ao início</a>
+</body>
+</html>
