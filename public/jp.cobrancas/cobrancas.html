@@ -36,6 +36,11 @@
   </header>
   <main>
     <div class="container">
+      <nav class="breadcrumb">
+        <a href="dashboard.html">Dashboard</a>
+        <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
+        <span>Cobranças</span>
+      </nav>
       <div class="page-header">
         <div class="page-header-icon">
           <i class="fas fa-file-invoice-dollar"></i>
@@ -256,7 +261,8 @@
             
             // Validar se tem cliente selecionado ou dados para novo cliente
             if (!clienteId && (!nome || nome.trim() === '')) {
-              alert('Selecione um cliente existente ou preencha o nome para um novo cliente');
+              if (typeof ui !== 'undefined' && ui.showNotification) ui.showNotification('Selecione um cliente existente ou preencha o nome para um novo cliente', 'error');
+              else alert('Selecione um cliente existente ou preencha o nome para um novo cliente');
               return;
             }
             
@@ -345,7 +351,8 @@
               
             } catch (error) {
               console.error('Erro ao criar cobrança:', error);
-              alert('Erro ao criar cobrança: ' + error.message);
+              if (typeof ui !== 'undefined' && ui.showNotification) ui.showNotification('Erro ao criar cobrança: ' + error.message, 'error');
+              else alert('Erro ao criar cobrança: ' + error.message);
             } finally {
               const submitBtn = form.querySelector('#btn-criar-cobranca');
               submitBtn.textContent = originalText;

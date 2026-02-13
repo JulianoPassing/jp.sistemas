@@ -179,6 +179,11 @@
   </header>
   <main>
     <div class="container">
+      <nav class="breadcrumb">
+        <a href="dashboard.html">Dashboard</a>
+        <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
+        <span>Configurações</span>
+      </nav>
       <div class="page-header">
         <div class="page-header-icon">
           <i class="fas fa-cog"></i>
@@ -508,7 +513,8 @@
         if (typeof ui !== 'undefined') {
           ui.showNotification('Configurações salvas com sucesso!', 'success');
         } else {
-          alert('Configurações salvas com sucesso!');
+          if (typeof ui !== 'undefined' && ui.showNotification) ui.showNotification('Configurações salvas com sucesso!', 'success');
+          else alert('Configurações salvas com sucesso!');
         }
         
       } catch (error) {
@@ -516,7 +522,8 @@
         if (typeof ui !== 'undefined') {
           ui.showNotification('Erro ao salvar configurações', 'error');
         } else {
-          alert('Erro ao salvar configurações');
+          if (typeof ui !== 'undefined' && ui.showNotification) ui.showNotification('Erro ao salvar configurações', 'error');
+          else alert('Erro ao salvar configurações');
         }
       }
     });

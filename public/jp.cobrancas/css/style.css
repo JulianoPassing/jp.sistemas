@@ -204,6 +204,36 @@ main {
   }
 }
 
+/* Breadcrumb global */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+.breadcrumb a {
+  color: #0d9488;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumb a:hover {
+  color: #002f4b;
+}
+
+.breadcrumb span:last-child {
+  color: #374151;
+  font-weight: 500;
+}
+
+.breadcrumb .breadcrumb-sep {
+  font-size: 0.65rem;
+  color: #9ca3af;
+}
+
 .dashboard-title {
   font-size: 2rem;
   font-weight: 700;
@@ -1378,6 +1408,10 @@ footer {
   border-left-color: var(--yellow-500);
 }
 
+.notification.notification-info {
+  border-left-color: #0d9488;
+}
+
 .notification-content {
   display: flex;
   justify-content: space-between;
@@ -1397,6 +1431,42 @@ footer {
 
 .notification-close:hover {
   color: var(--gray-700);
+}
+
+/* Empty state - quando listas/tabelas estão vazias */
+.empty-state {
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  color: #d1d5db;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.empty-state-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-text {
+  font-size: 0.95rem;
+  color: #9ca3af;
+  margin-bottom: 1rem;
+}
+
+.empty-state .btn {
+  margin-top: 0.5rem;
+}
+
+/* Empty state dentro de tabela */
+table td .empty-state {
+  display: block;
+  width: 100%;
 }
 
 /* Estilos para caixa de busca */

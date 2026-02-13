@@ -49,6 +49,11 @@
 
   <main>
     <div class="container">
+      <nav class="breadcrumb">
+        <a href="dashboard.html">Dashboard</a>
+        <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
+        <span>Histórico</span>
+      </nav>
       <div class="page-header">
         <div class="page-header-icon">
           <i class="fas fa-history"></i>
@@ -287,7 +292,7 @@
         historicoPagamentos = await apiService.getHistoricoPagamentos(params);
 
         if (!historicoPagamentos || historicoPagamentos.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum pagamento registrado. Os pagamentos são gravados automaticamente quando você marca parcelas ou juros como pagos no Dashboard ou Empréstimos.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-money-bill-wave empty-state-icon"></i><div class="empty-state-title">Nenhum pagamento registrado</div><div class="empty-state-text">Os pagamentos são gravados automaticamente quando você marca parcelas ou juros como pagos no Dashboard ou Empréstimos.</div></div></td></tr>';
           info.textContent = 'Nenhum pagamento encontrado';
         } else {
           tbody.innerHTML = '';
@@ -437,7 +442,7 @@
       const container = tbody.parentElement.parentElement;
 
       if (emprestimosFiltrados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-search empty-state-icon"></i><div class="empty-state-title">Nenhum empréstimo encontrado</div><div class="empty-state-text">Tente ajustar os filtros de busca ou adicione um novo empréstimo.</div></div></td></tr>';
         const oldCards = container.querySelector('.mobile-historico-cards');
         if (oldCards) oldCards.remove();
         tbody.parentElement.style.display = '';

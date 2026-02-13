@@ -926,7 +926,7 @@ const dashboardController = {
     tbody.innerHTML = '';
 
     if (emprestimos.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhum empréstimo recente</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-folder-open empty-state-icon"></i><div class="empty-state-title">Nenhum empréstimo recente</div><div class="empty-state-text">Clique em "Novo Empréstimo" acima para cadastrar.</div></div></td></tr>';
       return;
     }
 
@@ -1165,7 +1165,7 @@ const dashboardController = {
       }
 
       if (cobrancasDoDia.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhuma cobrança vence hoje</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-calendar-check empty-state-icon"></i><div class="empty-state-title">Nenhuma cobrança vence hoje</div><div class="empty-state-text">Ótimo! Nenhum vencimento para a data de hoje.</div></div></td></tr>';
         return;
       }
 
@@ -1246,7 +1246,7 @@ const dashboardController = {
       const emprestimos = await apiService.getEmprestimos();
       
       if (!emprestimos || emprestimos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-search empty-state-icon"></i><div class="empty-state-title">Nenhum empréstimo encontrado</div><div class="empty-state-text">Tente ajustar os filtros de busca ou adicione um novo empréstimo.</div></div></td></tr>';
         this.todosEmprestimosProcessados = [];
         this.updateSearchResultsInfo(0, 0);
         return;
@@ -1404,7 +1404,7 @@ const dashboardController = {
       if (oldCards) oldCards.remove();
       tbody.parentElement.style.display = '';
       
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-search empty-state-icon"></i><div class="empty-state-title">Nenhum empréstimo encontrado</div><div class="empty-state-text">Tente ajustar os filtros de busca ou adicione um novo empréstimo.</div></div></td></tr>';
       return;
     }
 
@@ -2606,7 +2606,7 @@ const emprestimoController = {
             const observacoes = document.getElementById('observacoes-juros').value;
             
             if (valorJuros < jurosAcumulados) {
-                                alert(`Valor insuficiente. O mínimo é ${utils.formatCurrency(jurosAcumulados)}`);
+                                ui.showNotification(`Valor insuficiente. O mínimo é ${utils.formatCurrency(jurosAcumulados)}`, 'error');
               return;
             }
             
@@ -2649,7 +2649,7 @@ const emprestimoController = {
               
             } catch (error) {
               console.error('Erro ao processar pagamento de juros:', error);
-              alert('Erro ao processar pagamento: ' + error.message);
+              ui.showNotification('Erro ao processar pagamento: ' + error.message, 'error');
             } finally {
               const submitBtn = formJuros.querySelector('button[type="submit"]');
               submitBtn.textContent = originalText;
@@ -3098,7 +3098,7 @@ async function renderHistoricoEmprestimos() {
   try {
     const emprestimos = await apiService.getEmprestimos();
     if (!emprestimos || emprestimos.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-history empty-state-icon"></i><div class="empty-state-title">Nenhum empréstimo encontrado</div><div class="empty-state-text">Não há empréstimos cadastrados no sistema.</div></div></td></tr>';
       return;
     }
     tbody.innerHTML = '';
@@ -3234,7 +3234,7 @@ async function renderEmprestimosLista() {
     // Filtrar apenas empréstimos ativos
     const ativos = (emprestimos || []).filter(e => (e.status || '').toLowerCase() === 'ativo');
     if (!ativos || ativos.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo ativo encontrado</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-hand-holding-usd empty-state-icon"></i><div class="empty-state-title">Nenhum empréstimo ativo encontrado</div><div class="empty-state-text">Não há empréstimos ativos no momento.</div></div></td></tr>';
       return;
     }
     tbody.innerHTML = '';
@@ -3422,7 +3422,7 @@ async function renderClientesLista() {
     const clientes = await apiService.getClientes();
     const emprestimos = await apiService.getEmprestimos();
     if (!clientes || clientes.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhum cliente encontrado</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-users-slash empty-state-icon"></i><div class="empty-state-title">Nenhum cliente encontrado</div><div class="empty-state-text">Cadastre clientes em "Adicionar Cliente" ou ajuste a busca.</div></div></td></tr>';
       return;
     }
     
@@ -3548,11 +3548,11 @@ async function carregarListaDocumentosCobrancas(clienteId) {
         const did = btn.getAttribute('data-doc-id');
         try {
           const r = await fetch(`/api/cobrancas/clientes/${cid}/documentos/${did}/arquivo`, { credentials: 'include' });
-          if (!r.ok) { alert('Erro ao abrir documento.'); return; }
+          if (!r.ok) { ui.showNotification('Erro ao abrir documento.', 'error'); return; }
           const blob = await r.blob();
           const url = URL.createObjectURL(blob);
           window.open(url, '_blank');
-        } catch (_) { alert('Erro ao abrir documento.'); }
+        } catch (_) { ui.showNotification('Erro ao abrir documento.', 'error'); }
       };
     });
     document.querySelectorAll('.btn-excluir-doc-cobrancas').forEach(btn => {
@@ -3563,8 +3563,8 @@ async function carregarListaDocumentosCobrancas(clienteId) {
         try {
           const r = await fetch(`/api/cobrancas/clientes/${cid}/documentos/${did}`, { method: 'DELETE', credentials: 'include' });
           if (r.ok) await carregarListaDocumentosCobrancas(cid);
-          else alert('Erro ao remover.');
-        } catch (_) { alert('Erro ao remover.'); }
+          else ui.showNotification('Erro ao remover.', 'error');
+        } catch (_) { ui.showNotification('Erro ao remover.', 'error'); }
       };
     });
   } catch (_) {
@@ -3602,7 +3602,7 @@ function abrirModalDocumentosCobrancas(clienteId, clienteNome) {
       const input = document.getElementById('input-documento-cobrancas');
       const cid = modal.getAttribute('data-cliente-id');
       if (!cid || !input.files || input.files.length === 0) {
-        alert('Selecione um ou mais arquivos (PDF ou imagem).');
+        ui.showNotification('Selecione um ou mais arquivos (PDF ou imagem).', 'error');
         return;
       }
       const btn = document.getElementById('btn-anexar-doc-cobrancas');
@@ -3615,10 +3615,10 @@ function abrirModalDocumentosCobrancas(clienteId, clienteNome) {
         }
         const resp = await fetch(`/api/cobrancas/clientes/${cid}/documentos`, { method: 'POST', credentials: 'include', body: formData });
         const data = await resp.json().catch(() => ({}));
-        if (!resp.ok) { alert(data.error || 'Erro ao anexar documento.'); return; }
+        if (!resp.ok) { ui.showNotification(data.error || 'Erro ao anexar documento.', 'error'); return; }
         input.value = '';
         await carregarListaDocumentosCobrancas(cid);
-      } catch (err) { alert('Erro ao enviar arquivo.'); }
+      } catch (err) { ui.showNotification('Erro ao enviar arquivo.', 'error'); }
       finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> Anexar documento'; }
     };
   }
@@ -3662,10 +3662,10 @@ async function initDocumentosModalVer(modal, clienteId) {
         btn.onclick = async () => {
           try {
             const r = await fetch(`/api/cobrancas/clientes/${clienteId}/documentos/${btn.getAttribute('data-doc-id')}/arquivo`, { credentials: 'include' });
-            if (!r.ok) { alert('Erro ao abrir documento.'); return; }
+            if (!r.ok) { ui.showNotification('Erro ao abrir documento.', 'error'); return; }
             const blob = await r.blob();
             window.open(URL.createObjectURL(blob), '_blank');
-          } catch (_) { alert('Erro ao abrir documento.'); }
+          } catch (_) { ui.showNotification('Erro ao abrir documento.', 'error'); }
         };
       });
       modal.querySelectorAll('.btn-excluir-doc-modal-ver').forEach(btn => {
@@ -3674,8 +3674,8 @@ async function initDocumentosModalVer(modal, clienteId) {
           try {
             const r = await fetch(`/api/cobrancas/clientes/${clienteId}/documentos/${btn.getAttribute('data-doc-id')}`, { method: 'DELETE', credentials: 'include' });
             if (r.ok) await renderDocs();
-            else alert('Erro ao remover.');
-          } catch (_) { alert('Erro ao remover.'); }
+            else ui.showNotification('Erro ao remover.', 'error');
+          } catch (_) { ui.showNotification('Erro ao remover.', 'error'); }
         };
       });
     } catch (_) {
@@ -3687,7 +3687,7 @@ async function initDocumentosModalVer(modal, clienteId) {
     e.preventDefault();
     const input = modal.querySelector('#input-doc-modal-ver');
     if (!input.files || input.files.length === 0) {
-      alert('Selecione um ou mais arquivos (PDF ou imagem).');
+      ui.showNotification('Selecione um ou mais arquivos (PDF ou imagem).', 'error');
       return;
     }
     const btn = modal.querySelector('#btn-anexar-doc-modal-ver');
@@ -3700,10 +3700,10 @@ async function initDocumentosModalVer(modal, clienteId) {
       }
       const resp = await fetch(`/api/cobrancas/clientes/${clienteId}/documentos`, { method: 'POST', credentials: 'include', body: formData });
       const data = await resp.json().catch(() => ({}));
-      if (!resp.ok) { alert(data.error || 'Erro ao anexar documento.'); return; }
+      if (!resp.ok) { ui.showNotification(data.error || 'Erro ao anexar documento.', 'error'); return; }
       input.value = '';
       await renderDocs();
-    } catch (err) { alert('Erro ao enviar arquivo.'); }
+    } catch (err) { ui.showNotification('Erro ao enviar arquivo.', 'error'); }
     finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> Anexar documento'; }
   };
 
@@ -3718,7 +3718,7 @@ async function renderListaNegra() {
   try {
     const clientes = await apiService.getClientes();
     if (!clientes || clientes.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum cliente encontrado</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-users-slash empty-state-icon"></i><div class="empty-state-title">Nenhum cliente encontrado</div><div class="empty-state-text">Cadastre clientes em "Adicionar Cliente" para começar.</div></div></td></tr>';
       return;
     }
     
@@ -3726,7 +3726,7 @@ async function renderListaNegra() {
     const listaNegra = clientes.filter(cliente => cliente.status === 'Lista Negra');
     
     if (listaNegra.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhum cliente na lista negra</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-shield-alt empty-state-icon"></i><div class="empty-state-title">Nenhum cliente na lista negra</div><div class="empty-state-text">Nenhum cliente bloqueado no momento.</div></div></td></tr>';
       return;
     }
     
@@ -3799,7 +3799,7 @@ async function renderCobrancasEmAbertoLista() {
       return status === 'ativo' || status === 'pendente';
     });
     if (emAberto.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhuma cobrança em aberto</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-receipt empty-state-icon"></i><div class="empty-state-title">Nenhuma cobrança em aberto</div><div class="empty-state-text">Todas as cobranças foram quitadas ou não há empréstimos ativos.</div></div></td></tr>';
       return;
     }
     tbody.innerHTML = '';
@@ -4644,7 +4644,7 @@ async function renderAtrasadosLista() {
     }
     
     if (atrasadosProcessados.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo atrasado</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-check-circle empty-state-icon" style="color: #10b981;"></i><div class="empty-state-title">Nenhum empréstimo atrasado</div><div class="empty-state-text">Ótimo! Todos os pagamentos estão em dia.</div></div></td></tr>';
       return;
     }
     

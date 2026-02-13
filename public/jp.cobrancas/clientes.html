@@ -36,6 +36,11 @@
   </header>
   <main>
     <div class="container">
+      <nav class="breadcrumb">
+        <a href="dashboard.html">Dashboard</a>
+        <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
+        <span>Clientes</span>
+      </nav>
       <div class="page-header">
         <div class="page-header-icon">
           <i class="fas fa-users"></i>
@@ -169,7 +174,7 @@
         if (!tbody) return;
         
         if (!filteredClientes || filteredClientes.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">Nenhum cliente encontrado</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-users-slash empty-state-icon"></i><div class="empty-state-title">Nenhum cliente encontrado</div><div class="empty-state-text">Cadastre clientes em "Adicionar Cliente" ou ajuste a busca.</div></div></td></tr>';
           return;
         }
         

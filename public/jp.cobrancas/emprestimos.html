@@ -43,6 +43,11 @@
   </header>
   <main>
     <div class="container">
+      <nav class="breadcrumb">
+        <a href="dashboard.html">Dashboard</a>
+        <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
+        <span>Empréstimos</span>
+      </nav>
       <div class="page-header">
         <div class="page-header-icon">
           <i class="fas fa-hand-holding-usd"></i>
@@ -1190,7 +1195,7 @@
         });
         
         if (emprestimosFiltrados.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500">Nenhum empréstimo encontrado</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-search empty-state-icon"></i><div class="empty-state-title">Nenhum empréstimo encontrado</div><div class="empty-state-text">Tente ajustar os filtros de busca ou adicione um novo empréstimo.</div></div></td></tr>';
           return;
         }
         

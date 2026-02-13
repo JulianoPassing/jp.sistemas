@@ -402,7 +402,8 @@
             const result = await response.json();
             const novoClienteId = result.id || (result.cliente && result.cliente.id);
             if (!novoClienteId) {
-              alert('Cliente cadastrado, mas não foi possível obter o ID para anexar documentos.');
+              if (typeof ui !== 'undefined' && ui.showNotification) ui.showNotification('Cliente cadastrado, mas não foi possível obter o ID para anexar documentos.', 'info');
+              else alert('Cliente cadastrado, mas não foi possível obter o ID para anexar documentos.');
               window.location.href = 'clientes.html';
               return;
             }
@@ -425,11 +426,17 @@
               }
             }
 
-            alert('Cliente cadastrado com sucesso!');
-            window.location.href = 'clientes.html';
+            if (typeof ui !== 'undefined' && ui.showNotification) {
+              ui.showNotification('Cliente cadastrado com sucesso!', 'success');
+              setTimeout(() => { window.location.href = 'clientes.html'; }, 1200);
+            } else {
+              alert('Cliente cadastrado com sucesso!');
+              window.location.href = 'clientes.html';
+            }
           } catch (error) {
             console.error('Erro ao cadastrar cliente:', error);
-            alert('Erro ao cadastrar cliente: ' + (error.message || error));
+            if (typeof ui !== 'undefined' && ui.showNotification) ui.showNotification('Erro ao cadastrar cliente: ' + (error.message || error), 'error');
+            else alert('Erro ao cadastrar cliente: ' + (error.message || error));
           } finally {
             submitBtn.textContent = originalText;
             submitBtn.disabled = false;
