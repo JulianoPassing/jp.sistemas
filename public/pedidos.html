@@ -2124,43 +2124,47 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             doc.text('INFORMAÇÕES DO CLIENTE', 20, yBase + 30);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            // Extrair informações das observações para o PDF
-            const observacoes = pedido.observacoes || '';
-            const telefonePDF = extrairInfoPDF(observacoes, 'Telefone:') || 'Não informado';
-            const emailPDF = extrairInfoPDF(observacoes, 'Email:') || 'Não informado';
-            const enderecoPDF = extrairInfoPDF(observacoes, 'Endereço:') || 'Não informado';
-            const formaPagamentoPDF = extrairInfoPDF(observacoes, 'Forma de Pagamento:') || 'Não informado';
-
-            // Função auxiliar para extrair informações no PDF
+            // Dados do cliente: priorizar pedido (API), depois observações
             function extrairInfoPDF(texto, chave) {
+              if (!texto) return null;
               const textoLimpo = texto.replace(/•/g, '').replace(/\s+/g, ' ');
               const regex = new RegExp(`${chave}\\s*([^\\n]+)`, 'i');
               const match = textoLimpo.match(regex);
               return match ? match[1].trim() : null;
             }
+            const obs = pedido.observacoes || '';
+            const telefonePDF = pedido.telefone || extrairInfoPDF(obs, 'Telefone:') || '—';
+            const emailPDF = pedido.email || extrairInfoPDF(obs, 'Email:') || '—';
+            const enderecoPDF = pedido.endereco || extrairInfoPDF(obs, 'Endereço:') || '—';
+            const formaPagamentoPDF = pedido.forma_pagamento || extrairInfoPDF(obs, 'Forma de Pagamento:') || '—';
 
-            doc.text(`Cliente: ${limparCaracteres(pedido.nome_cliente || pedido.cliente_id || 'N/A')}`, 20, yBase + 40);
-            doc.text(`Endereço: ${limparCaracteres(enderecoPDF)}`, 20, yBase + 47);
-            doc.text(`Telefone: ${limparCaracteres(telefonePDF)}`, 20, yBase + 54);
-            doc.text(`E-mail: ${limparCaracteres(emailPDF)}`, 20, yBase + 61);
-            doc.text(`Forma de Pagamento: ${limparCaracteres(formaPagamentoPDF)}`, 20, yBase + 68);
+            doc.setFontSize(9);
+            doc.text(`Cliente: ${limparCaracteres(pedido.nome_cliente || pedido.cliente_id || 'N/A')}`, 20, yBase + 38);
+            doc.text(`Endereço: ${limparCaracteres(enderecoPDF)}`, 20, yBase + 44);
+            doc.text(`Telefone: ${limparCaracteres(telefonePDF)}  |  E-mail: ${limparCaracteres(emailPDF)}`, 20, yBase + 50);
+            doc.text(`Pagamento: ${limparCaracteres(formaPagamentoPDF)}`, 20, yBase + 56);
 
             // Itens do pedido
-            doc.setFontSize(14);
+            doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
-            doc.text('ITENS DO PEDIDO', 20, yBase + 90);
-            // Tabela de itens
-            const tableData = pedido.itens ? pedido.itens.map(item => [
-              limparCaracteres(item.produto || 'N/A'),
-              String(item.quantidade || 0),
-              `R$ ${(Number(item.precoUnitario) || 0).toFixed(2).replace('.', ',')}`,
-              `R$ ${(Number(item.subtotal) || 0).toFixed(2).replace('.', ',')}`
-            ]) : [];
+            doc.text('ITENS DO PEDIDO', 20, yBase + 66);
+            // Tabela de itens - usar preco_unitario/preco_venda como fallback
+            const tableData = pedido.itens ? pedido.itens.map(item => {
+              const precoUnit = Number(item.precoUnitario ?? item.preco_unitario ?? item.preco_venda) || 0;
+              const qtd = Number(item.quantidade) || 0;
+              const sub = Number(item.subtotal) || (precoUnit * qtd);
+              return [
+                limparCaracteres(item.produto || 'N/A'),
+                String(qtd),
+                `R$ ${precoUnit.toFixed(2).replace('.', ',')}`,
+                `R$ ${sub.toFixed(2).replace('.', ',')}`
+              ];
+            }) : [];
             
             // Só criar tabela se houver dados
             if (tableData.length > 0) {
               doc.autoTable({
-                startY: yBase + 95,
+                startY: yBase + 70,
                 head: [['Produto', 'Qtd', 'Preço Unit.', 'Subtotal']],
                 body: tableData,
                 theme: 'grid',
@@ -2187,19 +2191,20 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
               });
             }
             // Total
-            const finalY = tableData.length > 0 ? doc.lastAutoTable.finalY + 10 : yBase + 95;
+            const finalY = tableData.length > 0 ? doc.lastAutoTable.finalY + 8 : yBase + 70;
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             doc.text(`Valor Total: R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}`, 150, finalY);
-            // Observações
-            if (pedido.observacoes) {
-              doc.setFontSize(12);
+            // Observações - omitir bloco "INFORMAÇÕES ADICIONAIS" (redundante)
+            let obsTexto = (pedido.observacoes || '').replace(/[\x00-\x1F\x7F]/g, '').trim();
+            obsTexto = obsTexto.replace(/INFORMAÇÕES ADICIONAIS:[\s\S]*/i, '').trim();
+            if (obsTexto && obsTexto.length > 2) {
+              doc.setFontSize(9);
               doc.setFont('helvetica', 'bold');
-              doc.text('OBSERVAÇÕES:', 20, finalY + 20);
-              doc.setFontSize(10);
+              doc.text('Obs:', 20, finalY + 14);
               doc.setFont('helvetica', 'normal');
-              const observacoes = doc.splitTextToSize((pedido.observacoes || '').replace(/[\x00-\x1F\x7F]/g, ''), 170);
-              doc.text(observacoes, 20, finalY + 28);
+              const obsLinhas = doc.splitTextToSize(obsTexto.substring(0, 180), 170);
+              doc.text(obsLinhas, 28, finalY + 20);
             }
             // Rodapé
             const pageHeight = doc.internal.pageSize.height;
@@ -2357,13 +2362,18 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.text('ITENS DO PEDIDO', 20, yInfo);
-            // Tabela de itens
-            const tableData = pedido.itens ? pedido.itens.map(item => [
-              limparCaracteres(item.produto || 'N/A'),
-              String(item.quantidade || 0),
-              `R$ ${(Number(item.precoUnitario) || 0).toFixed(2).replace('.', ',')}`,
-              `R$ ${(Number(item.subtotal) || 0).toFixed(2).replace('.', ',')}`
-            ]) : [];
+            // Tabela de itens - usar preco_unitario/preco_venda como fallback
+            const tableData = pedido.itens ? pedido.itens.map(item => {
+              const precoUnit = Number(item.precoUnitario ?? item.preco_unitario ?? item.preco_venda) || 0;
+              const qtd = Number(item.quantidade) || 0;
+              const sub = Number(item.subtotal) || (precoUnit * qtd);
+              return [
+                limparCaracteres(item.produto || 'N/A'),
+                String(qtd),
+                `R$ ${precoUnit.toFixed(2).replace('.', ',')}`,
+                `R$ ${sub.toFixed(2).replace('.', ',')}`
+              ];
+            }) : [];
             if (tableData.length > 0) {
               doc.autoTable({
                 startY: yInfo + 5,
@@ -2397,15 +2407,16 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             doc.text(`Valor Total: R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}`, 150, finalY);
-            // Observações (apenas se houver e não for duplicada)
-            if (pedido.observacoes) {
-              doc.setFontSize(12);
+            // Observações - omitir bloco "INFORMAÇÕES ADICIONAIS" (redundante)
+            let obsTexto = (pedido.observacoes || '').replace(/[\x00-\x1F\x7F]/g, '').trim();
+            obsTexto = obsTexto.replace(/INFORMAÇÕES ADICIONAIS:[\s\S]*/i, '').trim();
+            if (obsTexto && obsTexto.length > 2) {
+              doc.setFontSize(9);
               doc.setFont('helvetica', 'bold');
-              doc.text('OBSERVAÇÕES:', 20, finalY + 20);
-              doc.setFontSize(10);
+              doc.text('Obs:', 20, finalY + 14);
               doc.setFont('helvetica', 'normal');
-              const obsFormatada = doc.splitTextToSize(pedido.observacoes, 170);
-              doc.text(obsFormatada, 20, finalY + 28);
+              const obsLinhas = doc.splitTextToSize(obsTexto.substring(0, 180), 170);
+              doc.text(obsLinhas, 28, finalY + 20);
             }
             // Rodapé
             const pageHeight = doc.internal.pageSize.height;
