@@ -730,19 +730,25 @@
         renderMesas();
       }
     }
-    function minutosAbertos(pedido) {
-      const dataRef = pedido?.created_at || pedido?.data_pedido;
-      if (!dataRef) return 0;
+    function getDataCriacaoPedido(pedido) {
+      if (!pedido) return null;
+      const key = 'comanda_criada_' + pedido.id;
+      const stored = sessionStorage.getItem(key);
+      if (stored) return parseInt(stored, 10);
+      const dataRef = pedido.created_at || pedido.data_pedido;
+      if (!dataRef) return null;
       const d = new Date(dataRef);
-      if (isNaN(d.getTime())) return 0;
-      return Math.floor((Date.now() - d.getTime()) / 60000);
+      return isNaN(d.getTime()) ? null : d.getTime();
+    }
+    function minutosAbertos(pedido) {
+      const ts = getDataCriacaoPedido(pedido);
+      if (!ts) return 0;
+      return Math.floor((Date.now() - ts) / 60000);
     }
     function tempoAbertura(pedido) {
-      const dataRef = pedido?.created_at || pedido?.data_pedido;
-      if (!dataRef) return '';
-      const d = new Date(dataRef);
-      if (isNaN(d.getTime())) return '';
-      const diff = Math.floor((Date.now() - d.getTime()) / 60000);
+      const ts = getDataCriacaoPedido(pedido);
+      if (!ts) return '';
+      const diff = Math.floor((Date.now() - ts) / 60000);
       if (diff < 1) return 'Agora';
       if (diff < 60) return `${diff} min`;
       const h = Math.floor(diff / 60);
@@ -767,14 +773,14 @@
           return nome.includes(termoBusca);
         });
       }
-      const dataRef = (p) => p.created_at || p.data_pedido || 0;
-      if (ordenar === 'antigo') lista.sort((a, b) => new Date(dataRef(a)) - new Date(dataRef(b)));
+      const dataRef = (p) => getDataCriacaoPedido(p) || 0;
+      if (ordenar === 'antigo') lista.sort((a, b) => dataRef(a) - dataRef(b));
       else if (ordenar === 'valor') lista.sort((a, b) => {
         const ta = (a.itens||[]).reduce((s, i) => s + parseFloat(i.subtotal || i.precoUnitario * i.quantidade || 0), 0);
         const tb = (b.itens||[]).reduce((s, i) => s + parseFloat(i.subtotal || i.precoUnitario * i.quantidade || 0), 0);
         return tb - ta;
       });
-      else lista.sort((a, b) => new Date(dataRef(b)) - new Date(dataRef(a)));
+      else lista.sort((a, b) => dataRef(b) - dataRef(a));
       lista.forEach(pedido => {
         let total = (pedido.itens||[]).reduce((sum, i) => {
           const precoUnitario = parseFloat(i.precoUnitario || i.preco_unitario || 0);
@@ -868,11 +874,9 @@
         }
         if (response.ok) {
           const idCriado = novoPedido?.id;
-          const createdAgora = new Date().toISOString();
+          if (idCriado) sessionStorage.setItem('comanda_criada_' + idCriado, Date.now().toString());
           nomeInput.value = '';
           await carregarPedidosAbertos();
-          const p = pedidosAbertos.find(x => x.id === idCriado);
-          if (p) p.created_at = createdAgora;
           renderMesas();
           feedback.textContent = 'Comanda criada com sucesso!';
           feedback.style.color = '#059669';
@@ -989,6 +993,7 @@
           throw new Error('Erro ao finalizar mesa');
         }
 
+        sessionStorage.removeItem('comanda_criada_' + id);
         await carregarPedidosAbertos();
         alert('Mesa finalizada com sucesso!');
       } catch (error) {
@@ -1097,6 +1102,7 @@
       try {
         const resp = await fetch(`/api/pedidos/${id}`, { method: 'DELETE' });
         if (!resp.ok) throw new Error('Erro ao excluir mesa');
+        sessionStorage.removeItem('comanda_criada_' + id);
         pedidosAbertos = pedidosAbertos.filter(p => p.id !== id);
         renderMesas();
       } catch (e) {
@@ -1441,6 +1447,7 @@
             throw new Error('Erro ao finalizar mesa');
           }
 
+          sessionStorage.removeItem('comanda_criada_' + id);
           await carregarPedidosAbertos();
           fecharModalFinalizarMesa();
           alert('Mesa finalizada com sucesso!');
