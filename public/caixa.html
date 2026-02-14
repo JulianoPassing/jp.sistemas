@@ -321,9 +321,63 @@
     table tr td, table tr th {
       color: var(--primary-blue) !important;
     }
+    /* Modo PDV - tela cheia, só o essencial */
+    body.pdv-fullscreen .sistema-header,
+    body.pdv-fullscreen .sistema-breadcrumb,
+    body.pdv-fullscreen .sistema-page-header,
+    body.pdv-fullscreen .footer { display: none !important; }
+    body.pdv-fullscreen .sistema-main {
+      padding: 1rem;
+      max-width: none;
+      min-height: 100vh;
+    }
+    body.pdv-fullscreen .sistema-container { max-width: none; padding: 0; }
+    body.pdv-fullscreen .sistema-section { margin-bottom: 0; }
+    body.pdv-fullscreen .caixa-grid { gap: 24px; min-height: calc(100vh - 120px); }
+    .pdv-fullscreen-toggle {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 999;
+      padding: 8px 16px;
+      background: var(--primary-blue);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .pdv-fullscreen-toggle:hover { background: #004d73; }
+    body:not(.pdv-fullscreen) .pdv-exit-btn { display: none !important; }
+    body.pdv-fullscreen .pdv-fullscreen-btn { display: none !important; }
+    .pdv-exit-btn {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 999;
+      padding: 8px 16px;
+      background: #6b7280;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .pdv-exit-btn:hover { background: #4b5563; color: #fff; }
   </style>
 </head>
-<body class="app-layout">
+<body class="app-layout" id="pdv-body">
+  <button type="button" class="pdv-fullscreen-btn pdv-fullscreen-toggle" id="btn-tela-cheia" title="Modo PDV - ocultar menu e usar tela cheia"><i class="fas fa-expand"></i> Tela cheia</button>
+  <a href="caixa.html" class="pdv-exit-btn" id="btn-sair-tela-cheia" title="Sair do modo tela cheia"><i class="fas fa-compress"></i> Sair</a>
   <header class="sistema-header">
     <div class="header-content">
       <a href="painel.html" class="logo"><img src="https://i.imgur.com/EQ1tjZX.png" alt="J.P Sistemas" style="height: 5rem; width: auto; object-fit: contain;" /></a>
@@ -362,9 +416,11 @@
     <div class="sistema-section">
       <div class="sistema-section-header">
         <h2 class="sistema-section-title-icon"><i class="fas fa-shopping-cart"></i> Nova Venda</h2>
-        <a href="pedidos.html" class="btn btn-secondary" style="font-size:1rem;padding:10px 24px;display:inline-flex;align-items:center;gap:8px;text-decoration:none;">
-          <i class="fas fa-list"></i> Pedidos
-        </a>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <a href="pedidos.html" class="btn btn-secondary" style="font-size:1rem;padding:10px 24px;display:inline-flex;align-items:center;gap:8px;text-decoration:none;">
+            <i class="fas fa-list"></i> Pedidos
+          </a>
+        </div>
       </div>
       <div class="caixa-grid">
         <!-- Seção Cliente -->
@@ -453,6 +509,13 @@
       window.location.href = 'sistema.html';
     }
     document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('fullscreen') === '1') {
+        document.getElementById('pdv-body').classList.add('pdv-fullscreen');
+      }
+      document.getElementById('btn-tela-cheia')?.addEventListener('click', () => {
+        window.location.href = 'caixa.html?fullscreen=1';
+      });
       document.getElementById('nav-toggle')?.addEventListener('click', function() {
         document.getElementById('main-nav').classList.toggle('open');
       });

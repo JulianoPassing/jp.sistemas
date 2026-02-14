@@ -386,9 +386,63 @@
     table tr td, table tr th {
       color: var(--primary-blue) !important;
     }
+    /* Modo Comandas - tela cheia, só o essencial */
+    body.comandas-fullscreen .sistema-header,
+    body.comandas-fullscreen .sistema-breadcrumb,
+    body.comandas-fullscreen .sistema-page-header,
+    body.comandas-fullscreen .footer { display: none !important; }
+    body.comandas-fullscreen .sistema-main {
+      padding: 1rem;
+      max-width: none;
+      min-height: 100vh;
+    }
+    body.comandas-fullscreen .sistema-container { max-width: none; padding: 0; }
+    body.comandas-fullscreen .sistema-section { margin-bottom: 0; }
+    body.comandas-fullscreen .mesas-grid { min-height: calc(100vh - 180px); }
+    .comandas-fullscreen-toggle {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 999;
+      padding: 8px 16px;
+      background: var(--primary-blue);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .comandas-fullscreen-toggle:hover { background: #004d73; }
+    body:not(.comandas-fullscreen) .comandas-exit-btn { display: none !important; }
+    body.comandas-fullscreen .comandas-fullscreen-btn { display: none !important; }
+    .comandas-exit-btn {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 999;
+      padding: 8px 16px;
+      background: #6b7280;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .comandas-exit-btn:hover { background: #4b5563; color: #fff; }
   </style>
 </head>
-<body class="app-layout">
+<body class="app-layout" id="comandas-body">
+  <button type="button" class="comandas-fullscreen-btn comandas-fullscreen-toggle" id="btn-tela-cheia" title="Modo tela cheia - ocultar menu"><i class="fas fa-expand"></i> Tela cheia</button>
+  <a href="mesas.html" class="comandas-exit-btn" id="btn-sair-tela-cheia" title="Sair do modo tela cheia"><i class="fas fa-compress"></i> Sair</a>
   <header class="sistema-header">
     <div class="header-content">
       <a href="painel.html" class="logo"><img src="https://i.imgur.com/EQ1tjZX.png" alt="J.P Sistemas" style="height: 5rem; width: auto; object-fit: contain;" /></a>
@@ -486,6 +540,13 @@
       window.location.href = 'sistema.html';
     }
     document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('fullscreen') === '1') {
+        document.getElementById('comandas-body').classList.add('comandas-fullscreen');
+      }
+      document.getElementById('btn-tela-cheia')?.addEventListener('click', () => {
+        window.location.href = 'mesas.html?fullscreen=1';
+      });
       document.getElementById('nav-toggle')?.addEventListener('click', function() {
         document.getElementById('main-nav').classList.toggle('open');
       });
