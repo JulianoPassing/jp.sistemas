@@ -406,20 +406,27 @@
       </nav>
     </div>
   </header>
-  <main class="main-content">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
-      <nav class="sistema-breadcrumb" style="margin-bottom: 0;">
+  <main class="sistema-main">
+    <div class="sistema-container">
+      <nav class="sistema-breadcrumb">
         <a href="painel.html">Painel</a>
         <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
         <a href="pedidos.html">Pedidos</a>
         <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
         <span>Mesas</span>
       </nav>
-      <span style="color: #6b7280; font-size: 0.875rem;">Bem-vindo, <span id="userDisplay"></span></span>
-    </div>
-    <div class="card">
-      <div class="card-header">
-        <h2>Mesas / Pedidos em Aberto</h2>
+      <div class="sistema-page-header">
+        <div class="sistema-page-header-icon">
+          <i class="fas fa-chair"></i>
+        </div>
+        <div class="sistema-page-header-text">
+          <h1>Mesas / Pedidos em Aberto</h1>
+          <p>Gerencie mesas e pedidos em aberto</p>
+        </div>
+      </div>
+    <div class="sistema-section">
+      <div class="sistema-section-header">
+        <h2 class="sistema-section-title-icon"><i class="fas fa-list"></i> Mesas</h2>
       </div>
       <div id="mesa-feedback" style="display:none;margin-bottom:18px;text-align:center;font-weight:500;"></div>
       <form class="nova-mesa-form" id="nova-mesa-form">
@@ -435,6 +442,7 @@
         </a>
       </form>
       <div class="mesas-grid" id="mesas-grid"></div>
+    </div>
     </div>
   </main>
   <footer class="footer" style="width:100%;text-align:center;padding:18px 0 12px 0;color:#fff;font-size:15px;background:transparent;font-family:'Inter',sans-serif;letter-spacing:0.02em;">

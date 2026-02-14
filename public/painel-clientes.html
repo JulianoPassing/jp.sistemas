@@ -485,18 +485,25 @@
     </div>
   </header>
 
-  <main class="main-content">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
-      <nav class="sistema-breadcrumb" style="margin-bottom: 0;">
+  <main class="sistema-main">
+    <div class="sistema-container">
+      <nav class="sistema-breadcrumb">
         <a href="painel.html">Painel</a>
         <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
         <span>Clientes</span>
       </nav>
-      <span style="color: #6b7280; font-size: 0.875rem;">Bem-vindo, <span id="userDisplay"></span></span>
-    </div>
-    <div class="card" id="form-card">
-      <div class="card-header">
-        <h2 id="form-title">Cadastrar Novo Cliente</h2>
+      <div class="sistema-page-header">
+        <div class="sistema-page-header-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="sistema-page-header-text">
+          <h1>Gestão de Clientes</h1>
+          <p>Cadastre e gerencie seus clientes</p>
+        </div>
+      </div>
+    <div class="sistema-section" id="form-card">
+      <div class="sistema-section-header">
+        <h2 class="sistema-section-title-icon" id="form-title"><i class="fas fa-user-plus"></i> Cadastrar Novo Cliente</h2>
       </div>
       <form id="cliente-form">
         <div class="form-grid">
@@ -565,9 +572,9 @@
       </form>
     </div>
 
-    <div class="card">
-      <div class="card-header">
-        <h2>Gestao de Clientes</h2>
+    <div class="sistema-section">
+      <div class="sistema-section-header">
+        <h2 class="sistema-section-title-icon"><i class="fas fa-list"></i> Lista de Clientes</h2>
         <div class="btn-group">
           <button class="btn btn-primary" id="btn-exportar-pdf">
             <i class="fas fa-file-pdf"></i> Baixar PDF
@@ -604,10 +611,13 @@
               <th>Acoes</th>
             </tr>
           </thead>
-          <tbody id="clientes-tbody"></tbody>
+          <tbody id="clientes-tbody">
+            <tr><td colspan="5"><div class="table-skeleton"><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></div></td></tr>
+          </tbody>
         </table>
       </div>
           </div>
+    </div>
     </div>
     
     <!-- Input oculto para importação de arquivo -->
@@ -647,7 +657,12 @@
     function renderTabela() {
       const tbody = document.getElementById('clientes-tbody');
       tbody.innerHTML = '';
-      (clientesFiltrados || []).forEach(cli => {
+      const lista = clientesFiltrados || [];
+      if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-users-slash empty-state-icon"></i><div class="empty-state-title">Nenhum cliente encontrado</div><div class="empty-state-text">Cadastre clientes em "Cadastrar Novo Cliente" ou ajuste a busca.</div></div></td></tr>';
+        return;
+      }
+      lista.forEach(cli => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${cli.id ?? ''}</td>

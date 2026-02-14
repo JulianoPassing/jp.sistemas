@@ -337,21 +337,28 @@
       </nav>
     </div>
   </header>
-  <main class="main-content">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
-      <nav class="sistema-breadcrumb" style="margin-bottom: 0;">
+  <main class="sistema-main">
+    <div class="sistema-container">
+      <nav class="sistema-breadcrumb">
         <a href="painel.html">Painel</a>
         <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
         <a href="pedidos.html">Pedidos</a>
         <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
         <span>Caixa</span>
       </nav>
-      <span style="color: #6b7280; font-size: 0.875rem;">Bem-vindo, <span id="userDisplay"></span></span>
-    </div>
-    <div class="card">
-      <div class="card-header">
-        <h2>Caixa - Atendimento em Loja</h2>
-        <a href="pedidos.html" class="btn btn-secondary" style="margin-top:18px;font-size:1.13em;padding:12px 32px;display:inline-flex;align-items:center;gap:10px;text-decoration:none;box-shadow:0 2px 8px rgba(0,90,159,0.07);border-radius:10px;">
+      <div class="sistema-page-header">
+        <div class="sistema-page-header-icon">
+          <i class="fas fa-cash-register"></i>
+        </div>
+        <div class="sistema-page-header-text">
+          <h1>Caixa - Atendimento em Loja</h1>
+          <p>Registre vendas e gerencie o atendimento</p>
+        </div>
+      </div>
+    <div class="sistema-section">
+      <div class="sistema-section-header">
+        <h2 class="sistema-section-title-icon"><i class="fas fa-shopping-cart"></i> Novo Atendimento</h2>
+        <a href="pedidos.html" class="btn btn-secondary" style="font-size:1rem;padding:10px 24px;display:inline-flex;align-items:center;gap:8px;text-decoration:none;">
           <i class="fas fa-list"></i> Voltar para Pedidos
         </a>
       </div>
@@ -419,6 +426,7 @@
           <button class="btn btn-success finalizar-btn" id="finalizar-venda" type="button">Finalizar Venda</button>
         </section>
       </div>
+    </div>
     </div>
   </main>
   <footer class="footer" style="width:100%;text-align:center;padding:18px 0 12px 0;color:#fff;font-size:15px;background:transparent;font-family:'Inter',sans-serif;letter-spacing:0.02em;">

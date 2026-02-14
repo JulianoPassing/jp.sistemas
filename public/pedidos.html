@@ -928,18 +928,25 @@
       </nav>
     </div>
   </header>
-  <main class="main-content">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
-      <nav class="sistema-breadcrumb" style="margin-bottom: 0;">
+  <main class="sistema-main">
+    <div class="sistema-container">
+      <nav class="sistema-breadcrumb">
         <a href="painel.html">Painel</a>
         <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
         <span>Pedidos</span>
       </nav>
-      <span style="color: #6b7280; font-size: 0.875rem;">Bem-vindo, <span id="userDisplay"></span></span>
-    </div>
-    <div class="card">
-      <div class="card-header">
-        <h2>Pedidos e Vendas</h2>
+      <div class="sistema-page-header">
+        <div class="sistema-page-header-icon">
+          <i class="fas fa-shopping-cart"></i>
+        </div>
+        <div class="sistema-page-header-text">
+          <h1>Pedidos e Vendas</h1>
+          <p>Crie e gerencie pedidos, acompanhe status e gere relatórios</p>
+        </div>
+      </div>
+    <div class="sistema-section">
+      <div class="sistema-section-header">
+        <h2 class="sistema-section-title-icon"><i class="fas fa-list"></i> Lista de Pedidos</h2>
         <div class="btn-group">
           <button class="btn btn-primary" id="btn-novo-pedido">
             <i class="fas fa-plus"></i> Novo Pedido
@@ -978,10 +985,11 @@
             </tr>
           </thead>
           <tbody id="pedidos-tbody">
-            <!-- Os pedidos serão carregados dinamicamente do banco de dados -->
+            <tr><td colspan="7"><div class="table-skeleton"><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></div></td></tr>
           </tbody>
         </table>
       </div>
+    </div>
     </div>
   </main>
   <footer class="footer">
@@ -1114,6 +1122,10 @@
         const texto = `${p.id} ${p.nome_cliente || p.cliente_id || ''} ${p.data_pedido || ''} ${p.status || ''} ${p.valor_total || ''}`.toLowerCase();
         return texto.includes(filtro.toLowerCase());
       });
+      if (filtrados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-shopping-cart empty-state-icon"></i><div class="empty-state-title">Nenhum pedido encontrado</div><div class="empty-state-text">Crie pedidos em "Novo Pedido" ou ajuste a busca.</div></div></td></tr>';
+        return;
+      }
       filtrados.forEach(pedido => {
         // Determinar nome do cliente
         let nomeCliente = 'Cliente não identificado';

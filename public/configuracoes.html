@@ -270,18 +270,25 @@
       </nav>
     </div>
   </header>
-  <main class="main-content">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
-      <nav class="sistema-breadcrumb" style="margin-bottom: 0;">
+  <main class="sistema-main">
+    <div class="sistema-container">
+      <nav class="sistema-breadcrumb">
         <a href="painel.html">Painel</a>
         <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
         <span>Configurações</span>
       </nav>
-      <span style="color: #6b7280; font-size: 0.875rem;">Bem-vindo, <span id="userDisplay"></span></span>
-    </div>
-    <div class="card">
-      <div class="card-header">
-        <h2>Configuracoes do Sistema</h2>
+      <div class="sistema-page-header">
+        <div class="sistema-page-header-icon">
+          <i class="fas fa-cog"></i>
+        </div>
+        <div class="sistema-page-header-text">
+          <h1>Configurações do Sistema</h1>
+          <p>Configure preferências e gerencie sua conta</p>
+        </div>
+      </div>
+    <div class="sistema-section">
+      <div class="sistema-section-header">
+        <h2 class="sistema-section-title-icon"><i class="fas fa-sliders-h"></i> Configurações</h2>
       </div>
       <div class="config-area">
         <div style="text-align: center; padding: 40px 20px;">
@@ -347,6 +354,7 @@
           <div id="empresaMsg" style="margin-top: 10px;"></div>
         </form>
       </div>
+    </div>
     </div>
   </main>
   <footer class="footer">

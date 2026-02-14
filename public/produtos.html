@@ -814,18 +814,25 @@
       </div>
     </header>
     
-    <main class="main-content">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
-        <nav class="sistema-breadcrumb" style="margin-bottom: 0;">
+    <main class="sistema-main">
+      <div class="sistema-container">
+        <nav class="sistema-breadcrumb">
           <a href="painel.html">Painel</a>
           <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
           <span>Produtos</span>
         </nav>
-        <span style="color: #6b7280; font-size: 0.875rem;">Bem-vindo, <span id="userDisplay"></span></span>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <h2>Gestão de Produtos</h2>
+        <div class="sistema-page-header">
+          <div class="sistema-page-header-icon">
+            <i class="fas fa-box"></i>
+          </div>
+          <div class="sistema-page-header-text">
+            <h1>Gestão de Produtos</h1>
+            <p>Controle estoque, preços e informações dos produtos</p>
+          </div>
+        </div>
+      <div class="sistema-section">
+        <div class="sistema-section-header">
+          <h2 class="sistema-section-title-icon"><i class="fas fa-list"></i> Lista de Produtos</h2>
           <div class="btn-group">
             <button class="btn btn-primary" id="btn-novo-produto">
               <i class="fas fa-plus"></i> Novo Produto
@@ -845,7 +852,7 @@
           </div>
         </div>
         
-        <div class="search-container">
+        <div class="search-container" style="margin-top: 1rem;">
           <div class="search-box">
             <i class="fas fa-search search-icon"></i>
             <input type="text" id="busca-produto" placeholder="Buscar produto..." autocomplete="off" />
@@ -866,11 +873,12 @@
               </tr>
             </thead>
             <tbody id="produtos-tbody">
-              <!-- Os produtos serão carregados dinamicamente do banco de dados -->
+              <tr><td colspan="6"><div class="table-skeleton"><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></div></td></tr>
             </tbody>
           </table>
           </div>
         </div>
+      </div>
       </div>
     </main>
     
@@ -946,6 +954,11 @@
           const texto = `${p.id} ${p.nome} ${p.preco_custo} ${p.preco_venda} ${p.estoque} ${p.descricao}`.toLowerCase();
           return texto.includes(filtro.toLowerCase());
         });
+        
+        if (filtrados.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-box-open empty-state-icon"></i><div class="empty-state-title">Nenhum produto encontrado</div><div class="empty-state-text">Cadastre produtos em "Novo Produto" ou ajuste a busca.</div></div></td></tr>';
+          return;
+        }
         
         filtrados.forEach(produto => {
           const tr = document.createElement('tr');

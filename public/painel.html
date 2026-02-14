@@ -44,10 +44,10 @@
         color: #1F2937;
       }
 
-      .main-content {
-        max-width: 1200px;
-        margin: 40px auto;
-        padding: 0 20px;
+      .main-content, .sistema-main {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
       }
 
       .welcome-section {
@@ -424,11 +424,17 @@
       </div>
     </header>
 
-    <main class="main-content">
-      <div class="welcome-section">
-        <h2>Bem-vindo(a), <span id="userDisplay"></span></h2>
-        <p>Gerencie seus clientes, produtos, pedidos e relatorios de forma eficiente</p>
-      </div>
+    <main class="sistema-main">
+      <div class="sistema-container">
+        <div class="sistema-page-header">
+          <div class="sistema-page-header-icon">
+            <i class="fas fa-tachometer-alt"></i>
+          </div>
+          <div class="sistema-page-header-text">
+            <h1>Bem-vindo(a), <span id="userDisplay"></span></h1>
+            <p>Gerencie seus clientes, produtos, pedidos e relatórios de forma eficiente</p>
+          </div>
+        </div>
 
       <!-- Dashboard Pequeno -->
       <div class="dashboard-grid dashboard-rapido">
@@ -519,6 +525,7 @@
             <div class="dashboard-label">Lucro do mês</div>
           </div>
         </div>
+      </div>
       </div>
     </main>
     <footer class="footer">
