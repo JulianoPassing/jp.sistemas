@@ -730,18 +730,19 @@
         renderMesas();
       }
     }
-    function minutosAbertos(dataPedido) {
-      if (!dataPedido) return 0;
-      const d = new Date(dataPedido);
+    function minutosAbertos(pedido) {
+      const dataRef = pedido?.created_at || pedido?.data_pedido;
+      if (!dataRef) return 0;
+      const d = new Date(dataRef);
       if (isNaN(d.getTime())) return 0;
       return Math.floor((Date.now() - d.getTime()) / 60000);
     }
-    function tempoAbertura(dataPedido) {
-      if (!dataPedido) return '';
-      const d = new Date(dataPedido);
-      if (isNaN(d)) return '';
-      const agora = new Date();
-      const diff = Math.floor((agora - d) / 60000);
+    function tempoAbertura(pedido) {
+      const dataRef = pedido?.created_at || pedido?.data_pedido;
+      if (!dataRef) return '';
+      const d = new Date(dataRef);
+      if (isNaN(d.getTime())) return '';
+      const diff = Math.floor((Date.now() - d.getTime()) / 60000);
       if (diff < 1) return 'Agora';
       if (diff < 60) return `${diff} min`;
       const h = Math.floor(diff / 60);
@@ -766,13 +767,14 @@
           return nome.includes(termoBusca);
         });
       }
-      if (ordenar === 'antigo') lista.sort((a, b) => new Date(a.data_pedido || 0) - new Date(b.data_pedido || 0));
+      const dataRef = (p) => p.created_at || p.data_pedido || 0;
+      if (ordenar === 'antigo') lista.sort((a, b) => new Date(dataRef(a)) - new Date(dataRef(b)));
       else if (ordenar === 'valor') lista.sort((a, b) => {
         const ta = (a.itens||[]).reduce((s, i) => s + parseFloat(i.subtotal || i.precoUnitario * i.quantidade || 0), 0);
         const tb = (b.itens||[]).reduce((s, i) => s + parseFloat(i.subtotal || i.precoUnitario * i.quantidade || 0), 0);
         return tb - ta;
       });
-      else lista.sort((a, b) => new Date(b.data_pedido || 0) - new Date(a.data_pedido || 0));
+      else lista.sort((a, b) => new Date(dataRef(b)) - new Date(dataRef(a)));
       lista.forEach(pedido => {
         let total = (pedido.itens||[]).reduce((sum, i) => {
           const precoUnitario = parseFloat(i.precoUnitario || i.preco_unitario || 0);
@@ -780,8 +782,8 @@
           return sum + (precoUnitario * quantidade);
         }, 0);
         const qtdItens = (pedido.itens||[]).reduce((s, i) => s + parseInt(i.quantidade || 0), 0);
-        const tempo = tempoAbertura(pedido.data_pedido);
-        const mins = minutosAbertos(pedido.data_pedido);
+        const tempo = tempoAbertura(pedido);
+        const mins = minutosAbertos(pedido);
         let tempoClass = '';
         if (mins >= 120) tempoClass = 'mesa-tempo-urgente';
         else if (mins >= 60) tempoClass = 'mesa-tempo-alerta';
@@ -865,41 +867,13 @@
           console.warn('Resposta não é JSON, mas status é sucesso. Mesa criada, mas resposta inesperada.');
         }
         if (response.ok) {
-          if (novoPedido && novoPedido.id) {
-            // Buscar o pedido recém-criado
-            const respPedido = await fetch(`/api/pedidos/${novoPedido.id}`);
-            if (respPedido.ok) {
-              const respPedidoContentType = respPedido.headers.get('content-type') || '';
-              let pedidoCompleto = null;
-              if (respPedidoContentType.includes('application/json')) {
-                try {
-                  pedidoCompleto = await respPedido.json();
-                } catch (e) {
-                  console.warn('Falha ao parsear JSON do pedido recém-criado:', e);
-                }
-              } else {
-                console.warn('Resposta de /api/pedidos/:id não é JSON. Status:', respPedido.status, 'Content-Type:', respPedidoContentType);
-              }
-              if (pedidoCompleto) {
-                pedidoCompleto.nome_cliente = pedidoCompleto.nome_cliente || nome;
-                pedidosAbertos.unshift(pedidoCompleto);
-              } else {
-                // fallback: adicionar só com nome
-                pedidosAbertos.unshift({ id: novoPedido?.id, nome_cliente: nome, status: 'Em Aberto', itens: [], data_pedido: pedido.data_pedido });
-              }
-            } else {
-              // fallback: adicionar só com nome
-              pedidosAbertos.unshift({ id: novoPedido?.id, nome_cliente: nome, status: 'Em Aberto', itens: [], data_pedido: pedido.data_pedido });
-            }
-          } else {
-            await carregarPedidosAbertos();
-          }
           nomeInput.value = '';
-          feedback.textContent = contentType.includes('application/json') ? 'Mesa criada com sucesso!' : 'Mesa criada! (resposta inesperada, atualize a página se não aparecer)';
+          await carregarPedidosAbertos();
+          feedback.textContent = 'Comanda criada com sucesso!';
           feedback.style.color = '#059669';
           feedback.style.display = 'block';
           nomeInput.focus();
-          setTimeout(() => { feedback.style.display = 'none'; }, 2000);
+          setTimeout(() => { feedback.style.display = 'none'; }, 2500);
           return;
         }
         // Se chegou aqui, é erro HTTP
@@ -922,7 +896,7 @@
         console.error('Erro real ao criar mesa/pedido:', e);
       } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-plus"></i> Nova Mesa';
+        btn.innerHTML = '<i class="fas fa-plus"></i> Nova Comanda';
       }
     }
     window.editarMesa = async function(id) {
