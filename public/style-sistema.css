@@ -95,6 +95,15 @@ header.sistema-header {
   background-color: rgba(239, 68, 68, 0.3);
 }
 
+/* Ícones no header sempre brancos (fundo escuro) */
+.sistema-header .nav-link i,
+.sistema-header .nav-link .fa,
+.sistema-header .nav-link .fas,
+.sistema-header .nav-link .far,
+.sistema-header .nav-link .fab {
+  color: inherit !important;
+}
+
 /* Container */
 .sistema-container {
   max-width: 1280px;
@@ -156,10 +165,19 @@ main.main-content {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: #fff !important;
   font-size: 1.5rem;
   box-shadow: 0 4px 14px rgba(0, 47, 75, 0.25);
   flex-shrink: 0;
+}
+
+/* Ícones dentro do page-header sempre brancos (padrão jp.cobrancas) */
+.sistema-page-header-icon i,
+.sistema-page-header-icon .fa,
+.sistema-page-header-icon .fas,
+.sistema-page-header-icon .far,
+.sistema-page-header-icon .fab {
+  color: #fff !important;
 }
 
 .sistema-page-header-text h1,
@@ -200,6 +218,21 @@ main.main-content {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--terciary);
+}
+
+/* Cabeçalhos de tabela: fundo escuro + texto branco (padrão jp.cobrancas) */
+.sistema-section thead th,
+.table-container thead th,
+table thead th {
+  background: linear-gradient(135deg, #002f4b 0%, #004d73 100%) !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+/* Ícones em botões herdam a cor do texto (evita ícone escuro em botão escuro) */
+.btn i, .btn .fa, .btn .fas, .btn .far, .btn .fab,
+button i, button .fa, button .fas {
+  color: inherit !important;
 }
 
 /* Cards - estilo jp.cobrancas */
@@ -289,8 +322,10 @@ main.main-content {
   color: var(--terciary);
 }
 
-.sistema-section-title-icon i {
-  color: var(--accent-teal);
+.sistema-section-title-icon i,
+.sistema-section-title-icon .fa,
+.sistema-section-title-icon .fas {
+  color: var(--accent-teal) !important;
 }
 
 /* Empty state - quando listas/tabelas estão vazias */
@@ -331,6 +366,7 @@ table td .sistema-empty-state {
 /* Compatibilidade com classes do jp.cobrancas */
 .empty-state { padding: 3rem 2rem; text-align: center; }
 .empty-state-icon { font-size: 3rem; color: var(--gray-300); margin-bottom: 1rem; display: block; }
+.empty-state-icon i, .empty-state-icon .fa, .empty-state-icon .fas { color: var(--gray-300) !important; }
 .empty-state-title { font-size: 1.1rem; font-weight: 600; color: var(--gray-600); margin-bottom: 0.5rem; }
 .empty-state-text { font-size: 0.95rem; color: var(--gray-500); margin-bottom: 1rem; }
 table td .empty-state { display: block; width: 100%; }
