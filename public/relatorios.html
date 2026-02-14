@@ -1132,7 +1132,9 @@
     // Função para animar valores monetários
     function animarValorMonetario(elemento, valorFinal, duracao = 2000) {
       if (!elemento) return;
-      const valorNumerico = parseFloat(valorFinal.replace(/[^\d,.-]/g, '').replace(',', '.'));
+      // Formato pt-BR: 25.706,00 = ponto (milhares) e vírgula (decimais)
+      const str = valorFinal.replace(/[^\d,.-]/g, '');
+      const valorNumerico = parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
       const valorInicial = 0;
       const incremento = valorNumerico / (duracao / 16);
       let valorAtual = valorInicial;
