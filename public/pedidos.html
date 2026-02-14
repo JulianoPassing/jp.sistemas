@@ -1868,14 +1868,14 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
       return `R$ ${valor.toFixed(2).replace('.', ',')}`;
     }
 
-    // Função para limpar caracteres especiais (global, para uso em todo o arquivo)
+    // Função para limpar caracteres especiais (global) - preserva acentos para PDF
     function limparCaracteres(texto) {
       if (!texto) return '';
       return texto.toString()
-        .replace(/[^\w\s\-.,()@\n]/g, '')
+        .replace(/[\x00-\x1F\x7F]/g, '') // Remove apenas caracteres de controle
         .replace(/\s+/g, ' ')
         .trim()
-        .substring(0, 50); // Limita a 50 caracteres para evitar overflow
+        .substring(0, 80);
     }
 
     // Função para gerar PDF de todos os pedidos
@@ -2068,16 +2068,6 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
           const successColor = [40, 167, 69];
           const dangerColor = [220, 53, 69];
 
-          // Função para limpar caracteres especiais
-          function limparCaracteres(texto) {
-            if (!texto) return '';
-            return texto.toString()
-              .replace(/[^\w\s\-.,()@\n]/g, '')
-              .replace(/\s+/g, ' ')
-              .trim()
-              .substring(0, 50); // Limita a 50 caracteres para evitar overflow
-          }
-
           carregarImagemBase64('https://i.imgur.com/2jT2EPD.png', function(logoBase64) {
             // Logo centralizada
             const logoWidth = 50;
@@ -2131,7 +2121,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             // Informações do cliente
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
-            doc.text('INFORMACOES DO CLIENTE', 20, yBase + 30);
+            doc.text('INFORMAÇÕES DO CLIENTE', 20, yBase + 30);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             // Extrair informações das observações para o PDF
@@ -2150,7 +2140,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             }
 
             doc.text(`Cliente: ${limparCaracteres(pedido.nome_cliente || pedido.cliente_id || 'N/A')}`, 20, yBase + 40);
-            doc.text(`Endereco: ${limparCaracteres(enderecoPDF)}`, 20, yBase + 47);
+            doc.text(`Endereço: ${limparCaracteres(enderecoPDF)}`, 20, yBase + 47);
             doc.text(`Telefone: ${limparCaracteres(telefonePDF)}`, 20, yBase + 54);
             doc.text(`E-mail: ${limparCaracteres(emailPDF)}`, 20, yBase + 61);
             doc.text(`Forma de Pagamento: ${limparCaracteres(formaPagamentoPDF)}`, 20, yBase + 68);
@@ -2171,7 +2161,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             if (tableData.length > 0) {
               doc.autoTable({
                 startY: yBase + 95,
-                head: [['Produto', 'Qtd', 'Preco Unit.', 'Subtotal']],
+                head: [['Produto', 'Qtd', 'Preço Unit.', 'Subtotal']],
                 body: tableData,
                 theme: 'grid',
                 tableWidth: 170, // Largura total da tabela (210 - 40 de margem)
@@ -2205,10 +2195,10 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             if (pedido.observacoes) {
               doc.setFontSize(12);
               doc.setFont('helvetica', 'bold');
-              doc.text('OBSERVACOES:', 20, finalY + 20);
+              doc.text('OBSERVAÇÕES:', 20, finalY + 20);
               doc.setFontSize(10);
               doc.setFont('helvetica', 'normal');
-              const observacoes = doc.splitTextToSize(limparCaracteres(pedido.observacoes), 170);
+              const observacoes = doc.splitTextToSize((pedido.observacoes || '').replace(/[\x00-\x1F\x7F]/g, ''), 170);
               doc.text(observacoes, 20, finalY + 28);
             }
             // Rodapé
@@ -2271,15 +2261,6 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
           const secondaryColor = [0, 55, 102];
           const successColor = [40, 167, 69];
           const dangerColor = [220, 53, 69];
-          // Função para limpar caracteres especiais
-          function limparCaracteres(texto) {
-            if (!texto) return '';
-            return texto.toString()
-              .replace(/[^\w\s\-.,()@\n]/g, '')
-              .replace(/\s+/g, ' ')
-              .trim()
-              .substring(0, 50);
-          }
           carregarImagemBase64('https://i.imgur.com/2jT2EPD.png', function(logoBase64) {
             // Logo centralizada
             const logoWidth = 50;

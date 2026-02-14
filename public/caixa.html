@@ -800,7 +800,7 @@
           <td>${prod.nome}</td>
           <td>R$ ${precoVenda.toFixed(2).replace('.', ',')}</td>
           <td>${prod.estoque ?? 0}</td>
-          <td><input type="number" min="1" max="${prod.estoque ?? 1}" value="1" style="width:60px;" id="qtd-${prod.id}" /></td>
+          <td><input type="number" min="1" max="${prod.estoque != null ? Math.max(prod.estoque, 1) : 9999}" value="1" style="width:60px;" id="qtd-${prod.id}" /></td>
           <td><button class="btn btn-primary" type="button" onclick="adicionarItem(${prod.id})"><i class="fas fa-plus"></i> Adicionar</button></td>
         `;
         tbody.appendChild(tr);

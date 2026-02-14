@@ -912,6 +912,7 @@ app.put('/api/pedidos/:id', requireAuthJWT, async (req, res) => {
     });
     const { id } = req.params;
     const { cliente_id, data_pedido, status, valor_total, observacoes, itens, nome_cliente } = req.body;
+    const itensArray = Array.isArray(itens) ? itens : [];
     
     // Normalizar o status e a data
     const statusNormalizado = normalizarStatus(status);
@@ -932,8 +933,8 @@ app.put('/api/pedidos/:id', requireAuthJWT, async (req, res) => {
     );
     
     // Se está concluindo o pedido, atualizar estoque
-    if (estaConcluindo && itens && Array.isArray(itens)) {
-      for (const item of itens) {
+    if (estaConcluindo && itensArray.length > 0) {
+      for (const item of itensArray) {
         if (item.produto_id && item.quantidade) {
           // Buscar estoque atual do produto
           const [produtoResult] = await connection.execute(
@@ -961,7 +962,7 @@ app.put('/api/pedidos/:id', requireAuthJWT, async (req, res) => {
     await connection.execute('DELETE FROM pedido_itens WHERE pedido_id = ?', [id]);
     
     // Inserir novos itens
-    for (const item of itens) {
+    for (const item of itensArray) {
       await connection.execute(
         'INSERT INTO pedido_itens (pedido_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)',
         [id, ...safeValues([item.produto_id, item.quantidade, item.preco_unitario])]

@@ -1037,7 +1037,7 @@
         }).join('');
         let html, winW, winH;
         if (modelo === 'cupom') {
-          html = `<html><head><title>Comanda - ${mesaNome}</title>
+          html = `<html><head><meta charset="UTF-8"><title>Comanda - ${mesaNome}</title>
           <style>
             body{font-family:monospace;font-size:12px;margin:0;padding:0;}
             .doc{width:280px;margin:0 auto;padding:8px;}
@@ -1066,7 +1066,7 @@
           </div></body></html>`;
           winW = 320; winH = 600;
         } else {
-          html = `<html><head><title>Comanda - ${mesaNome}</title>
+          html = `<html><head><meta charset="UTF-8"><title>Comanda - ${mesaNome}</title>
           <style>
             body{font-family:Inter,sans-serif;font-size:14px;margin:0;padding:20px;color:#1f2937;}
             .doc{max-width:210mm;margin:0 auto;}
