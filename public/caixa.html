@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="canonical" href="https://jp-sistemas.com/caixa.html" />
   <title>Caixa - J.P Sistemas Comercial</title>
-  <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
+  <link rel="icon" href="https://i.imgur.com/TwZLW6a.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="mobile.css">
   <style>
@@ -42,6 +41,15 @@
       min-height: 100vh;
       color: var(--light-text);
       padding: 0;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23374151" opacity="0.03"/><circle cx="75" cy="75" r="1" fill="%23374151" opacity="0.03"/><circle cx="50" cy="10" r="0.5" fill="%23374151" opacity="0.03"/><circle cx="10" cy="60" r="0.5" fill="%23374151" opacity="0.03"/><circle cx="90" cy="40" r="0.5" fill="%23374151" opacity="0.03"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+      pointer-events: none;
     }
     .header {
       background: rgba(255, 255, 255, 0.95);
@@ -105,7 +113,27 @@
       margin: 40px auto;
       padding: 0 20px;
     }
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: rgba(255,255,255,0.8);
+    }
+    .breadcrumb a {
+      color: var(--light-text);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .breadcrumb a:hover { color: #00e6ff; }
+    .breadcrumb span { color: rgba(255,255,255,0.6); }
+    @keyframes cardFadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
     .card {
+      animation: cardFadeIn 0.5s ease-out;
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(20px);
       border-radius: 20px;
@@ -129,7 +157,7 @@
       color: var(--dark-color);
       font-weight: 600;
       text-align: center;
-      font-family: 'Poppins', sans-serif;
+      font-family: 'Inter', sans-serif;
       background: none;
     }
     .caixa-grid {
@@ -211,7 +239,7 @@
       padding: 10px 18px;
       border-radius: 8px;
       border: none;
-      font-family: "Poppins", sans-serif;
+      font-family: "Inter", sans-serif;
       font-weight: 500;
       font-size: 1em;
       cursor: pointer;
@@ -306,17 +334,27 @@
         <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" />
       </div>
       <div class="user-info">
+        <a href="index.html" class="logout-btn" style="background: transparent; color: var(--primary-blue); border: 1px solid var(--primary-blue); text-decoration: none; display: flex; align-items: center; gap: 6px;" title="Ver site principal">
+          <i class="fas fa-globe"></i> Site
+        </a>
         <span>Bem-vindo, <span id="userDisplay"></span></span>
         <button class="logout-btn" onclick="logout()">
           <i class="fas fa-sign-out-alt"></i> Sair
         </button>
-        <a href="painel.html" class="logout-btn" style="margin-left: 8px;">
+        <a href="painel.html" class="logout-btn" style="margin-left: 8px; text-decoration: none; display: flex; align-items: center; gap: 6px;">
           <i class="fas fa-arrow-left"></i> Voltar
         </a>
       </div>
     </div>
   </header>
   <main class="main-content">
+    <nav class="breadcrumb">
+      <a href="painel.html">Painel</a>
+      <span>/</span>
+      <a href="pedidos.html">Pedidos</a>
+      <span>/</span>
+      <span>Caixa</span>
+    </nav>
     <div class="card">
       <div class="card-header">
         <h2>Caixa - Atendimento em Loja</h2>

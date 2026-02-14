@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="canonical" href="https://jp-sistemas.com/painel.html" />
     <title>Painel Principal - J.P Sistemas</title>
-    <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
+    <link rel="icon" href="https://i.imgur.com/TwZLW6a.png" type="image/png" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="mobile.css">
@@ -145,10 +145,28 @@
         text-align: center;
         box-shadow: 0 8px 25px rgba(0, 90, 159, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
-        transition: all 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
         text-decoration: none;
         color: inherit;
+        animation: cardFadeIn 0.6s ease-out forwards;
+        opacity: 0;
+      }
+      .menu-card:nth-child(1) { animation-delay: 0.05s; }
+      .menu-card:nth-child(2) { animation-delay: 0.1s; }
+      .menu-card:nth-child(3) { animation-delay: 0.15s; }
+      .menu-card:nth-child(4) { animation-delay: 0.2s; }
+      .menu-card:nth-child(5) { animation-delay: 0.25s; }
+      .menu-card:nth-child(6) { animation-delay: 0.3s; }
+      @keyframes cardFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       .menu-card:hover {
@@ -445,10 +463,13 @@
   <body>
     <header class="header">
       <div class="header-content">
-        <div class="logo">
+        <div class="logo" style="cursor: pointer;" onclick="window.location.href='painel.html'" title="Ir para o painel">
           <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 150px; height: 67px; display: block; object-fit: contain; background: none; box-shadow: none; border-radius: 0; margin: 0;" />
         </div>
         <div class="user-info">
+          <a href="index.html" class="logout-btn" style="background: transparent; color: var(--primary-blue); border: 1px solid var(--primary-blue);" title="Ver site principal">
+            <i class="fas fa-globe"></i> Site
+          </a>
           <span>Bem-vindo, <span id="userDisplay"></span></span>
           <button class="logout-btn" onclick="logout()">
             <i class="fas fa-sign-out-alt"></i> Sair

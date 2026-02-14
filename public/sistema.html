@@ -7,7 +7,7 @@
     <title>J.P Sistemas - Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
+    <link rel="icon" href="https://i.imgur.com/TwZLW6a.png" type="image/png" />
     <style>
       :root {
         --primary-color: #005a9f;
@@ -25,12 +25,12 @@
         --surface: #ffffff;
         --surface-hover: #f9fafb;
         --border: #e5e7eb;
-        --border-focus: #005a9f;
+        --border-focus: #002f4b;
         --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        --shadow-primary: 0 0 0 4px rgba(0, 90, 159, 0.1);
+        --shadow-primary: 0 0 0 4px rgba(0, 47, 75, 0.15);
         --gradient-primary: linear-gradient(135deg, #005a9f 0%, #003766 100%);
         --gradient-secondary: linear-gradient(135deg, #022656 0%, #1e4a8a 100%);
         --gradient-accent: linear-gradient(135deg, #0077cc 0%, #005a9f 100%);
@@ -209,7 +209,7 @@
       }
 
       .form-group:focus-within label {
-        color: var(--primary-color);
+        color: var(--primary-blue);
       }
 
       .input-wrapper {
@@ -252,8 +252,8 @@
         background: rgba(255, 255, 255, 1);
       }
 
-      .form-group input:focus + i {
-        color: var(--primary-color);
+      .form-group:focus-within .input-wrapper i {
+        color: var(--primary-blue);
         transform: translateY(-50%) scale(1.1);
       }
 
@@ -262,8 +262,8 @@
         font-weight: 400;
       }
 
-      .form-group input:not(:placeholder-shown) + i {
-        color: var(--primary-color);
+      .form-group input:not(:placeholder-shown) ~ i {
+        color: var(--primary-blue);
       }
 
       .login-btn {
@@ -305,7 +305,7 @@
 
       .login-btn:hover {
         transform: translateY(-3px);
-        box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.4);
+        box-shadow: 0 20px 25px -5px rgba(0, 230, 255, 0.4);
       }
 
       .login-btn:active {
@@ -432,6 +432,12 @@
 
       /* Responsive design */
       @media (max-width: 480px) {
+        .back-link {
+          top: 12px;
+          left: 12px;
+          padding: 8px 12px;
+          font-size: 12px;
+        }
         .login-container {
           padding: 28.8px 21.6px;
           margin: 14.4px;
@@ -470,6 +476,34 @@
         }
       }
 
+      .back-link {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        background: rgba(255, 255, 255, 0.15);
+        color: var(--light-text);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        z-index: 100;
+        transition: all 0.3s ease;
+      }
+      .back-link:hover {
+        background: rgba(0, 230, 255, 0.2);
+        color: var(--accent-blue);
+        border-color: var(--accent-blue);
+      }
+      .back-link i {
+        font-size: 12px;
+      }
+
       .footer {
         width: 100%;
         text-align: center;
@@ -494,6 +528,9 @@
     </style>
   </head>
   <body>
+    <a href="index.html" class="back-link" title="Voltar ao site">
+      <i class="fas fa-arrow-left"></i> Voltar ao site
+    </a>
     <div class="background-elements">
       <div class="bg-circle"></div>
       <div class="bg-circle"></div>

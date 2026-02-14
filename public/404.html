@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Página não encontrada - J.P Sistemas</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png">
   <style>
     :root {
@@ -24,6 +25,24 @@
       color: var(--light-text);
       text-align: center;
       padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .error-illustration {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 1.5rem;
+      animation: floatBounce 2s ease-in-out infinite;
+    }
+    .error-illustration i {
+      font-size: 5rem;
+      color: var(--accent-blue);
+      opacity: 0.9;
+      text-shadow: 0 0 40px rgba(0, 230, 255, 0.4);
+    }
+    @keyframes floatBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
     }
     .error-code {
       font-size: 6rem;
@@ -31,36 +50,81 @@
       color: var(--accent-blue);
       text-shadow: 0 0 30px rgba(0, 230, 255, 0.5);
       margin-bottom: 1rem;
+      animation: fadeInScale 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      opacity: 0;
+    }
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
     }
     h1 {
       font-size: 1.5rem;
       margin-bottom: 0.5rem;
+      animation: fadeInUp 0.6s ease-out 0.2s forwards;
+      opacity: 0;
     }
     p {
       opacity: 0.9;
       margin-bottom: 2rem;
       max-width: 400px;
+      line-height: 1.6;
+      animation: fadeInUp 0.6s ease-out 0.35s forwards;
+      opacity: 0;
     }
-    a {
-      display: inline-block;
-      padding: 0.75rem 1.5rem;
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .btn-home {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.9rem 1.8rem;
       background: var(--accent-blue);
       color: var(--primary-blue);
       text-decoration: none;
       font-weight: 600;
-      border-radius: 8px;
-      transition: all 0.3s ease;
+      font-size: 1rem;
+      border-radius: 50px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 2px solid transparent;
+      animation: fadeInUp 0.6s ease-out 0.5s forwards;
+      opacity: 0;
+      box-shadow: 0 4px 20px rgba(0, 230, 255, 0.3);
     }
-    a:hover {
+    .btn-home:hover {
       background: #00ffff;
-      box-shadow: 0 0 20px rgba(0, 230, 255, 0.5);
+      box-shadow: 0 0 25px rgba(0, 230, 255, 0.5), 0 6px 25px rgba(0, 230, 255, 0.3);
+      transform: translateY(-3px);
+    }
+    .btn-home i {
+      font-size: 1rem;
+      transition: transform 0.3s ease;
+    }
+    .btn-home:hover i {
+      transform: translateX(-3px);
     }
   </style>
 </head>
 <body>
+  <div class="error-illustration">
+    <i class="fas fa-compass"></i>
+  </div>
   <div class="error-code">404</div>
   <h1>Página não encontrada</h1>
   <p>O endereço que você acessou não existe ou foi movido. Volte para a página inicial e continue navegando.</p>
-  <a href="/">Voltar ao início</a>
+  <a href="/" class="btn-home"><i class="fas fa-arrow-left"></i> Voltar ao início</a>
 </body>
 </html>

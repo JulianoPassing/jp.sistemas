@@ -5,10 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="canonical" href="https://jp-sistemas.com/relatorios.html" />
   <title>Relatorios - J.P Sistemas Comercial</title>
-  <link rel="icon" href="https://i.imgur.com/QgVsPmF.png" type="image/png" />
+  <link rel="icon" href="https://i.imgur.com/TwZLW6a.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
@@ -153,6 +152,25 @@
       position: relative;
       z-index: 10;
     }
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: rgba(255,255,255,0.8);
+    }
+    .breadcrumb a {
+      color: var(--light-text);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .breadcrumb a:hover { color: #00e6ff; }
+    .breadcrumb span { color: rgba(255,255,255,0.6); }
+    @keyframes cardFadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     .page-header {
       text-align: center;
@@ -166,7 +184,7 @@
       color: white;
       margin-bottom: 10px;
       text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-      font-family: 'Poppins', sans-serif;
+      font-family: 'Inter', sans-serif;
     }
 
     .page-subtitle {
@@ -232,6 +250,7 @@
     }
 
     .stat-card {
+      animation: cardFadeIn 0.5s ease-out;
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(20px);
       border-radius: var(--border-radius);
@@ -356,7 +375,7 @@
       font-weight: 800;
       color: var(--dark-color);
       margin-bottom: 8px;
-      font-family: 'Poppins', sans-serif;
+      font-family: 'Inter', sans-serif;
     }
 
     .stat-label {
@@ -402,7 +421,7 @@
       font-weight: 700;
       color: var(--dark-color);
       margin-bottom: 8px;
-      font-family: 'Poppins', sans-serif;
+      font-family: 'Inter', sans-serif;
     }
 
     .actions-subtitle {
@@ -425,7 +444,7 @@
       padding: 16px 32px;
       border-radius: 12px;
       border: none;
-      font-family: "Poppins", sans-serif;
+      font-family: "Inter", sans-serif;
       font-weight: 600;
       font-size: 1rem;
       cursor: pointer;
@@ -512,7 +531,7 @@
       font-size: 1.3rem;
       font-weight: 700;
       color: var(--dark-color);
-      font-family: 'Poppins', sans-serif;
+      font-family: 'Inter', sans-serif;
     }
 
     .chart-container {
@@ -774,15 +793,18 @@
 <body>
   <header class="header">
     <div class="header-content">
-      <div class="logo">
+      <div class="logo" style="cursor: pointer;" onclick="window.location.href='painel.html'" title="Ir para o painel">
         <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 150px; height: 67px; display: block; object-fit: contain; background: none; box-shadow: none; border-radius: 0; margin: 0;" />
       </div>
       <div class="user-info">
+        <a href="index.html" class="logout-btn" style="background: transparent; color: var(--primary-blue); border: 1px solid var(--primary-blue); text-decoration: none; display: flex; align-items: center; gap: 6px;" title="Ver site principal">
+          <i class="fas fa-globe"></i> Site
+        </a>
         <span>Bem-vindo, <span id="userDisplay"></span></span>
         <button class="logout-btn" onclick="logout()">
           <i class="fas fa-sign-out-alt"></i> Sair
         </button>
-        <a href="painel.html" class="logout-btn" style="background: var(--primary-light); margin-left: 8px;">
+        <a href="painel.html" class="logout-btn" style="margin-left: 8px; text-decoration: none; display: flex; align-items: center; gap: 6px;">
           <i class="fas fa-arrow-left"></i> Voltar
         </a>
       </div>
@@ -790,6 +812,11 @@
   </header>
 
   <main class="main-content">
+    <nav class="breadcrumb">
+      <a href="painel.html">Painel</a>
+      <span>/</span>
+      <span>Relatórios</span>
+    </nav>
     <div class="page-header">
       <h1 class="page-title">Relatorios Executivos</h1>
       <p class="page-subtitle">Analise completa e insights do seu negocio em tempo real (Pedidos Concluidos e Em Processamento)</p>
