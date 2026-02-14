@@ -189,6 +189,16 @@
       border: 2.5px solid var(--primary-color);
       transform: translateY(-2px) scale(1.01);
     }
+    .mesa-card.mesa-tempo-alerta {
+      border-left: 5px solid #d97706;
+      background: linear-gradient(to right, rgba(217,119,6,0.06), var(--card-bg));
+    }
+    .mesa-card.mesa-tempo-alerta .mesa-header { background: linear-gradient(135deg, #b45309, #d97706); }
+    .mesa-card.mesa-tempo-urgente {
+      border-left: 5px solid #dc2626;
+      background: linear-gradient(to right, rgba(220,38,38,0.08), var(--card-bg));
+    }
+    .mesa-card.mesa-tempo-urgente .mesa-header { background: linear-gradient(135deg, #b91c1c, #dc2626); }
     .mesa-header {
       background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
       color: #fff;
@@ -197,7 +207,20 @@
       display: flex;
       flex-direction: row;
       align-items: center;
+      justify-content: space-between;
       gap: 10px;
+      flex-wrap: wrap;
+    }
+    .mesa-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 0.85rem;
+      opacity: 0.95;
+    }
+    .mesa-tempo, .mesa-qtd-itens {
+      display: flex;
+      align-items: center;
+      gap: 4px;
       box-shadow: 0 2px 8px rgba(0,90,159,0.07);
     }
     .mesa-nome {
@@ -483,6 +506,14 @@
         <h2 class="sistema-section-title-icon"><i class="fas fa-list"></i> Comandas / Mesas em Aberto</h2>
       </div>
       <p style="font-size:0.9rem;color:#6b7280;margin-bottom:14px;">Restaurantes: Mesa 1, Mesa 2. Bares: Comanda 5. Mercados: Balcão 1. Ou nome do cliente.</p>
+      <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+        <input type="text" id="busca-comanda" placeholder="Buscar comanda..." style="flex:1;min-width:200px;padding:10px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:1rem;" />
+        <select id="ordenar-comandas" style="padding:10px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:1rem;">
+          <option value="recente">Mais recente</option>
+          <option value="antigo">Mais antigo</option>
+          <option value="valor">Maior valor</option>
+        </select>
+      </div>
       <div id="mesa-feedback" style="display:none;margin-bottom:18px;text-align:center;font-weight:500;"></div>
       <form class="nova-mesa-form" id="nova-mesa-form">
         <div class="form-group" style="position:relative;display:flex;align-items:center;flex:1;">
@@ -561,6 +592,8 @@
       carregarPedidosAbertos();
       document.getElementById('mesa-nome').focus();
       document.getElementById('nova-mesa-form').addEventListener('submit', criarNovaMesa);
+      document.getElementById('busca-comanda')?.addEventListener('input', renderMesas);
+      document.getElementById('ordenar-comandas')?.addEventListener('change', renderMesas);
     });
 
     async function carregarProdutos() {
@@ -587,27 +620,70 @@
         renderMesas();
       }
     }
+    function minutosAbertos(dataPedido) {
+      if (!dataPedido) return 0;
+      const d = new Date(dataPedido);
+      if (isNaN(d.getTime())) return 0;
+      return Math.floor((Date.now() - d.getTime()) / 60000);
+    }
+    function tempoAbertura(dataPedido) {
+      if (!dataPedido) return '';
+      const d = new Date(dataPedido);
+      if (isNaN(d)) return '';
+      const agora = new Date();
+      const diff = Math.floor((agora - d) / 60000);
+      if (diff < 1) return 'Agora';
+      if (diff < 60) return `${diff} min`;
+      const h = Math.floor(diff / 60);
+      const m = diff % 60;
+      if (h < 24) return m ? `${h}h ${m}min` : `${h}h`;
+      const dias = Math.floor(h / 24);
+      return `${dias}d`;
+    }
     function renderMesas() {
-      console.log('Renderizando mesas:', pedidosAbertos);
       const grid = document.getElementById('mesas-grid');
       grid.innerHTML = '';
       if (!pedidosAbertos.length) {
         grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#888;font-size:1.1em;padding:2rem;"><i class="fas fa-receipt" style="font-size:2.5rem;display:block;margin-bottom:0.5rem;opacity:0.5;"></i>Nenhuma comanda ou mesa em aberto.<br><small>Crie uma nova comanda acima para começar.</small></div>';
         return;
       }
-      pedidosAbertos.forEach(pedido => {
-        console.log('Renderizando pedido:', pedido.id, 'Itens:', pedido.itens);
+      const termoBusca = (document.getElementById('busca-comanda')?.value || '').trim().toLowerCase();
+      const ordenar = document.getElementById('ordenar-comandas')?.value || 'recente';
+      let lista = [...pedidosAbertos];
+      if (termoBusca) {
+        lista = lista.filter(p => {
+          const nome = ((p.nome_cliente || '') + ' ' + (p.nome_mesa || '')).toLowerCase();
+          return nome.includes(termoBusca);
+        });
+      }
+      if (ordenar === 'antigo') lista.sort((a, b) => new Date(a.data_pedido || 0) - new Date(b.data_pedido || 0));
+      else if (ordenar === 'valor') lista.sort((a, b) => {
+        const ta = (a.itens||[]).reduce((s, i) => s + parseFloat(i.subtotal || i.precoUnitario * i.quantidade || 0), 0);
+        const tb = (b.itens||[]).reduce((s, i) => s + parseFloat(i.subtotal || i.precoUnitario * i.quantidade || 0), 0);
+        return tb - ta;
+      });
+      else lista.sort((a, b) => new Date(b.data_pedido || 0) - new Date(a.data_pedido || 0));
+      lista.forEach(pedido => {
         let total = (pedido.itens||[]).reduce((sum, i) => {
           const precoUnitario = parseFloat(i.precoUnitario || i.preco_unitario || 0);
           const quantidade = parseInt(i.quantidade || 0);
           return sum + (precoUnitario * quantidade);
         }, 0);
+        const qtdItens = (pedido.itens||[]).reduce((s, i) => s + parseInt(i.quantidade || 0), 0);
+        const tempo = tempoAbertura(pedido.data_pedido);
+        const mins = minutosAbertos(pedido.data_pedido);
+        let tempoClass = '';
+        if (mins >= 120) tempoClass = 'mesa-tempo-urgente';
+        else if (mins >= 60) tempoClass = 'mesa-tempo-alerta';
         const card = document.createElement('div');
-        card.className = 'mesa-card';
+        card.className = 'mesa-card' + (tempoClass ? ' ' + tempoClass : '');
         card.innerHTML = `
           <div class="mesa-header">
             <div class="mesa-nome"><i class="fas fa-receipt"></i> ${(pedido.nome_cliente && pedido.nome_cliente.trim()) || pedido.nome_mesa || 'Comanda/Mesa'}</div>
-            <div class="mesa-status"><i class="fas fa-clock"></i> ${pedido.status}</div>
+            <div class="mesa-meta">
+              <span class="mesa-tempo" title="Tempo em aberto"><i class="fas fa-clock"></i> ${tempo || '--'}</span>
+              <span class="mesa-qtd-itens" title="Quantidade de itens">${qtdItens} itens</span>
+            </div>
           </div>
           <div class="mesa-itens">
             <table>

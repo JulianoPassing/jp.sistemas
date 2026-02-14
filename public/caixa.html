@@ -154,14 +154,93 @@
     }
     .caixa-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 32px;
+      grid-template-columns: 380px 1fr;
+      gap: 24px;
     }
+    .caixa-col-esquerda { display: flex; flex-direction: column; gap: 20px; }
     @media (max-width: 900px) {
       .caixa-grid {
         grid-template-columns: 1fr;
       }
     }
+    .caixa-carrinho-section { min-height: 320px; }
+    .carrinho-itens {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      background: #f9fafb;
+    }
+    .carrinho-vazio { color: #9ca3af; font-size: 0.9rem; margin: 0; padding: 1rem; text-align: center; }
+    .carrinho-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      background: #fff;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+    .carrinho-item:last-child { margin-bottom: 0; }
+    .carrinho-item-nome { font-weight: 500; }
+    .carrinho-item-qtd { color: #6b7280; font-size: 0.85rem; }
+    .carrinho-item-remover {
+      background: none;
+      border: none;
+      color: #dc2626;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .carrinho-item-remover:hover { background: #fee2e2; }
+    .caixa-total-grande {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary-blue);
+      text-align: center;
+      padding: 16px;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      border: 2px solid #0ea5e9;
+    }
+    .pdv-view-toggle { display: flex; gap: 4px; margin-bottom: 12px; }
+    .pdv-view-toggle .btn-view {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #6b7280;
+    }
+    .pdv-view-toggle .btn-view.active {
+      background: var(--primary-blue);
+      color: #fff;
+      border-color: var(--primary-blue);
+    }
+    .produtos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .produto-card {
+      background: #fff;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .produto-card:hover {
+      border-color: var(--primary-blue);
+      box-shadow: 0 4px 12px rgba(0,47,75,0.15);
+    }
+    .produto-card-nome { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+    .produto-card-preco { color: var(--primary-blue); font-weight: 700; }
     .caixa-section {
       background: var(--card-bg);
       border-radius: var(--border-radius);
@@ -276,6 +355,58 @@
       margin-top: 18px;
       font-size: 1.1em;
       padding: 14px 0;
+    }
+    .troco-section {
+      margin-top: 14px;
+      padding: 12px;
+      background: #f8fafc;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+    }
+    .troco-section label {
+      display: block;
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-bottom: 6px;
+    }
+    .troco-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .troco-row input {
+      width: 100px;
+      padding: 8px 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .troco-resultado {
+      font-weight: 700;
+      color: var(--success-color);
+      font-size: 1.1rem;
+    }
+    .troco-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-troco {
+      padding: 6px 12px;
+      border: 2px solid #e5e7eb;
+      background: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--primary-blue);
+      transition: all 0.2s;
+    }
+    .btn-troco:hover {
+      background: #e0f2fe;
+      border-color: var(--primary-color);
     }
     .cliente-opcoes {
       display: flex;
@@ -423,6 +554,7 @@
         </div>
       </div>
       <div class="caixa-grid">
+        <div class="caixa-col-esquerda">
         <!-- Seção Cliente -->
         <section class="caixa-section" style="position:relative;">
           <div class="section-title"><i class="fas fa-user" style="margin-right:6px;color:#0d9488;"></i> Identificação do Cliente</div>
@@ -463,14 +595,41 @@
           </form>
           <div id="cliente-resumo" style="display:none;"></div>
         </section>
+        <!-- Seção Carrinho + Total -->
+        <section class="caixa-section caixa-carrinho-section">
+          <div class="section-title"><i class="fas fa-shopping-basket" style="margin-right:6px;color:#0d9488;"></i> Itens da venda</div>
+          <div id="carrinho-itens" class="carrinho-itens">
+            <p class="carrinho-vazio">Nenhum item adicionado. Busque e adicione produtos.</p>
+          </div>
+          <div class="caixa-total-grande" id="total-venda">R$ 0,00</div>
+          <div class="troco-section">
+            <label for="troco-para">Troco para</label>
+            <div class="troco-row">
+              <input type="text" id="troco-para" placeholder="0,00" inputmode="decimal" />
+              <span class="troco-resultado" id="troco-resultado"></span>
+            </div>
+            <div class="troco-buttons">
+              <button type="button" class="btn-troco" data-val="10">R$ 10</button>
+              <button type="button" class="btn-troco" data-val="20">R$ 20</button>
+              <button type="button" class="btn-troco" data-val="50">R$ 50</button>
+              <button type="button" class="btn-troco" data-val="100">R$ 100</button>
+            </div>
+          </div>
+          <button class="btn btn-success finalizar-btn" id="finalizar-venda" type="button"><i class="fas fa-check-circle"></i> Concluir Venda</button>
+        </section>
+        </div>
         <!-- Seção Produtos -->
         <section class="caixa-section">
           <div class="section-title">Produtos</div>
           <div class="form-group">
-            <label for="busca-produto">Buscar produto</label>
+            <label for="busca-produto">Buscar produto (Enter para adicionar)</label>
             <input type="text" id="busca-produto" placeholder="Nome, código ou código de barras..." autocomplete="off" />
           </div>
-          <div class="produtos-lista">
+          <div class="pdv-view-toggle">
+            <button type="button" class="btn-view active" data-view="lista" title="Lista"><i class="fas fa-list"></i></button>
+            <button type="button" class="btn-view" data-view="grid" title="Grid (touch)"><i class="fas fa-th-large"></i></button>
+          </div>
+          <div class="produtos-lista" id="produtos-lista">
             <table>
               <thead>
                 <tr>
@@ -484,8 +643,7 @@
               <tbody id="produtos-tbody"></tbody>
             </table>
           </div>
-          <div class="total" id="total-venda">Total: R$ 0,00</div>
-          <button class="btn btn-success finalizar-btn" id="finalizar-venda" type="button"><i class="fas fa-check-circle"></i> Concluir Venda</button>
+          <div class="produtos-grid" id="produtos-grid" style="display:none;"></div>
         </section>
       </div>
     </div>
@@ -500,7 +658,8 @@
     let vendaItens = [];
     let clienteSelecionado = null;
     let clienteManual = false;
-    let consumidorFinal = true; // Padrão: venda rápida sem cadastro
+    let consumidorFinal = true;
+    let produtosFiltradosAtual = [];
 
     async function logout() {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
@@ -530,8 +689,44 @@
       carregarClientes();
       usarConsumidorFinal();
       document.getElementById('finalizar-venda').onclick = finalizarVenda;
+      document.getElementById('troco-para')?.addEventListener('input', () => atualizarTroco());
+      document.getElementById('troco-para')?.addEventListener('blur', () => atualizarTroco());
+      document.querySelectorAll('.btn-troco').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const total = vendaItens.reduce((s, i) => s + i.preco * i.qtd, 0);
+          const val = parseFloat(btn.dataset.val || 0);
+          const proximo = Math.ceil(total / val) * val || val;
+          const input = document.getElementById('troco-para');
+          if (input) {
+            input.value = proximo.toFixed(2).replace('.', ',');
+            atualizarTroco(total);
+          }
+        });
+      });
       document.getElementById('busca-produto').addEventListener('input', filtrarProdutos);
+      document.getElementById('busca-produto').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const filtrados = produtos.filter(p => {
+            const termo = this.value.trim().toLowerCase();
+            if (!termo) return true;
+            return (p.nome && p.nome.toLowerCase().includes(termo)) || (p.codigo && String(p.codigo).toLowerCase().includes(termo));
+          });
+          if (filtrados.length > 0) adicionarItem(filtrados[0].id);
+        }
+      });
       document.getElementById('busca-cliente').addEventListener('input', filtrarClientes);
+      setTimeout(() => document.getElementById('busca-produto')?.focus(), 500);
+      document.querySelectorAll('.pdv-view-toggle .btn-view').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.pdv-view-toggle .btn-view').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const view = btn.dataset.view;
+          document.getElementById('produtos-lista').style.display = view === 'lista' ? '' : 'none';
+          document.getElementById('produtos-grid').style.display = view === 'grid' ? 'grid' : 'none';
+          if (view === 'grid') renderProdutosGrid(produtosFiltradosAtual || produtos);
+        });
+      });
     });
 
     async function carregarProdutos() {
@@ -539,6 +734,7 @@
         const response = await fetch('/api/produtos');
         if (!response.ok) throw new Error('Erro ao buscar produtos');
         produtos = await response.json();
+        produtosFiltradosAtual = produtos;
         renderProdutos(produtos);
       } catch (e) {
         alert('Erro ao carregar produtos.');
@@ -555,11 +751,10 @@
     }
     function renderProdutos(lista) {
       const tbody = document.getElementById('produtos-tbody');
+      if (!tbody) return;
       tbody.innerHTML = '';
       (lista || []).forEach(prod => {
-        console.log('Produto sendo renderizado:', prod);
         const precoVenda = parseFloat(prod.preco_venda || 0);
-        console.log('Preço de venda:', prod.preco_venda, 'Convertido:', precoVenda);
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${prod.nome}</td>
@@ -574,14 +769,48 @@
     function filtrarProdutos() {
       const termo = document.getElementById('busca-produto').value.trim().toLowerCase();
       if (!termo) {
+        produtosFiltradosAtual = produtos;
         renderProdutos(produtos);
+        if (document.getElementById('produtos-grid').style.display === 'grid') renderProdutosGrid(produtos);
         return;
       }
-      const filtrados = produtos.filter(p =>
+      produtosFiltradosAtual = produtos.filter(p =>
         (p.nome && p.nome.toLowerCase().includes(termo)) ||
         (p.codigo && String(p.codigo).toLowerCase().includes(termo))
       );
-      renderProdutos(filtrados);
+      renderProdutos(produtosFiltradosAtual);
+      if (document.getElementById('produtos-grid').style.display === 'grid') renderProdutosGrid(produtosFiltradosAtual);
+    }
+    function renderProdutosGrid(lista) {
+      const grid = document.getElementById('produtos-grid');
+      grid.innerHTML = '';
+      (lista || []).forEach(prod => {
+        const preco = parseFloat(prod.preco_venda || 0);
+        const card = document.createElement('div');
+        card.className = 'produto-card';
+        card.innerHTML = `<div class="produto-card-nome">${prod.nome}</div><div class="produto-card-preco">R$ ${preco.toFixed(2).replace('.', ',')}</div>`;
+        card.onclick = () => adicionarItem(prod.id);
+        grid.appendChild(card);
+      });
+    }
+    function renderCarrinho() {
+      const container = document.getElementById('carrinho-itens');
+      if (!container) return;
+      if (vendaItens.length === 0) {
+        container.innerHTML = '<p class="carrinho-vazio" id="carrinho-vazio">Nenhum item adicionado. Busque e adicione produtos.</p>';
+        return;
+      }
+      container.innerHTML = vendaItens.map((item, idx) => `
+        <div class="carrinho-item">
+          <div><span class="carrinho-item-nome">${item.nome}</span><br><span class="carrinho-item-qtd">${item.qtd} x R$ ${item.preco.toFixed(2).replace('.', ',')}</span></div>
+          <button type="button" class="carrinho-item-remover" onclick="removerItemCarrinho(${idx})" title="Remover"><i class="fas fa-times"></i></button>
+        </div>
+      `).join('');
+    }
+    function removerItemCarrinho(idx) {
+      vendaItens.splice(idx, 1);
+      atualizarTotal();
+      renderCarrinho();
     }
     function adicionarItem(prodId) {
       const prod = produtos.find(p => p.id === prodId);
@@ -607,6 +836,7 @@
       }
       atualizarTotal();
       atualizarEstoqueVisual(prodId, qtd);
+      renderCarrinho();
     }
     function atualizarTotal() {
       let total = 0;
@@ -614,7 +844,21 @@
         total += i.preco * i.qtd;
       });
       const totalEl = document.getElementById('total-venda');
-      if (totalEl) totalEl.textContent = 'Total: R$ ' + total.toFixed(2).replace('.', ',');
+      if (totalEl) totalEl.textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+      atualizarTroco(total);
+    }
+    function atualizarTroco(totalVenda) {
+      const input = document.getElementById('troco-para');
+      const resultado = document.getElementById('troco-resultado');
+      if (!input || !resultado) return;
+      const val = parseFloat(String(input.value || '0').replace(',', '.')) || 0;
+      const total = totalVenda ?? vendaItens.reduce((s, i) => s + i.preco * i.qtd, 0);
+      if (val <= 0 || val < total) {
+        resultado.textContent = '';
+        return;
+      }
+      const troco = val - total;
+      resultado.textContent = 'Troco: R$ ' + troco.toFixed(2).replace('.', ',');
     }
     function atualizarEstoqueVisual(prodId, qtdVendida) {
       const prod = produtos.find(p => p.id === prodId);
