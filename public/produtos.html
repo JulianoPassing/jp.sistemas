@@ -902,9 +902,10 @@
             alert('Acesso negado. Por favor, realize o login.');
             window.location.href = 'index.html';
         }
-        // Exibir nome do usuário
+        // Exibir nome do usuário (se o elemento existir)
         const username = sessionStorage.getItem('username') || 'Usuário';
-        document.getElementById('userDisplay').textContent = username;
+        const userDisplay = document.getElementById('userDisplay');
+        if (userDisplay) userDisplay.textContent = username;
         window.logout = async function() {
             await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
             sessionStorage.removeItem('loggedIn');

@@ -1741,7 +1741,8 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
         .map(input => parseFloat(input.value) || 0);
       
       const total = subtotais.reduce((sum, subtotal) => sum + subtotal, 0);
-      document.getElementById('totalPedido').textContent = total.toFixed(2).replace('.', ',');
+      const totalEl = document.getElementById('totalPedido');
+      if (totalEl) totalEl.textContent = total.toFixed(2).replace('.', ',');
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -1752,9 +1753,10 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
       if (sessionStorage.getItem('loggedIn') !== 'true') {
         window.location.href = 'index.html';
       }
-      // Exibir nome do usuário
+      // Exibir nome do usuário (elemento pode não existir no layout)
       const username = sessionStorage.getItem('username') || 'Usuário';
-      document.getElementById('userDisplay').textContent = username;
+      const userDisplayEl = document.getElementById('userDisplay');
+      if (userDisplayEl) userDisplayEl.textContent = username;
 
       // Event listeners do modal
       document.getElementById('btn-novo-pedido').addEventListener('click', abrirModalNovoPedido);

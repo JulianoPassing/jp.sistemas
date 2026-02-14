@@ -372,7 +372,8 @@
 
       // Exibir nome do usuário
       const username = sessionStorage.getItem('username') || 'Usuário';
-      document.getElementById('userDisplay').textContent = username;
+      const userDisplay = document.getElementById('userDisplay');
+      if (userDisplay) userDisplay.textContent = username;
       carregarPerfil();
     });
 
@@ -381,8 +382,10 @@
         const res = await fetch('/api/auth/perfil', { credentials: 'include' });
         if (!res.ok) return;
         const data = await res.json();
-        document.getElementById('perfil-username').textContent = data.username || '';
-        document.getElementById('perfil-email').textContent = data.email || '(não informado)';
+        const pu = document.getElementById('perfil-username');
+        const pe = document.getElementById('perfil-email');
+        if (pu) pu.textContent = data.username || '';
+        if (pe) pe.textContent = data.email || '(não informado)';
       } catch (e) {
         console.error('Erro ao carregar perfil:', e);
       }
@@ -502,17 +505,16 @@
           body: JSON.stringify(body)
         });
         const data = await res.json();
+        const msgEl = document.getElementById('empresaMsg');
         if (res.ok) {
-          document.getElementById('empresaMsg').textContent = 'Informações salvas com sucesso!';
-          document.getElementById('empresaMsg').style.color = 'green';
+          if (msgEl) { msgEl.textContent = 'Informações salvas com sucesso!'; msgEl.style.color = 'green'; }
           await carregarEmpresa();
         } else {
-          document.getElementById('empresaMsg').textContent = data.error || 'Erro ao salvar.';
-          document.getElementById('empresaMsg').style.color = 'red';
+          if (msgEl) { msgEl.textContent = data.error || 'Erro ao salvar.'; msgEl.style.color = 'red'; }
         }
       } catch (e) {
-        document.getElementById('empresaMsg').textContent = 'Erro ao salvar.';
-        document.getElementById('empresaMsg').style.color = 'red';
+        const msgEl = document.getElementById('empresaMsg');
+        if (msgEl) { msgEl.textContent = 'Erro ao salvar.'; msgEl.style.color = 'red'; }
       }
     });
     carregarEmpresa();

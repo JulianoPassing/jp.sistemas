@@ -454,7 +454,8 @@
         window.location.href = 'index.html';
       }
       const username = sessionStorage.getItem('username') || 'Usuário';
-      document.getElementById('userDisplay').textContent = username;
+      const userDisplay = document.getElementById('userDisplay');
+      if (userDisplay) userDisplay.textContent = username;
       carregarProdutos();
       carregarClientes();
       document.getElementById('finalizar-venda').onclick = finalizarVenda;
@@ -541,7 +542,8 @@
       vendaItens.forEach(i => {
         total += i.preco * i.qtd;
       });
-      document.getElementById('total-venda').textContent = 'Total: R$ ' + total.toFixed(2).replace('.', ',');
+      const totalEl = document.getElementById('total-venda');
+      if (totalEl) totalEl.textContent = 'Total: R$ ' + total.toFixed(2).replace('.', ',');
     }
     function atualizarEstoqueVisual(prodId, qtdVendida) {
       const prod = produtos.find(p => p.id === prodId);

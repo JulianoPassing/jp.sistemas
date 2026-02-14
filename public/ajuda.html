@@ -392,7 +392,8 @@
       }
       // Exibir nome do usuário
       const username = sessionStorage.getItem('username') || 'Usuário';
-      document.getElementById('userDisplay').textContent = username;
+      const userDisplay = document.getElementById('userDisplay');
+      if (userDisplay) userDisplay.textContent = username;
     });
 
     async function logout() {

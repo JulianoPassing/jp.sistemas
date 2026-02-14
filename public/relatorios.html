@@ -1013,17 +1013,19 @@
         window.location.href = 'index.html';
       }
 
-      // Exibir nome do usuário
+      // Exibir nome do usuário (elemento pode não existir)
       const username = sessionStorage.getItem('username') || 'Usuário';
-      document.getElementById('userDisplay').textContent = username;
+      const userDisplayEl = document.getElementById('userDisplay');
+      if (userDisplayEl) userDisplayEl.textContent = username;
 
-      // Configurar seletor de mês com mês atual
+      // Configurar seletor de mês com mês atual (padrão)
       const hoje = new Date();
       const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
-      document.getElementById('monthYear').value = mesAtual;
+      const monthYearEl = document.getElementById('monthYear');
+      if (monthYearEl) monthYearEl.value = mesAtual;
 
-      // Carregar estatísticas reais
-      carregarEstatisticas();
+      // Carregar estatísticas do mês atual
+      carregarEstatisticas(mesAtual);
       
       // Inicializar gráficos
       setTimeout(() => {
@@ -1061,6 +1063,7 @@
 
     // Função para animar números
     function animarNumero(elemento, valorFinal, duracao = 2000) {
+      if (!elemento) return;
       const valorInicial = 0;
       const incremento = valorFinal / (duracao / 16);
       let valorAtual = valorInicial;
@@ -1082,6 +1085,7 @@
 
     // Função para animar valores monetários
     function animarValorMonetario(elemento, valorFinal, duracao = 2000) {
+      if (!elemento) return;
       const valorNumerico = parseFloat(valorFinal.replace(/[^\d,.-]/g, '').replace(',', '.'));
       const valorInicial = 0;
       const incremento = valorNumerico / (duracao / 16);
@@ -1870,13 +1874,14 @@
         window.dadosEstatisticas = dados;
       } catch (error) {
         console.error('Erro ao carregar estatísticas:', error);
-        // Em caso de erro, mostrar valores padrão
-        document.getElementById('total-clientes').textContent = '0';
-        document.getElementById('total-produtos').textContent = '0';
-        document.getElementById('pedidos-mes').textContent = '0';
-        document.getElementById('vendas-mes').textContent = 'R$ 0,00';
-        document.getElementById('lucro-mes').textContent = 'R$ 0,00';
-        document.getElementById('total-pedidos').textContent = '0';
+        // Em caso de erro, mostrar valores padrão (com verificação de existência)
+        const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+        setText('total-clientes', '0');
+        setText('total-produtos', '0');
+        setText('pedidos-mes', '0');
+        setText('vendas-mes', 'R$ 0,00');
+        setText('lucro-mes', 'R$ 0,00');
+        setText('total-pedidos', '0');
       }
     }
 
@@ -1950,7 +1955,8 @@
       let total = 0;
       if (!contas || contas.length === 0) {
         lista.innerHTML = '<li style="color:#888;">Nenhuma conta cadastrada.</li>';
-        document.getElementById('total-' + tipo).textContent = 'Total: R$ 0,00';
+        const totalEl0 = document.getElementById('total-' + tipo);
+        if (totalEl0) totalEl0.textContent = 'Total: R$ 0,00';
         return;
       }
       contas.forEach(conta => {
@@ -1994,7 +2000,8 @@
           ` <button class="remover" title="Remover" onclick="removerContaUI('${tipo}',${conta.id})"><i class="fas fa-trash"></i></button>`;
         lista.appendChild(li);
       });
-      document.getElementById('total-' + tipo).textContent = `Total: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+      const totalEl = document.getElementById('total-' + tipo);
+      if (totalEl) totalEl.textContent = `Total: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
     }
     window.removerContaUI = async function(tipo, id) {
       await removerConta(tipo, id);
