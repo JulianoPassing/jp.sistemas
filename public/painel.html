@@ -8,6 +8,7 @@
     <link rel="icon" href="https://i.imgur.com/TwZLW6a.png" type="image/png" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="js/utils.js"></script>
     <link rel="stylesheet" href="style-sistema.css">
     <link rel="stylesheet" href="mobile.css">
     <style>
@@ -551,7 +552,7 @@
             document.getElementById('dashboardClientes').textContent = data.totalClientes ?? '--';
             document.getElementById('dashboardProdutos').textContent = data.totalProdutos ?? '--';
             document.getElementById('dashboardPedidos').textContent = data.pedidosMes ?? '--';
-            document.getElementById('dashboardVendas').textContent = data.vendasMes ? 'R$ ' + Number(data.vendasMes).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '--';
+            document.getElementById('dashboardVendas').textContent = data.vendasMes ? formatarMoeda(data.vendasMes) : '--';
           })
           .catch(() => {
             document.getElementById('dashboardClientes').textContent = '--';
@@ -565,7 +566,7 @@
           .then(res => res.json())
           .then(lista => {
             const total = lista.reduce((acc, c) => acc + Number(c.valor || 0), 0);
-            document.getElementById('dashboardPagar').textContent = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            document.getElementById('dashboardPagar').textContent = formatarMoeda(total);
           })
           .catch(() => {
             document.getElementById('dashboardPagar').textContent = '--';
@@ -574,7 +575,7 @@
           .then(res => res.json())
           .then(lista => {
             const total = lista.reduce((acc, c) => acc + Number(c.valor || 0), 0);
-            document.getElementById('dashboardReceber').textContent = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            document.getElementById('dashboardReceber').textContent = formatarMoeda(total);
           })
           .catch(() => {
             document.getElementById('dashboardReceber').textContent = '--';
@@ -584,7 +585,7 @@
         fetch('/api/relatorios/estatisticas', { credentials: 'include' })
           .then(res => res.json())
           .then(data => {
-            document.getElementById('dashboardLucro').textContent = data.lucroMes ? 'R$ ' + Number(data.lucroMes).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '--';
+            document.getElementById('dashboardLucro').textContent = data.lucroMes ? formatarMoeda(data.lucroMes) : '--';
           })
           .catch(() => {
             document.getElementById('dashboardLucro').textContent = '--';

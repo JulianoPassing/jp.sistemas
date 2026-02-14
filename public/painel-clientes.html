@@ -16,6 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="js/utils.js"></script>
   <link rel="stylesheet" href="style-sistema.css">
   <link rel="stylesheet" href="mobile.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -717,12 +718,16 @@
           const cliente = clientes.find(c => String(c.id) === String(id));
           if (!cliente) return;
           
-          if (!confirm(`Tem certeza que deseja remover o cliente "${cliente.razao}"?`)) return;
+          if (!(typeof confirmar === 'function' ? confirmar(`Deseja realmente remover o cliente "${cliente.razao}"? Esta ação não pode ser desfeita.`, 'Remover cliente') : confirm(`Tem certeza que deseja remover o cliente "${cliente.razao}"?`))) return;
           try {
+            if (typeof showLoading === 'function') showLoading('Removendo cliente...');
             await fetch(`${API_URL}/${id}`, { method: 'DELETE', credentials: 'include' });
-            alert('Cliente removido com sucesso!');
             await carregarClientes();
+            if (typeof hideLoading === 'function') hideLoading();
+            if (typeof mostrarSucesso === 'function') mostrarSucesso('Cliente removido com sucesso!');
+            else alert('Cliente removido com sucesso!');
           } catch (err) {
+            if (typeof hideLoading === 'function') hideLoading();
             alert('Erro ao remover cliente.');
           }
         };

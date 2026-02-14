@@ -13,6 +13,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/utils.js"></script>
   <link rel="stylesheet" href="style-sistema.css">
   <link rel="stylesheet" href="mobile.css">
   <style>
@@ -1892,8 +1893,7 @@
     // Função para carregar estatísticas do banco de dados
     async function carregarEstatisticas(mesAno = null) {
       try {
-        // LOG: valor do mês enviado
-        console.log('[LOG] Valor enviado para API:', mesAno);
+        if (typeof showLoading === 'function') showLoading('Carregando relatórios...');
         let url = '/api/relatorios/estatisticas';
         if (mesAno) {
           url += `?mes=${mesAno}`;
@@ -1914,23 +1914,24 @@
           animarNumero(document.getElementById('pedidos-mes'), dados.pedidosMes);
         }, 600);
         setTimeout(() => {
-          animarValorMonetario(document.getElementById('vendas-mes'), `R$ ${parseFloat(dados.vendasMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
+          animarValorMonetario(document.getElementById('vendas-mes'), formatarMoeda(dados.vendasMes));
         }, 800);
         setTimeout(() => {
-          animarValorMonetario(document.getElementById('lucro-mes'), `R$ ${parseFloat(dados.lucroMes).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
+          animarValorMonetario(document.getElementById('lucro-mes'), formatarMoeda(dados.lucroMes));
         }, 1000);
         setTimeout(() => {
           animarNumero(document.getElementById('total-pedidos'), dados.totalPedidos);
         }, 1200);
         setTimeout(() => {
-          animarValorMonetario(document.getElementById('total-estoque-custo'), `R$ ${parseFloat(dados.totalEstoqueCusto || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
+          animarValorMonetario(document.getElementById('total-estoque-custo'), formatarMoeda(dados.totalEstoqueCusto));
         }, 1400);
         setTimeout(() => {
-          animarValorMonetario(document.getElementById('total-estoque-venda'), `R$ ${parseFloat(dados.totalEstoqueVenda || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
+          animarValorMonetario(document.getElementById('total-estoque-venda'), formatarMoeda(dados.totalEstoqueVenda));
         }, 1600);
-        // Armazenar dados para uso nos relatórios
         window.dadosEstatisticas = dados;
+        if (typeof hideLoading === 'function') hideLoading();
       } catch (error) {
+        if (typeof hideLoading === 'function') hideLoading();
         console.error('Erro ao carregar estatísticas:', error);
         // Em caso de erro, mostrar valores padrão (com verificação de existência)
         const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
@@ -2064,8 +2065,18 @@
       if (totalEl) totalEl.textContent = `Total: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
     }
     window.removerContaUI = async function(tipo, id) {
-      await removerConta(tipo, id);
-      renderContas(tipo);
+      if (!(typeof confirmar === 'function' ? confirmar('Esta ação não pode ser desfeita. Deseja realmente remover este lançamento?', 'Remover lançamento') : confirm('Tem certeza que deseja remover este lançamento?'))) return;
+      try {
+        if (typeof showLoading === 'function') showLoading('Removendo...');
+        await removerConta(tipo, id);
+        renderContas(tipo);
+        if (typeof hideLoading === 'function') hideLoading();
+        if (typeof mostrarSucesso === 'function') mostrarSucesso('Lançamento removido com sucesso!');
+        else alert('Lançamento removido com sucesso!');
+      } catch (e) {
+        if (typeof hideLoading === 'function') hideLoading();
+        alert('Erro ao remover lançamento.');
+      }
     }
     window.marcarComoPago = async function(tipo, id) {
       await atualizarStatusConta(tipo, id);

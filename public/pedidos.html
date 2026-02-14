@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+  <script src="js/utils.js"></script>
   <link rel="stylesheet" href="style-sistema.css">
   <link rel="stylesheet" href="mobile.css">
   <style>
@@ -865,7 +866,7 @@
               </button>
             </div>
             <div class="total-section">
-              <h3>Total: R$ <span id="totalPedido">0,00</span></h3>
+              <h3>Total: <span id="totalPedido">R$ 0,00</span></h3>
             </div>
           </div>
 
@@ -1160,8 +1161,8 @@
           <td>${nomeCliente}</td>
           <td>${formatarData(pedido.data_pedido)}</td>
           <td><span style="color: ${pedido.status === 'Concluído' ? 'var(--success-color)' : pedido.status === 'Cancelado' ? 'var(--danger-color)' : '#f59e0b'}; font-weight: bold;">${pedido.status || ''}</span></td>
-          <td>R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}</td>
-          <td>R$ ${calcularLucroPedido(pedido).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+          <td>${formatarMoeda(pedido.valor_total)}</td>
+          <td>${formatarMoeda(calcularLucroPedido(pedido))}</td>
           <td>
             <button class="btn btn-primary btn-sm" onclick="visualizarPedido('${pedido.id}')" title="Visualizar"><i class="fas fa-eye"></i></button>
             <button class="btn btn-success btn-sm" onclick="editarPedido('${pedido.id}')" title="Editar"><i class="fas fa-edit"></i></button>
@@ -1291,6 +1292,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
           itens: novoPedidoItens
         };
         
+        if (typeof showLoading === 'function') showLoading('Salvando pedido...');
         if (editandoId) {
           response = await fetch(`/api/pedidos/${editandoId}`, {
             method: 'PUT',
@@ -1321,8 +1323,11 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
         }
         await carregarPedidos();
         fecharModalNovoPedido();
-        alert('Pedido salvo com sucesso!');
+        if (typeof hideLoading === 'function') hideLoading();
+        if (typeof mostrarSucesso === 'function') mostrarSucesso(editandoId ? 'Pedido atualizado com sucesso!' : 'Pedido cadastrado com sucesso!');
+        else alert(editandoId ? 'Pedido atualizado com sucesso!' : 'Pedido cadastrado com sucesso!');
       } catch (error) {
+        if (typeof hideLoading === 'function') hideLoading();
         alert('Erro ao salvar pedido');
         console.error(error);
       }
@@ -1330,13 +1335,17 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
 
     // Função para remover pedido
     async function removerPedido(pedidoId) {
-      if (!confirm('Tem certeza que deseja remover este pedido?')) return;
+      if (!(typeof confirmar === 'function' ? confirmar('Esta ação não pode ser desfeita. Deseja realmente remover este pedido?', 'Remover pedido') : confirm('Tem certeza que deseja remover este pedido?'))) return;
       try {
+        if (typeof showLoading === 'function') showLoading('Removendo pedido...');
         const response = await fetch(`/api/pedidos/${pedidoId}`, { method: 'DELETE' });
         if (!response.ok) throw new Error('Erro ao remover pedido');
         await carregarPedidos();
-        alert('Pedido removido com sucesso!');
+        if (typeof hideLoading === 'function') hideLoading();
+        if (typeof mostrarSucesso === 'function') mostrarSucesso('Pedido removido com sucesso!');
+        else alert('Pedido removido com sucesso!');
       } catch (error) {
+        if (typeof hideLoading === 'function') hideLoading();
         alert('Erro ao remover pedido');
         console.error(error);
       }
@@ -1547,7 +1556,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
               <div class="info-item"><span class="info-label">Data:</span><span class="info-value">${pedido.data_pedido || 'N/A'}</span></div>
               <div class="info-item"><span class="info-label">Pagamento:</span><span class="info-value">${formaPagamento}</span></div>
               <div class="info-item"><span class="info-label">Status:</span><span class="info-value">${pedido.status || 'Em Processamento'}</span></div>
-              <div class="info-item"><span class="info-label">Total:</span><span class="info-value" style="font-weight:700;color:#059669;">R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}</span></div>
+              <div class="info-item"><span class="info-label">Total:</span><span class="info-value" style="font-weight:700;color:#059669;">${formatarMoeda(pedido.valor_total)}</span></div>
             </div>
           </div>
           
@@ -1566,8 +1575,8 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
                   <tr>
                     <td>${item.produto || 'N/A'}</td>
                     <td style="text-align: center;">${item.quantidade || 0}</td>
-                    <td style="text-align: right;">R$ ${(Number(item.precoUnitario) || 0).toFixed(2).replace('.', ',')}</td>
-                    <td style="text-align: right;">R$ ${(Number(item.subtotal) || 0).toFixed(2).replace('.', ',')}</td>
+                    <td style="text-align: right;">${formatarMoeda(item.precoUnitario)}</td>
+                    <td style="text-align: right;">${formatarMoeda(item.subtotal)}</td>
                   </tr>
                 `).join('') : '<tr><td colspan="4" style="text-align: center;">Nenhum item encontrado</td></tr>'}
               </tbody>
@@ -1575,7 +1584,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
           </div>
           
           <div class="total-section-visualizacao">
-            Total: R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}
+            Total: ${formatarMoeda(pedido.valor_total)}
           </div>
           
           ${pedido.observacoes ? `
@@ -1773,7 +1782,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
       
       const total = subtotais.reduce((sum, subtotal) => sum + subtotal, 0);
       const totalEl = document.getElementById('totalPedido');
-      if (totalEl) totalEl.textContent = total.toFixed(2).replace('.', ',');
+      if (totalEl) totalEl.textContent = formatarMoeda(total);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -1863,10 +1872,6 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
       }, 0);
     }
 
-    // Função para formatar valor em reais
-    function formatarMoeda(valor) {
-      return `R$ ${valor.toFixed(2).replace('.', ',')}`;
-    }
 
     // Função para limpar caracteres especiais (global) - preserva acentos para PDF
     function limparCaracteres(texto) {
@@ -1925,7 +1930,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
           (pedido.status || '').toLowerCase().includes('conclu') ? 'Concluído' :
           (pedido.status || '').toLowerCase().includes('canc') ? 'Cancelado' :
           'Em Processamento',
-          `R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}`
+          formatarMoeda(pedido.valor_total)
         ]);
 
         doc.autoTable({
@@ -2156,8 +2161,8 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
               return [
                 limparCaracteres(item.produto || 'N/A'),
                 String(qtd),
-                `R$ ${precoUnit.toFixed(2).replace('.', ',')}`,
-                `R$ ${sub.toFixed(2).replace('.', ',')}`
+                formatarMoeda(precoUnit),
+                formatarMoeda(sub)
               ];
             }) : [];
             
@@ -2194,7 +2199,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             const finalY = tableData.length > 0 ? doc.lastAutoTable.finalY + 8 : yBase + 70;
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text(`Valor Total: R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}`, 150, finalY);
+            doc.text(`Valor Total: ${formatarMoeda(pedido.valor_total)}`, 150, finalY);
             // Observações - omitir bloco "INFORMAÇÕES ADICIONAIS" (redundante)
             let obsTexto = (pedido.observacoes || '').replace(/[\x00-\x1F\x7F]/g, '').trim();
             obsTexto = obsTexto.replace(/INFORMAÇÕES ADICIONAIS:[\s\S]*/i, '').trim();
@@ -2370,8 +2375,8 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
               return [
                 limparCaracteres(item.produto || 'N/A'),
                 String(qtd),
-                `R$ ${precoUnit.toFixed(2).replace('.', ',')}`,
-                `R$ ${sub.toFixed(2).replace('.', ',')}`
+                formatarMoeda(precoUnit),
+                formatarMoeda(sub)
               ];
             }) : [];
             if (tableData.length > 0) {
@@ -2406,7 +2411,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
             const finalY = tableData.length > 0 ? doc.lastAutoTable.finalY + 10 : yInfo + 15;
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text(`Valor Total: R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}`, 150, finalY);
+            doc.text(`Valor Total: ${formatarMoeda(pedido.valor_total)}`, 150, finalY);
             // Observações - omitir bloco "INFORMAÇÕES ADICIONAIS" (redundante)
             let obsTexto = (pedido.observacoes || '').replace(/[\x00-\x1F\x7F]/g, '').trim();
             obsTexto = obsTexto.replace(/INFORMAÇÕES ADICIONAIS:[\s\S]*/i, '').trim();

@@ -8,6 +8,7 @@
   <link rel="icon" href="https://i.imgur.com/TwZLW6a.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="js/utils.js"></script>
   <link rel="stylesheet" href="style-sistema.css">
   <link rel="stylesheet" href="mobile.css">
   <style>
@@ -798,7 +799,7 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${prod.nome}</td>
-          <td>R$ ${precoVenda.toFixed(2).replace('.', ',')}</td>
+          <td>${formatarMoeda(precoVenda)}</td>
           <td>${prod.estoque ?? 0}</td>
           <td><input type="number" min="1" max="${prod.estoque != null ? Math.max(prod.estoque, 1) : 9999}" value="1" style="width:60px;" id="qtd-${prod.id}" /></td>
           <td><button class="btn btn-primary" type="button" onclick="adicionarItem(${prod.id})"><i class="fas fa-plus"></i> Adicionar</button></td>
@@ -828,7 +829,7 @@
         const preco = parseFloat(prod.preco_venda || 0);
         const card = document.createElement('div');
         card.className = 'produto-card';
-        card.innerHTML = `<div class="produto-card-nome">${prod.nome}</div><div class="produto-card-preco">R$ ${preco.toFixed(2).replace('.', ',')}</div>`;
+        card.innerHTML = `<div class="produto-card-nome">${prod.nome}</div><div class="produto-card-preco">${formatarMoeda(preco)}</div>`;
         card.onclick = () => adicionarItem(prod.id);
         grid.appendChild(card);
       });
@@ -842,7 +843,7 @@
       }
       container.innerHTML = vendaItens.map((item, idx) => `
         <div class="carrinho-item">
-          <div><span class="carrinho-item-nome">${item.nome}</span><br><span class="carrinho-item-qtd">${item.qtd} x R$ ${item.preco.toFixed(2).replace('.', ',')}</span></div>
+          <div><span class="carrinho-item-nome">${item.nome}</span><br><span class="carrinho-item-qtd">${item.qtd} x ${formatarMoeda(item.preco)}</span></div>
           <button type="button" class="carrinho-item-remover" onclick="removerItemCarrinho(${idx})" title="Remover"><i class="fas fa-times"></i></button>
         </div>
       `).join('');
@@ -884,7 +885,7 @@
         total += i.preco * i.qtd;
       });
       const totalEl = document.getElementById('total-venda');
-      if (totalEl) totalEl.textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+      if (totalEl) totalEl.textContent = formatarMoeda(total);
       atualizarTroco(total);
     }
     function atualizarTroco(totalVenda) {
@@ -898,7 +899,7 @@
         return;
       }
       const troco = val - total;
-      resultado.textContent = 'Troco: R$ ' + troco.toFixed(2).replace('.', ',');
+      resultado.textContent = 'Troco: ' + formatarMoeda(troco);
     }
     function atualizarEstoqueVisual(prodId, qtdVendida) {
       const prod = produtos.find(p => p.id === prodId);

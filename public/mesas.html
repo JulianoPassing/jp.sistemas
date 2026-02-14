@@ -15,6 +15,7 @@
   <link rel="icon" href="https://i.imgur.com/TwZLW6a.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="js/utils.js"></script>
   <link rel="stylesheet" href="style-sistema.css">
   <link rel="stylesheet" href="mobile.css">
   <style>
@@ -814,13 +815,13 @@
                   const quantidade = parseInt(i.quantidade || 0);
                   const precoUnitario = parseFloat(i.precoUnitario || i.preco_unitario || 0);
                   const subtotal = (i.subtotal != null ? parseFloat(i.subtotal) : precoUnitario * quantidade);
-                  return `<tr><td>${produtoNome}</td><td>${quantidade}</td><td>R$ ${precoUnitario.toFixed(2).replace('.', ',')}</td><td>R$ ${subtotal.toFixed(2).replace('.', ',')}</td></tr>`;
+                  return `<tr><td>${produtoNome}</td><td>${quantidade}</td><td>${formatarMoeda(precoUnitario)}</td><td>${formatarMoeda(subtotal)}</td></tr>`;
                 }).join('') : '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:16px;font-size:0.9rem;">Nenhum item adicionado</td></tr>'}
               </tbody>
             </table>
           </div>
           <div class="mesa-rodape">
-            <div class="mesa-total"><span>Total:</span> <span>R$ ${total.toFixed(2).replace('.', ',')}</span></div>
+            <div class="mesa-total"><span>Total:</span> <span>${formatarMoeda(total)}</span></div>
             <div class="mesa-acoes">
               <button class="btn btn-secondary" title="Editar itens" onclick="abrirModalEditarProdutos(${pedido.id})"><i class='fas fa-edit'></i></button>
               <button class="btn btn-success" title="Fechar comanda" onclick="abrirModalFinalizarMesa(${pedido.id})"><i class='fas fa-check'></i></button>
@@ -1033,7 +1034,7 @@
           const preco = parseFloat(i.precoUnitario||i.preco_unitario)||0;
           const qtd = parseInt(i.quantidade)||0;
           const sub = (i.subtotal != null ? parseFloat(i.subtotal) : preco * qtd).toFixed(2);
-          return `<tr><td>${i.produto||''}</td><td>${qtd}</td><td>R$ ${preco.toFixed(2).replace('.',',')}</td><td>R$ ${sub.replace('.',',')}</td></tr>`;
+          return `<tr><td>${i.produto||''}</td><td>${qtd}</td><td>${formatarMoeda(preco)}</td><td>${formatarMoeda(sub)}</td></tr>`;
         }).join('');
         let html, winW, winH;
         if (modelo === 'cupom') {
@@ -1061,7 +1062,7 @@
             <div class='linha'></div>
             <table><thead><tr><th>Produto</th><th>Qtd</th><th>Vlr</th><th>Sub</th></tr></thead><tbody>${itensHtml}</tbody></table>
             <div class='linha'></div>
-            <div class='total'>TOTAL: R$ ${total.toFixed(2).replace('.',',')}</div>
+            <div class='total'>TOTAL: ${formatarMoeda(total)}</div>
             <div class='footer'>Cupom não fiscal - ${new Date().toLocaleString('pt-BR')}<br>J.P Sistemas</div>
           </div></body></html>`;
           winW = 320; winH = 600;
@@ -1087,7 +1088,7 @@
             <div class='empresa'><b>${razao}</b><br>CNPJ: ${cnpj}<br>${endereco}<br>${email} | ${telefone}</div>
             <div class='info'><b>Mesa/Pessoa:</b> ${mesaNome} | <b>Data:</b> ${dataStr} | <b>Status:</b> ${pedido.status}</div>
             <table><thead><tr><th>Produto</th><th>Qtd</th><th>Preço Unit.</th><th>Subtotal</th></tr></thead><tbody>${itensHtml}</tbody></table>
-            <div class='total'>TOTAL: R$ ${total.toFixed(2).replace('.',',')}</div>
+            <div class='total'>TOTAL: ${formatarMoeda(total)}</div>
             <div class='footer'>Documento não fiscal - ${new Date().toLocaleString('pt-BR')} | J.P Sistemas</div>
           </div></body></html>`;
           winW = 800; winH = 700;
@@ -1098,14 +1099,19 @@
       });
     }
     window.excluirMesa = async function(id) {
-      if (!confirm('Tem certeza que deseja excluir esta mesa/pedido?')) return;
+      if (!(typeof confirmar === 'function' ? confirmar('Esta ação não pode ser desfeita. Deseja realmente excluir esta mesa/pedido?', 'Excluir mesa') : confirm('Tem certeza que deseja excluir esta mesa/pedido?'))) return;
       try {
+        if (typeof showLoading === 'function') showLoading('Excluindo mesa...');
         const resp = await fetch(`/api/pedidos/${id}`, { method: 'DELETE' });
         if (!resp.ok) throw new Error('Erro ao excluir mesa');
         sessionStorage.removeItem('comanda_criada_' + id);
         pedidosAbertos = pedidosAbertos.filter(p => p.id !== id);
         renderMesas();
+        if (typeof hideLoading === 'function') hideLoading();
+        if (typeof mostrarSucesso === 'function') mostrarSucesso('Mesa excluída com sucesso!');
+        else alert('Mesa excluída com sucesso!');
       } catch (e) {
+        if (typeof hideLoading === 'function') hideLoading();
         alert('Erro ao excluir mesa!');
       }
     }
@@ -1157,8 +1163,8 @@
                         <td style='text-align:center;padding:8px 4px;'>
                           <input type='number' min='1' value='${quantidade}' data-idx='${idx}' class='input-quantidade' style='width:50px;padding:4px 6px;border-radius:6px;border:1.5px solid #e5e7eb;font-size:0.9em;text-align:center;' />
                         </td>
-                        <td style='text-align:right;padding:8px 4px;color:#6b7280;'>R$ ${precoUnitario.toFixed(2).replace('.', ',')}</td>
-                        <td style='text-align:right;padding:8px 4px;font-weight:600;color:#059669;'>R$ ${subtotal.toFixed(2).replace('.', ',')}</td>
+                        <td style='text-align:right;padding:8px 4px;color:#6b7280;'>${formatarMoeda(precoUnitario)}</td>
+                        <td style='text-align:right;padding:8px 4px;font-weight:600;color:#059669;'>${formatarMoeda(subtotal)}</td>
                         <td style='text-align:center;padding:8px 4px;'>
                           <button class='btn btn-danger btn-remover-produto' data-idx='${idx}' title='Remover' style='padding:4px 8px;font-size:0.85em;'><i class='fas fa-trash'></i></button>
                         </td>
@@ -1167,7 +1173,7 @@
                   </tbody>
                 </table>
                 <div style='margin-top:16px;padding-top:12px;border-top:2px solid #e5e7eb;text-align:right;'>
-                  <div style='font-size:1.2em;font-weight:700;color:#059669;'>Total da Mesa: R$ ${total.toFixed(2).replace('.', ',')}</div>
+                  <div style='font-size:1.2em;font-weight:700;color:#059669;'>Total da Mesa: ${formatarMoeda(total)}</div>
                 </div>
               </div>
             </div>`;
@@ -1281,7 +1287,7 @@
           const div = document.createElement('div');
           div.className = 'item-busca-produto';
           div.style.cssText = 'padding:10px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f1f5f9;transition:background 0.2s;';
-          div.innerHTML = `<span style="font-weight:500;color:#374151;">${prod.nome}</span><span style="color:#059669;font-weight:600;">R$ ${preco.toFixed(2).replace('.', ',')}</span>`;
+          div.innerHTML = `<span style="font-weight:500;color:#374151;">${prod.nome}</span><span style="color:#059669;font-weight:600;">${formatarMoeda(preco)}</span>`;
           div.onmouseenter = () => div.style.background = '#f0f9ff';
           div.onmouseleave = () => div.style.background = '#fff';
           div.onclick = () => {
@@ -1418,7 +1424,7 @@
         <div style='background:#f9fafb;border-radius:10px;padding:16px;border:1px solid #e5e7eb;margin-bottom:16px;'>
           <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;'>
             <span style='font-weight:600;color:#374151;'>Subtotal:</span>
-            <span style='font-size:1.1em;color:#6b7280;'>R$ ${total.toFixed(2).replace('.', ',')}</span>
+            <span style='font-size:1.1em;color:#6b7280;'>${formatarMoeda(total)}</span>
           </div>
           <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;'>
             <span style='font-weight:600;color:#374151;'>Desconto (%):</span>
@@ -1426,7 +1432,7 @@
           </div>
           <div style='border-top:2px solid #e5e7eb;padding-top:12px;display:flex;justify-content:space-between;align-items:center;'>
             <span style='font-weight:700;color:#374151;font-size:1.1em;'>Total Final:</span>
-            <span id='total-final' style='font-size:1.3em;font-weight:700;color:#059669;'>R$ ${total.toFixed(2).replace('.', ',')}</span>
+            <span id='total-final' style='font-size:1.3em;font-weight:700;color:#059669;'>${formatarMoeda(total)}</span>
           </div>
         </div>
         <div style='margin-bottom:16px;'>
@@ -1446,8 +1452,8 @@
         const valorDesconto = total * (descontoPercent / 100);
         const totalFinal = total - valorDesconto;
         
-        descontoValorSpan.textContent = `R$ ${valorDesconto.toFixed(2).replace('.', ',')}`;
-        totalFinalSpan.textContent = `R$ ${totalFinal.toFixed(2).replace('.', ',')}`;
+        descontoValorSpan.textContent = formatarMoeda(valorDesconto);
+        totalFinalSpan.textContent = formatarMoeda(totalFinal);
         
         if (descontoPercent > 0) {
           descontoValorSpan.style.color = '#dc2626';
