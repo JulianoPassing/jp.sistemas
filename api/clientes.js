@@ -2,11 +2,19 @@ const mysql = require('mysql2/promise');
 const url = require('url');
 
 module.exports = async (req, res) => {
+  const host = process.env.DB_HOST;
+  const user = process.env.DB_USER;
+  const password = process.env.DB_PASSWORD;
+  const database = process.env.DB_NAME;
+  if (!host || !user || !password || !database) {
+    res.status(500).json({ error: 'Configuração do banco de dados incompleta. Defina DB_HOST, DB_USER, DB_PASSWORD e DB_NAME no .env' });
+    return;
+  }
   const connection = await mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'julianopassing',
-    password: process.env.DB_PASSWORD || 'Juliano@95',
-    database: process.env.DB_NAME || 'sistemajuliano'
+    host,
+    user,
+    password,
+    database
   });
 
   try {

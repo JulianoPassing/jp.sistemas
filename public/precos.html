@@ -25,6 +25,7 @@
   <meta name="theme-color" content="#002f4b">
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script src="js/utils.js"></script>
   <link rel="stylesheet" href="mobile.css">
   <style>
     :root {
@@ -1607,10 +1608,7 @@
     let planoAtual = planos[0];
     let cupomAtivo = null;
 
-    // --- Utilitários ---
-    function formatarMoeda(v) {
-      return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    }
+    // --- Utilitários (formatarMoeda vem de js/utils.js) ---
     function formatarCPF(v) {
       return v.replace(/\D/g, '').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
     }
