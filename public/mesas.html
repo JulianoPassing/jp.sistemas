@@ -200,9 +200,9 @@
     }
     .mesa-card.mesa-tempo-urgente .mesa-header { background: linear-gradient(135deg, #b91c1c, #dc2626); }
     .mesa-header {
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+      background: linear-gradient(135deg, var(--primary-blue) 0%, #004d73 100%);
       color: #fff;
-      padding: 12px 16px 10px 16px;
+      padding: 14px 18px;
       border-radius: 10px 10px 0 0;
       display: flex;
       flex-direction: row;
@@ -213,15 +213,17 @@
     }
     .mesa-meta {
       display: flex;
-      gap: 12px;
-      font-size: 0.85rem;
+      gap: 10px;
+      font-size: 0.8rem;
       opacity: 0.95;
     }
     .mesa-tempo, .mesa-qtd-itens {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 4px;
-      box-shadow: 0 2px 8px rgba(0,90,159,0.07);
+      background: rgba(255,255,255,0.2);
+      padding: 4px 8px;
+      border-radius: 6px;
     }
     .mesa-nome {
       font-size: 1.15em;
@@ -246,23 +248,23 @@
       gap: 4px;
     }
     .mesa-itens {
-      margin: 10px 0 4px 0;
-      padding: 0 12px;
+      margin: 0;
+      padding: 0 16px;
+      background: #fafafa;
     }
     .mesa-itens table {
       width: 100%;
       border-collapse: collapse;
     }
     .mesa-itens th {
-      background: #f3f4f6;
-      color: var(--primary-color);
+      background: linear-gradient(135deg, var(--primary-blue) 0%, #004d73 100%);
+      color: #fff !important;
       font-weight: 600;
       text-align: right;
-      border-bottom: 2px solid #e5e7eb;
+      border-bottom: none;
+      padding: 8px 10px;
     }
-    .mesa-itens th:first-child {
-      text-align: left;
-    }
+    .mesa-itens th:first-child { text-align: left; }
     .mesa-itens td {
       padding: 8px 6px;
       font-size: 1.05em;
@@ -276,25 +278,27 @@
       border-bottom: none;
     }
     .mesa-total {
-      font-size: 1.18em;
+      font-size: 1.15em;
       font-weight: 700;
       color: var(--success-color);
-      margin: 12px 18px 0 0;
+      margin: 12px 16px 0 0;
+      padding-bottom: 12px;
       text-align: right;
       letter-spacing: 0.01em;
     }
     .mesa-acoes {
       display: flex;
       gap: 8px;
-      margin: 14px 16px 0 0;
+      margin: 0 16px 16px 0;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
       justify-content: flex-end;
       flex-wrap: wrap;
     }
     .mesa-acoes .btn {
       min-width: 40px;
-      font-size: 1.15em;
-      font-weight: 600;
-      box-shadow: 0 2px 8px rgba(37,99,235,0.07);
+      font-size: 1rem;
+      font-weight: 500;
       padding: 8px 12px;
       border-radius: 8px;
       display: flex;
@@ -500,6 +504,31 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
     .comandas-exit-btn:hover { background: #4b5563; color: #fff; }
+    /* Modal impressão - botões de opção */
+    .btn-opcao-impressao {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+    }
+    .btn-opcao-impressao:hover {
+      border-color: var(--primary-color);
+      background: #f0f9ff;
+    }
+    .btn-opcao-impressao i {
+      font-size: 1.5rem;
+      color: #0d9488;
+      flex-shrink: 0;
+    }
+    .btn-opcao-impressao strong { display: block; color: #002f4b; margin-bottom: 4px; font-size: 1rem; }
+    .btn-opcao-impressao span { font-size: 0.85rem; color: #6b7280; }
   </style>
 </head>
 <body class="app-layout" id="comandas-body">
@@ -571,8 +600,8 @@
   </footer>
   <!-- Modal de Edição de Produtos da Mesa -->
   <div id="modal-editar-produtos" class="modal" style="display:none;position:fixed;z-index:1000;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
-    <div class="modal-content" style="background:#fff;border-radius:16px;max-width:700px;width:97vw;padding:48px 36px;box-shadow:0 8px 32px rgba(0,90,159,0.18);position:relative;">
-      <h3 style="margin-bottom:18px;font-size:1.25em;font-weight:600;">Editar itens da comanda</h3>
+    <div class="modal-content" style="background:#fff;border-radius:16px;max-width:700px;width:97vw;padding:32px 28px;box-shadow:0 8px 32px rgba(0,90,159,0.18);position:relative;border:1px solid #e5e7eb;">
+      <h3 style="margin-bottom:20px;font-size:1.2em;font-weight:600;color:#002f4b;display:flex;align-items:center;gap:8px;"><i class="fas fa-edit" style="color:#0d9488;"></i> Editar itens da comanda</h3>
       <div id="produtos-mesa-lista"></div>
 
       <div style="margin-top:24px;text-align:right;">
@@ -580,6 +609,33 @@
         <button id="btn-cancelar-produtos" class="btn btn-secondary" style="margin-left:8px;">Cancelar</button>
       </div>
       <button id="btn-fechar-modal-produtos" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.5em;color:#888;cursor:pointer;"><i class="fas fa-times"></i></button>
+    </div>
+  </div>
+  <!-- Modal de Impressão - Seleção de Modelo -->
+  <div id="modal-imprimir-comanda" class="modal" style="display:none;position:fixed;z-index:1000;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+    <div class="modal-content" style="background:#fff;border-radius:16px;max-width:420px;width:95vw;padding:28px 24px;box-shadow:0 8px 32px rgba(0,90,159,0.18);position:relative;border:1px solid #e5e7eb;">
+      <h3 style="margin-bottom:20px;font-size:1.2em;font-weight:600;color:#002f4b;display:flex;align-items:center;gap:8px;"><i class="fas fa-print" style="color:#0d9488;"></i> Imprimir Comanda</h3>
+      <p style="font-size:0.9rem;color:#6b7280;margin-bottom:20px;">Selecione o modelo de impressão conforme sua impressora:</p>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <button type="button" id="btn-imprimir-normal" class="btn-opcao-impressao" data-modelo="normal">
+          <i class="fas fa-file-alt"></i>
+          <div>
+            <strong>Impressora Normal (A4)</strong>
+            <span>Papel A4, layout completo para impressora de mesa</span>
+          </div>
+        </button>
+        <button type="button" id="btn-imprimir-cupom" class="btn-opcao-impressao" data-modelo="cupom">
+          <i class="fas fa-receipt"></i>
+          <div>
+            <strong>Impressora de Cupom (térmica)</strong>
+            <span>Papel 80mm, formato compacto para impressora térmica</span>
+          </div>
+        </button>
+      </div>
+      <div style="margin-top:20px;text-align:right;">
+        <button type="button" id="btn-cancelar-imprimir" class="btn btn-secondary">Cancelar</button>
+      </div>
+      <button type="button" id="btn-fechar-modal-imprimir" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.4em;color:#9ca3af;cursor:pointer;"><i class="fas fa-times"></i></button>
     </div>
   </div>
   <!-- Modal de Finalização com Desconto -->
@@ -629,6 +685,10 @@
       document.getElementById('nova-mesa-form').addEventListener('submit', criarNovaMesa);
       document.getElementById('busca-comanda')?.addEventListener('input', renderMesas);
       document.getElementById('ordenar-comandas')?.addEventListener('change', renderMesas);
+      document.getElementById('btn-imprimir-normal')?.addEventListener('click', () => executarImpressao('normal'));
+      document.getElementById('btn-imprimir-cupom')?.addEventListener('click', () => executarImpressao('cupom'));
+      document.getElementById('btn-cancelar-imprimir')?.addEventListener('click', fecharModalImprimir);
+      document.getElementById('btn-fechar-modal-imprimir')?.addEventListener('click', fecharModalImprimir);
     });
 
     async function carregarProdutos() {
@@ -738,7 +798,7 @@
           <div class="mesa-acoes">
             <button class="btn btn-secondary" title="Editar itens" onclick="abrirModalEditarProdutos(${pedido.id})"><i class='fas fa-edit'></i></button>
             <button class="btn btn-success" title="Fechar comanda / Finalizar venda" onclick="abrirModalFinalizarMesa(${pedido.id})"><i class='fas fa-check'></i></button>
-            <button class="btn btn-primary" title="Imprimir comanda" onclick="imprimirComanda(${pedido.id})"><i class='fas fa-print'></i></button>
+            <button class="btn btn-primary" title="Imprimir comanda" onclick="abrirModalImprimir(${pedido.id})"><i class='fas fa-print'></i></button>
             <button class="btn btn-danger" title="Excluir comanda" onclick="excluirMesa(${pedido.id})"><i class='fas fa-trash'></i></button>
           </div>
         `;
@@ -938,59 +998,100 @@
         alert('Erro ao finalizar mesa: ' + error.message);
       }
     }
-    window.imprimirComanda = function(id) {
+    let pedidoParaImprimir = null;
+    window.abrirModalImprimir = function(id) {
       const pedido = pedidosAbertos.find(p => p.id === id);
       if (!pedido) return;
+      pedidoParaImprimir = pedido;
+      const modal = document.getElementById('modal-imprimir-comanda');
+      if (modal) modal.style.display = 'flex';
+    };
+    function fecharModalImprimir() {
+      pedidoParaImprimir = null;
+      const modal = document.getElementById('modal-imprimir-comanda');
+      if (modal) modal.style.display = 'none';
+    }
+    function executarImpressao(modelo) {
+      const pedido = pedidoParaImprimir;
+      if (!pedido) return;
+      fecharModalImprimir();
       const data = new Date(pedido.data_pedido || Date.now());
       const dataStr = data.toLocaleDateString('pt-BR');
-      let total = (pedido.itens||[]).reduce((sum, i) => sum + (i.precoUnitario||0) * (i.quantidade||0), 0);
-      // Buscar informações da empresa antes de imprimir
+      let total = (pedido.itens||[]).reduce((sum, i) => sum + (parseFloat(i.precoUnitario||i.preco_unitario)||0) * (parseInt(i.quantidade)||0), 0);
       fetch('/api/empresa').then(res => res.json()).then(empresa => {
-        const html = `
-        <html><head><title>Comanda - ${pedido.nome_cliente||''}</title>
-        <style>
-          body { font-family: monospace; font-size: 13px; margin: 0; padding: 0; }
-          .cupom { width: 280px; margin: 0 auto; padding: 10px; }
-          .cupom h2 { text-align: center; font-size: 1.1em; margin: 0 0 8px 0; }
-          .cupom .linha { border-top: 1px dashed #000; margin: 6px 0; }
-          .cupom .info { margin-bottom: 8px; }
-          .cupom table { width: 100%; border-collapse: collapse; }
-          .cupom th, .cupom td { font-size: 13px; padding: 2px 0; text-align: left; }
-          .cupom th { border-bottom: 1px solid #000; }
-          .cupom .total { font-weight: bold; font-size: 1.1em; text-align: right; margin-top: 8px; }
-          .cupom .footer { text-align: center; font-size: 11px; margin-top: 10px; }
-          @media print { body { margin: 0; } .cupom { box-shadow: none; border: none; } }
-        </style></head><body onload='window.print()'>
-        <div class='cupom'>
-          <h2>COMANDA - ${empresa.nome_fantasia || 'J.P Sistemas'}</h2>
-          <div style='text-align:center;font-size:12px;margin-bottom:6px;'>
-            <div><b>${empresa.razao_social || ''}</b></div>
-            <div>CNPJ: ${empresa.cnpj || ''}</div>
-            <div>${empresa.endereco || ''}</div>
-            <div>${empresa.email || ''}</div>
-            <div>${empresa.telefone || ''}</div>
-          </div>
-          <div class='info'>
-            <b>Mesa/Pessoa:</b> ${pedido.nome_cliente || pedido.nome_mesa || ''}<br>
-            <b>Data:</b> ${dataStr}<br>
-            <b>Status:</b> ${pedido.status}
-          </div>
-          <div class='linha'></div>
-          <table>
-            <thead><tr><th>Produto</th><th>Qtd</th><th>Vlr</th><th>Sub</th></tr></thead>
-            <tbody>
-              ${(pedido.itens||[]).map(i => `<tr><td>${i.produto}</td><td>${i.quantidade}</td><td>${(Number(i.precoUnitario ?? i.preco_unitario) || 0).toFixed(2)}</td><td>${(Number(i.subtotal) || 0).toFixed(2)}</td></tr>`).join('')}
-            </tbody>
-          </table>
-          <div class='linha'></div>
-          <div class='total'>TOTAL: R$ ${total.toFixed(2).replace('.', ',')}</div>
-          <div class='footer'>Cupom não fiscal - ${new Date().toLocaleString('pt-BR')}<br>Powered by J.P Sistemas</div>
-        </div>
-        </body></html>
-      `;
-      const win = window.open('', '', 'width=320,height=600');
-      win.document.write(html);
-      win.document.close();
+        const nomeEmpresa = empresa.nome_fantasia || 'J.P Sistemas';
+        const razao = empresa.razao_social || '';
+        const cnpj = empresa.cnpj || '';
+        const endereco = empresa.endereco || '';
+        const email = empresa.email || '';
+        const telefone = empresa.telefone || '';
+        const mesaNome = pedido.nome_cliente || pedido.nome_mesa || '';
+        const itensHtml = (pedido.itens||[]).map(i => {
+          const preco = parseFloat(i.precoUnitario||i.preco_unitario)||0;
+          const qtd = parseInt(i.quantidade)||0;
+          const sub = (i.subtotal != null ? parseFloat(i.subtotal) : preco * qtd).toFixed(2);
+          return `<tr><td>${i.produto||''}</td><td>${qtd}</td><td>R$ ${preco.toFixed(2).replace('.',',')}</td><td>R$ ${sub.replace('.',',')}</td></tr>`;
+        }).join('');
+        let html, winW, winH;
+        if (modelo === 'cupom') {
+          html = `<html><head><title>Comanda - ${mesaNome}</title>
+          <style>
+            body{font-family:monospace;font-size:12px;margin:0;padding:0;}
+            .doc{width:280px;margin:0 auto;padding:8px;}
+            .doc h2{text-align:center;font-size:1em;margin:0 0 6px 0;}
+            .doc .linha{border-top:1px dashed #000;margin:6px 0;}
+            .doc table{width:100%;border-collapse:collapse;}
+            .doc th,.doc td{font-size:11px;padding:2px 0;}
+            .doc th{border-bottom:1px solid #000;}
+            .doc .total{font-weight:bold;font-size:1.05em;text-align:right;margin-top:6px;}
+            .doc .footer{text-align:center;font-size:10px;margin-top:8px;}
+            @media print{body{margin:0;}.doc{box-shadow:none;border:none;}}
+          </style></head><body onload='window.print()'>
+          <div class='doc'>
+            <h2>COMANDA - ${nomeEmpresa}</h2>
+            <div style='text-align:center;font-size:11px;margin-bottom:4px;'>
+              <div><b>${razao}</b></div>
+              <div>CNPJ: ${cnpj}</div>
+              <div>${endereco}</div>
+            </div>
+            <div style='margin-bottom:6px;'><b>Mesa:</b> ${mesaNome} | <b>Data:</b> ${dataStr}</div>
+            <div class='linha'></div>
+            <table><thead><tr><th>Produto</th><th>Qtd</th><th>Vlr</th><th>Sub</th></tr></thead><tbody>${itensHtml}</tbody></table>
+            <div class='linha'></div>
+            <div class='total'>TOTAL: R$ ${total.toFixed(2).replace('.',',')}</div>
+            <div class='footer'>Cupom não fiscal - ${new Date().toLocaleString('pt-BR')}<br>J.P Sistemas</div>
+          </div></body></html>`;
+          winW = 320; winH = 600;
+        } else {
+          html = `<html><head><title>Comanda - ${mesaNome}</title>
+          <style>
+            body{font-family:Inter,sans-serif;font-size:14px;margin:0;padding:20px;color:#1f2937;}
+            .doc{max-width:210mm;margin:0 auto;}
+            .doc h1{font-size:1.4em;color:#002f4b;text-align:center;margin-bottom:16px;border-bottom:2px solid #002f4b;padding-bottom:12px;}
+            .doc .empresa{text-align:center;margin-bottom:20px;color:#6b7280;font-size:0.9em;}
+            .doc .info{margin-bottom:16px;padding:12px;background:#f9fafb;border-radius:8px;}
+            .doc table{width:100%;border-collapse:collapse;}
+            .doc th{background:#002f4b;color:#fff;padding:10px 12px;text-align:left;font-weight:600;}
+            .doc th:nth-child(2),.doc th:nth-child(3),.doc th:nth-child(4){text-align:right;}
+            .doc td{padding:10px 12px;border-bottom:1px solid #e5e7eb;}
+            .doc td:nth-child(2),.doc td:nth-child(3),.doc td:nth-child(4){text-align:right;}
+            .doc .total{font-size:1.2em;font-weight:700;color:#059669;text-align:right;margin-top:16px;padding-top:12px;border-top:2px solid #e5e7eb;}
+            .doc .footer{text-align:center;font-size:0.85em;color:#9ca3af;margin-top:24px;}
+            @media print{body{margin:0;padding:0;}.doc{box-shadow:none;}}
+          </style></head><body onload='window.print()'>
+          <div class='doc'>
+            <h1>COMANDA - ${nomeEmpresa}</h1>
+            <div class='empresa'><b>${razao}</b><br>CNPJ: ${cnpj}<br>${endereco}<br>${email} | ${telefone}</div>
+            <div class='info'><b>Mesa/Pessoa:</b> ${mesaNome} | <b>Data:</b> ${dataStr} | <b>Status:</b> ${pedido.status}</div>
+            <table><thead><tr><th>Produto</th><th>Qtd</th><th>Preço Unit.</th><th>Subtotal</th></tr></thead><tbody>${itensHtml}</tbody></table>
+            <div class='total'>TOTAL: R$ ${total.toFixed(2).replace('.',',')}</div>
+            <div class='footer'>Documento não fiscal - ${new Date().toLocaleString('pt-BR')} | J.P Sistemas</div>
+          </div></body></html>`;
+          winW = 800; winH = 700;
+        }
+        const win = window.open('', '', 'width='+winW+',height='+winH);
+        win.document.write(html);
+        win.document.close();
       });
     }
     window.excluirMesa = async function(id) {
@@ -1034,12 +1135,12 @@
               <div style='background:#f9fafb;border-radius:10px;padding:16px;border:1px solid #e5e7eb;'>
                 <table style='width:100%;border-collapse:collapse;font-size:0.95em;'>
                   <thead>
-                    <tr style='border-bottom:2px solid #e5e7eb;'>
-                      <th style='text-align:left;padding:8px 4px;color:#374151;font-weight:600;'>Produto</th>
-                      <th style='text-align:center;padding:8px 4px;color:#374151;font-weight:600;'>Qtd</th>
-                      <th style='text-align:right;padding:8px 4px;color:#374151;font-weight:600;'>Preço Unit.</th>
-                      <th style='text-align:right;padding:8px 4px;color:#374151;font-weight:600;'>Subtotal</th>
-                      <th style='text-align:center;padding:8px 4px;color:#374151;font-weight:600;'>Ação</th>
+                    <tr>
+                      <th style='text-align:left;padding:10px 12px;background:linear-gradient(135deg,#002f4b,#004d73);color:#fff;font-weight:600;'>Produto</th>
+                      <th style='text-align:center;padding:10px 12px;background:linear-gradient(135deg,#002f4b,#004d73);color:#fff;font-weight:600;'>Qtd</th>
+                      <th style='text-align:right;padding:10px 12px;background:linear-gradient(135deg,#002f4b,#004d73);color:#fff;font-weight:600;'>Preço Unit.</th>
+                      <th style='text-align:right;padding:10px 12px;background:linear-gradient(135deg,#002f4b,#004d73);color:#fff;font-weight:600;'>Subtotal</th>
+                      <th style='text-align:center;padding:10px 12px;background:linear-gradient(135deg,#002f4b,#004d73);color:#fff;font-weight:600;'>Ação</th>
                     </tr>
                   </thead>
                   <tbody>
