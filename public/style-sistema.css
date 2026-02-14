@@ -198,9 +198,9 @@ main.main-content {
 /* Section - estilo jp.cobrancas */
 .sistema-section {
   background-color: var(--white);
-  border-radius: var(--border-radius-lg);
+  border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: var(--shadow);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 0.06);
   border: 1px solid var(--gray-200);
   margin-bottom: 1.5rem;
 }

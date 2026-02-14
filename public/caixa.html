@@ -154,23 +154,27 @@
     }
     .caixa-grid {
       display: grid;
-      grid-template-columns: 380px 1fr;
-      gap: 24px;
+      grid-template-columns: 360px 1fr;
+      gap: 20px;
+      align-items: start;
     }
-    .caixa-col-esquerda { display: flex; flex-direction: column; gap: 20px; }
+    .caixa-col-esquerda {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 0;
+    }
     @media (max-width: 900px) {
-      .caixa-grid {
-        grid-template-columns: 1fr;
-      }
+      .caixa-grid { grid-template-columns: 1fr; }
     }
-    .caixa-carrinho-section { min-height: 320px; }
+    .caixa-carrinho-section { min-height: 280px; }
     .carrinho-itens {
-      max-height: 200px;
+      max-height: 160px;
       overflow-y: auto;
       margin-bottom: 12px;
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px;
+      border-radius: 10px;
+      padding: 10px;
       background: #f9fafb;
     }
     .carrinho-vazio { color: #9ca3af; font-size: 0.9rem; margin: 0; padding: 1rem; text-align: center; }
@@ -197,14 +201,14 @@
     }
     .carrinho-item-remover:hover { background: #fee2e2; }
     .caixa-total-grande {
-      font-size: 2rem;
+      font-size: 1.75rem;
       font-weight: 800;
       color: var(--primary-blue);
       text-align: center;
-      padding: 16px;
+      padding: 14px 16px;
       background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-      border-radius: 12px;
-      margin-bottom: 16px;
+      border-radius: 10px;
+      margin-bottom: 12px;
       border: 2px solid #0ea5e9;
     }
     .pdv-view-toggle { display: flex; gap: 4px; margin-bottom: 12px; }
@@ -243,17 +247,22 @@
     .produto-card-preco { color: var(--primary-blue); font-weight: 700; }
     .caixa-section {
       background: var(--card-bg);
-      border-radius: var(--border-radius);
-      box-shadow: 0 4px 16px rgba(0, 90, 159, 0.08);
-      padding: 24px;
-      margin-bottom: 24px;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0, 90, 159, 0.06);
+      padding: 20px;
+      margin-bottom: 0;
+      border: 1px solid var(--border);
     }
     .section-title {
-      font-size: 1.2em;
+      font-size: 1.1rem;
       font-weight: 600;
       color: var(--primary-color);
-      margin-bottom: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
+    .section-title i { color: #0d9488 !important; }
     .form-group {
       margin-bottom: 16px;
     }
@@ -267,10 +276,10 @@
       width: 100%;
       padding: 10px 12px;
       border-radius: 8px;
-      border: 1.5px solid var(--border);
+      border: 2px solid var(--border);
       font-size: 1em;
-      background: #f9fafb;
-      margin-bottom: 4px;
+      background: #fff;
+      margin-bottom: 0;
     }
     .form-group input:focus, .form-group select:focus {
       outline: none;
@@ -278,10 +287,10 @@
       background: #fff;
     }
     .produtos-lista {
-      max-height: 250px;
+      max-height: 320px;
       overflow-y: auto;
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 10px;
       background: #f9fafb;
       margin-bottom: 12px;
     }
@@ -394,8 +403,8 @@
       flex-wrap: wrap;
     }
     .btn-troco {
-      padding: 6px 12px;
-      border: 2px solid #e5e7eb;
+      padding: 8px 14px;
+      border: 2px solid var(--border);
       background: #fff;
       border-radius: 8px;
       cursor: pointer;
@@ -410,9 +419,11 @@
     }
     .cliente-opcoes {
       display: flex;
-      gap: 12px;
-      margin-bottom: 10px;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
     }
+    .cliente-opcoes .btn { flex: 1; min-width: 120px; }
     .cliente-opcoes button {
       flex: 1;
     }
@@ -452,7 +463,7 @@
     table tr td, table tr th {
       color: var(--primary-blue) !important;
     }
-    /* Modo PDV - tela cheia, só o essencial */
+    /* Modo PDV - tela cheia, conteúdo na tela */
     body.pdv-fullscreen .sistema-header,
     body.pdv-fullscreen .sistema-breadcrumb,
     body.pdv-fullscreen .sistema-page-header,
@@ -460,11 +471,40 @@
     body.pdv-fullscreen .sistema-main {
       padding: 1rem;
       max-width: none;
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
     }
-    body.pdv-fullscreen .sistema-container { max-width: none; padding: 0; }
-    body.pdv-fullscreen .sistema-section { margin-bottom: 0; }
-    body.pdv-fullscreen .caixa-grid { gap: 24px; min-height: calc(100vh - 120px); }
+    body.pdv-fullscreen .sistema-container { max-width: none; padding: 0; height: 100%; }
+    body.pdv-fullscreen .sistema-section {
+      margin-bottom: 0;
+      height: calc(100vh - 2rem);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    body.pdv-fullscreen .caixa-grid {
+      gap: 16px;
+      flex: 1;
+      min-height: 0;
+      align-items: stretch;
+    }
+    body.pdv-fullscreen .caixa-col-esquerda { max-height: 100%; overflow-y: auto; }
+    body.pdv-fullscreen .caixa-produtos-section {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+    body.pdv-fullscreen .caixa-produtos-section .section-title,
+    body.pdv-fullscreen .caixa-produtos-section .form-group,
+    body.pdv-fullscreen .caixa-produtos-section .pdv-view-toggle { flex-shrink: 0; }
+    body.pdv-fullscreen .produtos-lista,
+    body.pdv-fullscreen .produtos-grid {
+      flex: 1;
+      min-height: 0;
+      max-height: none;
+      overflow-y: auto;
+    }
     .pdv-fullscreen-toggle {
       position: fixed;
       top: 12px;
@@ -557,7 +597,7 @@
         <div class="caixa-col-esquerda">
         <!-- Seção Cliente -->
         <section class="caixa-section" style="position:relative;">
-          <div class="section-title"><i class="fas fa-user" style="margin-right:6px;color:#0d9488;"></i> Identificação do Cliente</div>
+          <div class="section-title"><i class="fas fa-user"></i> Identificação do Cliente</div>
           <p style="font-size:0.9rem;color:#6b7280;margin-bottom:14px;">Consumidor final (venda rápida) ou cliente cadastrado para NF-e</p>
           <div class="cliente-opcoes">
             <button class="btn btn-success" type="button" onclick="usarConsumidorFinal()" id="btn-consumidor-final" title="Venda rápida sem cadastro"><i class="fas fa-bolt"></i> Consumidor Final</button>
@@ -597,7 +637,7 @@
         </section>
         <!-- Seção Carrinho + Total -->
         <section class="caixa-section caixa-carrinho-section">
-          <div class="section-title"><i class="fas fa-shopping-basket" style="margin-right:6px;color:#0d9488;"></i> Itens da venda</div>
+          <div class="section-title"><i class="fas fa-shopping-basket"></i> Itens da venda</div>
           <div id="carrinho-itens" class="carrinho-itens">
             <p class="carrinho-vazio">Nenhum item adicionado. Busque e adicione produtos.</p>
           </div>
@@ -619,8 +659,8 @@
         </section>
         </div>
         <!-- Seção Produtos -->
-        <section class="caixa-section">
-          <div class="section-title">Produtos</div>
+        <section class="caixa-section caixa-produtos-section">
+          <div class="section-title"><i class="fas fa-box"></i> Produtos</div>
           <div class="form-group">
             <label for="busca-produto">Buscar produto (Enter para adicionar)</label>
             <input type="text" id="busca-produto" placeholder="Nome, código ou código de barras..." autocomplete="off" />
