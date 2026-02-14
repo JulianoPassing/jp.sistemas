@@ -8,6 +8,7 @@
   <link rel="icon" href="https://i.imgur.com/TwZLW6a.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="style-sistema.css">
   <style>
     :root {
       --primary-color: #005a9f;
@@ -37,8 +38,8 @@
     body {
       font-family: 'Inter', sans-serif;
       font-size: 14px;
-      background: var(--primary-blue);
-      color: var(--light-text);
+      background: #F5F7FA;
+      color: #1F2937;
       padding: 0;
       min-height: 100vh;
     }
@@ -115,13 +116,12 @@
       opacity: 0.9;
     }
     .card { 
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(249, 250, 251, 0.95));
-      backdrop-filter: blur(10px);
-      border-radius: var(--border-radius); 
-      box-shadow: var(--shadow); 
+      background: #fff;
+      border-radius: 12px; 
+      box-shadow: 0 1px 3px rgb(0 0 0 / 0.1); 
       padding: 25px; 
       margin-bottom: 25px; 
-      border: 1px solid var(--border-color); 
+      border: 1px solid #E5E7EB; 
     }
     .card-header {
       display: flex;
@@ -281,27 +281,28 @@
     }
   </style>
 </head>
-<body>
-  <header class="header">
+<body class="app-layout">
+  <header class="sistema-header">
     <div class="header-content">
-      <div class="logo" style="cursor:pointer;" onclick="window.location.href='painel.html'">
-        <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 150px; height: 67px; display: block; object-fit: contain; background: none; box-shadow: none; border-radius: 0; margin: 0;" />
-      </div>
-      <div class="user-info">
-        <span>Bem-vindo, <span id="userDisplay"></span></span>
-        <button class="logout-btn" onclick="logout()">
-          <i class="fas fa-sign-out-alt"></i> Sair
-        </button>
-        <a href="index.html" class="logout-btn" style="margin-left: 8px; background: transparent; color: var(--primary-blue); border: 1px solid var(--primary-blue);" title="Ver site principal">
-          <i class="fas fa-globe"></i> Site
-        </a>
-        <a href="painel.html" class="logout-btn" style="margin-left: 8px;">
-          <i class="fas fa-arrow-left"></i> Voltar
-        </a>
-      </div>
+      <a href="painel.html" class="logo"><img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" /></a>
+      <button class="sistema-mobile-toggle" id="nav-toggle" aria-label="Menu"><i class="fas fa-bars"></i></button>
+      <nav id="main-nav">
+        <a href="painel.html" class="nav-link">Painel</a>
+        <a href="painel-clientes.html" class="nav-link">Clientes</a>
+        <a href="produtos.html" class="nav-link">Produtos</a>
+        <a href="pedidos.html" class="nav-link">Pedidos</a>
+        <a href="relatorios.html" class="nav-link">Relatórios</a>
+        <a href="configuracoes.html" class="nav-link">Configurações</a>
+        <a href="ajuda.html" class="nav-link active">Ajuda</a>
+        <a href="index.html" class="nav-link" title="Site"><i class="fas fa-globe"></i></a>
+        <a href="#" class="nav-link nav-sair" onclick="logout(); return false;"><i class="fas fa-sign-out-alt"></i> Sair</a>
+      </nav>
     </div>
   </header>
   <main class="main-content">
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+      <span style="color: #6b7280; font-size: 0.875rem;">Bem-vindo, <span id="userDisplay"></span></span>
+    </div>
     <div class="card">
       <div class="card-header">
         <h2>Ajuda e Suporte</h2>
@@ -369,6 +370,9 @@
   </footer>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('nav-toggle')?.addEventListener('click', function() {
+        document.getElementById('main-nav').classList.toggle('open');
+      });
       // Verificar se está logado
       if (sessionStorage.getItem('loggedIn') !== 'true') {
         window.location.href = 'index.html';

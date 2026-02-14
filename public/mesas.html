@@ -15,6 +15,7 @@
   <link rel="icon" href="https://i.imgur.com/TwZLW6a.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="style-sistema.css">
   <link rel="stylesheet" href="mobile.css">
   <style>
     :root {
@@ -44,19 +45,10 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', sans-serif;
-      background: var(--primary-blue);
+      background: #F5F7FA;
       min-height: 100vh;
-      color: var(--light-text);
+      color: #1F2937;
       padding: 0;
-      position: relative;
-      overflow-x: hidden;
-    }
-    body::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23374151" opacity="0.03"/><circle cx="75" cy="75" r="1" fill="%23374151" opacity="0.03"/><circle cx="50" cy="10" r="0.5" fill="%23374151" opacity="0.03"/><circle cx="10" cy="60" r="0.5" fill="%23374151" opacity="0.03"/><circle cx="90" cy="40" r="0.5" fill="%23374151" opacity="0.03"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-      pointer-events: none;
     }
     .header {
       background: rgba(255, 255, 255, 0.95);
@@ -396,34 +388,35 @@
     }
   </style>
 </head>
-<body>
-  <header class="header">
+<body class="app-layout">
+  <header class="sistema-header">
     <div class="header-content">
-      <div class="logo" style="cursor:pointer;" onclick="window.location.href='painel.html'">
-        <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" />
-      </div>
-      <div class="user-info">
-        <a href="index.html" class="logout-btn" style="background: transparent; color: var(--primary-blue); border: 1px solid var(--primary-blue); text-decoration: none; display: flex; align-items: center; gap: 6px;" title="Ver site principal">
-          <i class="fas fa-globe"></i> Site
-        </a>
-        <span>Bem-vindo, <span id="userDisplay"></span></span>
-        <button class="logout-btn" onclick="logout()">
-          <i class="fas fa-sign-out-alt"></i> Sair
-        </button>
-        <a href="painel.html" class="logout-btn" style="margin-left: 8px; text-decoration: none; display: flex; align-items: center; gap: 6px;">
-          <i class="fas fa-arrow-left"></i> Voltar
-        </a>
-      </div>
+      <a href="painel.html" class="logo"><img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" /></a>
+      <button class="sistema-mobile-toggle" id="nav-toggle" aria-label="Menu"><i class="fas fa-bars"></i></button>
+      <nav id="main-nav">
+        <a href="painel.html" class="nav-link">Painel</a>
+        <a href="painel-clientes.html" class="nav-link">Clientes</a>
+        <a href="produtos.html" class="nav-link">Produtos</a>
+        <a href="pedidos.html" class="nav-link active">Pedidos</a>
+        <a href="relatorios.html" class="nav-link">Relatórios</a>
+        <a href="configuracoes.html" class="nav-link">Configurações</a>
+        <a href="ajuda.html" class="nav-link">Ajuda</a>
+        <a href="index.html" class="nav-link" title="Site"><i class="fas fa-globe"></i></a>
+        <a href="#" class="nav-link nav-sair" onclick="logout(); return false;"><i class="fas fa-sign-out-alt"></i> Sair</a>
+      </nav>
     </div>
   </header>
   <main class="main-content">
-    <nav class="breadcrumb">
-      <a href="painel.html">Painel</a>
-      <span>/</span>
-      <a href="pedidos.html">Pedidos</a>
-      <span>/</span>
-      <span>Mesas</span>
-    </nav>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+      <nav class="sistema-breadcrumb" style="margin-bottom: 0;">
+        <a href="painel.html">Painel</a>
+        <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
+        <a href="pedidos.html">Pedidos</a>
+        <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
+        <span>Mesas</span>
+      </nav>
+      <span style="color: #6b7280; font-size: 0.875rem;">Bem-vindo, <span id="userDisplay"></span></span>
+    </div>
     <div class="card">
       <div class="card-header">
         <h2>Mesas / Pedidos em Aberto</h2>
@@ -484,6 +477,9 @@
       window.location.href = 'sistema.html';
     }
     document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('nav-toggle')?.addEventListener('click', function() {
+        document.getElementById('main-nav').classList.toggle('open');
+      });
       if (sessionStorage.getItem('loggedIn') !== 'true') {
         alert('Acesso negado. Por favor, realize o login.');
         window.location.href = 'index.html';

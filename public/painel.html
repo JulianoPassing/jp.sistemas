@@ -8,6 +8,7 @@
     <link rel="icon" href="https://i.imgur.com/TwZLW6a.png" type="image/png" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="style-sistema.css">
     <link rel="stylesheet" href="mobile.css">
     <style>
       :root {
@@ -38,66 +39,9 @@
 
       body {
         font-family: 'Inter', sans-serif;
-        background: var(--primary-blue);
+        background: #F5F7FA;
         min-height: 100vh;
-        color: var(--light-text);
-      }
-
-      .header {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        padding: 20px 0;
-        box-shadow: 0 4px 20px rgba(0, 90, 159, 0.1);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-      }
-
-      .header-content {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .logo h1 {
-        color: var(--primary-blue);
-        font-size: 24px;
-        font-weight: 700;
-      }
-
-      .user-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .user-info span {
-        color: var(--text-primary);
-        font-family: 'Inter', sans-serif;
-        font-size: 16px;
-        font-weight: 500;
-      }
-
-      .user-info #userDisplay {
-        font-weight: 700;
-      }
-
-      .logout-btn {
-        background: var(--primary-blue);
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 500;
-        transition: all 0.3s ease;
-      }
-
-      .logout-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 90, 159, 0.3);
+        color: #1F2937;
       }
 
       .main-content {
@@ -107,25 +51,24 @@
       }
 
       .welcome-section {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border-radius: 20px;
+        background: #fff;
+        border-radius: 12px;
         padding: 32px;
         margin-bottom: 32px;
-        box-shadow: 0 10px 30px rgba(0, 90, 159, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+        border: 1px solid #E5E7EB;
         text-align: center;
       }
 
       .welcome-section h2 {
-        color: var(--primary-blue);
+        color: #002f4b;
         font-size: 28px;
         font-weight: 700;
         margin-bottom: 12px;
       }
 
       .welcome-section p {
-        color: var(--text-secondary);
+        color: #6b7280;
         font-size: 16px;
         line-height: 1.6;
       }
@@ -138,13 +81,12 @@
       }
 
       .menu-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border-radius: 16px;
+        background: #fff;
+        border-radius: 12px;
         padding: 32px;
         text-align: center;
-        box-shadow: 0 8px 25px rgba(0, 90, 159, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+        border: 1px solid #E5E7EB;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
         text-decoration: none;
@@ -171,7 +113,7 @@
 
       .menu-card:hover {
         transform: translateY(-8px);
-        box-shadow: 0 20px 40px rgba(0, 90, 159, 0.2);
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
       }
 
       .menu-card i {
@@ -193,7 +135,7 @@
       }
 
       .menu-card p {
-        color: var(--text-secondary);
+        color: #6b7280;
         font-size: 14px;
         line-height: 1.5;
       }
@@ -219,9 +161,10 @@
         padding: 18px 0 12px 0;
         color: #fff;
         font-size: 15px;
-        background: transparent;
+        background: #1F2937;
         font-family: 'Inter', sans-serif;
         letter-spacing: 0.02em;
+        margin-top: auto;
       }
 
       /* Dashboard Styles */
@@ -232,12 +175,12 @@
         margin-bottom: 32px;
       }
       .dashboard-card {
-        background: rgba(255,255,255,0.97);
-        border-radius: 14px;
-        box-shadow: 0 4px 16px var(--shadow);
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
         padding: 18px 0 12px 0;
         text-align: center;
-        border: 1px solid rgba(255,255,255,0.18);
+        border: 1px solid #E5E7EB;
         transition: box-shadow 0.3s;
         position: relative;
       }
@@ -293,13 +236,13 @@
       }
 
       .dashboard-financeiro-bloco {
-        background: linear-gradient(135deg, #f8fafc 60%, #e5e7eb 100%);
-        border-radius: 22px;
-        box-shadow: 0 8px 32px var(--shadow-hover), 0 0 0 4px #e5e7eb inset;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+        border: 1px solid #E5E7EB;
         padding: 38px 0 30px 0;
         margin: 48px auto 0 auto;
         max-width: 760px;
-        border: 1.5px solid var(--primary-light);
         position: relative;
       }
       .dashboard-financeiro-titulo {
@@ -460,27 +403,30 @@
       }
     </style>
   </head>
-  <body>
-    <header class="header">
+  <body class="app-layout">
+    <header class="sistema-header">
       <div class="header-content">
-        <div class="logo" style="cursor: pointer;" onclick="window.location.href='painel.html'" title="Ir para o painel">
-          <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" style="width: 150px; height: 67px; display: block; object-fit: contain; background: none; box-shadow: none; border-radius: 0; margin: 0;" />
-        </div>
-        <div class="user-info">
-          <a href="index.html" class="logout-btn" style="background: transparent; color: var(--primary-blue); border: 1px solid var(--primary-blue);" title="Ver site principal">
-            <i class="fas fa-globe"></i> Site
-          </a>
-          <span>Bem-vindo, <span id="userDisplay"></span></span>
-          <button class="logout-btn" onclick="logout()">
-            <i class="fas fa-sign-out-alt"></i> Sair
-          </button>
-        </div>
+        <a href="painel.html" class="logo">
+          <img src="https://i.imgur.com/2jT2EPD.png" alt="Logo J.P Sistemas" />
+        </a>
+        <button class="sistema-mobile-toggle" id="nav-toggle" aria-label="Menu"><i class="fas fa-bars"></i></button>
+        <nav id="main-nav">
+          <a href="painel.html" class="nav-link active">Painel</a>
+          <a href="painel-clientes.html" class="nav-link">Clientes</a>
+          <a href="produtos.html" class="nav-link">Produtos</a>
+          <a href="pedidos.html" class="nav-link">Pedidos</a>
+          <a href="relatorios.html" class="nav-link">Relatórios</a>
+          <a href="configuracoes.html" class="nav-link">Configurações</a>
+          <a href="ajuda.html" class="nav-link">Ajuda</a>
+          <a href="index.html" class="nav-link" title="Site principal"><i class="fas fa-globe"></i></a>
+          <a href="#" class="nav-link nav-sair" onclick="logout(); return false;"><i class="fas fa-sign-out-alt"></i> Sair</a>
+        </nav>
       </div>
     </header>
 
     <main class="main-content">
       <div class="welcome-section">
-        <h2>Bem-vindo(a) ao J.P Sistemas</h2>
+        <h2>Bem-vindo(a), <span id="userDisplay"></span></h2>
         <p>Gerencie seus clientes, produtos, pedidos e relatorios de forma eficiente</p>
       </div>
 
@@ -636,6 +582,10 @@
           .catch(() => {
             document.getElementById('dashboardLucro').textContent = '--';
           });
+      });
+      
+      document.getElementById('nav-toggle')?.addEventListener('click', function() {
+        document.getElementById('main-nav').classList.toggle('open');
       });
       
       // Função logout global
