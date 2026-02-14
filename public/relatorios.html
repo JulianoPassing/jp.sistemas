@@ -358,6 +358,20 @@
       background: linear-gradient(135deg, var(--danger-color), #ef4444);
     }
 
+    .stat-card.estoque-custo {
+      border-left: 4px solid #0891b2;
+    }
+    .stat-card.estoque-custo .stat-icon::before {
+      background: linear-gradient(135deg, #0891b2, #06b6d4);
+    }
+
+    .stat-card.estoque-venda {
+      border-left: 4px solid #059669;
+    }
+    .stat-card.estoque-venda .stat-icon::before {
+      background: linear-gradient(135deg, #059669, #10b981);
+    }
+
     .stat-value {
       font-size: 2.5rem;
       font-weight: 800;
@@ -917,6 +931,38 @@
           <span>Historico completo</span>
         </div>
       </div>
+
+      <div class="stat-card estoque-custo">
+        <div class="stat-header">
+          <div class="stat-icon">
+            <i class="fas fa-warehouse"></i>
+          </div>
+        </div>
+        <div class="stat-value" id="total-estoque-custo">
+          <span class="loading"></span>
+        </div>
+        <div class="stat-label">Valor Total em Estoque (Custo)</div>
+        <div class="stat-change positive">
+          <i class="fas fa-boxes"></i>
+          <span>Inventário</span>
+        </div>
+      </div>
+
+      <div class="stat-card estoque-venda">
+        <div class="stat-header">
+          <div class="stat-icon">
+            <i class="fas fa-tags"></i>
+          </div>
+        </div>
+        <div class="stat-value" id="total-estoque-venda">
+          <span class="loading"></span>
+        </div>
+        <div class="stat-label">Valor Total em Estoque (Venda)</div>
+        <div class="stat-change positive">
+          <i class="fas fa-chart-line"></i>
+          <span>Potencial de venda</span>
+        </div>
+      </div>
     </div>
 
     <!-- INÍCIO: CONTAS A PAGAR E RECEBER -->
@@ -1345,6 +1391,8 @@
       const estatisticas = [
         ['Total de Clientes', dados.totalClientes.toString()],
         ['Total de Produtos', dados.totalProdutos.toString()],
+        ['Valor Total em Estoque (Custo)', `R$ ${parseFloat(dados.totalEstoqueCusto || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Valor Total em Estoque (Venda)', `R$ ${parseFloat(dados.totalEstoqueVenda || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
         ['', ''],
         ['PEDIDOS CONCLUÍDOS:', ''],
         ['Total de Pedidos Concluidos', dados.totalPedidos.toString()],
@@ -1691,6 +1739,8 @@
         ['Indicador', 'Valor'],
         ['Total de Clientes', dados.totalClientes],
         ['Total de Produtos', dados.totalProdutos],
+        ['Valor Total em Estoque (Custo)', `R$ ${parseFloat(dados.totalEstoqueCusto || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
+        ['Valor Total em Estoque (Venda)', `R$ ${parseFloat(dados.totalEstoqueVenda || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`],
         ['', ''],
         ['PEDIDOS CONCLUÍDOS:', ''],
         ['Total de Pedidos Concluidos', dados.totalPedidos],
@@ -1870,6 +1920,12 @@
         setTimeout(() => {
           animarNumero(document.getElementById('total-pedidos'), dados.totalPedidos);
         }, 1200);
+        setTimeout(() => {
+          animarValorMonetario(document.getElementById('total-estoque-custo'), `R$ ${parseFloat(dados.totalEstoqueCusto || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
+        }, 1400);
+        setTimeout(() => {
+          animarValorMonetario(document.getElementById('total-estoque-venda'), `R$ ${parseFloat(dados.totalEstoqueVenda || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
+        }, 1600);
         // Armazenar dados para uso nos relatórios
         window.dadosEstatisticas = dados;
       } catch (error) {
@@ -1882,6 +1938,8 @@
         setText('vendas-mes', 'R$ 0,00');
         setText('lucro-mes', 'R$ 0,00');
         setText('total-pedidos', '0');
+        setText('total-estoque-custo', 'R$ 0,00');
+        setText('total-estoque-venda', 'R$ 0,00');
       }
     }
 

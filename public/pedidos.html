@@ -1703,8 +1703,8 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
         if (p) produtoId = String(p.id);
       }
       const quantidade = dadosItem ? (parseInt(dadosItem.quantidade) || 1) : 1;
-      const preco = dadosItem ? (parseFloat(dadosItem.precoUnitario || dadosItem.preco_unitario || 0)) : 0;
-      const subtotal = dadosItem ? (parseFloat(dadosItem.subtotal) || quantidade * preco) : 0;
+      const preco = dadosItem ? (parseFloat(dadosItem.precoUnitario ?? dadosItem.preco_unitario ?? dadosItem.preco_venda) || 0) : 0;
+      const subtotal = dadosItem ? (parseFloat(dadosItem.subtotal) || (quantidade * preco)) : 0;
       const itemHTML = `
         <div class="item-row" id="${itemId}">
           <div class="form-group">

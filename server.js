@@ -806,14 +806,15 @@ app.get('/api/pedidos', requireAuthJWT, async (req, res) => {
     const itensPorPedido = {};
     itens.forEach(item => {
       if (!itensPorPedido[item.pedido_id]) itensPorPedido[item.pedido_id] = [];
+      const precoUnit = Number(item.preco_unitario) || Number(item.preco_venda) || 0;
       itensPorPedido[item.pedido_id].push({
         produto_id: item.produto_id,
         produto: item.produto,
         quantidade: item.quantidade,
-        precoUnitario: item.preco_unitario,
+        precoUnitario: precoUnit,
         preco_custo: item.preco_custo,
         preco_venda: item.preco_venda,
-        subtotal: Number(item.preco_unitario) * Number(item.quantidade)
+        subtotal: precoUnit * Number(item.quantidade)
       });
     });
     // Adicionar array itens em cada pedido
@@ -1077,6 +1078,16 @@ app.get('/api/relatorios/estatisticas', requireAuthJWT, async (req, res) => {
     const [produtosResult] = await connection.execute('SELECT COUNT(*) as total FROM produtos');
     const totalProdutos = produtosResult[0].total;
 
+    // Valor total em estoque (custo e venda)
+    const [estoqueCustoResult] = await connection.execute(
+      'SELECT COALESCE(SUM(COALESCE(estoque, 0) * COALESCE(preco_custo, 0)), 0) as total FROM produtos'
+    );
+    const totalEstoqueCusto = parseFloat(estoqueCustoResult[0].total);
+    const [estoqueVendaResult] = await connection.execute(
+      'SELECT COALESCE(SUM(COALESCE(estoque, 0) * COALESCE(preco_venda, 0)), 0) as total FROM produtos'
+    );
+    const totalEstoqueVenda = parseFloat(estoqueVendaResult[0].total);
+
     // Buscar total de pedidos CONCLUÍDOS
     const [pedidosResult] = await connection.execute('SELECT COUNT(*) as total FROM pedidos WHERE status IN ("Concluído", "concluído", "Concluido", "concluido", "CONCLUÍDO", "CONCLUIDO")');
     console.log('Total pedidos concluídos encontrados:', pedidosResult[0].total);
@@ -1148,6 +1159,8 @@ app.get('/api/relatorios/estatisticas', requireAuthJWT, async (req, res) => {
     res.json({
       totalClientes,
       totalProdutos,
+      totalEstoqueCusto: totalEstoqueCusto.toFixed(2),
+      totalEstoqueVenda: totalEstoqueVenda.toFixed(2),
       totalPedidos,
       totalPedidosProcessamento,
       totalVendas: totalVendas.toFixed(2),
