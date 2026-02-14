@@ -338,9 +338,9 @@
     }
 
     .modal-header {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      background: linear-gradient(135deg, #002f4b, #004d73);
       color: white;
-      padding: 20px 24px;
+      padding: 18px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -619,8 +619,8 @@
     }
 
     .itens-table th {
-      background: var(--primary-color);
-      color: white;
+      background: linear-gradient(135deg, #002f4b, #004d73);
+      color: white !important;
       font-weight: 600;
       padding: 12px;
     }
@@ -660,6 +660,16 @@
       border-radius: 4px;
       border-left: 4px solid var(--primary-color);
       font-style: italic;
+    }
+
+    .modal-footer-visualizar {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      padding: 16px 24px;
+      background: #f8fafc;
+      border-top: 1px solid #e5e7eb;
     }
 
     @media (max-width: 768px) {
@@ -760,15 +770,21 @@
         <span class="close" id="closeNovoPedido">&times;</span>
       </div>
       <div class="modal-body">
+        <div class="modal-atalhos" style="margin-bottom:20px;padding:12px 16px;background:#f0f9ff;border-radius:10px;border:1px solid #bae6fd;">
+          <span style="font-weight:600;color:#0369a1;font-size:0.9rem;"><i class="fas fa-bolt"></i> Venda rápida:</span>
+          <a href="caixa.html" class="btn btn-primary btn-sm" style="margin-left:10px;padding:6px 14px;font-size:0.9rem;"><i class="fas fa-cash-register"></i> PDV</a>
+          <a href="mesas.html" class="btn btn-primary btn-sm" style="margin-left:6px;padding:6px 14px;font-size:0.9rem;"><i class="fas fa-chair"></i> Comandas</a>
+        </div>
         <form id="novoPedidoForm">
           <!-- Informações do Cliente -->
           <div class="form-section">
-            <h4>Informacoes do Cliente</h4>
+            <h4><i class="fas fa-user" style="color:#0d9488;margin-right:6px;"></i> Informações do Cliente</h4>
             <div class="form-row">
               <div class="form-group">
                 <label for="tipoCliente">Tipo de Cliente *</label>
                 <select id="tipoCliente" required onchange="toggleTipoCliente()">
                   <option value="">Selecione</option>
+                  <option value="consumidor">Consumidor Final</option>
                   <option value="existente">Cliente Existente</option>
                   <option value="novo">Novo Cliente</option>
                 </select>
@@ -824,14 +840,14 @@
               </div>
             </div>
             <div class="form-group full-width">
-              <label for="endereco">Endereco</label>
-              <input type="text" id="endereco" placeholder="Rua, numero, bairro, cidade/estado">
+              <label for="endereco">Endereço</label>
+              <input type="text" id="endereco" placeholder="Rua, número, bairro, cidade/estado">
             </div>
           </div>
 
           <!-- Itens do Pedido -->
           <div class="form-section">
-            <h4>Itens do Pedido</h4>
+            <h4><i class="fas fa-box" style="color:#0d9488;margin-right:6px;"></i> Itens do Pedido</h4>
             <div class="items-section">
               <!-- Cabeçalho dos campos dos itens -->
               <div class="item-row" style="background:transparent; border:none; margin-bottom:0; font-weight:600;">
@@ -853,11 +869,11 @@
             </div>
           </div>
 
-          <!-- Observacoes -->
+          <!-- Observações -->
           <div class="form-section">
-            <h4>Observacoes</h4>
+            <h4><i class="fas fa-sticky-note" style="color:#0d9488;margin-right:6px;"></i> Observações</h4>
             <div class="form-group full-width">
-              <textarea id="observacoes" rows="3" placeholder="Observacoes sobre o pedido, instrucoes de entrega, etc."></textarea>
+              <textarea id="observacoes" rows="3" placeholder="Observações sobre o pedido, instruções de entrega, etc."></textarea>
             </div>
           </div>
         </form>
@@ -894,18 +910,21 @@
           </div>
         </div>
       </div>
-      <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; padding: 16px 24px 16px 24px; background: #f8fafc; border-top: 1px solid #e5e7eb;">
-        <button type="button" class="btn btn-success" id="concluirPedido">
-          <i class="fas fa-check"></i> Concluir Pedido
-        </button>
-        <button type="button" class="btn btn-warning" id="cancelarPedidoBtn">
-          <i class="fas fa-ban"></i> Cancelar Pedido
-        </button>
-        <button type="button" class="btn btn-primary" id="gerarPDFPedidoBtn">
-          <i class="fas fa-file-pdf"></i> Gerar PDF
-        </button>
+      <div class="modal-footer modal-footer-visualizar">
         <button type="button" class="btn btn-secondary" id="fecharVisualizarPedido">
           <i class="fas fa-times"></i> Fechar
+        </button>
+        <button type="button" class="btn btn-primary" id="editarPedidoBtn">
+          <i class="fas fa-edit"></i> Editar
+        </button>
+        <button type="button" class="btn btn-primary" id="gerarPDFPedidoBtn">
+          <i class="fas fa-file-pdf"></i> PDF
+        </button>
+        <button type="button" class="btn btn-success" id="concluirPedido">
+          <i class="fas fa-check"></i> Concluir
+        </button>
+        <button type="button" class="btn btn-danger" id="cancelarPedidoBtn">
+          <i class="fas fa-ban"></i> Cancelar Pedido
         </button>
       </div>
     </div>
@@ -1048,7 +1067,7 @@
       });
     }
 
-    // Função para alternar entre cliente existente e novo cliente
+    // Função para alternar entre cliente existente, novo e consumidor final
     function toggleTipoCliente() {
       const tipoCliente = document.getElementById('tipoCliente').value;
       const clienteExistenteSection = document.getElementById('clienteExistenteSection');
@@ -1057,23 +1076,22 @@
       if (tipoCliente === 'existente') {
         clienteExistenteSection.style.display = 'block';
         novoClienteSection.style.display = 'none';
-        // Limpar campos do novo cliente
         document.getElementById('nomeCliente').value = '';
         document.getElementById('cpfCnpj').value = '';
       } else if (tipoCliente === 'novo') {
         clienteExistenteSection.style.display = 'none';
         novoClienteSection.style.display = 'block';
-        // Limpar seleção de cliente existente
         document.getElementById('cliente').value = '';
       } else {
         clienteExistenteSection.style.display = 'none';
         novoClienteSection.style.display = 'none';
       }
       
-      // Limpar campos de contato
-      document.getElementById('telefone').value = '';
-      document.getElementById('email').value = '';
-      document.getElementById('endereco').value = '';
+      if (tipoCliente !== 'consumidor') {
+        document.getElementById('telefone').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('endereco').value = '';
+      }
     }
 
     // Função para preencher informações do cliente automaticamente
@@ -1214,6 +1232,10 @@
         return;
       }
       
+      if (tipoCliente === 'consumidor') {
+        // Consumidor final: não exige cliente
+      }
+      
       if (!formaPagamento) {
         alert('Selecione uma forma de pagamento');
         return;
@@ -1247,19 +1269,21 @@
         if (tipoCliente === 'existente') {
           const cliente = clientes.find(c => c.id == cliente_id);
           clienteInfo = cliente ? cliente.razao : 'Cliente não identificado';
+        } else if (tipoCliente === 'consumidor') {
+          clienteInfo = 'Consumidor Final';
         } else {
           clienteInfo = nomeCliente;
         }
         
         const pedidoData = {
           cliente_id: tipoCliente === 'existente' ? cliente_id : null,
-          nome_cliente: tipoCliente === 'novo' ? nomeCliente : null,
+          nome_cliente: tipoCliente === 'consumidor' ? 'Consumidor Final' : (tipoCliente === 'novo' ? nomeCliente : null),
           cpf_cnpj: tipoCliente === 'novo' ? cpfCnpj : null,
           data_pedido,
           status,
           valor_total,
           observacoes: `${observacoes ? observacoes + '\n\n' : ''}INFORMAÇÕES ADICIONAIS:
-• Tipo de Cliente: ${tipoCliente === 'existente' ? 'Cliente Existente' : 'Novo Cliente'}
+• Tipo de Cliente: ${tipoCliente === 'existente' ? 'Cliente Existente' : tipoCliente === 'consumidor' ? 'Consumidor Final' : 'Novo Cliente'}
 ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n` : ''}• Telefone: ${telefone || 'Não informado'}
 • Email: ${email || 'Não informado'}
 • Endereço: ${endereco || 'Não informado'}
@@ -1435,11 +1459,15 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
     }
 
     // Função para visualizar pedido
-    function visualizarPedido(pedidoId) {
+    async function visualizarPedido(pedidoId) {
       const pedido = pedidos.find(p => p.id == pedidoId);
       if (!pedido) {
         alert('Pedido não encontrado!');
         return;
+      }
+      // Garantir clientes carregados quando pedido tem cliente_id (para puxar CPF/CNPJ, telefone, etc.)
+      if (pedido.cliente_id && clientes.length === 0) {
+        await carregarClientes();
       }
 
       // Extrair informações adicionais das observações
@@ -1461,19 +1489,31 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
       const chaves = [
         'Telefone:', 'Email:', 'Endereço:', 'Forma de Pagamento:', 'CPF/CNPJ:'
       ];
-      const telefone = extrairInfoSimples(observacoes, 'Telefone:', chaves) || 'Não informado';
-      const email = extrairInfoSimples(observacoes, 'Email:', chaves) || 'Não informado';
-      const endereco = extrairInfoSimples(observacoes, 'Endereço:', chaves) || 'Não informado';
+      
+      // Buscar cliente quando pedido tem cliente_id (API retorna cnpj, telefone, email, endereco do JOIN)
+      const cliente = pedido.cliente_id ? clientes.find(c => c.id == pedido.cliente_id) : null;
+      
+      // Priorizar dados do cliente cadastrado (API/cliente), senão extrair das observações
+      const cpfCnpj = (cliente && cliente.cnpj) || pedido.cnpj || extrairInfoSimples(observacoes, 'CPF/CNPJ:', chaves) || 'Não informado';
+      const telefone = (cliente && cliente.telefone) || pedido.telefone || extrairInfoSimples(observacoes, 'Telefone:', chaves) || 'Não informado';
+      const email = (cliente && cliente.email) || pedido.email || extrairInfoSimples(observacoes, 'Email:', chaves) || 'Não informado';
       const formaPagamento = extrairInfoSimples(observacoes, 'Forma de Pagamento:', chaves) || 'Não informado';
-      const cpfCnpj = extrairInfoSimples(observacoes, 'CPF/CNPJ:', chaves) || 'Não informado';
+
+      // Endereço: priorizar cliente cadastrado, depois API (pedido.endereco), depois observações
+      let endereco = pedido.endereco || extrairInfoSimples(observacoes, 'Endereço:', chaves) || 'Não informado';
+      if (cliente && (cliente.endereco || cliente.bairro || cliente.cidade || cliente.estado)) {
+        const parts = [cliente.endereco, cliente.bairro, cliente.cidade && cliente.estado ? `${cliente.cidade}/${cliente.estado}` : (cliente.cidade || cliente.estado)].filter(Boolean);
+        endereco = parts.length ? parts.join(', ') : endereco;
+      }
 
       // Determinar nome do cliente
       let nomeCliente = 'Cliente não identificado';
       if (pedido.nome_cliente) {
         nomeCliente = pedido.nome_cliente;
+      } else if (cliente) {
+        nomeCliente = cliente.razao || `Cliente ID: ${pedido.cliente_id}`;
       } else if (pedido.cliente_id) {
-        const cliente = clientes.find(c => c.id == pedido.cliente_id);
-        nomeCliente = cliente ? cliente.razao : `Cliente ID: ${pedido.cliente_id}`;
+        nomeCliente = `Cliente ID: ${pedido.cliente_id}`;
       }
 
       // Determinar classe do status
@@ -1491,51 +1531,19 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
           
           <div class="info-grid">
             <div class="info-section">
-              <h4><i class="fas fa-user"></i> Informações do Cliente</h4>
-              <div class="info-item">
-                <span class="info-label">Cliente:</span>
-                <span class="info-value">${nomeCliente}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">CPF/CNPJ:</span>
-                <span class="info-value">${cpfCnpj}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Telefone:</span>
-                <span class="info-value">${telefone}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">E-mail:</span>
-                <span class="info-value">${email}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Endereço:</span>
-                <span class="info-value">${endereco}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Forma de Pagamento:</span>
-                <span class="info-value">${formaPagamento}</span>
-              </div>
+              <h4><i class="fas fa-user" style="color:#0d9488;margin-right:6px;"></i> Cliente</h4>
+              <div class="info-item"><span class="info-label">Nome:</span><span class="info-value">${nomeCliente}</span></div>
+              <div class="info-item"><span class="info-label">CPF/CNPJ:</span><span class="info-value">${cpfCnpj}</span></div>
+              <div class="info-item"><span class="info-label">Telefone:</span><span class="info-value">${telefone}</span></div>
+              <div class="info-item"><span class="info-label">E-mail:</span><span class="info-value">${email}</span></div>
+              <div class="info-item"><span class="info-label">Endereço:</span><span class="info-value">${endereco}</span></div>
             </div>
-            
             <div class="info-section">
-              <h4><i class="fas fa-credit-card"></i> Informações do Pedido</h4>
-              <div class="info-item">
-                <span class="info-label">Data:</span>
-                <span class="info-value">${pedido.data_pedido || 'N/A'}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Forma de Pagamento:</span>
-                <span class="info-value">${formaPagamento}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Status:</span>
-                <span class="info-value">${pedido.status || 'Em Processamento'}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Valor Total:</span>
-                <span class="info-value">R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}</span>
-              </div>
+              <h4><i class="fas fa-receipt" style="color:#0d9488;margin-right:6px;"></i> Pedido</h4>
+              <div class="info-item"><span class="info-label">Data:</span><span class="info-value">${pedido.data_pedido || 'N/A'}</span></div>
+              <div class="info-item"><span class="info-label">Pagamento:</span><span class="info-value">${formaPagamento}</span></div>
+              <div class="info-item"><span class="info-label">Status:</span><span class="info-value">${pedido.status || 'Em Processamento'}</span></div>
+              <div class="info-item"><span class="info-label">Total:</span><span class="info-value" style="font-weight:700;color:#059669;">R$ ${(Number(pedido.valor_total) || 0).toFixed(2).replace('.', ',')}</span></div>
             </div>
           </div>
           
@@ -1578,10 +1586,19 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
       // Preencher modal
       document.getElementById('pedidoDetalhes').innerHTML = html;
       
-      // Configurar botões
+      // Configurar botões e visibilidade por status
+      const statusAtual = (pedido.status || '').toLowerCase();
+      const podeEditar = !statusAtual.includes('conclu') && !statusAtual.includes('cancelad');
+      document.getElementById('concluirPedido').style.display = podeEditar ? '' : 'none';
+      document.getElementById('cancelarPedidoBtn').style.display = podeEditar ? '' : 'none';
+      document.getElementById('editarPedidoBtn').style.display = podeEditar ? '' : 'none';
       document.getElementById('concluirPedido').onclick = () => alterarStatusPedido(pedidoId, 'Concluído');
       document.getElementById('cancelarPedidoBtn').onclick = () => alterarStatusPedido(pedidoId, 'Cancelado');
       document.getElementById('gerarPDFPedidoBtn').onclick = () => gerarPDFPedido(pedidoId);
+      document.getElementById('editarPedidoBtn').onclick = () => {
+        fecharModalVisualizarPedido();
+        editarPedido(pedidoId);
+      };
       
       // Abrir modal
       document.getElementById('visualizarPedidoModal').style.display = 'block';
