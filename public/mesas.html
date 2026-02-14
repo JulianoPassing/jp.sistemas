@@ -1175,7 +1175,13 @@
           itensHtml = '<div style="color:#888;font-size:0.98em;text-align:center;padding:20px;background:#f9fafb;border-radius:10px;border:1px solid #e5e7eb;"><i class="fas fa-shopping-cart" style="font-size:1.5em;margin-bottom:8px;display:block;"></i>Nenhum produto adicionado.</div>';
         }
         
-        document.getElementById('produtos-mesa-lista').innerHTML = nomeHtml + itensHtml;
+        const container = document.getElementById('produtos-mesa-lista');
+        let dinamico = document.getElementById('conteudo-dinamico-mesa');
+        if (!dinamico) {
+          container.innerHTML = '<div id="conteudo-dinamico-mesa"></div><div id="secao-add-produtos-mesa"></div>';
+          dinamico = document.getElementById('conteudo-dinamico-mesa');
+        }
+        dinamico.innerHTML = nomeHtml + itensHtml;
         
         // Atualizar nomeEdit ao digitar
         document.getElementById('input-nome-mesa').oninput = function() {
@@ -1206,94 +1212,144 @@
       }
       renderListaProdutos();
       
-      // Seção de adicionar produtos
+      const secaoAdd = document.getElementById('secao-add-produtos-mesa');
+      if (secaoAdd && !secaoAdd.hasChildNodes()) {
+      // Seção de adicionar produtos - busca + atalhos de quantidade
       const addProdutosHtml = `
         <div style='margin-top:20px;padding-top:20px;border-top:2px solid #e5e7eb;'>
-          <h4 style='font-weight:600;color:#374151;margin-bottom:12px;font-size:1.1em;'>Adicionar Produto:</h4>
-          <div style='display:flex;gap:12px;align-items:end;flex-wrap:wrap;'>
-            <div style='flex:1;min-width:200px;'>
-              <label style='font-weight:500;color:#6b7280;font-size:0.9em;margin-bottom:4px;display:block;'>Selecionar Produto:</label>
-              <select id='select-produto' style='width:100%;padding:10px 12px;border-radius:8px;border:2px solid #e5e7eb;font-size:1em;background:#fff;transition:border 0.2s;outline:none;' onfocus='this.style.borderColor="#005a9f"' onblur='this.style.borderColor="#e5e7eb"'>
-                <option value="">Escolha um produto...</option>
-                ${produtos.map(p => {
-                  const preco = parseFloat(p.preco_venda || 0);
-                  return `<option value='${p.id}' data-preco='${preco}'>${p.nome} - R$ ${preco.toFixed(2).replace('.', ',')}</option>`;
-                }).join('')}
-              </select>
-            </div>
-            <div style='min-width:120px;'>
-              <label style='font-weight:500;color:#6b7280;font-size:0.9em;margin-bottom:4px;display:block;'>Quantidade:</label>
-              <input type='number' id='input-quantidade-add' min='1' value='1' style='width:100%;padding:10px 12px;border-radius:8px;border:2px solid #e5e7eb;font-size:1em;text-align:center;transition:border 0.2s;outline:none;' onfocus='this.style.borderColor="#005a9f"' onblur='this.style.borderColor="#e5e7eb"' />
+          <h4 style='font-weight:600;color:#374151;margin-bottom:12px;font-size:1.1em;'><i class="fas fa-search" style="margin-right:6px;"></i>Buscar e adicionar produto:</h4>
+          <div style='display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;'>
+            <span style='position:relative;flex:1;min-width:200px;'>
+              <i class="fas fa-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:0.95em;"></i>
+              <input type='text' id='busca-produto' placeholder='Digite nome ou código do produto...' style='width:100%;padding:10px 12px 10px 40px;border-radius:8px;border:2px solid #e5e7eb;font-size:1em;transition:border 0.2s;outline:none;' onfocus='this.style.borderColor="#005a9f"' onblur='this.style.borderColor="#e5e7eb"' />
+            </span>
+            <div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'>
+              <span style='font-weight:500;color:#6b7280;font-size:0.9em;'>Qtd:</span>
+              <input type='number' id='input-quantidade-add' min='1' value='1' style='width:70px;padding:10px 8px;border-radius:8px;border:2px solid #e5e7eb;font-size:1em;text-align:center;transition:border 0.2s;outline:none;' onfocus='this.style.borderColor="#005a9f"' onblur='this.style.borderColor="#e5e7eb"' />
+              <div style='display:flex;gap:4px;'>
+                <button type='button' class='btn-qty-atual' data-qty='1' title='1 unidade' style='padding:8px 12px;border-radius:6px;border:1px solid #e5e7eb;background:#f9fafb;cursor:pointer;font-weight:600;font-size:0.9em;'>1</button>
+                <button type='button' class='btn-qty-atual' data-qty='2' title='2 unidades' style='padding:8px 12px;border-radius:6px;border:1px solid #e5e7eb;background:#f9fafb;cursor:pointer;font-weight:600;font-size:0.9em;'>2</button>
+                <button type='button' class='btn-qty-atual' data-qty='5' title='5 unidades' style='padding:8px 12px;border-radius:6px;border:1px solid #e5e7eb;background:#f9fafb;cursor:pointer;font-weight:600;font-size:0.9em;'>5</button>
+                <button type='button' class='btn-qty-atual' data-qty='10' title='10 unidades' style='padding:8px 12px;border-radius:6px;border:1px solid #e5e7eb;background:#f9fafb;cursor:pointer;font-weight:600;font-size:0.9em;'>10</button>
+              </div>
             </div>
             <button id='btn-add-produto' class='btn btn-primary' style='padding:10px 20px;font-size:1em;height:42px;display:flex;align-items:center;gap:8px;'>
               <i class='fas fa-plus'></i> Adicionar
             </button>
           </div>
-          <div id='produto-info' style='margin-top:8px;font-size:0.9em;color:#6b7280;display:none;'></div>
+          <div id='lista-produtos-busca' style='max-height:200px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;background:#fff;margin-bottom:8px;display:none;'></div>
+          <div id='produto-info' style='font-size:0.9em;color:#6b7280;display:none;'></div>
         </div>`;
       
-      // Adicionar a seção de produtos ao modal
-      document.getElementById('produtos-mesa-lista').insertAdjacentHTML('beforeend', addProdutosHtml);
+      // Adicionar a seção de produtos ao modal (só na primeira vez)
+      secaoAdd.innerHTML = addProdutosHtml;
+      }
       
-      // Preencher select de produtos
-      const select = document.getElementById('select-produto');
+      const buscaInput = document.getElementById('busca-produto');
+      const listaBusca = document.getElementById('lista-produtos-busca');
+      const qtdInput = document.getElementById('input-quantidade-add');
       
-      // Mostrar informações do produto selecionado
-      select.onchange = function() {
-        const prodId = this.value;
-        const infoDiv = document.getElementById('produto-info');
-        if (prodId) {
-          const prod = produtos.find(p => String(p.id) === String(prodId));
-          if (prod) {
-            const preco = parseFloat(prod.preco_venda || 0);
-            infoDiv.innerHTML = `<i class="fas fa-info-circle"></i> <strong>${prod.nome}</strong> - Preço: R$ ${preco.toFixed(2).replace('.', ',')} | Estoque: ${prod.estoque || 0} unidades`;
-            infoDiv.style.display = 'block';
-          }
-        } else {
-          infoDiv.style.display = 'none';
-        }
-      };
+      // Atalhos de quantidade
+      document.querySelectorAll('.btn-qty-atual').forEach(btn => {
+        btn.onclick = function() {
+          const q = parseInt(this.getAttribute('data-qty')) || 1;
+          qtdInput.value = q;
+          document.querySelectorAll('.btn-qty-atual').forEach(b => b.style.background = '#f9fafb');
+          this.style.background = '#e0f2fe';
+          this.style.borderColor = '#005a9f';
+        };
+      });
       
-      // Adicionar produto
-      document.getElementById('btn-add-produto').onclick = function() {
-        const prodId = select.value;
-        const qtd = parseInt(document.getElementById('input-quantidade-add').value) || 1;
-        
-        if (!prodId) {
-          alert('Selecione um produto!');
+      // Busca de produtos - filtrar ao digitar
+      function filtrarProdutos() {
+        const termo = (buscaInput.value || '').trim().toLowerCase();
+        listaBusca.innerHTML = '';
+        listaBusca.style.display = 'none';
+        if (termo.length < 2) return;
+        const filtrados = produtos.filter(p => {
+          const nome = (p.nome || '').toLowerCase();
+          const codigo = String(p.codigo || '').toLowerCase();
+          return nome.includes(termo) || codigo.includes(termo);
+        }).slice(0, 15);
+        if (filtrados.length === 0) {
+          listaBusca.innerHTML = '<div style="padding:12px;color:#9ca3af;font-size:0.9em;">Nenhum produto encontrado</div>';
+          listaBusca.style.display = 'block';
           return;
         }
-        
-        const prod = produtos.find(p => String(p.id) === String(prodId));
-        if (!prod) return;
-        
-        // Verificar estoque
-        if (qtd > (prod.estoque ?? 0)) {
+        filtrados.forEach(prod => {
+          const preco = parseFloat(prod.preco_venda || 0);
+          const div = document.createElement('div');
+          div.className = 'item-busca-produto';
+          div.style.cssText = 'padding:10px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f1f5f9;transition:background 0.2s;';
+          div.innerHTML = `<span style="font-weight:500;color:#374151;">${prod.nome}</span><span style="color:#059669;font-weight:600;">R$ ${preco.toFixed(2).replace('.', ',')}</span>`;
+          div.onmouseenter = () => div.style.background = '#f0f9ff';
+          div.onmouseleave = () => div.style.background = '#fff';
+          div.onclick = () => {
+            adicionarProdutoAMesa(prod);
+            buscaInput.value = '';
+            listaBusca.style.display = 'none';
+            buscaInput.focus();
+          };
+          listaBusca.appendChild(div);
+        });
+        listaBusca.style.display = 'block';
+      }
+      
+      function adicionarProdutoAMesa(prod) {
+        const qtd = parseInt(qtdInput.value) || 1;
+        if (qtd < 1) return;
+        if (qtd > (prod.estoque ?? 999999)) {
           alert(`Quantidade maior que o estoque disponível! Estoque: ${prod.estoque || 0} unidades`);
           return;
         }
-        
-        // Evitar duplicidade
-        if ((itensEdit||[]).some(i => String(i.produto_id) === String(prodId))) {
-          alert('Produto já adicionado!');
+        itensEdit = itensEdit || [];
+        const existente = itensEdit.find(i => String(i.produto_id) === String(prod.id));
+        if (existente) {
+          existente.quantidade += qtd;
+          existente.subtotal = existente.quantidade * (parseFloat(existente.precoUnitario || existente.preco_unitario) || 0);
+        } else {
+          itensEdit.push({
+            produto: prod.nome,
+            produto_id: prod.id,
+            quantidade: qtd,
+            precoUnitario: parseFloat(prod.preco_venda) || 0,
+            subtotal: (parseFloat(prod.preco_venda) || 0) * qtd
+          });
+        }
+        qtdInput.value = '1';
+        document.getElementById('produto-info').style.display = 'none';
+        renderListaProdutos();
+      }
+      
+      buscaInput.oninput = filtrarProdutos;
+      buscaInput.onkeydown = function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const primeiro = listaBusca.querySelector('.item-busca-produto');
+          if (primeiro) primeiro.click();
+        }
+      };
+      
+      document.getElementById('btn-add-produto').onclick = function() {
+        const termo = (buscaInput.value || '').trim().toLowerCase();
+        if (!termo) {
+          alert('Digite o nome ou código do produto para buscar!');
+          buscaInput.focus();
           return;
         }
-        
-        itensEdit = itensEdit || [];
-        itensEdit.push({
-          produto: prod.nome,
-          produto_id: prod.id,
-          quantidade: qtd,
-          precoUnitario: parseFloat(prod.preco_venda) || 0,
-          subtotal: (parseFloat(prod.preco_venda) || 0) * qtd
+        const prod = produtos.find(p => {
+          const nome = (p.nome || '').toLowerCase();
+          const codigo = String(p.codigo || '').toLowerCase();
+          return nome.includes(termo) || codigo === termo || nome === termo;
         });
-        
-        // Limpar campos
-        select.value = '';
-        document.getElementById('input-quantidade-add').value = '1';
-        document.getElementById('produto-info').style.display = 'none';
-        
-        renderListaProdutos();
+        if (!prod) {
+          alert('Produto não encontrado. Digite mais caracteres para buscar.');
+          return;
+        }
+        adicionarProdutoAMesa(prod);
+        buscaInput.value = '';
+        listaBusca.style.display = 'none';
+        buscaInput.focus();
       };
       // Salvar alterações
       document.getElementById('btn-salvar-produtos').onclick = async function() {

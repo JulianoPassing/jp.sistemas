@@ -798,7 +798,7 @@ app.get('/api/pedidos', requireAuthJWT, async (req, res) => {
     `);
     // Buscar itens de todos os pedidos
     const [itens] = await connection.execute(`
-      SELECT pi.pedido_id, pi.quantidade, pi.preco_unitario, pr.nome as produto, pr.preco_custo, pr.preco_venda
+      SELECT pi.pedido_id, pi.produto_id, pi.quantidade, pi.preco_unitario, pr.nome as produto, pr.preco_custo, pr.preco_venda
       FROM pedido_itens pi
       LEFT JOIN produtos pr ON pi.produto_id = pr.id
     `);
@@ -807,6 +807,7 @@ app.get('/api/pedidos', requireAuthJWT, async (req, res) => {
     itens.forEach(item => {
       if (!itensPorPedido[item.pedido_id]) itensPorPedido[item.pedido_id] = [];
       itensPorPedido[item.pedido_id].push({
+        produto_id: item.produto_id,
         produto: item.produto,
         quantidade: item.quantidade,
         precoUnitario: item.preco_unitario,

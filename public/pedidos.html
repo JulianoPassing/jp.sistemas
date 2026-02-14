@@ -1432,30 +1432,34 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
       const pedido = pedidos.find(p => p.id == pedidoId);
       if (!pedido) return;
       
-      // Carregar clientes se ainda não foram carregados
-      if (clientes.length === 0) {
-        await carregarClientes();
-      }
+      // Carregar clientes e produtos se ainda não foram carregados
+      if (clientes.length === 0) await carregarClientes();
+      if (produtos.length === 0) await carregarProdutos();
       
       abrirModalNovoPedido();
       
       // Determinar se é cliente existente ou novo
       if (pedido.cliente_id) {
-        // Cliente existente
         document.getElementById('tipoCliente').value = 'existente';
         toggleTipoCliente();
         document.getElementById('cliente').value = pedido.cliente_id || '';
         preencherInfoCliente();
-      } else if (pedido.nome_cliente) {
-        // Novo cliente
+      } else if (pedido.nome_cliente && pedido.nome_cliente !== 'Consumidor Final') {
         document.getElementById('tipoCliente').value = 'novo';
         toggleTipoCliente();
         document.getElementById('nomeCliente').value = pedido.nome_cliente || '';
         document.getElementById('cpfCnpj').value = pedido.cpf_cnpj || '';
+      } else if (pedido.nome_cliente === 'Consumidor Final') {
+        document.getElementById('tipoCliente').value = 'consumidor';
+        toggleTipoCliente();
       }
       
       document.getElementById('observacoes').value = pedido.observacoes || '';
       document.getElementById('salvarPedido').setAttribute('data-editando', pedidoId);
+      
+      // Preencher itens do pedido
+      const itens = pedido.itens || [];
+      itens.forEach(item => adicionarItem(item));
     }
 
     // Função para visualizar pedido
@@ -1690,27 +1694,36 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
       document.body.style.overflow = 'auto';
     }
 
-    // Função para adicionar item ao pedido
-    function adicionarItem() {
+    // Função para adicionar item ao pedido (opcional: dados pré-preenchidos para edição)
+    function adicionarItem(dadosItem) {
       const itemId = `item-${itemCounter++}`;
+      let produtoId = dadosItem ? String(dadosItem.produto_id || dadosItem.produtoId || '') : '';
+      if (!produtoId && dadosItem && dadosItem.produto) {
+        const p = produtos.find(pr => (pr.nome || '').trim() === (dadosItem.produto || '').trim());
+        if (p) produtoId = String(p.id);
+      }
+      const quantidade = dadosItem ? (parseInt(dadosItem.quantidade) || 1) : 1;
+      const preco = dadosItem ? (parseFloat(dadosItem.precoUnitario || dadosItem.preco_unitario || 0)) : 0;
+      const subtotal = dadosItem ? (parseFloat(dadosItem.subtotal) || quantidade * preco) : 0;
       const itemHTML = `
         <div class="item-row" id="${itemId}">
           <div class="form-group">
             <select class="produto-select" onchange="selecionarProduto(this, '${itemId}')">
               <option value="">Selecione um produto</option>
-              ${produtos.map(produto => 
-                `<option value="${produto.id}" data-preco="${produto.preco_venda || 0}">${produto.nome}</option>`
-              ).join('')}
+              ${produtos.map(produto => {
+                const sel = String(produto.id) === produtoId ? ' selected' : '';
+                return `<option value="${produto.id}" data-preco="${produto.preco_venda || 0}"${sel}>${produto.nome}</option>`;
+              }).join('')}
             </select>
           </div>
           <div class="form-group">
-            <input type="number" class="quantidade-input" value="1" min="1" onchange="calcularSubtotal('${itemId}')" onkeyup="calcularSubtotal('${itemId}')">
+            <input type="number" class="quantidade-input" value="${quantidade}" min="1" onchange="calcularSubtotal('${itemId}')" onkeyup="calcularSubtotal('${itemId}')">
           </div>
           <div class="form-group">
-            <input type="number" class="preco-input" step="0.01" readonly>
+            <input type="number" class="preco-input" step="0.01" value="${preco}" readonly>
           </div>
           <div class="form-group">
-            <input type="number" class="subtotal-input" step="0.01" readonly>
+            <input type="number" class="subtotal-input" step="0.01" value="${subtotal.toFixed(2)}" readonly>
           </div>
           <button type="button" class="remove-item" onclick="removerItem('${itemId}')">
             <i class="fas fa-times"></i>
@@ -1719,6 +1732,7 @@ ${tipoCliente === 'novo' ? `• Nome: ${nomeCliente}\n• CPF/CNPJ: ${cpfCnpj}\n
       `;
       document.getElementById('itensContainer').insertAdjacentHTML('beforeend', itemHTML);
       atualizarNovoPedidoItens();
+      atualizarTotalPedido();
     }
 
     // Função para selecionar produto
