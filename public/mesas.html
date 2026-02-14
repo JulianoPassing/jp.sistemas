@@ -867,8 +867,13 @@
           console.warn('Resposta não é JSON, mas status é sucesso. Mesa criada, mas resposta inesperada.');
         }
         if (response.ok) {
+          const idCriado = novoPedido?.id;
+          const createdAgora = new Date().toISOString();
           nomeInput.value = '';
           await carregarPedidosAbertos();
+          const p = pedidosAbertos.find(x => x.id === idCriado);
+          if (p) p.created_at = createdAgora;
+          renderMesas();
           feedback.textContent = 'Comanda criada com sucesso!';
           feedback.style.color = '#059669';
           feedback.style.display = 'block';
