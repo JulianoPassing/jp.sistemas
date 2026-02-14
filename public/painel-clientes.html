@@ -717,20 +717,13 @@
           const cliente = clientes.find(c => String(c.id) === String(id));
           if (!cliente) return;
           
-          const senha = prompt('Digite a senha para confirmar a exclusao:');
-          if (senha !== 'excluir@95') {
-            alert('Senha incorreta. Exclusao cancelada.');
-            return;
-          }
-          
-          if (confirm(`Tem certeza que deseja remover o cliente "${cliente.razao}"?`)) {
-            try {
-              await fetch(`${API_URL}/${id}`, { method: 'DELETE', credentials: 'include' });
-              alert('Cliente removido com sucesso!');
-              await carregarClientes();
-            } catch (err) {
-              alert('Erro ao remover cliente.');
-            }
+          if (!confirm(`Tem certeza que deseja remover o cliente "${cliente.razao}"?`)) return;
+          try {
+            await fetch(`${API_URL}/${id}`, { method: 'DELETE', credentials: 'include' });
+            alert('Cliente removido com sucesso!');
+            await carregarClientes();
+          } catch (err) {
+            alert('Erro ao remover cliente.');
           }
         };
       });
