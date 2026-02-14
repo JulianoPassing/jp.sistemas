@@ -11,7 +11,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="canonical" href="https://jp-sistemas.com/mesas.html" />
-  <title>Mesas e Pedidos em Aberto - J.P Sistemas Comercial</title>
+  <title>Comandas e Mesas - J.P Sistemas Comercial</title>
   <link rel="icon" href="https://i.imgur.com/TwZLW6a.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -413,32 +413,33 @@
         <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
         <a href="pedidos.html">Pedidos</a>
         <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
-        <span>Mesas</span>
+        <span>Comandas</span>
       </nav>
       <div class="sistema-page-header">
         <div class="sistema-page-header-icon">
           <i class="fas fa-chair"></i>
         </div>
         <div class="sistema-page-header-text">
-          <h1>Mesas / Pedidos em Aberto</h1>
-          <p>Gerencie mesas e pedidos em aberto</p>
+          <h1>Comandas e Mesas</h1>
+          <p>Restaurantes, bares, mercados e lojas — pedidos em aberto</p>
         </div>
       </div>
     <div class="sistema-section">
       <div class="sistema-section-header">
-        <h2 class="sistema-section-title-icon"><i class="fas fa-list"></i> Mesas</h2>
+        <h2 class="sistema-section-title-icon"><i class="fas fa-list"></i> Comandas / Mesas em Aberto</h2>
       </div>
+      <p style="font-size:0.9rem;color:#6b7280;margin-bottom:14px;">Restaurantes: Mesa 1, Mesa 2. Bares: Comanda 5. Mercados: Balcão 1. Ou nome do cliente.</p>
       <div id="mesa-feedback" style="display:none;margin-bottom:18px;text-align:center;font-weight:500;"></div>
       <form class="nova-mesa-form" id="nova-mesa-form">
         <div class="form-group" style="position:relative;display:flex;align-items:center;flex:1;">
-          <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#005a9f;font-size:1.3em;"><i class="fas fa-chair"></i></span>
-          <input type="text" id="mesa-nome" required placeholder="Ex: Mesa 1, João, Família Silva..." style="padding-left:40px;height:48px;font-size:1.13em;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,90,159,0.07);transition:border 0.2s;outline:none;width:100%;" />
+          <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#005a9f;font-size:1.3em;"><i class="fas fa-receipt"></i></span>
+          <input type="text" id="mesa-nome" required placeholder="Ex: Mesa 1, Comanda 5, Balcão 2, João Silva, Delivery..." style="padding-left:40px;height:48px;font-size:1.13em;border-radius:8px;border:2px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,90,159,0.07);transition:border 0.2s;outline:none;width:100%;" />
         </div>
         <button class="btn btn-primary" id="btn-criar-mesa" type="submit" style="height:48px;font-size:1.13em;padding:0 32px;box-shadow:0 4px 16px rgba(0,90,159,0.13);display:flex;align-items:center;gap:10px;">
-          <i class="fas fa-plus"></i> Nova Mesa
+          <i class="fas fa-plus"></i> Nova Comanda
         </button>
         <a href="pedidos.html" class="btn btn-secondary" style="height:48px;font-size:1.13em;padding:0 32px;display:flex;align-items:center;gap:10px;text-decoration:none;">
-          <i class="fas fa-list"></i> Voltar para Pedidos
+          <i class="fas fa-list"></i> Pedidos
         </a>
       </form>
       <div class="mesas-grid" id="mesas-grid"></div>
@@ -451,7 +452,7 @@
   <!-- Modal de Edição de Produtos da Mesa -->
   <div id="modal-editar-produtos" class="modal" style="display:none;position:fixed;z-index:1000;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
     <div class="modal-content" style="background:#fff;border-radius:16px;max-width:700px;width:97vw;padding:48px 36px;box-shadow:0 8px 32px rgba(0,90,159,0.18);position:relative;">
-      <h3 style="margin-bottom:18px;font-size:1.25em;font-weight:600;">Editar Produtos da Mesa</h3>
+      <h3 style="margin-bottom:18px;font-size:1.25em;font-weight:600;">Editar itens da comanda</h3>
       <div id="produtos-mesa-lista"></div>
 
       <div style="margin-top:24px;text-align:right;">
@@ -464,10 +465,10 @@
   <!-- Modal de Finalização com Desconto -->
   <div id="modal-finalizar-mesa" class="modal" style="display:none;position:fixed;z-index:1000;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
     <div class="modal-content" style="background:#fff;border-radius:16px;max-width:420px;width:95vw;padding:32px 24px;box-shadow:0 8px 32px rgba(0,90,159,0.18);position:relative;">
-      <h3 style="margin-bottom:18px;font-size:1.25em;font-weight:600;">Finalizar Mesa</h3>
+      <h3 style="margin-bottom:18px;font-size:1.25em;font-weight:600;">Fechar comanda / Finalizar venda</h3>
       <div id="finalizar-info"></div>
       <div style="margin-top:24px;text-align:right;">
-        <button id="btn-finalizar-mesa" class="btn btn-success"><i class="fas fa-check"></i> Finalizar Mesa</button>
+        <button id="btn-finalizar-mesa" class="btn btn-success"><i class="fas fa-check"></i> Fechar comanda</button>
         <button id="btn-cancelar-finalizar" class="btn btn-secondary" style="margin-left:8px;">Cancelar</button>
       </div>
       <button id="btn-fechar-modal-finalizar" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.5em;color:#888;cursor:pointer;"><i class="fas fa-times"></i></button>
@@ -530,7 +531,7 @@
       const grid = document.getElementById('mesas-grid');
       grid.innerHTML = '';
       if (!pedidosAbertos.length) {
-        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#888;font-size:1.1em;">Nenhuma mesa/pedido em aberto.</div>';
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#888;font-size:1.1em;padding:2rem;"><i class="fas fa-receipt" style="font-size:2.5rem;display:block;margin-bottom:0.5rem;opacity:0.5;"></i>Nenhuma comanda ou mesa em aberto.<br><small>Crie uma nova comanda acima para começar.</small></div>';
         return;
       }
       pedidosAbertos.forEach(pedido => {
@@ -544,7 +545,7 @@
         card.className = 'mesa-card';
         card.innerHTML = `
           <div class="mesa-header">
-            <div class="mesa-nome"><i class="fas fa-chair"></i> ${(pedido.nome_cliente && pedido.nome_cliente.trim()) || pedido.nome_mesa || 'Mesa/Pessoa'}</div>
+            <div class="mesa-nome"><i class="fas fa-receipt"></i> ${(pedido.nome_cliente && pedido.nome_cliente.trim()) || pedido.nome_mesa || 'Comanda/Mesa'}</div>
             <div class="mesa-status"><i class="fas fa-clock"></i> ${pedido.status}</div>
           </div>
           <div class="mesa-itens">
@@ -563,10 +564,10 @@
           </div>
           <div class="mesa-total">Total: R$ ${total.toFixed(2).replace('.', ',')}</div>
           <div class="mesa-acoes">
-            <button class="btn btn-secondary" title="Editar Produtos" onclick="abrirModalEditarProdutos(${pedido.id})"><i class='fas fa-edit'></i></button>
-            <button class="btn btn-success" title="Finalizar Mesa" onclick="abrirModalFinalizarMesa(${pedido.id})"><i class='fas fa-check'></i></button>
-            <button class="btn btn-primary" title="Imprimir Comanda" onclick="imprimirComanda(${pedido.id})"><i class='fas fa-print'></i></button>
-            <button class="btn btn-danger" title="Excluir Mesa" onclick="excluirMesa(${pedido.id})"><i class='fas fa-trash'></i></button>
+            <button class="btn btn-secondary" title="Editar itens" onclick="abrirModalEditarProdutos(${pedido.id})"><i class='fas fa-edit'></i></button>
+            <button class="btn btn-success" title="Fechar comanda / Finalizar venda" onclick="abrirModalFinalizarMesa(${pedido.id})"><i class='fas fa-check'></i></button>
+            <button class="btn btn-primary" title="Imprimir comanda" onclick="imprimirComanda(${pedido.id})"><i class='fas fa-print'></i></button>
+            <button class="btn btn-danger" title="Excluir comanda" onclick="excluirMesa(${pedido.id})"><i class='fas fa-trash'></i></button>
           </div>
         `;
         grid.appendChild(card);
@@ -580,7 +581,7 @@
       const nome = nomeInput.value.trim();
       feedback.style.display = 'none';
       if (!nome) {
-        feedback.textContent = 'Informe o nome da mesa ou pessoa!';
+        feedback.textContent = 'Informe o nome da comanda, mesa ou cliente!';
         feedback.style.color = '#dc2626';
         feedback.style.display = 'block';
         nomeInput.focus();

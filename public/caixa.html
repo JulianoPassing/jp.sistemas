@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="canonical" href="https://jp-sistemas.com/caixa.html" />
-  <title>Caixa - J.P Sistemas Comercial</title>
+  <title>PDV / Balcão - J.P Sistemas Comercial</title>
   <link rel="icon" href="https://i.imgur.com/TwZLW6a.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -285,6 +285,10 @@
     .cliente-opcoes button {
       flex: 1;
     }
+    .cliente-opcoes .btn.active {
+      box-shadow: 0 0 0 2px var(--primary-blue);
+      font-weight: 600;
+    }
     .sugestoes-clientes {
       position: absolute;
       background: #fff;
@@ -351,23 +355,25 @@
           <i class="fas fa-cash-register"></i>
         </div>
         <div class="sistema-page-header-text">
-          <h1>Caixa - Atendimento em Loja</h1>
-          <p>Registre vendas e gerencie o atendimento</p>
+          <h1>PDV / Balcão</h1>
+          <p>Restaurantes, mercados, lojas e hortifrútis — venda rápida e profissional</p>
         </div>
       </div>
     <div class="sistema-section">
       <div class="sistema-section-header">
-        <h2 class="sistema-section-title-icon"><i class="fas fa-shopping-cart"></i> Novo Atendimento</h2>
+        <h2 class="sistema-section-title-icon"><i class="fas fa-shopping-cart"></i> Nova Venda</h2>
         <a href="pedidos.html" class="btn btn-secondary" style="font-size:1rem;padding:10px 24px;display:inline-flex;align-items:center;gap:8px;text-decoration:none;">
-          <i class="fas fa-list"></i> Voltar para Pedidos
+          <i class="fas fa-list"></i> Pedidos
         </a>
       </div>
       <div class="caixa-grid">
         <!-- Seção Cliente -->
         <section class="caixa-section" style="position:relative;">
-          <div class="section-title">Cliente</div>
+          <div class="section-title"><i class="fas fa-user" style="margin-right:6px;color:#0d9488;"></i> Identificação do Cliente</div>
+          <p style="font-size:0.9rem;color:#6b7280;margin-bottom:14px;">Consumidor final (venda rápida) ou cliente cadastrado para NF-e</p>
           <div class="cliente-opcoes">
-            <button class="btn btn-primary" type="button" onclick="mostrarBuscaCliente()">Buscar Cliente</button>
+            <button class="btn btn-success" type="button" onclick="usarConsumidorFinal()" id="btn-consumidor-final" title="Venda rápida sem cadastro"><i class="fas fa-bolt"></i> Consumidor Final</button>
+            <button class="btn btn-primary" type="button" onclick="mostrarBuscaCliente()" id="btn-buscar-cliente">Buscar Cliente</button>
             <button class="btn btn-secondary" type="button" onclick="mostrarManualCliente()">Preencher Manual</button>
           </div>
           <div id="cliente-busca" style="display:none;">
@@ -406,24 +412,24 @@
           <div class="section-title">Produtos</div>
           <div class="form-group">
             <label for="busca-produto">Buscar produto</label>
-            <input type="text" id="busca-produto" placeholder="Digite nome ou código..." autocomplete="off" />
+            <input type="text" id="busca-produto" placeholder="Nome, código ou código de barras..." autocomplete="off" />
           </div>
           <div class="produtos-lista">
             <table>
               <thead>
                 <tr>
                   <th>Produto</th>
-                  <th>Preço</th>
+                  <th>Preço Unit.</th>
                   <th>Estoque</th>
                   <th>Qtd</th>
-                  <th>Ação</th>
+                  <th>Adicionar</th>
                 </tr>
               </thead>
               <tbody id="produtos-tbody"></tbody>
             </table>
           </div>
           <div class="total" id="total-venda">Total: R$ 0,00</div>
-          <button class="btn btn-success finalizar-btn" id="finalizar-venda" type="button">Finalizar Venda</button>
+          <button class="btn btn-success finalizar-btn" id="finalizar-venda" type="button"><i class="fas fa-check-circle"></i> Concluir Venda</button>
         </section>
       </div>
     </div>
@@ -438,6 +444,7 @@
     let vendaItens = [];
     let clienteSelecionado = null;
     let clienteManual = false;
+    let consumidorFinal = true; // Padrão: venda rápida sem cadastro
 
     async function logout() {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
@@ -458,6 +465,7 @@
       if (userDisplay) userDisplay.textContent = username;
       carregarProdutos();
       carregarClientes();
+      usarConsumidorFinal();
       document.getElementById('finalizar-venda').onclick = finalizarVenda;
       document.getElementById('busca-produto').addEventListener('input', filtrarProdutos);
       document.getElementById('busca-cliente').addEventListener('input', filtrarClientes);
@@ -551,17 +559,33 @@
       prod.estoque = (prod.estoque ?? 0) - qtdVendida;
       renderProdutos(produtos);
     }
+    function usarConsumidorFinal() {
+      consumidorFinal = true;
+      clienteManual = false;
+      clienteSelecionado = null;
+      document.getElementById('cliente-busca').style.display = 'none';
+      document.getElementById('cliente-form').style.display = 'none';
+      document.getElementById('cliente-resumo').style.display = 'none';
+      document.getElementById('btn-consumidor-final').classList.add('active');
+      document.getElementById('btn-buscar-cliente').classList.remove('active');
+    }
     function mostrarBuscaCliente() {
+      consumidorFinal = false;
       clienteManual = false;
       document.getElementById('cliente-busca').style.display = '';
       document.getElementById('cliente-form').style.display = 'none';
       document.getElementById('cliente-resumo').style.display = 'none';
+      document.getElementById('btn-consumidor-final').classList.remove('active');
+      document.getElementById('btn-buscar-cliente').classList.add('active');
     }
     function mostrarManualCliente() {
+      consumidorFinal = false;
       clienteManual = true;
       document.getElementById('cliente-busca').style.display = 'none';
       document.getElementById('cliente-form').style.display = '';
       document.getElementById('cliente-resumo').style.display = 'none';
+      document.getElementById('btn-consumidor-final').classList.remove('active');
+      document.getElementById('btn-buscar-cliente').classList.remove('active');
     }
     function filtrarClientes() {
       const termo = document.getElementById('busca-cliente').value.trim().toLowerCase();
@@ -608,19 +632,21 @@
         return;
       }
       let clienteInfo = {};
-      if (clienteManual) {
-        const form = document.getElementById('cliente-form');
-        if (!form.nome.value.trim()) {
+      if (consumidorFinal) {
+        clienteInfo = { nome: 'Consumidor Final', cnpj: '', telefone: '', email: '', endereco: '' };
+      } else if (clienteManual) {
+        const nome = document.getElementById('cliente-nome').value.trim();
+        if (!nome) {
           alert('Preencha o nome do cliente!');
-          form.nome.focus();
+          document.getElementById('cliente-nome').focus();
           return;
         }
         clienteInfo = {
-          nome: form.nome.value.trim(),
-          cnpj: form.cnpj.value.trim(),
-          telefone: form.telefone.value.trim(),
-          email: form.email.value.trim(),
-          endereco: form.endereco.value.trim()
+          nome,
+          cnpj: document.getElementById('cliente-cnpj').value.trim(),
+          telefone: document.getElementById('cliente-telefone').value.trim(),
+          email: document.getElementById('cliente-email').value.trim(),
+          endereco: document.getElementById('cliente-endereco').value.trim()
         };
       } else if (clienteSelecionado) {
         clienteInfo = {
@@ -632,7 +658,7 @@
           endereco: clienteSelecionado.endereco
         };
       } else {
-        alert('Selecione ou preencha os dados do cliente!');
+        alert('Selecione uma opção: Consumidor Final, Buscar Cliente ou Preencher Manual.');
         return;
       }
       const pedido = {
