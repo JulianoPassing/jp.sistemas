@@ -1625,14 +1625,14 @@ const dashboardController = {
           
           const row = document.createElement('tr');
           row.innerHTML = `
-            <td>${emp.cliente_nome || 'N/A'}</td>
+            <td>${emp.cliente_nome || 'N/A'} <i class="fas ${tipoIcone}" title="${tipoTitle}" style="font-size: 0.75rem; color: #6b7280; margin-left: 4px;"></i></td>
             <td>${(emp.valorInicial ?? emp.valorFinal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
             <td>${(emp.valorJurosOuParcela ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
             <td>${emp.valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
             <td>${emp.dataEmprestimo}</td>
             <td>${emp.vencimentoExibir}</td>
             <td>${emp.diasAtraso > 0 ? emp.diasAtraso : '-'}</td>
-            <td><i class="fas ${tipoIcone}" title="${tipoTitle}" style="margin-right: 6px; color: #6b7280; font-size: 0.9rem;"></i><span class="badge badge-${statusClass}">${emp.statusCalculado.charAt(0) + emp.statusCalculado.slice(1).toLowerCase()}</span></td>
+            <td><span class="badge badge-${statusClass}">${emp.statusCalculado.charAt(0) + emp.statusCalculado.slice(1).toLowerCase()}</span></td>
             <td>
               <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
             </td>
