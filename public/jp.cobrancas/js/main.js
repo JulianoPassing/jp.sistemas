@@ -1587,12 +1587,15 @@ const dashboardController = {
             border-left: 4px solid ${statusColor};
           `;
           const statusTexto = emp.statusCalculado === 'ATRASADO' ? 'Atrasado' : emp.statusCalculado === 'QUITADO' ? 'Quitado' : 'Em dia';
+          const ehParcelado = emp.tipo_emprestimo === 'in_installments' && (emp.numero_parcelas || 0) > 1;
+          const tipoIcone = ehParcelado ? 'fa-list-ol' : 'fa-percent';
+          const tipoLabel = ehParcelado ? 'Parcelado' : 'Juros';
           const valorInicialStr = (emp.valorInicial ?? emp.valorFinal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
           const valorJurosStr = (emp.valorJurosOuParcela ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
           const valorTotalStr = emp.valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
           card.innerHTML = `
             <div style="flex: 1; min-width: 0;">
-              <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem; margin-bottom: 2px;">${emp.cliente_nome || 'N/A'}</div>
+              <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem; margin-bottom: 2px;">${emp.cliente_nome || 'N/A'} <i class="fas ${tipoIcone}" title="${tipoLabel}" style="font-size: 0.75rem; color: #6b7280; margin-left: 4px;"></i></div>
               <div style="font-size: 0.8rem; color: #6b7280;">Inicial: ${valorInicialStr} | Juros/Parcela: ${valorJurosStr} | Total: <span style="font-weight: 700; color: ${statusColor};">${valorTotalStr}</span></div>
               <div style="font-size: 0.75rem; color: #6b7280; margin-top: 2px;">Venc: ${emp.vencimentoExibir} • <span style="color: ${statusColor}; font-weight: 600;">${statusTexto}</span></div>
             </div>
@@ -1616,6 +1619,10 @@ const dashboardController = {
           else if (emp.statusCalculado === 'PENDENTE' || emp.statusCalculado === 'ATIVO') statusClass = 'warning';
           else if (emp.statusCalculado === 'QUITADO') statusClass = 'info';
           
+          const ehParcelado = emp.tipo_emprestimo === 'in_installments' && (emp.numero_parcelas || 0) > 1;
+          const tipoIcone = ehParcelado ? 'fa-list-ol' : 'fa-percent';
+          const tipoTitle = ehParcelado ? 'Parcelado' : 'Juros';
+          
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${emp.cliente_nome || 'N/A'}</td>
@@ -1625,7 +1632,7 @@ const dashboardController = {
             <td>${emp.dataEmprestimo}</td>
             <td>${emp.vencimentoExibir}</td>
             <td>${emp.diasAtraso > 0 ? emp.diasAtraso : '-'}</td>
-            <td><span class="badge badge-${statusClass}">${emp.statusCalculado.charAt(0) + emp.statusCalculado.slice(1).toLowerCase()}</span></td>
+            <td><i class="fas ${tipoIcone}" title="${tipoTitle}" style="margin-right: 6px; color: #6b7280; font-size: 0.9rem;"></i><span class="badge badge-${statusClass}">${emp.statusCalculado.charAt(0) + emp.statusCalculado.slice(1).toLowerCase()}</span></td>
             <td>
               <button class="btn btn-primary btn-sm" onclick="viewEmprestimo(${emp.id})">Ver</button>
             </td>
