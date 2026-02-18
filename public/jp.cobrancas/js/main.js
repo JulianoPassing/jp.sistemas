@@ -1374,14 +1374,14 @@ const dashboardController = {
     const tbody = document.getElementById('cobrancas-pendentes');
     if (!tbody) return;
 
-    tbody.innerHTML = getSkeletonRows(7, 3);
+    tbody.innerHTML = getSkeletonRows(9, 3);
 
     try {
       // Buscar todos os empréstimos
       const emprestimos = await apiService.getEmprestimos();
       
       if (!emprestimos || emprestimos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-search empty-state-icon"></i><div class="empty-state-title">Nenhum empréstimo encontrado</div><div class="empty-state-text">Tente ajustar os filtros de busca ou adicione um novo empréstimo.</div></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-search empty-state-icon"></i><div class="empty-state-title">Nenhum empréstimo encontrado</div><div class="empty-state-text">Tente ajustar os filtros de busca ou adicione um novo empréstimo.</div></div></td></tr>';
         this.todosEmprestimosProcessados = [];
         this.updateSearchResultsInfo(0, 0);
         return;
@@ -1394,7 +1394,13 @@ const dashboardController = {
       const emprestimosProcessados = [];
       
       for (const emprestimo of emprestimos) {
+        const valorInicial = Number(emprestimo.valor_inicial ?? emprestimo.valor ?? 0);
         const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
+        const valorParcela = Number(emprestimo.valor_parcela || 0);
+        const ehParcelado = emprestimo.tipo_emprestimo === 'in_installments' && (emprestimo.numero_parcelas || 0) > 1;
+        const valorJurosOuParcela = ehParcelado && valorParcela > 0
+          ? valorParcela
+          : (valorFinal - valorInicial);
         const dataEmprestimo = utils.formatDate(emprestimo.data_emprestimo);
         let vencimentoExibir = utils.formatDate(emprestimo.data_vencimento);
         let dataVencimentoOrdenacao = emprestimo.data_vencimento; // Data bruta para ordenação
@@ -1461,6 +1467,8 @@ const dashboardController = {
         
         emprestimosProcessados.push({
           ...emprestimo,
+          valorInicial,
+          valorJurosOuParcela,
           valorFinal,
           dataEmprestimo,
           vencimentoExibir,
@@ -1498,7 +1506,7 @@ const dashboardController = {
       console.error('Erro ao carregar cobranças pendentes:', error);
       const tbody = document.getElementById('cobrancas-pendentes');
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-500">Erro ao carregar cobranças</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-red-500">Erro ao carregar cobranças</td></tr>';
       }
     }
   },
@@ -1539,7 +1547,7 @@ const dashboardController = {
       if (oldCards) oldCards.remove();
       tbody.parentElement.style.display = '';
       
-      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-search empty-state-icon"></i><div class="empty-state-title">Nenhum empréstimo encontrado</div><div class="empty-state-text">Tente ajustar os filtros de busca ou adicione um novo empréstimo.</div></div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-search empty-state-icon"></i><div class="empty-state-title">Nenhum empréstimo encontrado</div><div class="empty-state-text">Tente ajustar os filtros de busca ou adicione um novo empréstimo.</div></div></td></tr>';
       return;
     }
 
@@ -1579,10 +1587,13 @@ const dashboardController = {
             border-left: 4px solid ${statusColor};
           `;
           const statusTexto = emp.statusCalculado === 'ATRASADO' ? 'Atrasado' : emp.statusCalculado === 'QUITADO' ? 'Quitado' : 'Em dia';
+          const valorInicialStr = (emp.valorInicial ?? emp.valorFinal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+          const valorJurosStr = (emp.valorJurosOuParcela ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+          const valorTotalStr = emp.valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
           card.innerHTML = `
             <div style="flex: 1; min-width: 0;">
               <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem; margin-bottom: 2px;">${emp.cliente_nome || 'N/A'}</div>
-              <div style="font-size: 0.85rem; font-weight: 700; color: ${statusColor};">${emp.valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+              <div style="font-size: 0.8rem; color: #6b7280;">Inicial: ${valorInicialStr} | Juros/Parcela: ${valorJurosStr} | Total: <span style="font-weight: 700; color: ${statusColor};">${valorTotalStr}</span></div>
               <div style="font-size: 0.75rem; color: #6b7280; margin-top: 2px;">Venc: ${emp.vencimentoExibir} • <span style="color: ${statusColor}; font-weight: 600;">${statusTexto}</span></div>
             </div>
             <button onclick="viewEmprestimo(${emp.id})" style="background: #3b82f6; color: #fff; border: none; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Ver</button>
@@ -1608,6 +1619,8 @@ const dashboardController = {
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${emp.cliente_nome || 'N/A'}</td>
+            <td>${(emp.valorInicial ?? emp.valorFinal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+            <td>${(emp.valorJurosOuParcela ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
             <td>${emp.valorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
             <td>${emp.dataEmprestimo}</td>
             <td>${emp.vencimentoExibir}</td>
