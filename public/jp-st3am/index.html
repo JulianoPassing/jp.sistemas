@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JP-ST3AM - Ferramentas Steam | JP. Sistemas</title>
+  <meta name="description" content="JP-ST3AM: ferramentas para Steam com identidade JP. Sistemas. Instale jogos na sua biblioteca Steam com facilidade. Launcher gráfico intuitivo e licenciamento por chave.">
+  <link rel="canonical" href="https://jp-sistemas.com/jp-st3am/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png">
+  <meta name="theme-color" content="#002f4b">
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script src="/js/utils.js"></script>
+  <style>
+    :root {
+      --primary-blue: #002f4b;
+      --accent-blue: #00e6ff;
+      --accent-cyan: #00b8d4;
+      --dark-bg: #0a0e14;
+      --card-bg: #0d1520;
+      --card-border: rgba(0, 230, 255, 0.25);
+      --neon-glow: 0 0 20px rgba(0, 230, 255, 0.3);
+      --light-text: #ecf0f1;
+      --muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(180deg, #0a0e14 0%, #0d1520 30%, #001a2e 100%);
+      color: var(--light-text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .gamer-font { font-family: 'Orbitron', sans-serif; }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 4vw;
+      background: linear-gradient(135deg, var(--primary-blue) 0%, #003d60 100%);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 40px rgba(0, 230, 255, 0.08);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 2px solid rgba(0, 230, 255, 0.2);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+    }
+    .logo img { height: 50px; }
+    .logo span {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--light-text);
+    }
+    .logo span .highlight { color: var(--accent-blue); }
+    nav a {
+      color: var(--light-text);
+      text-decoration: none;
+      margin-left: 1.5rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--accent-blue); }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 4rem 2rem 3rem;
+      position: relative;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      color: var(--primary-blue);
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+    }
+    .hero h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      margin: 0 0 1rem;
+      background: linear-gradient(135deg, var(--accent-blue), #00ffff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: var(--neon-glow);
+    }
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 700px;
+      margin: 0 auto 2rem;
+      line-height: 1.7;
+    }
+
+    /* Cards de funções */
+    .section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    .section-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent-blue);
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    .func-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .func-card {
+      background: linear-gradient(145deg, #0d1520 0%, var(--primary-blue) 100%);
+      border: 2px solid var(--card-border);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .func-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-blue), transparent);
+      transform: scaleX(0);
+      transition: transform 0.3s;
+    }
+    .func-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--neon-glow);
+      border-color: var(--accent-blue);
+    }
+    .func-card:hover::before { transform: scaleX(1); }
+    .func-card i {
+      font-size: 2.5rem;
+      color: var(--accent-blue);
+      margin-bottom: 1rem;
+    }
+    .func-card h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      margin: 0 0 0.5rem;
+      color: var(--light-text);
+    }
+    .func-card p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* Jogos populares */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .game-card {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+    .game-card:hover {
+      transform: scale(1.03);
+      border-color: var(--accent-blue);
+      box-shadow: var(--neon-glow);
+    }
+    .game-card img {
+      width: 100%;
+      aspect-ratio: 460/215;
+      object-fit: cover;
+      display: block;
+    }
+    .game-card span {
+      display: block;
+      padding: 0.6rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--light-text);
+      text-align: center;
+      background: rgba(0, 47, 75, 0.5);
+    }
+
+    /* Stats */
+    .stats-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin: 2rem 0;
+    }
+    .stat-item {
+      text-align: center;
+      padding: 1rem 2rem;
+      background: linear-gradient(135deg, rgba(0, 230, 255, 0.1), rgba(0, 184, 212, 0.05));
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+    }
+    .stat-item .num {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--accent-blue);
+      display: block;
+    }
+    .stat-item .label {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+    }
+
+    /* Card de compra */
+    .purchase-card {
+      max-width: 420px;
+      margin: 2rem auto;
+      background: linear-gradient(145deg, #003a5e 0%, var(--primary-blue) 100%);
+      border: 2px solid var(--accent-blue);
+      border-radius: 24px;
+      padding: 2.5rem;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0, 230, 255, 0.2);
+    }
+    .purchase-card .plano-titulo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.4rem;
+      color: var(--accent-blue);
+      margin-bottom: 0.5rem;
+    }
+    .purchase-card .plano-preco {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      color: #fff;
+      margin: 2rem 0;
+    }
+    .purchase-card .plano-detalhe {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+    .btn-comprar {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 1rem 2.5rem;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      color: var(--primary-blue);
+      font-weight: 600;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 20px rgba(0, 230, 255, 0.4);
+    }
+    .btn-comprar:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 30px rgba(0, 230, 255, 0.5);
+    }
+
+    /* Modal */
+    .modal-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+    .modal-bg.active { display: flex; }
+    .modal {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      border-radius: 24px;
+      padding: 1.5rem;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      border-top: 6px solid var(--accent-blue);
+      position: relative;
+      color: #1f2937;
+    }
+    .modal h2 {
+      background: linear-gradient(135deg, var(--primary-blue), #005580);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+    }
+    .resumo-compra {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid rgba(0, 230, 255, 0.2);
+    }
+    .resumo-linha { display: flex; justify-content: space-between; margin-bottom: 0.4rem; }
+    .resumo-linha.total { margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid rgba(0,47,75,0.15); font-weight: 700; color: var(--primary-blue); }
+    .form-secao { margin-bottom: 1rem; }
+    .form-row-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .cupom-input-group { display: flex; gap: 0.5rem; }
+    .cupom-input-group input { flex: 1; }
+    .btn-cupom {
+      padding: 0.5rem 1rem;
+      background: var(--primary-blue);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-cupom:hover { background: #003d60; }
+    .cupom-msg { font-size: 0.85rem; margin-top: 0.3rem; }
+    .cupom-msg.success { color: #059669; }
+    .cupom-msg.error { color: #dc2626; }
+    .modal input {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    .modal input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 2px rgba(0, 230, 255, 0.2);
+    }
+    .modal label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+      color: var(--primary-blue);
+      font-size: 0.9rem;
+    }
+    .btn-pagar-mp {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #009ee3 0%, #00b4d8 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      transition: all 0.3s;
+    }
+    .btn-pagar-mp:hover { transform: translateY(-2px); }
+    .btn-pagar-mp:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+    .close-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: var(--accent-blue);
+      color: var(--primary-blue);
+      border: none;
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    .modal-resultado { text-align: center; padding: 2rem; }
+    .modal-resultado .resultado-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+    }
+    .modal-resultado.success .resultado-icon { background: linear-gradient(135deg, #059669, #047857); color: #fff; }
+    .modal-resultado.failure .resultado-icon { background: linear-gradient(135deg, #dc2626, #b91c1c); color: #fff; }
+    .modal-resultado.pending .resultado-icon { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+    .resultado-titulo { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .resultado-mensagem { color: #64748b; margin-bottom: 1rem; }
+    .btn-whatsapp-sucesso {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 1rem 1.5rem;
+      background: #25d366;
+      color: #fff;
+      font-weight: 700;
+      border-radius: 12px;
+      text-decoration: none;
+      margin-bottom: 0.5rem;
+      transition: all 0.3s;
+    }
+    .btn-whatsapp-sucesso:hover { background: #20bd5a; transform: translateY(-2px); }
+    @media (max-width: 600px) {
+      .form-row-duo { grid-template-columns: 1fr; }
+      nav a { margin-left: 1rem; }
+    }
+
+    /* Particles */
+    #particles-js {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.15;
+    }
+    body > *:not(#particles-js):not(.modal-bg) { position: relative; z-index: 1; }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 3rem;
+      border-top: 1px solid rgba(0, 230, 255, 0.1);
+    }
+    footer a { color: var(--accent-blue); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div id="particles-js"></div>
+  <header>
+    <a href="/" class="logo">
+      <img src="https://i.imgur.com/6N82fk2.png" alt="JP Sistemas">
+      <span>J.P <span class="highlight">SISTEMAS</span></span>
+    </a>
+    <nav>
+      <a href="/">Início</a>
+      <a href="https://whatsa.me/5548996852138" target="_blank" rel="noopener">Contato</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <span class="hero-badge">Ferramentas Steam</span>
+    <h1 class="gamer-font">JP-ST3AM</h1>
+    <p>Conjunto de ferramentas para Steam com identidade JP. Sistemas. Instale jogos na sua biblioteca Steam com facilidade. Launcher gráfico intuitivo e licenciamento por chave vinculado ao seu PC.</p>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">O que o JP-ST3AM oferece</h2>
+    <div class="func-grid">
+      <div class="func-card">
+        <i class="fas fa-download"></i>
+        <h3>Instalador</h3>
+        <p>Script de instalação automatizado que configura tudo que você precisa. Tudo pronto para começar em poucos cliques.</p>
+      </div>
+      <div class="func-card">
+        <i class="fas fa-gamepad"></i>
+        <h3>Launcher Gráfico</h3>
+        <p>Interface gráfica em Python/CustomTkinter para adicionar jogos à biblioteca Steam por App ID. Simples e intuitivo.</p>
+      </div>
+      <div class="func-card">
+        <i class="fas fa-key"></i>
+        <h3>Licenciamento</h3>
+        <p>1 chave = 1 PC, vinculada ao Hardware ID. Garantia de uso único e controle de acesso.</p>
+      </div>
+      <div class="func-card">
+        <i class="fas fa-list"></i>
+        <h3>Catálogo</h3>
+        <p>Integração com fontes externas para ampla variedade de jogos. Catálogo em constante atualização.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Jogos disponíveis no sistema</h2>
+    <p style="text-align:center;color:var(--muted);font-size:0.95rem;margin-bottom:1rem;">Lista do SteamTools GameList — fonte oficial do JP-ST3AM</p>
+    <div class="stats-row">
+      <div class="stat-item">
+        <span class="num">3.600+</span>
+        <span class="label">Jogos no catálogo</span>
+      </div>
+    </div>
+    <div class="games-grid">
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/271590/header.jpg" alt="GTA V"><span>GTA V</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/252490/header.jpg" alt="Rust"><span>Rust</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/105600/header.jpg" alt="Terraria"><span>Terraria</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/289070/header.jpg" alt="Civilization VI"><span>Civilization VI</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/4000/header.jpg" alt="Garry's Mod"><span>Garry's Mod</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/221100/header.jpg" alt="DayZ"><span>DayZ</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/108600/header.jpg" alt="Project Zomboid"><span>Project Zomboid</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/550/header.jpg" alt="Left 4 Dead 2"><span>Left 4 Dead 2</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/218620/header.jpg" alt="PAYDAY 2"><span>PAYDAY 2</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/261550/header.jpg" alt="Mount & Blade II"><span>Mount & Blade II</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/284160/header.jpg" alt="BeamNG.drive"><span>BeamNG.drive</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/227300/header.jpg" alt="Euro Truck Simulator 2"><span>Euro Truck Simulator 2</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/250900/header.jpg" alt="Binding of Isaac"><span>Binding of Isaac</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/281990/header.jpg" alt="Stellaris"><span>Stellaris</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/240/header.jpg" alt="Counter-Strike Source"><span>Counter-Strike Source</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/275850/header.jpg" alt="No Man's Sky"><span>No Man's Sky</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/292030/header.jpg" alt="The Witcher 3"><span>The Witcher 3</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/294100/header.jpg" alt="RimWorld"><span>RimWorld</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/251570/header.jpg" alt="7 Days to Die"><span>7 Days to Die</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/72850/header.jpg" alt="Skyrim"><span>Skyrim</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/244210/header.jpg" alt="Assetto Corsa"><span>Assetto Corsa</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/239140/header.jpg" alt="Dying Light"><span>Dying Light</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/620/header.jpg" alt="Portal 2"><span>Portal 2</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/236850/header.jpg" alt="Europa Universalis IV"><span>Europa Universalis IV</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/233450/header.jpg" alt="Prison Architect"><span>Prison Architect</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/233860/header.jpg" alt="Kenshi"><span>Kenshi</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/49520/header.jpg" alt="Borderlands 2"><span>Borderlands 2</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/8930/header.jpg" alt="Civilization V"><span>Civilization V</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/220/header.jpg" alt="Half-Life 2"><span>Half-Life 2</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/286160/header.jpg" alt="Tabletop Simulator"><span>Tabletop Simulator</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/48700/header.jpg" alt="Mount & Blade Warband"><span>Mount & Blade Warband</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/22380/header.jpg" alt="Fallout New Vegas"><span>Fallout New Vegas</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/22370/header.jpg" alt="Fallout 3 GOTY"><span>Fallout 3 GOTY</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/38400/header.jpg" alt="Fallout"><span>Fallout</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/22330/header.jpg" alt="Oblivion"><span>Oblivion</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/7670/header.jpg" alt="BioShock"><span>BioShock</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/200510/header.jpg" alt="XCOM Enemy Unknown"><span>XCOM Enemy Unknown</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/204360/header.jpg" alt="Castle Crashers"><span>Castle Crashers</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/48000/header.jpg" alt="LIMBO"><span>LIMBO</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/42700/header.jpg" alt="COD Black Ops"><span>COD Black Ops</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/20920/header.jpg" alt="The Witcher 2"><span>The Witcher 2</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/17450/header.jpg" alt="Dragon Age Origins"><span>Dragon Age Origins</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/17460/header.jpg" alt="Mass Effect"><span>Mass Effect</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/24980/header.jpg" alt="Mass Effect 2"><span>Mass Effect 2</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/17470/header.jpg" alt="Dead Space"><span>Dead Space</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/2280/header.jpg" alt="DOOM + DOOM II"><span>DOOM + DOOM II</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/400/header.jpg" alt="Portal"><span>Portal</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/500/header.jpg" alt="Left 4 Dead"><span>Left 4 Dead</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/70/header.jpg" alt="Half-Life"><span>Half-Life</span></div>
+      <div class="game-card"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/107100/header.jpg" alt="Bastion"><span>Bastion</span></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Adquira agora</h2>
+    <div class="purchase-card">
+      <div class="plano-titulo"><i class="fas fa-gamepad"></i> JP-ST3AM - Acesso Completo</div>
+      <div class="plano-preco">R$ 29,90</div>
+      <div class="plano-detalhe">Pagamento único. Inclui: instalador, launcher gráfico, chave de licença e suporte.</div>
+      <button type="button" class="btn-comprar" id="btn-comprar-st3am">
+        <i class="fas fa-shopping-cart"></i> Comprar agora
+      </button>
+    </div>
+  </section>
+
+  <!-- Modal de Pagamento -->
+  <div class="modal-bg" id="modal-bg">
+    <div class="modal">
+      <button class="close-btn" id="close-modal" title="Fechar">&times;</button>
+      <h2>Pagamento - JP-ST3AM</h2>
+      <div class="resumo-compra" id="resumo-compra">
+        <div class="resumo-linha">
+          <span>Produto:</span>
+          <strong>JP-ST3AM - Acesso Completo</strong>
+        </div>
+        <div class="resumo-linha total">
+          <span>Total:</span>
+          <strong id="resumo-total">R$ 29,90</strong>
+        </div>
+      </div>
+      <form id="form-pagamento" autocomplete="off" onsubmit="return false;">
+        <div class="form-secao">
+          <label for="nome">Nome completo *</label>
+          <input type="text" id="nome" name="nome" required placeholder="Seu nome completo">
+        </div>
+        <div class="form-secao">
+          <label for="email">E-mail *</label>
+          <input type="email" id="email" name="email" required placeholder="seu@email.com">
+        </div>
+        <div class="form-row-duo">
+          <div class="form-secao">
+            <label for="cpf">CPF *</label>
+            <input type="text" id="cpf" name="cpf" required placeholder="000.000.000-00" maxlength="14">
+          </div>
+          <div class="form-secao">
+            <label for="telefone">Telefone *</label>
+            <input type="tel" id="telefone" name="telefone" required placeholder="(99) 99999-9999" maxlength="16">
+          </div>
+        </div>
+        <div class="form-secao">
+          <label for="cupom">Cupom de desconto</label>
+          <div class="cupom-input-group">
+            <input type="text" id="cupom" placeholder="Digite o código" maxlength="20">
+            <button type="button" id="btn-aplicar-cupom" class="btn-cupom">Aplicar</button>
+          </div>
+          <span class="cupom-msg" id="cupom-msg"></span>
+        </div>
+      </form>
+      <p style="font-size:0.9rem;color:#64748b;margin:0.5rem 0;"><i class="fas fa-shield-alt"></i> Pague com PIX, cartão ou boleto via Mercado Pago</p>
+      <button type="button" id="btn-pagar" class="btn-pagar-mp">
+        <i class="fas fa-lock"></i> Ir para pagamento seguro
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal Resultado -->
+  <div class="modal-bg" id="resultado-bg">
+    <div class="modal modal-resultado" id="modal-resultado">
+      <button class="close-btn" id="resultado-close" title="Fechar">&times;</button>
+      <div class="resultado-icon" id="resultado-icon"><i class="fas fa-check-circle"></i></div>
+      <h2 class="resultado-titulo" id="resultado-titulo">Pagamento confirmado</h2>
+      <p class="resultado-mensagem" id="resultado-mensagem"></p>
+      <a href="https://wa.me/5548996852138" target="_blank" rel="noopener" class="btn-whatsapp-sucesso" id="btn-whatsapp">
+        <i class="fab fa-whatsapp"></i> Entrar em contato via WhatsApp
+      </a>
+      <button type="button" class="btn-cupom" id="btn-fechar-resultado" style="margin-top:0.5rem;">Fechar</button>
+    </div>
+  </div>
+
+  <footer>
+    © 2026 JP. Sistemas. Todos os direitos reservados. | <a href="https://jp-sistemas.com/">jp-sistemas.com</a>
+  </footer>
+
+  <script>
+    const VALOR_PLANO = 29.90;
+    const PLANO_NOME = 'JP-ST3AM - Acesso Completo';
+    const CUPONS = {
+      'PROMO10': { desconto: 10, desc: '10%' },
+      'JPSISTEMAS50': { desconto: 50, desc: '50%' }
+    };
+
+    let cupomAtivo = null;
+
+    function formatarCPF(v) {
+      return v.replace(/\D/g, '').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
+    function formatarTelefone(v) {
+      return v.replace(/\D/g, '').replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2').slice(0, 15);
+    }
+    function validarCPF(cpf) {
+      cpf = cpf.replace(/\D/g, '');
+      if (cpf.length !== 11) return false;
+      if (/^(\d)\1{10}$/.test(cpf)) return false;
+      let s = 0; for (let i = 0; i < 9; i++) s += parseInt(cpf[i]) * (10 - i);
+      let r = s % 11; if (r < 2) r = 0; else r = 11 - r;
+      if (r !== parseInt(cpf[9])) return false;
+      s = 0; for (let i = 0; i < 10; i++) s += parseInt(cpf[i]) * (11 - i);
+      r = s % 11; if (r < 2) r = 0; else r = 11 - r;
+      return r === parseInt(cpf[10]);
+    }
+
+    document.getElementById('cpf').addEventListener('input', e => { e.target.value = formatarCPF(e.target.value); });
+    document.getElementById('telefone').addEventListener('input', e => { e.target.value = formatarTelefone(e.target.value); });
+
+    function atualizarResumo() {
+      const subtotal = VALOR_PLANO;
+      const desconto = cupomAtivo ? (subtotal * cupomAtivo.desconto / 100) : 0;
+      const total = subtotal - desconto;
+      document.getElementById('resumo-total').textContent = formatarMoeda(total);
+    }
+
+    document.getElementById('btn-aplicar-cupom').addEventListener('click', function() {
+      const codigo = (document.getElementById('cupom').value || '').trim().toUpperCase();
+      const msg = document.getElementById('cupom-msg');
+      msg.className = 'cupom-msg';
+      msg.textContent = '';
+      if (!codigo) {
+        cupomAtivo = null;
+        atualizarResumo();
+        return;
+      }
+      const cupom = CUPONS[codigo];
+      if (cupom) {
+        cupomAtivo = cupom;
+        msg.textContent = 'Cupom aplicado!';
+        msg.classList.add('success');
+      } else {
+        cupomAtivo = null;
+        msg.textContent = 'Cupom inválido.';
+        msg.classList.add('error');
+      }
+      atualizarResumo();
+    });
+
+    document.getElementById('btn-comprar-st3am').addEventListener('click', () => {
+      cupomAtivo = null;
+      document.getElementById('cupom').value = '';
+      document.getElementById('cupom-msg').textContent = '';
+      atualizarResumo();
+      document.getElementById('modal-bg').classList.add('active');
+    });
+
+    document.getElementById('close-modal').addEventListener('click', () => document.getElementById('modal-bg').classList.remove('active'));
+    document.getElementById('modal-bg').addEventListener('click', e => {
+      if (e.target.id === 'modal-bg') document.getElementById('modal-bg').classList.remove('active');
+    });
+
+    document.getElementById('btn-pagar').addEventListener('click', async function() {
+      const nome = document.getElementById('nome').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const cpf = document.getElementById('cpf').value.trim();
+      const telefone = document.getElementById('telefone').value.trim();
+
+      if (!nome || !email) { alert('Preencha nome e e-mail.'); return; }
+      if (!validarCPF(cpf)) { alert('CPF inválido.'); return; }
+      if (!telefone || telefone.replace(/\D/g, '').length < 10) { alert('Telefone inválido.'); return; }
+
+      const subtotal = VALOR_PLANO;
+      const desconto = cupomAtivo ? (subtotal * cupomAtivo.desconto / 100) : 0;
+      const valorFinal = Math.round((subtotal - desconto) * 100) / 100;
+
+      const btn = this;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redirecionando...';
+
+      try {
+        const cupomCodigo = cupomAtivo ? Object.keys(CUPONS).find(k => CUPONS[k] === cupomAtivo) : null;
+        const res = await fetch('/api/mercadopago/preference', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            planName: PLANO_NOME,
+            amount: valorFinal,
+            quantity: 1,
+            returnPath: '/jp-st3am/',
+            valorOriginal: subtotal,
+            valorDesconto: desconto,
+            cupomCodigo,
+            cupomPercent: cupomAtivo ? cupomAtivo.desconto : null,
+            payer: {
+              name: nome.split(' ')[0] || nome,
+              surname: nome.split(' ').slice(1).join(' ') || '',
+              email,
+              phone: telefone.replace(/\D/g, '').slice(-11),
+              cpf: cpf.replace(/\D/g, ''),
+              cupom: cupomCodigo
+            }
+          })
+        });
+        const data = await res.json();
+        if (data.init_point) {
+          window.location.href = data.init_point;
+        } else {
+          throw new Error(data.error || 'Erro ao gerar pagamento');
+        }
+      } catch (err) {
+        alert(err.message || 'Erro ao conectar. Tente novamente.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-lock"></i> Ir para pagamento seguro';
+      }
+    });
+
+    function exibirResultado(tipo, titulo, mensagem, mostrarWhats) {
+      const bg = document.getElementById('resultado-bg');
+      const modal = document.getElementById('modal-resultado');
+      const icon = document.getElementById('resultado-icon');
+      modal.className = 'modal modal-resultado ' + tipo;
+      icon.innerHTML = tipo === 'success' ? '<i class="fas fa-check-circle"></i>' : tipo === 'failure' ? '<i class="fas fa-times-circle"></i>' : '<i class="fas fa-clock"></i>';
+      document.getElementById('resultado-titulo').textContent = titulo;
+      document.getElementById('resultado-mensagem').textContent = mensagem;
+      document.getElementById('btn-whatsapp').style.display = mostrarWhats ? 'inline-flex' : 'none';
+      bg.classList.add('active');
+    }
+
+    document.getElementById('btn-fechar-resultado').addEventListener('click', () => document.getElementById('resultado-bg').classList.remove('active'));
+    document.getElementById('resultado-close').addEventListener('click', () => document.getElementById('resultado-bg').classList.remove('active'));
+    document.getElementById('resultado-bg').addEventListener('click', e => {
+      if (e.target.id === 'resultado-bg') document.getElementById('resultado-bg').classList.remove('active');
+    });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get('status');
+    const ref = urlParams.get('ref');
+
+    if (status === 'success' && ref) {
+      (async () => {
+        try {
+          const res = await fetch('/api/precos/confirmar?ref=' + encodeURIComponent(ref));
+          const data = await res.json();
+          exibirResultado('success', 'Pagamento confirmado!', 'Obrigado! Entre em contato via WhatsApp para receber sua chave de licença.', true);
+        } catch (e) {
+          exibirResultado('success', 'Pagamento confirmado!', 'Obrigado! Entre em contato via WhatsApp (48) 99685-2138 para receber sua chave.', true);
+        }
+        window.history.replaceState({}, '', window.location.pathname);
+      })();
+    } else if (status === 'failure') {
+      exibirResultado('failure', 'Pagamento recusado', 'O pagamento não foi aprovado. Tente novamente.', false);
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (status === 'pending') {
+      exibirResultado('pending', 'Pagamento em análise', 'Seu pagamento está em análise. Entraremos em contato em breve.', true);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    particlesJS('particles-js', {
+      particles: { number: { value: 50, density: { enable: true, value_area: 800 } }, color: { value: '#00e6ff' }, shape: { type: 'circle' }, opacity: { value: 0.5 }, size: { value: 3 }, line_linked: { enable: true, distance: 150, color: '#00e6ff', opacity: 0.3, width: 1 }, move: { enable: true, speed: 2 } },
+      interactivity: { detect_on: 'canvas', events: { onhover: { enable: true, mode: 'grab' }, resize: true }, modes: { grab: { distance: 140, line_linked: { opacity: 1 } } } },
+      retina_detect: true
+    });
+  </script>
+</body>
+</html>

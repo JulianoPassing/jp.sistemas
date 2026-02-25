@@ -170,7 +170,7 @@ async function ensurePrecosDatabase() {
 // POST /api/mercadopago/preference - Cria preferência e retorna init_point
 router.post('/preference', async (req, res) => {
   try {
-    const { planName, amount, quantity = 1, payer, valorOriginal, valorDesconto, cupomCodigo, cupomPercent } = req.body;
+    const { planName, amount, quantity = 1, payer, valorOriginal, valorDesconto, cupomCodigo, cupomPercent, returnPath } = req.body;
 
     if (!planName || !amount || amount <= 0) {
       return res.status(400).json({ error: 'planName e amount são obrigatórios' });
@@ -217,9 +217,11 @@ router.post('/preference', async (req, res) => {
     const preference = new Preference(client);
 
     const baseUrl = process.env.MP_BASE_URL || `${req.protocol}://${req.get('host')}`.replace(/\/$/, '');
-    const successUrl = `${baseUrl}/precos.html?status=success&ref=${refId}`;
-    const failureUrl = `${baseUrl}/precos.html?status=failure`;
-    const pendingUrl = `${baseUrl}/precos.html?status=pending`;
+    const pathBase = (returnPath && typeof returnPath === 'string' && returnPath.startsWith('/')) ? returnPath.replace(/\/$/, '') : '/precos.html';
+    const sep = pathBase.includes('?') ? '&' : '?';
+    const successUrl = `${baseUrl}${pathBase}${sep}status=success&ref=${refId}`;
+    const failureUrl = `${baseUrl}${pathBase}${pathBase.includes('?') ? '&' : '?'}status=failure`;
+    const pendingUrl = `${baseUrl}${pathBase}${pathBase.includes('?') ? '&' : '?'}status=pending`;
 
     const preferenceData = {
       body: {
