@@ -2006,11 +2006,34 @@ const emprestimoController = {
   renderParcelasDetalhadas(parcelas) {
     const hoje = new Date();
     hoje.setHours(0,0,0,0);
+
+    // Contar parcelas por status
+    let qtdPagas = 0, qtdEmAberto = 0, qtdVencidas = 0;
+    parcelas.forEach(parcela => {
+      const statusDB = parcela.status || parcela.cobranca_status || 'Pendente';
+      const dataVencimento = utils.createValidDate(parcela.data_vencimento);
+      const isPaga = statusDB === 'Paga';
+      const isAtrasado = !isPaga && dataVencimento && dataVencimento < hoje;
+      if (isPaga) qtdPagas++;
+      else if (isAtrasado) qtdVencidas++;
+      else qtdEmAberto++;
+    });
     
     return `
       <div style="margin-bottom: 1.2rem;">
-        <div style="font-size: 1.1rem; font-weight: 700; color: #222; margin-bottom: 1em; text-align: center;">
+        <div style="font-size: 1.1rem; font-weight: 700; color: #222; margin-bottom: 0.5em; text-align: center;">
           EMPRÉSTIMO PARCELADO - ${parcelas.length} PARCELAS
+        </div>
+        <div style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 1em; flex-wrap: wrap;">
+          <span style="background: #10b981; color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.875rem; font-weight: 600;">
+            <i class="fas fa-check-circle"></i> ${qtdPagas} pagas
+          </span>
+          <span style="background: #3b82f6; color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.875rem; font-weight: 600;">
+            <i class="fas fa-clock"></i> ${qtdEmAberto} em aberto
+          </span>
+          <span style="background: #ef4444; color: white; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.875rem; font-weight: 600;">
+            <i class="fas fa-exclamation-triangle"></i> ${qtdVencidas} vencidas
+          </span>
         </div>
         <div style="max-height: 400px; overflow-y: auto;">
           ${parcelas.map(parcela => {
