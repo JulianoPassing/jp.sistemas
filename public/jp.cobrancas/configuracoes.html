@@ -305,6 +305,9 @@
             <label for="chave_pix">Sua Chave PIX para Recebimentos</label>
             <input type="text" id="chave_pix" class="form-input" placeholder="CPF, CNPJ, E-mail, Telefone ou Chave Aleatória">
             <small>Esta chave será exibida nas mensagens de cobrança enviadas aos clientes.</small>
+            <label for="nome_banco_pix" style="margin-top: 0.75rem;">Nome - Banco</label>
+            <input type="text" id="nome_banco_pix" class="form-input" placeholder="Ex.: João Silva - Nubank">
+            <small>Opcional. Se preenchido, será exibido na linha abaixo da chave PIX nas mensagens de cobrança.</small>
           </div>
         </div>
 
@@ -576,6 +579,7 @@
         
         // Preencher campos
         document.getElementById('chave_pix').value = config.chave_pix || '';
+        document.getElementById('nome_banco_pix').value = config.nome_banco_pix || '';
         document.getElementById('msg_parcela').value = config.msg_parcela || '';
         document.getElementById('msg_emprestimo_com_juros').value = config.msg_emprestimo_com_juros || '';
         document.getElementById('msg_emprestimo_sem_juros').value = config.msg_emprestimo_sem_juros || '';
@@ -597,6 +601,7 @@
             try {
               const dados = {
                 chave_pix: (document.getElementById('chave_pix')?.value || '').trim() || null,
+                nome_banco_pix: (document.getElementById('nome_banco_pix')?.value || '').trim() || null,
                 msg_parcela: (document.getElementById('msg_parcela')?.value || '').trim() || null,
                 msg_emprestimo_com_juros: (document.getElementById('msg_emprestimo_com_juros')?.value || '').trim() || null,
                 msg_emprestimo_sem_juros: (document.getElementById('msg_emprestimo_sem_juros')?.value || '').trim() || null,
@@ -640,6 +645,7 @@
       const backupToggle = document.getElementById('backup-diario-toggle');
       const dados = {
         chave_pix: document.getElementById('chave_pix').value.trim() || null,
+        nome_banco_pix: document.getElementById('nome_banco_pix').value.trim() || null,
         msg_parcela: document.getElementById('msg_parcela').value.trim() || null,
         msg_emprestimo_com_juros: document.getElementById('msg_emprestimo_com_juros').value.trim() || null,
         msg_emprestimo_sem_juros: document.getElementById('msg_emprestimo_sem_juros').value.trim() || null,
@@ -684,6 +690,7 @@
       const ok = await ui.showConfirm('Tem certeza que deseja restaurar as configurações padrão? Todas as suas mensagens personalizadas serão removidas.', { title: 'Restaurar padrão', confirmText: 'Restaurar', danger: true });
       if (ok) {
         document.getElementById('chave_pix').value = '';
+        document.getElementById('nome_banco_pix').value = '';
         document.getElementById('msg_parcela').value = '';
         document.getElementById('msg_emprestimo_com_juros').value = '';
         document.getElementById('msg_emprestimo_sem_juros').value = '';
@@ -720,6 +727,7 @@
       
       // Substituir variáveis por exemplos
       const chavePix = document.getElementById('chave_pix').value || '(sua chave PIX)';
+      const nomeBancoPix = (document.getElementById('nome_banco_pix')?.value || 'João Silva - Nubank');
       const exemplos = {
         '{nome}': 'João',
         '{parcela_atual}': '2',
@@ -735,7 +743,8 @@
         '{valor_total}': 'R$ 2.233,35',
         '{qtd_parcelas}': '3',
         '{lista_parcelas}': '• Parcela 1: R$ 500,00 (vencida em 15/01/2026)\n• Parcela 2: R$ 500,00 (vencida em 15/02/2026)',
-        '{chave_pix}': chavePix
+        '{chave_pix}': chavePix,
+        '{nome_banco_pix}': nomeBancoPix
       };
       
       for (const [variavel, exemplo] of Object.entries(exemplos)) {

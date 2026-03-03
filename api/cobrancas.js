@@ -187,6 +187,7 @@ async function createCobrancasDatabase(username) {
       CREATE TABLE IF NOT EXISTS configuracoes (
         id INT AUTO_INCREMENT PRIMARY KEY,
         chave_pix VARCHAR(255) DEFAULT NULL,
+        nome_banco_pix VARCHAR(255) DEFAULT NULL,
         msg_parcela TEXT DEFAULT NULL,
         msg_emprestimo_com_juros TEXT DEFAULT NULL,
         msg_emprestimo_sem_juros TEXT DEFAULT NULL,
@@ -195,13 +196,19 @@ async function createCobrancasDatabase(username) {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
+    // Garantir coluna nome_banco_pix em bases mais antigas
+    try {
+      await cobrancasConnection.execute('ALTER TABLE configuracoes ADD COLUMN nome_banco_pix VARCHAR(255) DEFAULT NULL');
+    } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
 
     // Inserir registro padrão de configurações se não existir
     const [configExists] = await cobrancasConnection.execute('SELECT COUNT(*) as total FROM configuracoes');
     if (configExists[0].total === 0) {
       await cobrancasConnection.execute(`
-        INSERT INTO configuracoes (chave_pix, msg_parcela, msg_emprestimo_com_juros, msg_emprestimo_sem_juros, msg_parcelas_vencidas) 
-        VALUES (NULL, NULL, NULL, NULL, NULL)
+        INSERT INTO configuracoes (chave_pix, nome_banco_pix, msg_parcela, msg_emprestimo_com_juros, msg_emprestimo_sem_juros, msg_parcelas_vencidas) 
+        VALUES (NULL, NULL, NULL, NULL, NULL, NULL)
       `);
     }
 
@@ -3026,6 +3033,7 @@ router.get('/configuracoes', ensureDatabase, async (req, res) => {
       CREATE TABLE IF NOT EXISTS configuracoes (
         id INT AUTO_INCREMENT PRIMARY KEY,
         chave_pix VARCHAR(255) DEFAULT NULL,
+        nome_banco_pix VARCHAR(255) DEFAULT NULL,
         msg_parcela TEXT DEFAULT NULL,
         msg_emprestimo_com_juros TEXT DEFAULT NULL,
         msg_emprestimo_sem_juros TEXT DEFAULT NULL,
@@ -3035,6 +3043,8 @@ router.get('/configuracoes', ensureDatabase, async (req, res) => {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
+    // Garantir coluna nome_banco_pix em bases mais antigas
+    try { await connection.execute('ALTER TABLE configuracoes ADD COLUMN nome_banco_pix VARCHAR(255) DEFAULT NULL'); } catch (e) { if (e.code !== 'ER_DUP_FIELDNAME') throw e; }
     try { await connection.execute('ALTER TABLE configuracoes ADD COLUMN backup_diario_ativo TINYINT(1) DEFAULT 0'); } catch (e) { if (e.code !== 'ER_DUP_FIELDNAME') throw e; }
     
     const [rows] = await connection.execute('SELECT * FROM configuracoes LIMIT 1');
@@ -3042,8 +3052,8 @@ router.get('/configuracoes', ensureDatabase, async (req, res) => {
     // Se não existir configuração, criar uma padrão
     if (rows.length === 0) {
       await connection.execute(`
-        INSERT INTO configuracoes (chave_pix, msg_parcela, msg_emprestimo_com_juros, msg_emprestimo_sem_juros, msg_parcelas_vencidas) 
-        VALUES (NULL, NULL, NULL, NULL, NULL)
+        INSERT INTO configuracoes (chave_pix, nome_banco_pix, msg_parcela, msg_emprestimo_com_juros, msg_emprestimo_sem_juros, msg_parcelas_vencidas) 
+        VALUES (NULL, NULL, NULL, NULL, NULL, NULL)
       `);
       const [newRows] = await connection.execute('SELECT * FROM configuracoes LIMIT 1');
       await connection.end();
@@ -3061,7 +3071,7 @@ router.get('/configuracoes', ensureDatabase, async (req, res) => {
 // Salvar configurações do usuário
 router.put('/configuracoes', ensureDatabase, async (req, res) => {
   try {
-    const { chave_pix, msg_parcela, msg_emprestimo_com_juros, msg_emprestimo_sem_juros, msg_parcelas_vencidas, backup_diario_ativo } = req.body;
+    const { chave_pix, nome_banco_pix, msg_parcela, msg_emprestimo_com_juros, msg_emprestimo_sem_juros, msg_parcelas_vencidas, backup_diario_ativo } = req.body;
     const username = req.session.cobrancasUser;
     const connection = await createCobrancasConnection(username);
     
@@ -3070,13 +3080,14 @@ router.put('/configuracoes', ensureDatabase, async (req, res) => {
     
     if (rows.length === 0) {
       await connection.execute(`
-        INSERT INTO configuracoes (chave_pix, msg_parcela, msg_emprestimo_com_juros, msg_emprestimo_sem_juros, msg_parcelas_vencidas, backup_diario_ativo) 
-        VALUES (?, ?, ?, ?, ?, ?)
-      `, [chave_pix || null, msg_parcela || null, msg_emprestimo_com_juros || null, msg_emprestimo_sem_juros || null, msg_parcelas_vencidas || null, backup_diario_ativo ? 1 : 0]);
+        INSERT INTO configuracoes (chave_pix, nome_banco_pix, msg_parcela, msg_emprestimo_com_juros, msg_emprestimo_sem_juros, msg_parcelas_vencidas, backup_diario_ativo) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `, [chave_pix || null, nome_banco_pix || null, msg_parcela || null, msg_emprestimo_com_juros || null, msg_emprestimo_sem_juros || null, msg_parcelas_vencidas || null, backup_diario_ativo ? 1 : 0]);
     } else {
       await connection.execute(`
         UPDATE configuracoes SET 
           chave_pix = ?, 
+          nome_banco_pix = ?, 
           msg_parcela = ?, 
           msg_emprestimo_com_juros = ?, 
           msg_emprestimo_sem_juros = ?, 
@@ -3084,7 +3095,7 @@ router.put('/configuracoes', ensureDatabase, async (req, res) => {
           backup_diario_ativo = ?,
           updated_at = NOW()
         WHERE id = ?
-      `, [chave_pix || null, msg_parcela || null, msg_emprestimo_com_juros || null, msg_emprestimo_sem_juros || null, msg_parcelas_vencidas || null, backup_diario_ativo ? 1 : 0, rows[0].id]);
+      `, [chave_pix || null, nome_banco_pix || null, msg_parcela || null, msg_emprestimo_com_juros || null, msg_emprestimo_sem_juros || null, msg_parcelas_vencidas || null, backup_diario_ativo ? 1 : 0, rows[0].id]);
     }
     
     // Buscar configuração atualizada

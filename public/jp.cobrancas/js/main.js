@@ -36,6 +36,7 @@ const appState = {
   },
   configuracoes: {
     chave_pix: null,
+    nome_banco_pix: null,
     msg_parcela: null,
     msg_emprestimo_com_juros: null,
     msg_emprestimo_sem_juros: null,
@@ -53,6 +54,7 @@ async function carregarConfiguracoesUsuario() {
       const config = await response.json();
       appState.configuracoes = {
         chave_pix: config.chave_pix || null,
+        nome_banco_pix: config.nome_banco_pix || null,
         msg_parcela: config.msg_parcela || null,
         msg_emprestimo_com_juros: config.msg_emprestimo_com_juros || null,
         msg_emprestimo_sem_juros: config.msg_emprestimo_sem_juros || null,
@@ -119,6 +121,10 @@ async function verificarCadastroPixEmail() {
 function gerarMensagemCobranca(tipo, dados) {
   const config = appState.configuracoes;
   const chavePix = config.chave_pix || '(Chave PIX não configurada)';
+  const nomeBancoPix = (config.nome_banco_pix || '').trim();
+  const linhaPix = nomeBancoPix
+    ? `Chave PIX: ${chavePix}\nNome - Banco: ${nomeBancoPix}`
+    : `Chave PIX: ${chavePix}`;
   
   // Função para substituir variáveis na mensagem
   const substituirVariaveis = (msg, vars) => {
@@ -137,7 +143,8 @@ function gerarMensagemCobranca(tipo, dados) {
         '{total_parcelas}': dados.totalParcelas,
         '{data_vencimento}': dados.dataVencimento,
         '{valor}': dados.valor,
-        '{chave_pix}': chavePix
+        '{chave_pix}': chavePix,
+        '{nome_banco_pix}': nomeBancoPix
       };
       
       if (config.msg_parcela) {
@@ -148,7 +155,7 @@ function gerarMensagemCobranca(tipo, dados) {
       const infoParcela = dados.isParcelado ? ` (parcela ${dados.parcelaAtual}/${dados.totalParcelas})` : '';
       return `Olá, ${dados.nome}, a sua parcela${infoParcela} vence ${dados.dataVencimento}. Você pode pagar o valor de ${dados.valor}.
 
-Chave PIX: ${chavePix}
+${linhaPix}
 
 Solicitamos o pagamento até a data de vencimento.`;
     }
@@ -164,7 +171,8 @@ Solicitamos o pagamento até a data de vencimento.`;
         '{dias_atraso}': dados.diasAtraso,
         '{juros_atraso}': dados.jurosAtraso,
         '{valor_total}': dados.valorTotal,
-        '{chave_pix}': chavePix
+        '{chave_pix}': chavePix,
+        '{nome_banco_pix}': nomeBancoPix
       };
       
       if (config.msg_emprestimo_com_juros) {
@@ -183,7 +191,8 @@ Solicitamos o pagamento até a data de vencimento.`;
         '{juros_percent}': dados.jurosPercent,
         '{juros_total}': dados.jurosTotal,
         '{valor_total}': dados.valorTotal,
-        '{chave_pix}': chavePix
+        '{chave_pix}': chavePix,
+        '{nome_banco_pix}': nomeBancoPix
       };
       
       if (config.msg_emprestimo_sem_juros) {
@@ -200,7 +209,8 @@ Solicitamos o pagamento até a data de vencimento.`;
         '{qtd_parcelas}': dados.qtdParcelas,
         '{lista_parcelas}': dados.listaParcelas,
         '{valor_total}': dados.valorTotal,
-        '{chave_pix}': chavePix
+        '{chave_pix}': chavePix,
+        '{nome_banco_pix}': nomeBancoPix
       };
       
       if (config.msg_parcelas_vencidas) {
@@ -219,6 +229,10 @@ Solicitamos o pagamento até a data de vencimento.`;
 // Abre o modal de cobrança para escolher tipo de mensagem (reutilizado em viewEmprestimo e Cobranças do Dia)
 function showModalNotificacaoCobranca(dadosNotificacao) {
   const chavePix = appState.configuracoes.chave_pix || '(Chave PIX não configurada)';
+  const nomeBancoPix = (appState.configuracoes.nome_banco_pix || '').trim();
+  const linhaPix = nomeBancoPix
+    ? `Chave PIX: ${chavePix}\nNome - Banco: ${nomeBancoPix}`
+    : `Chave PIX: ${chavePix}`;
   const infoParcela = dadosNotificacao.isParcelado ? ` (parcela ${dadosNotificacao.numeroParcelaAtual}/${dadosNotificacao.totalParcelas})` : '';
   let msgParcelado;
   const msgParcelaPersonalizada = gerarMensagemCobranca('parcela', {
@@ -234,7 +248,7 @@ function showModalNotificacaoCobranca(dadosNotificacao) {
   } else {
     msgParcelado = `Olá, ${dadosNotificacao.primeiroNome}, a sua parcela${infoParcela} vence ${dadosNotificacao.dataParcela}. Você pode pagar o valor de ${utils.formatCurrency(dadosNotificacao.valorParcela)}.
 
-Chave PIX: ${chavePix}
+${linhaPix}
 
 Solicitamos o pagamento até a data de vencimento.`;
   }
@@ -276,7 +290,7 @@ Solicitamos o pagamento até a data de vencimento.`;
     msgEmprestimo = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.
 ${infoJurosMsg}
 
-Chave PIX: ${chavePix}
+${linhaPix}
 
 Lembramos que, em caso de atraso, será cobrada uma multa diária de ${utils.formatCurrency(dadosNotificacao.jurosDiario)}.`;
   }
@@ -308,7 +322,7 @@ Lembramos que, em caso de atraso, será cobrada uma multa diária de ${utils.for
     msgEmprestimoSemDiario = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.
 ${infoJurosSemDiario}
 
-Chave PIX: ${chavePix}
+${linhaPix}
 
 Solicitamos o pagamento até a data de vencimento.`;
   }
@@ -341,7 +355,7 @@ ${listaParcelasVencidas}
 
 💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotalVencidas)}*
 
-Chave PIX: ${chavePix}
+${linhaPix}
 
 Solicitamos a regularização o mais breve possível.`;
     }
