@@ -123,7 +123,7 @@ function gerarMensagemCobranca(tipo, dados) {
   const chavePix = config.chave_pix || '(Chave PIX não configurada)';
   const nomeBancoPix = (config.nome_banco_pix || '').trim();
   const linhaPix = nomeBancoPix
-    ? `Chave PIX: ${chavePix}\nNome - Banco: ${nomeBancoPix}`
+    ? `Chave PIX: ${chavePix}\n${nomeBancoPix}`
     : `Chave PIX: ${chavePix}`;
   
   // Função para substituir variáveis na mensagem
@@ -231,7 +231,7 @@ function showModalNotificacaoCobranca(dadosNotificacao) {
   const chavePix = appState.configuracoes.chave_pix || '(Chave PIX não configurada)';
   const nomeBancoPix = (appState.configuracoes.nome_banco_pix || '').trim();
   const linhaPix = nomeBancoPix
-    ? `Chave PIX: ${chavePix}\nNome - Banco: ${nomeBancoPix}`
+    ? `Chave PIX: ${chavePix}\n${nomeBancoPix}`
     : `Chave PIX: ${chavePix}`;
   const infoParcela = dadosNotificacao.isParcelado ? ` (parcela ${dadosNotificacao.numeroParcelaAtual}/${dadosNotificacao.totalParcelas})` : '';
   let msgParcelado;
