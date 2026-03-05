@@ -577,7 +577,10 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker
+        .register('/sw.js', { updateViaCache: 'none' })
+        .then((reg) => reg.update())
+        .catch(() => {});
     }
   </script>
 </body>

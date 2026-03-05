@@ -18,8 +18,21 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
+  if (e.request.method !== 'GET') return;
+
   e.respondWith(
-    caches.match(e.request).then((r) => r || fetch(e.request))
+    fetch(e.request, { cache: 'no-store' })
+      .then((networkResponse) => {
+        const responseClone = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, responseClone)).catch(() => {});
+        return networkResponse;
+      })
+      .catch(async () => {
+        const cachedResponse = await caches.match(e.request);
+        if (cachedResponse) return cachedResponse;
+        if (e.request.mode === 'navigate') return caches.match('/index.html');
+        return new Response('', { status: 504, statusText: 'Offline' });
+      })
   );
 });
 

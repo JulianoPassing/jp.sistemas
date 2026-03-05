@@ -4202,7 +4202,10 @@ async function sair() {
 // Inicializar quando o DOM estiver pronto
 // Registrar Service Worker para PWA
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
+  navigator.serviceWorker
+    .register('./sw.js', { updateViaCache: 'none' })
+    .then((reg) => reg.update())
+    .catch(() => {});
 }
 
 // Dark mode - aplicar preferência salva
