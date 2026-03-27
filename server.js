@@ -40,6 +40,8 @@ const allowedOrigins = [
   'https://jp-sistemas.vercel.app',
   'https://jp-sistemas.com',
   'http://jp-sistemas.com',
+  'https://jp.autopecasrg',
+  'http://jp.autopecasrg',
   'http://localhost:3000'
 ];
 app.use(cors({
@@ -87,6 +89,7 @@ app.use(session({
 app.use('/api/cobrancas', cobrancasHandler);
 app.use('/api/mercadopago', require('./api/mercadopago'));
 app.use('/api/precos', require('./api/precos'));
+app.use('/api/autopecasrg', require('./api/autopecasrg'));
 
 // Função utilitária para converter undefined para null
 function safeValue(value) {
@@ -1236,5 +1239,10 @@ if (require.main === module) {
     console.log(`🚀 Servidor J.P Sistemas rodando na porta ${PORT}`);
     console.log(`📱 Acesse: http://localhost:${PORT}`);
     console.log(`🔧 Ambiente: ${process.env.NODE_ENV || 'development'}`);
+    try {
+      require('./lib/autopecasrg-etiquetas-ml').iniciarWorkerEtiquetas();
+    } catch (e) {
+      console.warn('[autopecasrg] worker etiquetas ML:', e.message);
+    }
   });
 }

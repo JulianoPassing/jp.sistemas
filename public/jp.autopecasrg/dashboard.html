@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JP Auto Peças RG — Painel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../style-sistema.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="sistema-padrao">
+  <header class="sistema-header">
+    <div class="header-content">
+      <a href="dashboard.html" class="logo" style="gap:0.5rem">
+        <i class="fas fa-warehouse"></i>
+        <span>JP Auto Peças RG</span>
+      </a>
+      <nav>
+        <a href="dashboard.html" class="nav-link active"><i class="fas fa-chart-pie"></i> Painel</a>
+        <a href="estoque.html" class="nav-link"><i class="fas fa-boxes-stacked"></i> Estoque</a>
+        <a href="configuracoes.html" class="nav-link"><i class="fas fa-sliders"></i> Configurações</a>
+        <a href="#" class="nav-link nav-sair" onclick="logout();return false;"><i class="fas fa-sign-out-alt"></i> Sair</a>
+      </nav>
+    </div>
+  </header>
+  <main class="sistema-main">
+    <div class="sistema-container">
+      <div class="sistema-page-header">
+        <div class="sistema-page-header-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="sistema-page-header-text">
+          <h1 class="page-title">Painel</h1>
+          <p class="page-subtitle">Resumo de estoque, anúncios e vendas (padrão JP Sistemas).</p>
+        </div>
+      </div>
+
+      <div class="sistema-cards" id="cards">
+        <div class="sistema-card">
+          <div class="apm-metric-label"><i class="fas fa-cubes"></i> Total em estoque</div>
+          <div class="apm-metric-val" id="c-est">—</div>
+          <p style="margin:0.5rem 0 0 0;font-size:0.8rem;color:var(--gray-500)">Unidades somadas nos produtos ativos</p>
+        </div>
+        <div class="sistema-card">
+          <div class="apm-metric-label"><i class="fas fa-bullhorn"></i> Anúncios ativos</div>
+          <div class="apm-metric-val" id="c-pub">—</div>
+          <p style="margin:0.5rem 0 0 0;font-size:0.8rem;color:var(--gray-500)">Publicações ML + Shopee com status ativo</p>
+        </div>
+        <div class="sistema-card">
+          <div class="apm-metric-label"><i class="fas fa-receipt"></i> Total de vendas</div>
+          <div class="apm-metric-val" id="c-vend">—</div>
+          <p style="margin:0.5rem 0 0 0;font-size:0.8rem;color:var(--gray-500)">Pedidos processados (ML e Shopee)</p>
+        </div>
+        <div class="sistema-card">
+          <div class="apm-metric-label"><i class="fas fa-coins"></i> Vendas no mês</div>
+          <div class="apm-metric-val apm-money" id="c-val-mes">—</div>
+          <p style="margin:0.5rem 0 0 0;font-size:0.8rem;color:var(--gray-500)">Estimativa: preço base × quantidade (movimentos do mês)</p>
+        </div>
+      </div>
+
+      <div class="sistema-section">
+        <div class="sistema-section-header">
+          <h2 class="sistema-section-title"><i class="fas fa-list-check" style="color:var(--accent-teal)"></i> Próximos passos</h2>
+        </div>
+        <ol style="margin:0;padding-left:1.25rem;color:var(--gray-600);font-size:0.92rem;line-height:1.75;">
+          <li>Cadastre <strong>contas do Mercado Livre</strong> em Configurações e conclua o OAuth.</li>
+          <li>Cadastre produtos em <a href="estoque.html" style="color:var(--accent-teal)">Estoque</a> com <code>categoria_ml</code> e imagens (URLs públicas).</li>
+          <li>Use <strong>Publicar no ML</strong> por produto para criar o anúncio; o estoque sincroniza nas outras contas quando configurado.</li>
+          <li>Shopee: credenciais Partner no painel; webhooks para baixa e etiquetas automáticas.</li>
+        </ol>
+      </div>
+    </div>
+  </main>
+  <script src="js/app.js"></script>
+  <script>
+    function fmtBRL(n) {
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(n) || 0);
+    }
+    function fmtInt(n) {
+      return new Intl.NumberFormat('pt-BR').format(Number(n) || 0);
+    }
+    async function init() {
+      const s = await checkAuth(true);
+      if (!s) return;
+      try {
+        const r = await fetch('/api/autopecasrg/dashboard/resumo', { credentials: 'include' });
+        const d = await r.json();
+        if (r.ok) {
+          document.getElementById('c-est').textContent = fmtInt(d.unidadesEstoque);
+          document.getElementById('c-pub').textContent = fmtInt(d.publicacoesAtivas);
+          document.getElementById('c-vend').textContent = fmtInt(d.totalVendasPedidos);
+          document.getElementById('c-val-mes').textContent = fmtBRL(d.valorVendasMes);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    init();
+  </script>
+</body>
+</html>

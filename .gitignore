@@ -16,6 +16,9 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
+# JP Auto Peças RG — PDFs de etiquetas na VPS
+storage/autopecasrg/
+
 # IDE
 .idea/
 .vscode/

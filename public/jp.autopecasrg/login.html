@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JP Auto Peças RG — Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../style-sistema.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="sistema-padrao">
+  <div class="apm-login-wrap">
+    <div class="apm-login-card">
+      <h1><i class="fas fa-warehouse" style="color:var(--accent-teal)"></i> JP Auto Peças RG</h1>
+      <p>Estoque, Mercado Livre e Shopee — login seguro (padrão JP Sistemas).</p>
+      <div id="err" class="msg err" style="display:none;"></div>
+      <form id="f">
+        <div class="form-group">
+          <label for="u">Usuário</label>
+          <input id="u" name="username" autocomplete="username" required />
+        </div>
+        <div class="form-group">
+          <label for="p">Senha</label>
+          <input id="p" name="password" type="password" autocomplete="current-password" required />
+        </div>
+        <button type="submit" id="btn">Entrar</button>
+      </form>
+    </div>
+  </div>
+  <script>
+    (async function () {
+      const s = await fetch('/api/autopecasrg/session', { credentials: 'include' }).then(r => r.json());
+      if (s.authenticated) window.location.href = 'dashboard.html';
+    })();
+    const f = document.getElementById('f');
+    const err = document.getElementById('err');
+    const btn = document.getElementById('btn');
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.style.display = 'none';
+      btn.disabled = true;
+      try {
+        const r = await fetch('/api/autopecasrg/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            username: document.getElementById('u').value.trim(),
+            password: document.getElementById('p').value
+          })
+        });
+        const d = await r.json();
+        if (r.ok && d.success) {
+          window.location.href = 'dashboard.html';
+        } else {
+          err.textContent = d.message || 'Falha no login.';
+          err.style.display = 'block';
+        }
+      } catch {
+        err.textContent = 'Erro de rede.';
+        err.style.display = 'block';
+      }
+      btn.disabled = false;
+    });
+  </script>
+</body>
+</html>

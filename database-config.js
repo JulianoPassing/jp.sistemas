@@ -188,6 +188,20 @@ function getPrecosDatabaseConfig() {
   };
 }
 
+/** Banco dedicado JP Auto Peças RG (etiquetas ML, estoque, Shopee) — VPS */
+function getAutopecasrgDatabaseConfig() {
+  const config = getDatabaseConfig();
+  return {
+    host: config.host,
+    port: config.port || 3306,
+    user: config.user,
+    password: config.password,
+    database: process.env.DB_AUTOPECASRG_DATABASE || 'jpsistemas_autopecasrg',
+    ssl: config.ssl,
+    charset: config.charset
+  };
+}
+
 module.exports = {
   getDatabaseConfig,
   getSessionConfig,
@@ -196,5 +210,6 @@ module.exports = {
   getRootConfig,
   getCobrancasDatabaseConfig,
   getPrecosDatabaseConfig,
+  getAutopecasrgDatabaseConfig,
   databaseConfigs
 }; 
