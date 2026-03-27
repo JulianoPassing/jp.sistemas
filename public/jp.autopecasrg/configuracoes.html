@@ -20,7 +20,7 @@
         <div class="sistema-page-header-icon"><i class="fas fa-sliders"></i></div>
         <div class="sistema-page-header-text">
           <h1 class="page-title">Configurações</h1>
-          <p class="page-subtitle">Contas dos marketplaces, etiquetas e webhooks.</p>
+          <p class="page-subtitle">Primeiro conecte Mercado Livre e Shopee; depois ajuste etiquetas e webhooks.</p>
         </div>
       </div>
       <div id="msg"></div>
@@ -28,18 +28,136 @@
       <div class="apm-inline-hint">
         <i class="fas fa-book fa-lg"></i>
         <div>
-          Cada campo abaixo vem de um lugar específico (DevCenter ML, Open Platform Shopee). Se tiver dúvida, abra o
-          <a href="guia.html">Guia completo</a> com links oficiais e ordem dos passos.
+          Abaixo, cada campo indica <strong>onde copiar</strong> no DevCenter (ML) ou na Open Platform (Shopee). Passo a passo detalhado no
+          <a href="guia.html">Guia completo</a>.
         </div>
       </div>
 
       <div class="apm-help" style="margin-bottom:1rem">
-        <strong>Webhooks (copie para o app / Partner Center):</strong><br />
-        ML: <code style="font-size:0.78rem">https://seu-dominio/api/autopecasrg/webhooks/ml</code> (pedidos)<br />
-        Shopee: <code style="font-size:0.78rem">https://seu-dominio/api/autopecasrg/webhooks/shopee</code>
+        <strong>Webhooks (cole no app ML / Partner Center Shopee):</strong><br />
+        ML: <code style="font-size:0.78rem">https://jp-sistemas.com/api/autopecasrg/webhooks/ml</code>
+        — onde configurar: app no <a href="https://developers.mercadolivre.com.br/devcenter" target="_blank" rel="noopener">DevCenter ML</a> (notificações / URL de callback).<br />
+        Shopee: <code style="font-size:0.78rem">https://jp-sistemas.com/api/autopecasrg/webhooks/shopee</code>
+        — onde configurar: <a href="https://open.shopee.com/" target="_blank" rel="noopener">Open Platform</a> / app (webhook conforme doc).
       </div>
 
       <details class="apm-details panel" open>
+        <summary style="padding:0.5rem 0 0"><strong><i class="fas fa-store" style="color:var(--accent-teal)"></i> Conta Mercado Livre</strong></summary>
+        <div class="apm-cfg-platform-links">
+          <strong>Plataforma:</strong>
+          <a href="https://developers.mercadolivre.com.br/devcenter" target="_blank" rel="noopener"><i class="fas fa-external-link-alt" style="font-size:0.75rem;opacity:0.85"></i> DevCenter (criar app e credenciais)</a>
+          <a href="https://developers.mercadolibre.com.br/" target="_blank" rel="noopener"><i class="fas fa-external-link-alt" style="font-size:0.75rem;opacity:0.85"></i> Documentação desenvolvedores</a>
+          <a href="https://developers.mercadolibre.com/en_us/authorization-and-authentication" target="_blank" rel="noopener"><i class="fas fa-external-link-alt" style="font-size:0.75rem;opacity:0.85"></i> OAuth e Redirect URI (doc oficial)</a>
+        </div>
+        <div class="apm-help" style="margin-bottom:var(--apm-space-lg)">
+          <strong>Antes de preencher</strong>
+          <ol class="apm-cfg-steps" style="list-style:decimal;margin-top:0.5rem">
+            <li>Abra o <a href="https://developers.mercadolivre.com.br/devcenter" target="_blank" rel="noopener">DevCenter</a> → <strong>Meus aplicativos</strong> → crie ou abra o app.</li>
+            <li>No app, copie <strong>App ID</strong> e <strong>Client Secret</strong> (credenciais na página do aplicativo).</li>
+            <li>Em <strong>Redirect URIs</strong>, cadastre <strong>exatamente</strong> a mesma URL do servidor (<code style="font-size:0.75rem">AUTOPECASRG_ML_REDIRECT_URI</code> no <code>.env</code>), por exemplo:
+              <code style="display:block;margin-top:0.35rem;font-size:0.75rem;word-break:break-all">https://jp-sistemas.com/api/autopecasrg/oauth/ml/callback</code>
+              — detalhes em <a href="https://developers.mercadolibre.com/en_us/authorization-and-authentication" target="_blank" rel="noopener">Authorization and authentication</a> (ML).
+            </li>
+            <li>Adicione a conta aqui embaixo → na tabela, clique <strong>Autorizar</strong> e faça login no <a href="https://www.mercadolivre.com.br/" target="_blank" rel="noopener">Mercado Livre</a>.</li>
+          </ol>
+        </div>
+        <form id="form-ml" class="form-grid" style="margin-top:0">
+          <div class="form-group">
+            <label>Nome</label>
+            <input name="nome" required placeholder="ex.: Loja principal" />
+            <p class="apm-field-where">Só para você identificar no painel (não é o nome da loja no ML).</p>
+          </div>
+          <div class="form-group">
+            <label>App ID</label>
+            <input name="app_id" required placeholder="número do aplicativo" />
+            <p class="apm-field-where">Onde pegar: <a href="https://developers.mercadolivre.com.br/devcenter" target="_blank" rel="noopener">DevCenter</a> → <strong>Meus aplicativos</strong> → seu app → <strong>App ID</strong> (também chamado de Client ID).</p>
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Client Secret</label>
+            <input name="client_secret" type="password" required autocomplete="new-password" />
+            <p class="apm-field-where">Onde pegar: mesma página do app no <a href="https://developers.mercadolivre.com.br/devcenter" target="_blank" rel="noopener">DevCenter</a> → <strong>Client Secret</strong> (revelar/copiar).</p>
+          </div>
+          <div style="grid-column:1/-1">
+            <button type="submit" class="btn btn-primary">Adicionar conta</button>
+          </div>
+        </form>
+      <div class="table-wrap">
+        <table class="data">
+        <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>App ID</th>
+              <th>OAuth</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tb-ml"></tbody>
+        </table>
+      </div>
+      </details>
+
+      <details class="apm-details panel" open>
+        <summary style="padding:0.5rem 0 0"><strong><i class="fas fa-shopping-bag" style="color:var(--accent-teal)"></i> Conta Shopee</strong></summary>
+        <div class="apm-cfg-platform-links">
+          <strong>Plataforma:</strong>
+          <a href="https://open.shopee.com/" target="_blank" rel="noopener"><i class="fas fa-external-link-alt" style="font-size:0.75rem;opacity:0.85"></i> Open Platform (app e chaves)</a>
+          <a href="https://open.shopee.com/documents" target="_blank" rel="noopener"><i class="fas fa-external-link-alt" style="font-size:0.75rem;opacity:0.85"></i> Documentação API</a>
+          <a href="https://seller.shopee.com.br/" target="_blank" rel="noopener"><i class="fas fa-external-link-alt" style="font-size:0.75rem;opacity:0.85"></i> Central do vendedor (loja / shop)</a>
+        </div>
+        <div class="apm-help" style="margin-bottom:var(--apm-space-lg)">
+          <strong>Antes de preencher</strong>
+          <ol class="apm-cfg-steps" style="list-style:decimal;margin-top:0.5rem">
+            <li>Acesse <a href="https://open.shopee.com/" target="_blank" rel="noopener">open.shopee.com</a> → login com conta de vendedor → <strong>Console</strong> / Partner Center.</li>
+            <li>Crie um <strong>app</strong> na Open Platform e anote <strong>Partner ID</strong> e <strong>Partner Key</strong> na página do app (veja <a href="https://open.shopee.com/documents" target="_blank" rel="noopener">documentação</a>).</li>
+            <li><strong>Shop ID</strong>: número da loja — use o <a href="https://seller.shopee.com.br/" target="_blank" rel="noopener">painel do vendedor</a> ou os endpoints de <em>shop</em> descritos na doc (região Brasil).</li>
+            <li><strong>Refresh token</strong>: obtido no fluxo OAuth da Partner API — leia <a href="https://open.shopee.com/documents" target="_blank" rel="noopener">autenticação na documentação</a> e use a ferramenta de testes do console, se disponível.</li>
+            <li>Webhook (opcional): URL na seção de webhooks acima — tipos de notificação em <a href="https://open.shopee.com/documents" target="_blank" rel="noopener">open.shopee.com/documents</a>.</li>
+          </ol>
+        </div>
+        <form id="form-sh" class="form-grid" style="margin-top:0">
+          <div class="form-group">
+            <label>Nome</label>
+            <input name="nome" required placeholder="ex.: Loja Shopee" />
+            <p class="apm-field-where">Apelido só no JP Auto Peças RG.</p>
+          </div>
+          <div class="form-group">
+            <label>Partner ID</label>
+            <input name="partner_id" required placeholder="número" />
+            <p class="apm-field-where">Onde pegar: <a href="https://open.shopee.com/" target="_blank" rel="noopener">Open Platform</a> → Console → seu app → <strong>Partner ID</strong>.</p>
+          </div>
+          <div class="form-group">
+            <label>Shop ID</label>
+            <input name="shop_id" required placeholder="ID da loja" />
+            <p class="apm-field-where">Onde pegar: identificador numérico da loja (vinculada ao app). Confira na <a href="https://open.shopee.com/documents" target="_blank" rel="noopener">documentação</a> (shop) ou no <a href="https://seller.shopee.com.br/" target="_blank" rel="noopener">Seller Center</a>.</p>
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Partner Key</label>
+            <input name="partner_key" type="password" required />
+            <p class="apm-field-where">Onde pegar: mesma página do app na <a href="https://open.shopee.com/" target="_blank" rel="noopener">Open Platform</a> → <strong>Partner Key</strong> (secreta).</p>
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Refresh token</label>
+            <input name="refresh_token" type="password" autocomplete="off" placeholder="cole o token OAuth da Shopee" />
+            <p class="apm-field-where">Onde pegar: fluxo OAuth da Partner API — veja <a href="https://open.shopee.com/documents" target="_blank" rel="noopener">documentação (autenticação)</a>; necessário para renovar o <code>access_token</code>.</p>
+          </div>
+          <div style="grid-column:1/-1"><button type="submit" class="btn btn-primary">Salvar conta Shopee</button></div>
+        </form>
+      <div class="table-wrap">
+        <table class="data">
+        <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Shop</th>
+            </tr>
+          </thead>
+          <tbody id="tb-sh"></tbody>
+        </table>
+      </div>
+      </details>
+
+      <details class="apm-details panel">
         <summary style="padding:0.5rem 0 0"><strong><i class="fas fa-truck" style="color:var(--accent-teal)"></i> Etiquetas e vendas automáticas</strong></summary>
         <form id="form-etiq" class="form-grid" style="margin-top:0.75rem">
           <div class="form-group">
@@ -100,69 +218,6 @@
             <button type="submit" class="btn btn-primary">Salvar etiquetas</button>
           </div>
         </form>
-      </details>
-
-      <details class="apm-details panel" open>
-        <summary style="padding:0.5rem 0 0"><strong><i class="fas fa-store" style="color:var(--accent-teal)"></i> Contas Mercado Livre</strong></summary>
-        <p style="font-size:0.85rem;color:var(--gray-500);margin:0.5rem 0">App em <code>developers.mercadolibre.com.br</code> — mesma URL de redirect do servidor.</p>
-        <form id="form-ml" class="form-grid" style="margin-top:0.5rem">
-          <div class="form-group">
-            <label>Nome</label>
-            <input name="nome" required placeholder="Loja principal" />
-          </div>
-          <div class="form-group">
-            <label>App ID</label>
-            <input name="app_id" required />
-          </div>
-          <div class="form-group" style="grid-column:1/-1">
-            <label>Client Secret</label>
-            <input name="client_secret" type="password" required autocomplete="new-password" />
-          </div>
-          <div style="grid-column:1/-1">
-            <button type="submit" class="btn btn-primary">Adicionar conta</button>
-          </div>
-        </form>
-      <div class="table-wrap">
-        <table class="data">
-        <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nome</th>
-              <th>App ID</th>
-              <th>OAuth</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="tb-ml"></tbody>
-        </table>
-      </div>
-      </details>
-
-      <details class="apm-details panel" open>
-        <summary style="padding:0.5rem 0 0"><strong><i class="fas fa-shopping-bag" style="color:var(--accent-teal)"></i> Contas Shopee</strong></summary>
-        <form id="form-sh" class="form-grid" style="margin-top:0.75rem">
-          <div class="form-group"><label>Nome</label><input name="nome" required /></div>
-          <div class="form-group"><label>Partner ID</label><input name="partner_id" required /></div>
-          <div class="form-group"><label>Shop ID</label><input name="shop_id" required /></div>
-          <div class="form-group" style="grid-column:1/-1"><label>Partner Key</label><input name="partner_key" type="password" required /></div>
-          <div class="form-group" style="grid-column:1/-1">
-            <label>Refresh token</label>
-            <input name="refresh_token" type="password" autocomplete="off" placeholder="cole uma vez" />
-          </div>
-          <div style="grid-column:1/-1"><button type="submit" class="btn btn-primary">Salvar conta Shopee</button></div>
-        </form>
-      <div class="table-wrap">
-        <table class="data">
-        <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nome</th>
-              <th>Shop</th>
-            </tr>
-          </thead>
-          <tbody id="tb-sh"></tbody>
-        </table>
-      </div>
       </details>
     </div>
   </main>

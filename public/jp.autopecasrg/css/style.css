@@ -559,6 +559,64 @@ table.data tbody tr:hover td {
   padding: 0;
 }
 
+.apm-field-where {
+  font-size: 0.78rem;
+  color: var(--gray-500);
+  margin-top: 0.2rem;
+  line-height: 1.45;
+}
+
+.apm-field-where a {
+  color: var(--accent-teal);
+  text-decoration: none;
+}
+
+.apm-field-where a:hover {
+  text-decoration: underline;
+}
+
+.apm-cfg-steps {
+  margin: 0 0 var(--apm-space-lg) 0;
+  padding-left: 1.2rem;
+  font-size: var(--apm-font-small);
+  color: var(--gray-600);
+  line-height: 1.55;
+}
+
+.apm-cfg-steps li {
+  margin-bottom: var(--apm-space-sm);
+}
+
+.apm-cfg-platform-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.75rem;
+  font-size: var(--apm-font-small);
+  color: var(--gray-600);
+  margin: 0 0 var(--apm-space-lg) 0;
+  padding: var(--apm-space-md) var(--apm-space-lg);
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--apm-radius);
+  line-height: 1.5;
+}
+
+.apm-cfg-platform-links strong {
+  color: var(--terciary);
+  margin-right: 0.15rem;
+}
+
+.apm-cfg-platform-links a {
+  color: var(--accent-teal);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.apm-cfg-platform-links a:hover {
+  text-decoration: underline;
+}
+
 .apm-zone-upload {
   border: 2px dashed var(--gray-300);
   border-radius: var(--apm-radius-lg);
