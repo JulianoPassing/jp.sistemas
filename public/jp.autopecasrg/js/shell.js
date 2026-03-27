@@ -1,8 +1,18 @@
 /**
  * Cabeçalho e rodapé padrão JP Sistemas (logo + navegação + rodapé).
- * body[data-page] = dashboard | estoque | config | guia
+ * body[data-page] = dashboard | estoque | vendas | config | guia
  */
 (function () {
+  if (!document.querySelector('link[rel="manifest"]')) {
+    const lm = document.createElement('link');
+    lm.rel = 'manifest';
+    lm.href = 'manifest.json';
+    document.head.appendChild(lm);
+  }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js', { scope: './' }).catch(function () {});
+  }
+
   const LOGO = 'https://i.imgur.com/6N82fk2.png';
   const PAGE = document.body.getAttribute('data-page') || '';
 
@@ -37,6 +47,7 @@
       '<nav>' +
       navLink('dashboard', 'dashboard.html', 'fa-chart-pie', 'Painel') +
       navLink('estoque', 'estoque.html', 'fa-boxes-stacked', 'Estoque') +
+      navLink('vendas', 'vendas.html', 'fa-receipt', 'Vendas') +
       navLink('guia', 'guia.html', 'fa-book-open', 'Guia') +
       navLink('config', 'configuracoes.html', 'fa-sliders', 'Configurações') +
       '<a href="#" class="nav-link nav-sair" onclick="logout();return false;"><i class="fas fa-sign-out-alt"></i> Sair</a>' +

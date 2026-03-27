@@ -4,7 +4,9 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const fsp = fs.promises;
 const multer = require('multer');
+const XLSX = require('xlsx');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { getPool, ensureDatabase, encryptSecret, decryptSecret } = require('../lib/autopecasrg-db');
@@ -79,6 +81,21 @@ const uploadAutopecasMulter = multer({
     const ok = /^image\/(jpeg|png|webp)$/i.test(file.mimetype);
     if (ok) cb(null, true);
     else cb(new Error('Use apenas imagens JPG, PNG ou WebP.'));
+  }
+});
+
+const uploadPlanilhaProdutos = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 3 * 1024 * 1024 },
+  fileFilter(req, file, cb) {
+    const name = (file.originalname || '').toLowerCase();
+    const ok =
+      name.endsWith('.csv') ||
+      name.endsWith('.xlsx') ||
+      name.endsWith('.xls') ||
+      /csv|spreadsheet|excel/i.test(file.mimetype || '');
+    if (ok) cb(null, true);
+    else cb(new Error('Envie CSV ou Excel (.csv, .xlsx).'));
   }
 });
 
@@ -377,6 +394,154 @@ router.post('/produtos', requireAuth, async (req, res) => {
     res.status(500).json({ error: 'Erro ao salvar produto' });
   }
 });
+
+function normalizeImportKey(k) {
+  return String(k || '')
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '_');
+}
+
+function buildImportRowMap(row) {
+  const o = {};
+  for (const [k, v] of Object.entries(row)) {
+    o[normalizeImportKey(String(k).replace(/^\uFEFF/, ''))] = v;
+  }
+  return o;
+}
+
+function pickImport(m, ...aliases) {
+  for (const a of aliases) {
+    const key = normalizeImportKey(a);
+    if (Object.prototype.hasOwnProperty.call(m, key)) {
+      const v = m[key];
+      if (v !== undefined && v !== null && String(v).trim() !== '') return v;
+    }
+  }
+  return null;
+}
+
+function numImport(v) {
+  if (v == null || v === '') return null;
+  if (typeof v === 'number' && Number.isFinite(v)) return v;
+  const s = String(v).trim().replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : null;
+}
+
+router.post(
+  '/produtos/importar-planilha',
+  requireAuth,
+  uploadPlanilhaProdutos.single('arquivo'),
+  async (req, res) => {
+    if (!req.file || !req.file.buffer) {
+      return res.status(400).json({ error: 'Envie o arquivo no campo arquivo.' });
+    }
+    try {
+      const wb = XLSX.read(req.file.buffer, { type: 'buffer' });
+      const sheetName = wb.SheetNames[0];
+      if (!sheetName) return res.status(400).json({ error: 'Planilha vazia.' });
+      const sheet = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+      if (!rows.length) return res.status(400).json({ error: 'Nenhuma linha de dados.' });
+      if (rows.length > 2000) return res.status(400).json({ error: 'Máximo 2000 linhas por arquivo.' });
+
+      const pool = getPool();
+      const uid = req.autopecasrgUsuarioId;
+      let inseridos = 0;
+      let atualizados = 0;
+      const erros = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        const m = buildImportRowMap(rows[i]);
+        const skuRaw = pickImport(m, 'sku_interno', 'sku', 'codigo', 'codigo_interno');
+        const skuStr = skuRaw != null ? String(skuRaw).trim() : '';
+        const nome = pickImport(m, 'nome', 'produto', 'descricao_curta');
+        if (!skuStr || !nome) {
+          erros.push({ linha: i + 2, msg: 'sku_interno (ou codigo) e nome obrigatórios' });
+          continue;
+        }
+        const preco = numImport(pickImport(m, 'preco', 'preco_base', 'valor')) ?? 0;
+        const estoque = Math.max(0, Math.round(numImport(pickImport(m, 'estoque', 'qtd', 'quantidade')) ?? 0));
+        const descricao = pickImport(m, 'descricao', 'obs', 'detalhes');
+        const precoMl = numImport(pickImport(m, 'preco_ml', 'preco_mercadolivre'));
+        const precoSh = numImport(pickImport(m, 'preco_shopee', 'preco_sh'));
+        const tituloMl = pickImport(m, 'titulo_ml');
+        const tituloSh = pickImport(m, 'titulo_shopee');
+        const catMl = pickImport(m, 'categoria_ml');
+        const catShRaw = pickImport(m, 'categoria_shopee');
+        const catSh =
+          catShRaw != null && String(catShRaw).trim() !== ''
+            ? parseInt(String(catShRaw).replace(/\D/g, ''), 10)
+            : null;
+
+        try {
+          const [ex] = await pool.execute('SELECT id FROM produtos WHERE usuario_id = ? AND sku_interno = ?', [
+            uid,
+            skuStr
+          ]);
+          if (ex.length) {
+            await pool.execute(
+              `UPDATE produtos SET nome = ?, descricao = ?, preco = ?, preco_ml = ?, preco_shopee = ?,
+             titulo_ml = ?, titulo_shopee = ?, estoque = ?, categoria_ml = ?, categoria_shopee = ?
+             WHERE id = ? AND usuario_id = ?`,
+              [
+                String(nome).trim(),
+                descricao != null ? String(descricao) : null,
+                preco,
+                precoMl,
+                precoSh,
+                tituloMl ? String(tituloMl).slice(0, 255) : null,
+                tituloSh ? String(tituloSh).slice(0, 255) : null,
+                estoque,
+                catMl || null,
+                catSh != null && !Number.isNaN(catSh) ? catSh : null,
+                ex[0].id,
+                uid
+              ]
+            );
+            atualizados++;
+          } else {
+            await pool.execute(
+              `INSERT INTO produtos (usuario_id, sku_interno, nome, descricao, preco, preco_ml, preco_shopee, titulo_ml, titulo_shopee, estoque, categoria_ml, categoria_shopee, listing_type_ml, condicao_ml, imagens_json, shopee_media_ids_json, atributos_json, ativo)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?, 'gold_special', 'new', NULL, NULL, NULL, 1)`,
+              [
+                uid,
+                skuStr,
+                String(nome).trim(),
+                descricao != null ? String(descricao) : null,
+                preco,
+                precoMl,
+                precoSh,
+                tituloMl ? String(tituloMl).slice(0, 255) : null,
+                tituloSh ? String(tituloSh).slice(0, 255) : null,
+                estoque,
+                catMl || null,
+                catSh != null && !Number.isNaN(catSh) ? catSh : null
+              ]
+            );
+            inseridos++;
+          }
+        } catch (rowErr) {
+          erros.push({ linha: i + 2, msg: rowErr.message || String(rowErr) });
+        }
+      }
+
+      res.json({
+        ok: true,
+        inseridos,
+        atualizados,
+        erros: erros.slice(0, 50),
+        totalErros: erros.length
+      });
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ error: e.message || 'Erro ao importar' });
+    }
+  }
+);
 
 router.put('/produtos/:id', requireAuth, async (req, res) => {
   const id = parseInt(req.params.id, 10);
@@ -1218,13 +1383,120 @@ router.get('/estoque/movimentos', requireAuth, async (req, res) => {
   }
 });
 
+// ——— Vendas (pedidos processados) ———
+router.get('/vendas', requireAuth, async (req, res) => {
+  try {
+    const pool = getPool();
+    const uid = req.autopecasrgUsuarioId;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 200, 500);
+    const plataforma = req.query.plataforma;
+    const de = req.query.de;
+    const ate = req.query.ate;
+    let sql = `
+      SELECT v.id, v.plataforma, v.conta_id, v.pedido_externo, v.processado_em,
+        CASE WHEN v.plataforma = 'ml' THEN cm.nome ELSE cs.nome END AS conta_nome
+      FROM vendas_processadas v
+      LEFT JOIN contas_mercadolivre cm ON v.plataforma = 'ml' AND v.conta_id = cm.id AND cm.usuario_id = v.usuario_id
+      LEFT JOIN contas_shopee cs ON v.plataforma = 'shopee' AND v.conta_id = cs.id AND cs.usuario_id = v.usuario_id
+      WHERE v.usuario_id = ?`;
+    const params = [uid];
+    if (plataforma === 'ml' || plataforma === 'shopee') {
+      sql += ' AND v.plataforma = ?';
+      params.push(plataforma);
+    }
+    if (de) {
+      sql += ' AND v.processado_em >= ?';
+      params.push(de);
+    }
+    if (ate) {
+      sql += ' AND v.processado_em < DATE_ADD(?, INTERVAL 1 DAY)';
+      params.push(ate);
+    }
+    sql += ` ORDER BY v.processado_em DESC LIMIT ${limit}`;
+    const [rows] = await pool.execute(sql, params);
+    res.json(rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Erro ao listar vendas' });
+  }
+});
+
+router.get('/relatorios/vendas', requireAuth, async (req, res) => {
+  const uid = req.autopecasrgUsuarioId;
+  const de = req.query.de;
+  const ate = req.query.ate;
+  if (!de || !ate) {
+    return res.status(400).json({ error: 'Informe de e ate (YYYY-MM-DD).' });
+  }
+  try {
+    const pool = getPool();
+    const [[tot]] = await pool.execute(
+      `SELECT COALESCE(SUM(ABS(m.delta) * COALESCE(p.preco, 0)), 0) AS valor
+       FROM movimentos_estoque m
+       INNER JOIN produtos p ON p.id = m.produto_id AND p.usuario_id = m.usuario_id
+       WHERE m.usuario_id = ?
+         AND m.motivo IN ('venda_ml','venda_shopee')
+         AND m.delta < 0
+         AND m.created_at >= ? AND m.created_at < DATE_ADD(?, INTERVAL 1 DAY)`,
+      [uid, de, ate]
+    );
+    const [porPlat] = await pool.execute(
+      `SELECT m.plataforma, COALESCE(SUM(ABS(m.delta) * COALESCE(p.preco, 0)), 0) AS valor,
+        SUM(ABS(m.delta)) AS unidades
+       FROM movimentos_estoque m
+       INNER JOIN produtos p ON p.id = m.produto_id AND p.usuario_id = m.usuario_id
+       WHERE m.usuario_id = ?
+         AND m.motivo IN ('venda_ml','venda_shopee')
+         AND m.delta < 0
+         AND m.created_at >= ? AND m.created_at < DATE_ADD(?, INTERVAL 1 DAY)
+       GROUP BY m.plataforma`,
+      [uid, de, ate]
+    );
+    const [topSku] = await pool.execute(
+      `SELECT p.sku_interno, p.nome, SUM(ABS(m.delta)) AS qtd,
+        COALESCE(SUM(ABS(m.delta) * COALESCE(p.preco, 0)), 0) AS valor
+       FROM movimentos_estoque m
+       INNER JOIN produtos p ON p.id = m.produto_id AND p.usuario_id = m.usuario_id
+       WHERE m.usuario_id = ?
+         AND m.motivo IN ('venda_ml','venda_shopee')
+         AND m.delta < 0
+         AND m.created_at >= ? AND m.created_at < DATE_ADD(?, INTERVAL 1 DAY)
+       GROUP BY p.id, p.sku_interno, p.nome
+       ORDER BY qtd DESC
+       LIMIT 30`,
+      [uid, de, ate]
+    );
+    res.json({
+      periodo: { de, ate },
+      valorTotalAprox: Number(tot.valor),
+      porPlataforma: porPlat.map((r) => ({
+        plataforma: r.plataforma,
+        valor: Number(r.valor),
+        unidades: Number(r.unidades)
+      })),
+      topSku: topSku.map((r) => ({
+        sku_interno: r.sku_interno,
+        nome: r.nome,
+        qtd: Number(r.qtd),
+        valor: Number(r.valor)
+      }))
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Erro ao gerar relatório' });
+  }
+});
+
 // ——— Etiquetas ML (pedidos pagos) ———
 router.get('/etiquetas/ml', requireAuth, async (req, res) => {
   try {
     const pool = getPool();
     const [rows] = await pool.execute(
-      `SELECT id, conta_ml_id, ml_order_id, shipment_id, status, pdf_path, erro_msg, tentativas, created_at, updated_at
-       FROM etiquetas_ml WHERE usuario_id = ? ORDER BY updated_at DESC LIMIT 200`,
+      `SELECT e.id, e.conta_ml_id, e.ml_order_id, e.shipment_id, e.status, e.pdf_path, e.erro_msg, e.tentativas, e.created_at, e.updated_at,
+              c.nome AS conta_nome
+       FROM etiquetas_ml e
+       INNER JOIN contas_mercadolivre c ON c.id = e.conta_ml_id AND c.usuario_id = e.usuario_id
+       WHERE e.usuario_id = ? ORDER BY e.updated_at DESC LIMIT 200`,
       [req.autopecasrgUsuarioId]
     );
     res.json(rows);
@@ -1238,14 +1510,65 @@ router.get('/etiquetas/shopee', requireAuth, async (req, res) => {
   try {
     const pool = getPool();
     const [rows] = await pool.execute(
-      `SELECT id, conta_shopee_id, order_sn, status, pdf_path, erro_msg, tentativas, created_at, updated_at
-       FROM etiquetas_shopee WHERE usuario_id = ? ORDER BY updated_at DESC LIMIT 200`,
+      `SELECT e.id, e.conta_shopee_id, e.order_sn, e.package_number, e.status, e.pdf_path, e.erro_msg, e.tentativas, e.created_at, e.updated_at,
+              c.nome AS conta_nome
+       FROM etiquetas_shopee e
+       INNER JOIN contas_shopee c ON c.id = e.conta_shopee_id AND c.usuario_id = e.usuario_id
+       WHERE e.usuario_id = ? ORDER BY e.updated_at DESC LIMIT 200`,
       [req.autopecasrgUsuarioId]
     );
     res.json(rows);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Erro ao listar etiquetas Shopee' });
+  }
+});
+
+router.get('/etiquetas/ml/:id/pdf', requireAuth, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const pool = getPool();
+    const [rows] = await pool.execute(
+      `SELECT pdf_path FROM etiquetas_ml WHERE id = ? AND usuario_id = ?`,
+      [id, req.autopecasrgUsuarioId]
+    );
+    if (!rows.length || !rows[0].pdf_path) return res.status(404).send('PDF não encontrado');
+    const pdfPath = rows[0].pdf_path;
+    try {
+      await fsp.access(pdfPath);
+    } catch {
+      return res.status(404).send('Arquivo não disponível no servidor');
+    }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="etiqueta-ml-${id}.pdf"`);
+    fs.createReadStream(pdfPath).pipe(res);
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Erro ao abrir PDF');
+  }
+});
+
+router.get('/etiquetas/shopee/:id/pdf', requireAuth, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const pool = getPool();
+    const [rows] = await pool.execute(
+      `SELECT pdf_path FROM etiquetas_shopee WHERE id = ? AND usuario_id = ?`,
+      [id, req.autopecasrgUsuarioId]
+    );
+    if (!rows.length || !rows[0].pdf_path) return res.status(404).send('PDF não encontrado');
+    const pdfPath = rows[0].pdf_path;
+    try {
+      await fsp.access(pdfPath);
+    } catch {
+      return res.status(404).send('Arquivo não disponível no servidor');
+    }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="etiqueta-shopee-${id}.pdf"`);
+    fs.createReadStream(pdfPath).pipe(res);
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Erro ao abrir PDF');
   }
 });
 

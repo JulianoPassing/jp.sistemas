@@ -33,6 +33,20 @@
         </div>
       </div>
 
+      <details class="apm-details panel" style="margin-bottom:1rem">
+        <summary><strong><i class="fas fa-file-import" style="color:var(--accent-teal)"></i> Importar produtos (CSV ou Excel)</strong></summary>
+        <p class="apm-muted" style="margin:0.75rem 0;line-height:1.5">
+          <strong>Primeira linha:</strong> cabeçalhos — obrigatórios <code>sku_interno</code> (ou <code>codigo</code>) e <code>nome</code>. Opcionais:
+          <code>preco</code>, <code>estoque</code>, <code>descricao</code>, <code>preco_ml</code>, <code>preco_shopee</code>, <code>titulo_ml</code>, <code>titulo_shopee</code>, <code>categoria_ml</code>, <code>categoria_shopee</code>.
+          SKU já existente = atualização (fotos e publicações não são removidas). Máx. 2000 linhas.
+        </p>
+        <div class="form-group">
+          <input type="file" id="csv-import" accept=".csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" />
+        </div>
+        <button type="button" class="btn btn-primary" id="btn-import-csv"><i class="fas fa-upload"></i> Importar</button>
+        <pre id="import-result" style="margin-top:0.75rem;font-size:0.78rem;max-height:14rem;overflow:auto;display:none;background:var(--gray-50);padding:0.75rem;border-radius:var(--apm-radius)"></pre>
+      </details>
+
       <div class="panel panel-compact">
         <h2><i class="fas fa-plus-circle" style="color:var(--accent-teal)"></i> Novo produto</h2>
         <form id="novo">
@@ -451,6 +465,40 @@
         syncImagenJson();
         loadList();
       } else showErr(d.error || 'Erro ao salvar');
+    });
+
+    document.getElementById('btn-import-csv').addEventListener('click', async () => {
+      const inp = document.getElementById('csv-import');
+      if (!inp.files.length) {
+        showErr('Selecione um arquivo .csv ou .xlsx.');
+        return;
+      }
+      const fd = new FormData();
+      fd.append('arquivo', inp.files[0]);
+      try {
+        const r = await fetch('/api/autopecasrg/produtos/importar-planilha', {
+          method: 'POST',
+          credentials: 'include',
+          body: fd
+        });
+        const d = await r.json().catch(() => ({}));
+        const pre = document.getElementById('import-result');
+        pre.style.display = 'block';
+        pre.textContent = r.ok ? JSON.stringify(d, null, 2) : d.error || JSON.stringify(d);
+        if (r.ok) {
+          showOk(
+            'Importação: ' +
+              d.inseridos +
+              ' novo(s), ' +
+              d.atualizados +
+              ' atualizado(s)' +
+              (d.totalErros ? ' — ' + d.totalErros + ' linha(s) com aviso (veja JSON).' : '.')
+          );
+          loadList();
+        } else showErr(d.error || 'Falha na importação');
+      } catch {
+        showErr('Erro de rede.');
+      }
     });
 
     (async function () {
