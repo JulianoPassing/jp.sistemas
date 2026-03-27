@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jp-autopecasrg-v2';
+const CACHE_NAME = 'jp-autopecasrg-v3';
 const urlsToCache = [
   './',
   './dashboard.html',

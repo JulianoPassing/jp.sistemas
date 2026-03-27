@@ -17,6 +17,29 @@ const autopecasrgVendas = require('../lib/autopecasrg-vendas');
 
 const router = express.Router();
 
+/** ML Brasil: Peças de Carros e Caminhonetes › Outros (folha com listing_allowed). */
+const DEFAULT_CATEGORIA_ML = (process.env.AUTOPECASRG_DEFAULT_CATEGORIA_ML || 'MLB191833').trim();
+/** Shopee: folha da loja (Brasil). Confirme no Centro do Vendedor ou `product/get_category`; sobrescreva com AUTOPECASRG_DEFAULT_CATEGORIA_SHOPEE. */
+const DEFAULT_CATEGORIA_SHOPEE = (() => {
+  const raw = (process.env.AUTOPECASRG_DEFAULT_CATEGORIA_SHOPEE || '').trim();
+  if (raw) {
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) ? n : 100644;
+  }
+  return 100644;
+})();
+
+function normCategoriaMl(v) {
+  const s = v != null ? String(v).trim() : '';
+  return s ? s : DEFAULT_CATEGORIA_ML;
+}
+
+function normCategoriaShopee(v) {
+  if (v == null || v === '') return DEFAULT_CATEGORIA_SHOPEE;
+  const n = parseInt(String(v).replace(/\D/g, ''), 10);
+  return Number.isFinite(n) ? n : DEFAULT_CATEGORIA_SHOPEE;
+}
+
 function precoMl(prod) {
   return prod.preco_ml != null ? Number(prod.preco_ml) : Number(prod.preco);
 }
@@ -348,6 +371,24 @@ router.post(
   }
 );
 
+function extrairImagensMlProduto(prod) {
+  try {
+    if (prod.imagens_json == null) return [];
+    const parsed =
+      typeof prod.imagens_json === 'string' ? JSON.parse(prod.imagens_json) : prod.imagens_json;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((u) => {
+        if (typeof u === 'string') return { source: String(u).trim() };
+        if (u && typeof u === 'object' && u.source != null) return { source: String(u.source).trim() };
+        return { source: '' };
+      })
+      .filter((pic) => /^https?:\/\//i.test(pic.source));
+  } catch {
+    return [];
+  }
+}
+
 // ——— Produtos ———
 router.get('/produtos', requireAuth, async (req, res) => {
   try {
@@ -379,18 +420,16 @@ router.get('/produtos', requireAuth, async (req, res) => {
       pubsByProd[pub.produto_id].push(pub);
     }
     const out = rows.map((p) => {
-      let imagem_qtd = 0;
-      try {
-        const j = typeof p.imagens_json === 'string' ? JSON.parse(p.imagens_json) : p.imagens_json;
-        if (Array.isArray(j)) imagem_qtd = j.length;
-      } catch (_) {}
+      const imgsValidas = extrairImagensMlProduto(p);
+      const imagem_qtd = imgsValidas.length;
       const prList = pubsByProd[p.id] || [];
-      const podePublicarMl = !!(p.categoria_ml && imagem_qtd > 0);
+      const podePublicarMl = imagem_qtd > 0;
       let faltaParaMl = null;
-      if (!p.categoria_ml) faltaParaMl = 'categoria_ml';
-      else if (imagem_qtd === 0) faltaParaMl = 'imagens';
+      if (imagem_qtd === 0) faltaParaMl = 'imagens';
       return {
         ...p,
+        categoria_ml: normCategoriaMl(p.categoria_ml),
+        categoria_shopee: normCategoriaShopee(p.categoria_shopee),
         vendas_unidades: Number(p.vendas_unidades || 0),
         imagem_qtd,
         publicacoes: prList,
@@ -438,8 +477,8 @@ router.post('/produtos', requireAuth, async (req, res) => {
         b.titulo_ml ? String(b.titulo_ml).slice(0, 255) : null,
         b.titulo_shopee ? String(b.titulo_shopee).slice(0, 255) : null,
         parseInt(b.estoque, 10) || 0,
-        b.categoria_ml || null,
-        b.categoria_shopee != null ? parseInt(b.categoria_shopee, 10) : null,
+        normCategoriaMl(b.categoria_ml),
+        normCategoriaShopee(b.categoria_shopee),
         b.listing_type_ml || 'gold_special',
         b.condicao_ml || 'new',
         imagensVal,
@@ -563,8 +602,8 @@ router.post(
                 tituloMl ? String(tituloMl).slice(0, 255) : null,
                 tituloSh ? String(tituloSh).slice(0, 255) : null,
                 estoque,
-                catMl || null,
-                catSh != null && !Number.isNaN(catSh) ? catSh : null,
+                normCategoriaMl(catMl),
+                normCategoriaShopee(catSh != null && !Number.isNaN(catSh) ? catSh : null),
                 ex[0].id,
                 uid
               ]
@@ -585,8 +624,8 @@ router.post(
                 tituloMl ? String(tituloMl).slice(0, 255) : null,
                 tituloSh ? String(tituloSh).slice(0, 255) : null,
                 estoque,
-                catMl || null,
-                catSh != null && !Number.isNaN(catSh) ? catSh : null
+                normCategoriaMl(catMl),
+                normCategoriaShopee(catSh != null && !Number.isNaN(catSh) ? catSh : null)
               ]
             );
             inseridos++;
@@ -636,8 +675,8 @@ router.put('/produtos/:id', requireAuth, async (req, res) => {
     if (b.titulo_ml !== undefined) push('titulo_ml', b.titulo_ml ? String(b.titulo_ml).slice(0, 255) : null);
     if (b.titulo_shopee !== undefined) push('titulo_shopee', b.titulo_shopee ? String(b.titulo_shopee).slice(0, 255) : null);
     if (b.estoque != null) push('estoque', parseInt(b.estoque, 10));
-    if (b.categoria_ml !== undefined) push('categoria_ml', b.categoria_ml || null);
-    if (b.categoria_shopee !== undefined) push('categoria_shopee', b.categoria_shopee != null ? parseInt(b.categoria_shopee, 10) : null);
+    if (b.categoria_ml !== undefined) push('categoria_ml', normCategoriaMl(b.categoria_ml));
+    if (b.categoria_shopee !== undefined) push('categoria_shopee', normCategoriaShopee(b.categoria_shopee));
     if (b.listing_type_ml != null) push('listing_type_ml', b.listing_type_ml);
     if (b.condicao_ml != null) push('condicao_ml', b.condicao_ml);
     if (b.imagens_json !== undefined) {
@@ -964,8 +1003,14 @@ router.get('/oauth/shopee/callback', async (req, res) => {
 // ——— Publicar ML ———
 router.post('/produtos/:id/publicar-ml', requireAuth, async (req, res) => {
   const produtoId = parseInt(req.params.id, 10);
-  const { conta_ml_id: contaMlId } = req.body || {};
-  if (!contaMlId) return res.status(400).json({ error: 'Informe conta_ml_id.' });
+  const rawBody = req.body || {};
+  const contaMlId = parseInt(rawBody.conta_ml_id, 10);
+  if (!rawBody.conta_ml_id || Number.isNaN(contaMlId) || contaMlId < 1) {
+    return res.status(400).json({
+      error: 'Informe uma conta Mercado Livre válida (conta_ml_id).',
+      code: 'invalid_conta'
+    });
+  }
   try {
     const pool = getPool();
     const [prows] = await pool.execute('SELECT * FROM produtos WHERE id = ? AND usuario_id = ?', [
@@ -974,13 +1019,7 @@ router.post('/produtos/:id/publicar-ml', requireAuth, async (req, res) => {
     ]);
     if (!prows.length) return res.status(404).json({ error: 'Produto não encontrado' });
     const prod = prows[0];
-    if (!prod.categoria_ml) {
-      return res.status(400).json({
-        error:
-          'Defina a categoria ML do produto (campo categoria_ml, ex.: MLB5672 — use o preditor de categorias no DevCenter ML).',
-        code: 'missing_categoria'
-      });
-    }
+    const catMl = normCategoriaMl(prod.categoria_ml);
     const [crows] = await pool.execute(
       'SELECT * FROM contas_mercadolivre WHERE id = ? AND usuario_id = ? AND ativo = 1',
       [contaMlId, req.autopecasrgUsuarioId]
@@ -988,28 +1027,18 @@ router.post('/produtos/:id/publicar-ml', requireAuth, async (req, res) => {
     if (!crows.length) return res.status(404).json({ error: 'Conta Mercado Livre não encontrada' });
     const conta = crows[0];
     const token = await ensureMlAccessToken(conta);
-    let imagens = [];
-    try {
-      if (prod.imagens_json) {
-        const parsed = typeof prod.imagens_json === 'string' ? JSON.parse(prod.imagens_json) : prod.imagens_json;
-        if (Array.isArray(parsed)) {
-          imagens = parsed.map((u) => (typeof u === 'string' ? { source: u } : u));
-        }
-      }
-    } catch {
-      imagens = [];
-    }
+    const imagens = extrairImagensMlProduto(prod);
     if (!imagens.length) {
       return res.status(400).json({
         error:
-          'Envie ao menos uma foto (upload acima ou imagens_json com URLs HTTPS públicas) para publicar no Mercado Livre.',
+          'Cadastre ao menos uma foto com URL pública (HTTPS): use "Enviar para o servidor" no formulário do produto ou cole URLs no JSON. Depois salve o produto.',
         code: 'missing_imagens'
       });
     }
     const titulo = (prod.titulo_ml || prod.nome).trim().slice(0, 60);
     const body = {
       title: titulo,
-      category_id: prod.categoria_ml,
+      category_id: catMl,
       price: precoMl(prod),
       currency_id: 'BRL',
       available_quantity: Math.max(0, parseInt(prod.estoque, 10)),
@@ -1149,11 +1178,7 @@ router.post('/produtos/:id/publicar-shopee', requireAuth, async (req, res) => {
     ]);
     if (!prows.length) return res.status(404).json({ error: 'Produto não encontrado' });
     const prod = prows[0];
-    if (!prod.categoria_shopee) {
-      return res.status(400).json({
-        error: 'Defina categoria_shopee (ID de categoria folha na Shopee — use API de categorias ou o centro de vendedor).'
-      });
-    }
+    const catShopee = normCategoriaShopee(prod.categoria_shopee);
     let mediaIds = [];
     try {
       if (prod.shopee_media_ids_json) {
@@ -1191,7 +1216,7 @@ router.post('/produtos/:id/publicar-shopee', requireAuth, async (req, res) => {
       item_name: nome,
       description: desc,
       item_status: 'NORMAL',
-      category_id: parseInt(prod.categoria_shopee, 10),
+      category_id: catShopee,
       image: { image_id_list: mediaIds },
       item_sku: String(prod.sku_interno).slice(0, 100),
       weight: 0.1,
@@ -1242,7 +1267,7 @@ router.post('/produtos/:id/publicar-todos', requireAuth, async (req, res) => {
         ]);
         if (!prows.length) throw new Error('Produto não encontrado');
         const prod = prows[0];
-        if (!prod.categoria_ml) throw new Error('Sem categoria_ml');
+        const catMlNorm = normCategoriaMl(prod.categoria_ml);
         const [crows] = await pool.execute(
           'SELECT * FROM contas_mercadolivre WHERE id = ? AND usuario_id = ? AND ativo = 1',
           [cid, req.autopecasrgUsuarioId]
@@ -1265,7 +1290,7 @@ router.post('/produtos/:id/publicar-todos', requireAuth, async (req, res) => {
         const titulo = (prod.titulo_ml || prod.nome).trim().slice(0, 60);
         const body = {
           title: titulo,
-          category_id: prod.categoria_ml,
+          category_id: catMlNorm,
           price: precoMl(prod),
           currency_id: 'BRL',
           available_quantity: Math.max(0, parseInt(prod.estoque, 10)),
@@ -1304,7 +1329,7 @@ router.post('/produtos/:id/publicar-todos', requireAuth, async (req, res) => {
         ]);
         if (!prows.length) throw new Error('Produto não encontrado');
         const prod = prows[0];
-        if (!prod.categoria_shopee) throw new Error('Sem categoria_shopee');
+        const catShNorm = normCategoriaShopee(prod.categoria_shopee);
         let mediaIds = [];
         try {
           if (prod.shopee_media_ids_json) {
@@ -1335,7 +1360,7 @@ router.post('/produtos/:id/publicar-todos', requireAuth, async (req, res) => {
           item_name: nome,
           description: desc,
           item_status: 'NORMAL',
-          category_id: parseInt(prod.categoria_shopee, 10),
+          category_id: catShNorm,
           image: { image_id_list: mediaIds },
           item_sku: String(prod.sku_interno).slice(0, 100),
           weight: 0.1,

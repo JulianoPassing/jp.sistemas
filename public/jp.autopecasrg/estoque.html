@@ -123,11 +123,11 @@
             <div class="form-grid" style="margin-top:0.75rem">
               <div class="form-group">
                 <label>Categoria ML (ID)</label>
-                <input name="categoria_ml" placeholder="ex: MLB5672" />
+                <input name="categoria_ml" placeholder="vazio = MLB191833 (Peças de Carros › Outros)" />
               </div>
               <div class="form-group">
                 <label>Categoria Shopee (ID folha)</label>
-                <input name="categoria_shopee" type="number" placeholder="número" />
+                <input name="categoria_shopee" type="number" placeholder="vazio = padrão do servidor (100644)" />
               </div>
               <div class="form-group" style="grid-column:1/-1">
                 <label>IDs de imagem Shopee (JSON)</label>
@@ -409,9 +409,7 @@
           if (!pubM && p.falta_para_ml) {
             faltaMl =
               '<div class="apm-pub-falta"><i class="fas fa-exclamation-circle"></i> ' +
-              (p.falta_para_ml === 'categoria_ml'
-                ? 'Informe <strong>categoria ML</strong> no cadastro (detalhes).'
-                : 'Envie <strong>fotos</strong> (upload ou URLs).') +
+              'Envie <strong>fotos</strong> (upload ou URLs).' +
               '</div>';
           }
           var mlDisabled = !contasMlOk().length ? ' disabled' : '';
@@ -419,6 +417,8 @@
           return (
             '<tr class="apm-prod-row" data-pid="' +
             p.id +
+            '" data-pode-ml="' +
+            (p.pode_publicar_ml ? '1' : '0') +
             '">' +
             '<td class="td-prod">' +
             '<div class="apm-prod-sku">' +
@@ -527,6 +527,12 @@
         return;
       }
       if (mlOn) {
+        if (row.getAttribute('data-pode-ml') !== '1') {
+          showErr(
+            'Para o Mercado Livre: informe a categoria ML (detalhes do produto), envie fotos (HTTPS) e clique em Salvar. Depois tente de novo.'
+          );
+          return;
+        }
         var selM = row.querySelector('.sel-ml');
         var cidM = selM && selM.value;
         if (!cidM) {
@@ -557,12 +563,38 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ conta_ml_id: parseInt(contaId, 10) })
       });
-      const d = await r.json().catch(() => ({}));
+      var d = {};
+      var ct = (r.headers.get('content-type') || '').toLowerCase();
+      if (ct.indexOf('application/json') !== -1) {
+        d = await r.json().catch(function () {
+          return {};
+        });
+      } else {
+        var txt = await r.text().catch(function () {
+          return '';
+        });
+        showErr(
+          'Resposta do servidor (' +
+            r.status +
+            '). Se for 413, a foto é grande demais; se for HTML, o proxy pode estar bloqueando o POST.'
+        );
+        if (txt) console.warn('[publicar-ml]', txt.slice(0, 500));
+        return false;
+      }
       if (r.ok) {
         if (!silentOk) showOk('Publicado no Mercado Livre. ' + (d.permalink ? d.permalink : ''));
         return true;
       }
-      var msg = d.error || 'Falha ao publicar no ML';
+      var msg = d.error || 'Falha ao publicar no ML (HTTP ' + r.status + ')';
+      if (d.code === 'missing_categoria') {
+        msg =
+          'Falta a categoria ML: abra o cadastro do produto → seção "Categorias e Shopee" → campo "Categoria ML (ID)" (ex.: MLB…). Salve e publique de novo.';
+      } else if (d.code === 'missing_imagens') {
+        msg =
+          'Falta foto com URL pública: envie imagens pelo botão "Enviar para o servidor" (ou URLs https no JSON) e salve o produto antes de publicar.';
+      } else if (d.code === 'invalid_conta') {
+        msg = 'Conta Mercado Livre inválida. Recarregue a página e escolha a conta no seletor.';
+      }
       if (d.detail && typeof d.detail === 'object' && d.detail.message) msg += ' — ' + d.detail.message;
       showErr(msg);
       return false;
