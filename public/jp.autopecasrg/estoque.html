@@ -80,6 +80,9 @@
             <br /><br />
             <strong>Shopee:</strong> na prática as fotos do anúncio vêm do <strong>Media Space</strong> (IDs numéricos). Envie as imagens no painel Shopee / API de mídia e cole os <strong>image_id</strong> no campo JSON abaixo. Capa muito usada em <strong>1:1</strong>; limites de MB e quantidade variam por categoria — veja a <a href="https://help.shopee.com.br" target="_blank" rel="noopener">Central Shopee</a>.
             <p style="margin:0.6rem 0 0"><a href="guia.html#ml-produto" style="color:var(--accent-teal);font-weight:600">Padrões resumidos no guia →</a></p>
+            <p style="margin:0.5rem 0 0;font-size:0.85rem;color:var(--gray-600)">
+              <strong>Limite:</strong> até <strong>1 MB por imagem</strong> (comprima JPG/WebP se precisar). O envio é feito <strong>uma foto por vez</strong> para evitar erro 413 (conteúdo grande demais).
+            </p>
           </div>
 
           <div class="apm-zone-upload">
@@ -88,7 +91,7 @@
               <input type="file" id="foto-input" accept="image/jpeg,image/png,image/webp" multiple />
             </label>
             <button type="button" class="btn btn-primary" id="btn-enviar-fotos"><i class="fas fa-cloud-upload-alt"></i> Enviar para o servidor</button>
-            <p style="margin:0.5rem 0 0;font-size:0.8rem;color:var(--gray-500)">As fotos ficam em seu domínio e viram link público para o ML.</p>
+            <p style="margin:0.5rem 0 0;font-size:0.8rem;color:var(--gray-500)">As fotos ficam em seu domínio e viram link público para o ML. Máx. 1 MB por arquivo.</p>
             <div class="apm-preview" id="apm-preview"></div>
           </div>
           <input type="hidden" name="imagens_json" id="field-imagens-json" value="[]" />
@@ -148,20 +151,25 @@
         </form>
       </div>
 
-      <div class="panel">
-        <h2>Seus produtos</h2>
-        <p style="font-size:0.85rem;color:var(--gray-500);margin-top:-0.35rem">
-          Contas ML: <span id="hint-ml">—</span> · Shopee: <span id="hint-sh">—</span>
-        </p>
-        <div class="table-wrap">
-          <table class="data">
+      <div class="panel apm-produtos-panel">
+        <div class="apm-produtos-head">
+          <h2 style="margin:0 0 0.35rem">Seus produtos</h2>
+          <p class="apm-muted" style="margin:0;font-size:0.9rem">
+            Contas: <strong>ML</strong> <span id="hint-ml">—</span> · <strong>Shopee</strong> <span id="hint-sh">—</span>
+            — marque o canal, escolha a conta e clique em <strong>Publicar</strong>. Vendido = unidades baixadas pelo sistema (webhooks).
+          </p>
+        </div>
+        <div class="table-wrap apm-produtos-wrap">
+          <table class="data apm-prod-table">
             <thead>
               <tr>
-                <th>SKU</th>
-                <th>Nome</th>
-                <th>Preços</th>
-                <th>Est.</th>
-                <th>Publicar</th>
+                <th class="th-prod">Produto</th>
+                <th class="th-num">Est.</th>
+                <th class="th-preco">Preço</th>
+                <th class="th-num">Vendido</th>
+                <th class="th-canal">Mercado Livre</th>
+                <th class="th-canal">Shopee</th>
+                <th class="th-acoes">Ações</th>
               </tr>
             </thead>
             <tbody id="tb"></tbody>
@@ -218,24 +226,63 @@
       });
     }
 
+    var MAX_IMAGEM_BYTES = 1 * 1024 * 1024;
+    var MAX_IMAGEM_MB = 1;
+
     document.getElementById('btn-enviar-fotos').addEventListener('click', async () => {
       const inp = document.getElementById('foto-input');
       if (!inp.files.length) {
         showErr('Selecione ao menos uma imagem.');
         return;
       }
-      const fd = new FormData();
-      for (const f of inp.files) fd.append('imagens', f);
-      try {
-        const r = await fetch('/api/autopecasrg/upload/imagens', { method: 'POST', credentials: 'include', body: fd });
-        const d = await r.json();
-        if (!r.ok) {
-          showErr(d.error || 'Falha no upload');
+      const list = Array.from(inp.files);
+      for (let i = 0; i < list.length; i++) {
+        const f = list[i];
+        if (f.size > MAX_IMAGEM_BYTES) {
+          showErr(
+            '"' +
+              f.name +
+              '" tem ' +
+              (f.size / (1024 * 1024)).toFixed(1) +
+              ' MB. Máximo ' +
+              MAX_IMAGEM_MB +
+              ' MB por imagem (redimensione ou comprima).'
+          );
           return;
         }
-        (d.urls || []).forEach((u) => mlPhotoUrls.push(u));
+      }
+      try {
+        var novas = 0;
+        for (let i = 0; i < list.length; i++) {
+          const fd = new FormData();
+          fd.append('imagens', list[i]);
+          const r = await fetch('/api/autopecasrg/upload/imagens', { method: 'POST', credentials: 'include', body: fd });
+          var d = {};
+          try {
+            d = await r.json();
+          } catch (_) {
+            d = {};
+          }
+          if (r.status === 413) {
+            showErr(
+              d.error ||
+                'Arquivo grande demais (413). Máximo ' +
+                  MAX_IMAGEM_MB +
+                  ' MB por imagem. Se persistir, peça no servidor para aumentar o nginx client_max_body_size.'
+            );
+            return;
+          }
+          if (!r.ok) {
+            showErr(d.error || 'Falha no upload: ' + (list[i].name || ''));
+            return;
+          }
+          (d.urls || []).forEach(function (u) {
+            mlPhotoUrls.push(u);
+            novas++;
+          });
+        }
         syncImagenJson();
-        showOk('Fotos enviadas. Total na lista: ' + mlPhotoUrls.length + '.');
+        showOk(novas ? 'Enviadas ' + novas + ' foto(s). Total na lista: ' + mlPhotoUrls.length + '.' : 'Nada novo.');
         inp.value = '';
       } catch (e) {
         showErr('Erro de rede no upload.');
@@ -260,13 +307,29 @@
       }
     });
 
+    function contasMlOk() {
+      return contasMl.filter(function (c) {
+        return c.autorizado;
+      });
+    }
+    function contasShOk() {
+      return contasSh.filter(function (c) {
+        return c.tem_token;
+      });
+    }
     function optsMl() {
-      if (!contasMl.length) return '<option value="">— cadastre ML —</option>';
-      return contasMl.map((c) => '<option value="' + c.id + '">' + escapeHtml(c.nome) + '</option>').join('');
+      var ok = contasMlOk();
+      if (!ok.length) return '<option value="">— cadastre / autorize ML —</option>';
+      return ok.map(function (c) {
+        return '<option value="' + c.id + '">' + escapeHtml(c.nome) + '</option>';
+      }).join('');
     }
     function optsSh() {
-      if (!contasSh.length) return '<option value="">— cadastre Shopee —</option>';
-      return contasSh.map((c) => '<option value="' + c.id + '">' + escapeHtml(c.nome) + '</option>').join('');
+      var ok = contasShOk();
+      if (!ok.length) return '<option value="">— cadastre / autorize Shopee —</option>';
+      return ok.map(function (c) {
+        return '<option value="' + c.id + '">' + escapeHtml(c.nome) + '</option>';
+      }).join('');
     }
 
     async function loadContas() {
@@ -280,6 +343,18 @@
       document.getElementById('hint-sh').textContent = contasSh.length ? contasSh.length + ' conta(s)' : 'nenhuma';
     }
 
+    function pubPorPlataforma(p, plat) {
+      return (p.publicacoes || []).find(function (x) {
+        return x.plataforma === plat;
+      });
+    }
+
+    function snippet(s, n) {
+      var t = (s || '').trim().replace(/\s+/g, ' ');
+      if (!t) return '';
+      return t.length > n ? t.slice(0, n) + '…' : t;
+    }
+
     async function loadList() {
       await loadContas();
       const r = await fetch('/api/autopecasrg/produtos', { credentials: 'include' });
@@ -289,86 +364,193 @@
       }
       const rows = await r.json();
       const tb = document.getElementById('tb');
-      tb.innerHTML =
-        rows
-          .map((p) => {
-            const pb = formatMoney(p.preco);
-            const pm = p.preco_ml != null ? formatMoney(p.preco_ml) : '—';
-            const ps = p.preco_shopee != null ? formatMoney(p.preco_shopee) : '—';
-            return (
-              '<tr>' +
-              '<td>' +
-              escapeHtml(p.sku_interno) +
-              '</td>' +
-              '<td>' +
-              escapeHtml(p.nome) +
-              '</td>' +
-              '<td style="font-size:0.8rem">' +
-              pb +
-              '<br><span style="color:var(--accent-teal)">ML ' +
-              pm +
-              '</span> · <span style="color:#ee4d2d">Sh ' +
-              ps +
-              '</span></td>' +
-              '<td>' +
-              p.estoque +
-              '</td>' +
-              '<td style="white-space:nowrap">' +
-              '<select class="sel-ml" data-pid="' +
-              p.id +
-              '" style="max-width:110px;font-size:0.75rem">' +
-              optsMl() +
-              '</select> ' +
-              '<button type="button" class="btn btn-sm btn-ghost btn-ml" data-pid="' +
-              p.id +
-              '">ML</button> ' +
-              '<select class="sel-sh" data-pid="' +
-              p.id +
-              '" style="max-width:110px;font-size:0.75rem">' +
-              optsSh() +
-              '</select> ' +
-              '<button type="button" class="btn btn-sm btn-ghost btn-sh" data-pid="' +
-              p.id +
-              '">Sh</button> ' +
-              '<button type="button" class="btn btn-sm btn-primary btn-all" data-pid="' +
-              p.id +
-              '" title="Todas">Todas</button>' +
-              '</td>' +
-              '</tr>'
-            );
-          })
-          .join('') || '<tr><td colspan="5">Nenhum produto.</td></tr>';
+      if (!rows.length) {
+        tb.innerHTML = '<tr><td colspan="7" class="apm-empty-row">Nenhum produto cadastrado.</td></tr>';
+        return;
+      }
+      tb.innerHTML = rows
+        .map(function (p) {
+          var pubM = pubPorPlataforma(p, 'ml');
+          var pubS = pubPorPlataforma(p, 'shopee');
+          var pb = formatMoney(p.preco);
+          var pm = p.preco_ml != null ? formatMoney(p.preco_ml) : '—';
+          var ps = p.preco_shopee != null ? formatMoney(p.preco_shopee) : '—';
+          var vend = p.vendas_unidades != null ? p.vendas_unidades : 0;
+          var imgN = p.imagem_qtd != null ? p.imagem_qtd : 0;
+          var mlStatus = '';
+          if (pubM) {
+            mlStatus =
+              pubM.status === 'ativo'
+                ? '<span class="apm-pub-badge apm-pub-badge--ok">Ativo</span>'
+                : '<span class="apm-pub-badge">' + escapeHtml(pubM.status || '—') + '</span>';
+            if (pubM.external_item_id) {
+              mlStatus +=
+                ' <a class="apm-pub-link" href="https://www.mercadolivre.com.br/item/' +
+                encodeURIComponent(pubM.external_item_id) +
+                '" target="_blank" rel="noopener" title="Abrir anúncio">ver</a>';
+            }
+          } else {
+            mlStatus = '<span class="apm-pub-badge apm-pub-badge--muted">Não publicado</span>';
+          }
+          var shStatus = '';
+          if (pubS) {
+            shStatus =
+              pubS.status === 'ativo'
+                ? '<span class="apm-pub-badge apm-pub-badge--ok">Ativo</span>'
+                : '<span class="apm-pub-badge">' + escapeHtml(pubS.status || '—') + '</span>';
+            if (pubS.external_item_id) {
+              shStatus +=
+                ' <span class="apm-pub-id" title="ID Shopee">#' + escapeHtml(String(pubS.external_item_id)) + '</span>';
+            }
+          } else {
+            shStatus = '<span class="apm-pub-badge apm-pub-badge--muted">Não publicado</span>';
+          }
+          var faltaMl = '';
+          if (!pubM && p.falta_para_ml) {
+            faltaMl =
+              '<div class="apm-pub-falta"><i class="fas fa-exclamation-circle"></i> ' +
+              (p.falta_para_ml === 'categoria_ml'
+                ? 'Informe <strong>categoria ML</strong> no cadastro (detalhes).'
+                : 'Envie <strong>fotos</strong> (upload ou URLs).') +
+              '</div>';
+          }
+          var mlDisabled = !contasMlOk().length ? ' disabled' : '';
+          var shDisabled = !contasShOk().length ? ' disabled' : '';
+          return (
+            '<tr class="apm-prod-row" data-pid="' +
+            p.id +
+            '">' +
+            '<td class="td-prod">' +
+            '<div class="apm-prod-sku">' +
+            escapeHtml(p.sku_interno) +
+            '</div>' +
+            '<div class="apm-prod-nome">' +
+            escapeHtml(p.nome) +
+            '</div>' +
+            (snippet(p.descricao, 80)
+              ? '<div class="apm-prod-desc">' + escapeHtml(snippet(p.descricao, 80)) + '</div>'
+              : '') +
+            '<div class="apm-prod-meta">' +
+            '<span title="Fotos para ML"><i class="fas fa-image"></i> ' +
+            imgN +
+            ' foto(s)</span>' +
+            (p.categoria_ml
+              ? ' · <span title="Categoria ML"><i class="fas fa-tag"></i> ' + escapeHtml(p.categoria_ml) + '</span>'
+              : '') +
+            '</div>' +
+            faltaMl +
+            '</td>' +
+            '<td class="td-num">' +
+            p.estoque +
+            '</td>' +
+            '<td class="td-preco">' +
+            '<span class="apm-preco-base">' +
+            pb +
+            '</span>' +
+            '<div class="apm-preco-canal">ML ' +
+            pm +
+            ' · Sh ' +
+            ps +
+            '</div></td>' +
+            '<td class="td-num" title="Unidades vendidas (baixa automática)">' +
+            vend +
+            '</td>' +
+            '<td class="td-canal">' +
+            '<label class="apm-check-line">' +
+            '<input type="checkbox" class="chk-pub-ml" data-pid="' +
+            p.id +
+            '"' +
+            mlDisabled +
+            ' />' +
+            '<span>Publicar</span></label>' +
+            '<select class="apm-select-conta sel-ml" data-pid="' +
+            p.id +
+            '"' +
+            (mlDisabled ? ' disabled' : '') +
+            '>' +
+            optsMl() +
+            '</select>' +
+            '<div class="apm-canal-status">' +
+            mlStatus +
+            (pubM && pubM.conta_nome ? '<div class="apm-conta-nome">' + escapeHtml(pubM.conta_nome) + '</div>' : '') +
+            '</div></td>' +
+            '<td class="td-canal">' +
+            '<label class="apm-check-line">' +
+            '<input type="checkbox" class="chk-pub-sh" data-pid="' +
+            p.id +
+            '"' +
+            shDisabled +
+            ' />' +
+            '<span>Publicar</span></label>' +
+            '<select class="apm-select-conta sel-sh" data-pid="' +
+            p.id +
+            '"' +
+            (shDisabled ? ' disabled' : '') +
+            '>' +
+            optsSh() +
+            '</select>' +
+            '<div class="apm-canal-status">' +
+            shStatus +
+            (pubS && pubS.conta_nome ? '<div class="apm-conta-nome">' + escapeHtml(pubS.conta_nome) + '</div>' : '') +
+            '</div></td>' +
+            '<td class="td-acoes">' +
+            '<button type="button" class="btn btn-sm btn-primary btn-pub-row" data-pid="' +
+            p.id +
+            '">Publicar</button> ' +
+            '<button type="button" class="btn btn-sm btn-ghost btn-all" data-pid="' +
+            p.id +
+            '" title="Publicar em todas as contas autorizadas">Todas contas</button>' +
+            '</td></tr>'
+          );
+        })
+        .join('');
 
-      tb.querySelectorAll('.btn-ml').forEach((b) => {
-        b.addEventListener('click', () => {
-          const pid = b.getAttribute('data-pid');
-          const sel = tb.querySelector('.sel-ml[data-pid="' + pid + '"]');
-          const cid = sel && sel.value;
-          if (!cid) {
-            showErr('Escolha uma conta ML.');
-            return;
-          }
-          publicarMl(pid, cid);
+      tb.querySelectorAll('.btn-pub-row').forEach(function (b) {
+        b.addEventListener('click', function () {
+          publicarLinha(b.getAttribute('data-pid'));
         });
       });
-      tb.querySelectorAll('.btn-sh').forEach((b) => {
-        b.addEventListener('click', () => {
-          const pid = b.getAttribute('data-pid');
-          const sel = tb.querySelector('.sel-sh[data-pid="' + pid + '"]');
-          const cid = sel && sel.value;
-          if (!cid) {
-            showErr('Escolha uma conta Shopee.');
-            return;
-          }
-          publicarSh(pid, cid);
+      tb.querySelectorAll('.btn-all').forEach(function (b) {
+        b.addEventListener('click', function () {
+          publicarTodos(b.getAttribute('data-pid'));
         });
-      });
-      tb.querySelectorAll('.btn-all').forEach((b) => {
-        b.addEventListener('click', () => publicarTodos(b.getAttribute('data-pid')));
       });
     }
 
-    async function publicarMl(id, contaId) {
+    async function publicarLinha(pid) {
+      var row = document.querySelector('tr.apm-prod-row[data-pid="' + pid + '"]');
+      if (!row) return;
+      var mlOn = row.querySelector('.chk-pub-ml') && row.querySelector('.chk-pub-ml').checked;
+      var shOn = row.querySelector('.chk-pub-sh') && row.querySelector('.chk-pub-sh').checked;
+      if (!mlOn && !shOn) {
+        showErr('Marque Mercado Livre e/ou Shopee para publicar.');
+        return;
+      }
+      if (mlOn) {
+        var selM = row.querySelector('.sel-ml');
+        var cidM = selM && selM.value;
+        if (!cidM) {
+          showErr('Escolha a conta Mercado Livre.');
+          return;
+        }
+        var okM = await publicarMl(pid, cidM, true);
+        if (!okM) return;
+      }
+      if (shOn) {
+        var selS = row.querySelector('.sel-sh');
+        var cidS = selS && selS.value;
+        if (!cidS) {
+          showErr('Escolha a conta Shopee.');
+          return;
+        }
+        var okS = await publicarSh(pid, cidS, true);
+        if (!okS) return;
+      }
+      showOk('Publicação enviada.');
+      loadList();
+    }
+
+    async function publicarMl(id, contaId, silentOk) {
       const r = await fetch('/api/autopecasrg/produtos/' + id + '/publicar-ml', {
         method: 'POST',
         credentials: 'include',
@@ -376,11 +558,17 @@
         body: JSON.stringify({ conta_ml_id: parseInt(contaId, 10) })
       });
       const d = await r.json().catch(() => ({}));
-      if (r.ok) showOk('Publicado no ML. ' + (d.permalink || ''));
-      else showErr(d.error || 'Falha');
+      if (r.ok) {
+        if (!silentOk) showOk('Publicado no Mercado Livre. ' + (d.permalink ? d.permalink : ''));
+        return true;
+      }
+      var msg = d.error || 'Falha ao publicar no ML';
+      if (d.detail && typeof d.detail === 'object' && d.detail.message) msg += ' — ' + d.detail.message;
+      showErr(msg);
+      return false;
     }
 
-    async function publicarSh(id, contaId) {
+    async function publicarSh(id, contaId, silentOk) {
       const r = await fetch('/api/autopecasrg/produtos/' + id + '/publicar-shopee', {
         method: 'POST',
         credentials: 'include',
@@ -388,8 +576,14 @@
         body: JSON.stringify({ conta_shopee_id: parseInt(contaId, 10) })
       });
       const d = await r.json().catch(() => ({}));
-      if (r.ok) showOk('Publicado na Shopee. Item #' + (d.shopee_item_id || ''));
-      else showErr(d.error || 'Falha');
+      if (r.ok) {
+        if (!silentOk) showOk('Publicado na Shopee. Item #' + (d.shopee_item_id || ''));
+        return true;
+      }
+      var msg = d.error || 'Falha ao publicar na Shopee';
+      if (d.detail && typeof d.detail === 'object' && d.detail.message) msg += ' — ' + d.detail.message;
+      showErr(msg);
+      return false;
     }
 
     async function publicarTodos(id) {
@@ -414,7 +608,7 @@
       const okn = (d.resultados || []).length;
       const bad = (d.erros || []).length;
       showOk('Concluído: ' + okn + ' ok, ' + bad + ' erro(s).');
-      if (bad && d.erros) console.table(d.erros);
+      loadList();
     }
 
     document.getElementById('novo').addEventListener('submit', async (e) => {

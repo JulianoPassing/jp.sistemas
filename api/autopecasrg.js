@@ -52,6 +52,9 @@ function requireAuth(req, res, next) {
 
 const uploadAutopecasDir = path.join(__dirname, '..', 'public', 'uploads', 'autopecasrg');
 
+/** Limite por imagem (POST /upload/imagens). Nginx costuma usar 1m por padrão — manter ≤ isso ou subir `client_max_body_size`. */
+const AUTOPECASRG_MAX_IMAGEM_BYTES = 1 * 1024 * 1024;
+
 function ensureAutopecasUploadDir(usuarioId) {
   const dir = path.join(uploadAutopecasDir, String(usuarioId));
   fs.mkdirSync(dir, { recursive: true });
@@ -76,7 +79,7 @@ const storageAutopecasImg = multer.diskStorage({
 
 const uploadAutopecasMulter = multer({
   storage: storageAutopecasImg,
-  limits: { fileSize: 8 * 1024 * 1024, files: 12 },
+  limits: { fileSize: AUTOPECASRG_MAX_IMAGEM_BYTES, files: 12 },
   fileFilter(req, file, cb) {
     const ok = /^image\/(jpeg|png|webp)$/i.test(file.mimetype);
     if (ok) cb(null, true);
@@ -315,7 +318,15 @@ router.post(
   requireAuth,
   (req, res, next) => {
     uploadAutopecasMulter.array('imagens', 12)(req, res, (err) => {
-      if (err) return res.status(400).json({ error: err.message || 'Upload inválido' });
+      if (err) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(413).json({
+            error: `Cada imagem pode ter no máximo ${AUTOPECASRG_MAX_IMAGEM_BYTES / (1024 * 1024)} MB.`,
+            maxBytes: AUTOPECASRG_MAX_IMAGEM_BYTES
+          });
+        }
+        return res.status(400).json({ error: err.message || 'Upload inválido' });
+      }
       next();
     });
   },
@@ -341,13 +352,53 @@ router.post(
 router.get('/produtos', requireAuth, async (req, res) => {
   try {
     const pool = getPool();
+    const uid = req.autopecasrgUsuarioId;
     const [rows] = await pool.execute(
-      `SELECT id, sku_interno, nome, descricao, preco, preco_ml, preco_shopee, titulo_ml, titulo_shopee, estoque,
-              categoria_ml, categoria_shopee, listing_type_ml, condicao_ml, imagens_json, shopee_media_ids_json, atributos_json, ativo, created_at, updated_at
-       FROM produtos WHERE usuario_id = ? ORDER BY updated_at DESC`,
-      [req.autopecasrgUsuarioId]
+      `SELECT p.id, p.sku_interno, p.nome, p.descricao, p.preco, p.preco_ml, p.preco_shopee, p.titulo_ml, p.titulo_shopee, p.estoque,
+              p.categoria_ml, p.categoria_shopee, p.listing_type_ml, p.condicao_ml, p.imagens_json, p.shopee_media_ids_json, p.atributos_json, p.ativo, p.created_at, p.updated_at,
+              COALESCE((
+                SELECT SUM(ABS(m.delta)) FROM movimentos_estoque m
+                WHERE m.produto_id = p.id AND m.usuario_id = p.usuario_id
+                  AND m.motivo IN ('venda_ml','venda_shopee') AND m.delta < 0
+              ), 0) AS vendas_unidades
+       FROM produtos p WHERE p.usuario_id = ? ORDER BY p.updated_at DESC`,
+      [uid]
     );
-    res.json(rows);
+    const [pubs] = await pool.execute(
+      `SELECT pub.id, pub.produto_id, pub.plataforma, pub.conta_id, pub.external_item_id, pub.status, pub.ultimo_erro, pub.updated_at,
+              CASE WHEN pub.plataforma = 'ml' THEN cm.nome ELSE cs.nome END AS conta_nome
+       FROM publicacoes pub
+       LEFT JOIN contas_mercadolivre cm ON pub.plataforma = 'ml' AND cm.id = pub.conta_id AND cm.usuario_id = pub.usuario_id
+       LEFT JOIN contas_shopee cs ON pub.plataforma = 'shopee' AND cs.id = pub.conta_id AND cs.usuario_id = pub.usuario_id
+       WHERE pub.usuario_id = ?`,
+      [uid]
+    );
+    const pubsByProd = {};
+    for (const pub of pubs) {
+      if (!pubsByProd[pub.produto_id]) pubsByProd[pub.produto_id] = [];
+      pubsByProd[pub.produto_id].push(pub);
+    }
+    const out = rows.map((p) => {
+      let imagem_qtd = 0;
+      try {
+        const j = typeof p.imagens_json === 'string' ? JSON.parse(p.imagens_json) : p.imagens_json;
+        if (Array.isArray(j)) imagem_qtd = j.length;
+      } catch (_) {}
+      const prList = pubsByProd[p.id] || [];
+      const podePublicarMl = !!(p.categoria_ml && imagem_qtd > 0);
+      let faltaParaMl = null;
+      if (!p.categoria_ml) faltaParaMl = 'categoria_ml';
+      else if (imagem_qtd === 0) faltaParaMl = 'imagens';
+      return {
+        ...p,
+        vendas_unidades: Number(p.vendas_unidades || 0),
+        imagem_qtd,
+        publicacoes: prList,
+        pode_publicar_ml: podePublicarMl,
+        falta_para_ml: faltaParaMl
+      };
+    });
+    res.json(out);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Erro ao listar produtos' });
@@ -924,7 +975,11 @@ router.post('/produtos/:id/publicar-ml', requireAuth, async (req, res) => {
     if (!prows.length) return res.status(404).json({ error: 'Produto não encontrado' });
     const prod = prows[0];
     if (!prod.categoria_ml) {
-      return res.status(400).json({ error: 'Defina categoria_ml no produto (ex.: MLB5672 — use o preditor de categorias do ML).' });
+      return res.status(400).json({
+        error:
+          'Defina a categoria ML do produto (campo categoria_ml, ex.: MLB5672 — use o preditor de categorias no DevCenter ML).',
+        code: 'missing_categoria'
+      });
     }
     const [crows] = await pool.execute(
       'SELECT * FROM contas_mercadolivre WHERE id = ? AND usuario_id = ? AND ativo = 1',
@@ -945,7 +1000,11 @@ router.post('/produtos/:id/publicar-ml', requireAuth, async (req, res) => {
       imagens = [];
     }
     if (!imagens.length) {
-      return res.status(400).json({ error: 'Cadastre imagens_json com URLs públicas (array JSON).' });
+      return res.status(400).json({
+        error:
+          'Envie ao menos uma foto (upload acima ou imagens_json com URLs HTTPS públicas) para publicar no Mercado Livre.',
+        code: 'missing_imagens'
+      });
     }
     const titulo = (prod.titulo_ml || prod.nome).trim().slice(0, 60);
     const body = {
