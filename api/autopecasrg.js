@@ -2,6 +2,9 @@
  * JP Auto Peças RG — login, estoque, Mercado Livre (OAuth + publicação + etiquetas base), Shopee (credenciais)
  */
 const express = require('express');
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { getPool, ensureDatabase, encryptSecret, decryptSecret } = require('../lib/autopecasrg-db');
@@ -44,6 +47,40 @@ function requireAuth(req, res, next) {
   req.autopecasrgUsuarioId = uid;
   next();
 }
+
+const uploadAutopecasDir = path.join(__dirname, '..', 'public', 'uploads', 'autopecasrg');
+
+function ensureAutopecasUploadDir(usuarioId) {
+  const dir = path.join(uploadAutopecasDir, String(usuarioId));
+  fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+const storageAutopecasImg = multer.diskStorage({
+  destination(req, file, cb) {
+    try {
+      const dir = ensureAutopecasUploadDir(req.autopecasrgUsuarioId);
+      cb(null, dir);
+    } catch (e) {
+      cb(e);
+    }
+  },
+  filename(req, file, cb) {
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    const safe = ['.jpg', '.jpeg', '.png', '.webp'].includes(ext) ? ext : '.jpg';
+    cb(null, `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${safe}`);
+  }
+});
+
+const uploadAutopecasMulter = multer({
+  storage: storageAutopecasImg,
+  limits: { fileSize: 8 * 1024 * 1024, files: 12 },
+  fileFilter(req, file, cb) {
+    const ok = /^image\/(jpeg|png|webp)$/i.test(file.mimetype);
+    if (ok) cb(null, true);
+    else cb(new Error('Use apenas imagens JPG, PNG ou WebP.'));
+  }
+});
 
 function configuracoesHtmlUrl() {
   const base = (process.env.AUTOPECASRG_PUBLIC_URL || '').replace(/\/$/, '');
@@ -238,6 +275,34 @@ router.get('/dashboard/resumo', requireAuth, async (req, res) => {
     res.status(500).json({ error: 'Erro ao carregar resumo' });
   }
 });
+
+/** Fotos do produto — salvas em /public/uploads/autopecasrg/{usuarioId}/ (URLs absolutas para o ML). */
+router.post(
+  '/upload/imagens',
+  requireAuth,
+  (req, res, next) => {
+    uploadAutopecasMulter.array('imagens', 12)(req, res, (err) => {
+      if (err) return res.status(400).json({ error: err.message || 'Upload inválido' });
+      next();
+    });
+  },
+  (req, res) => {
+    try {
+      const publicRoot = path.join(__dirname, '..', 'public');
+      const host = req.get('host') || 'localhost';
+      const proto = req.protocol || 'http';
+      const base = `${proto}://${host}`;
+      const urls = (req.files || []).map((f) => {
+        const rel = path.relative(publicRoot, f.path).replace(/\\/g, '/');
+        const pathUrl = '/' + rel.replace(/^\/+/, '');
+        return `${base}${pathUrl}`;
+      });
+      res.json({ ok: true, urls });
+    } catch (e) {
+      res.status(500).json({ error: e.message || 'Erro no upload' });
+    }
+  }
+);
 
 // ——— Produtos ———
 router.get('/produtos', requireAuth, async (req, res) => {

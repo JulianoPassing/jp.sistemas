@@ -19,6 +19,9 @@ Thumbs.db
 # JP Auto Peças RG — PDFs de etiquetas na VPS
 storage/autopecasrg/
 
+# Fotos enviadas pelo módulo (URLs públicas geradas pelo servidor)
+public/uploads/autopecasrg/
+
 # IDE
 .idea/
 .vscode/

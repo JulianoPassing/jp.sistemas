@@ -225,6 +225,129 @@ table.data th {
   cursor: not-allowed;
 }
 
+/* Layout com rodapé fixo ao rodapé da viewport */
+body.sistema-padrao.apm-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.sistema-main.apm-grow {
+  flex: 1;
+}
+
+/* Rodapé */
+.apm-footer {
+  background: linear-gradient(180deg, var(--gray-100) 0%, var(--gray-200) 100%);
+  border-top: 1px solid var(--gray-200);
+  padding: 1.25rem 0;
+  margin-top: auto;
+}
+
+.apm-footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.apm-footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.apm-footer-brand strong {
+  color: var(--terciary);
+  font-size: 0.95rem;
+}
+
+.apm-muted {
+  font-size: 0.82rem;
+  color: var(--gray-500);
+  font-weight: 400;
+}
+
+.apm-footer-copy {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--gray-500);
+}
+
+.apm-footer-copy a {
+  color: var(--accent-teal);
+  text-decoration: none;
+}
+
+.apm-footer-copy a:hover {
+  text-decoration: underline;
+}
+
+/* Blocos de ajuda (padrões ML / Shopee) */
+.apm-help {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius-lg);
+  padding: 0.85rem 1rem;
+  font-size: 0.82rem;
+  color: var(--gray-600);
+  line-height: 1.55;
+  margin-bottom: 1rem;
+}
+
+.apm-help strong {
+  color: var(--terciary);
+}
+
+.apm-help ul {
+  margin: 0.35rem 0 0 1.1rem;
+  padding: 0;
+}
+
+.apm-zone-upload {
+  border: 2px dashed var(--gray-300);
+  border-radius: var(--border-radius-lg);
+  padding: 1rem;
+  background: var(--white);
+  margin-bottom: 0.75rem;
+}
+
+.apm-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.apm-preview img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
+}
+
+details.apm-details {
+  margin-bottom: 1rem;
+}
+
+details.apm-details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--terciary);
+  padding: 0.5rem 0;
+  list-style: none;
+}
+
+details.apm-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.panel-compact h2 {
+  font-size: 1.05rem;
+}
+
 @media (max-width: 600px) {
   .sistema-cards {
     grid-template-columns: 1fr;

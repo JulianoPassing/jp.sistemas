@@ -4,127 +4,165 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JP Auto Peças RG — Estoque</title>
+  <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png" />
+  <meta name="theme-color" content="#002f4b" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="../style-sistema.css" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
-<body class="sistema-padrao">
-  <header class="sistema-header">
-    <div class="header-content">
-      <a href="dashboard.html" class="logo" style="gap:0.5rem">
-        <i class="fas fa-warehouse"></i>
-        <span>JP Auto Peças RG</span>
-      </a>
-      <nav>
-        <a href="dashboard.html" class="nav-link"><i class="fas fa-chart-pie"></i> Painel</a>
-        <a href="estoque.html" class="nav-link active"><i class="fas fa-boxes-stacked"></i> Estoque</a>
-        <a href="configuracoes.html" class="nav-link"><i class="fas fa-sliders"></i> Configurações</a>
-        <a href="#" class="nav-link nav-sair" onclick="logout();return false;"><i class="fas fa-sign-out-alt"></i> Sair</a>
-      </nav>
-    </div>
-  </header>
-  <main class="sistema-main">
+<body class="sistema-padrao apm-layout" data-page="estoque">
+  <div id="jpapg-header"></div>
+  <main class="sistema-main apm-grow">
     <div class="sistema-container">
-    <div class="sistema-page-header">
-      <div class="sistema-page-header-icon"><i class="fas fa-boxes-stacked"></i></div>
-      <div class="sistema-page-header-text">
-        <h1 class="page-title">Estoque e produtos</h1>
-        <p class="page-subtitle">
-      Preço base + opcionais <strong>preço Mercado Livre</strong> e <strong>preço Shopee</strong>.
-      Várias contas: publique em cada uma (ou use &quot;Publicar em todas&quot;). ML usa URLs de imagem; Shopee usa IDs de mídia da API.
+      <div class="sistema-page-header">
+        <div class="sistema-page-header-icon"><i class="fas fa-boxes-stacked"></i></div>
+        <div class="sistema-page-header-text">
+          <h1 class="page-title">Produtos</h1>
+          <p class="page-subtitle">Cadastre o item, envie fotos e publique no ML e na Shopee quando as contas estiverem conectadas.</p>
+        </div>
+      </div>
+      <div id="msg"></div>
+
+      <div class="panel panel-compact">
+        <h2><i class="fas fa-plus-circle" style="color:var(--accent-teal)"></i> Novo produto</h2>
+        <form id="novo">
+          <h3 style="margin:0 0 0.75rem;font-size:0.95rem;color:var(--terciary)">Dados principais</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>SKU interno *</label>
+              <input name="sku_interno" required placeholder="ex: FILTRO-01" />
+            </div>
+            <div class="form-group">
+              <label>Nome *</label>
+              <input name="nome" required />
+            </div>
+            <div class="form-group">
+              <label>Preço base (R$)</label>
+              <input name="preco" type="number" step="0.01" value="0" />
+            </div>
+            <div class="form-group">
+              <label>Estoque</label>
+              <input name="estoque" type="number" value="0" />
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Descrição</label>
+              <textarea name="descricao" rows="3" placeholder="Especificações e compatibilidade"></textarea>
+            </div>
+          </div>
+
+          <h3 style="margin:1.25rem 0 0.75rem;font-size:0.95rem;color:var(--terciary)">Fotos (Mercado Livre)</h3>
+          <div class="apm-help">
+            <strong>Mercado Livre:</strong> JPG ou PNG, até <strong>10 fotos</strong>, tamanho máx. por arquivo 10&nbsp;MB.
+            Recomendado: fundo branco ou neutro, produto centralizado, resolução mínima em torno de <strong>500 px</strong> no menor lado (ideal 1200–1600 px para zoom).
+            <ul>
+              <li>Sem bordas artificiais nem texto sobre a foto principal.</li>
+              <li>URLs públicas em HTTPS — aqui o sistema gera automaticamente após o envio.</li>
+            </ul>
+            <strong>Shopee:</strong> o anúncio costuma usar fotos enviadas pelo <em>Media Space</em> da Shopee (IDs numéricos). Abaixo você pode colar os IDs depois de subir no painel Partner.
+            <ul>
+              <li>Formato comum: JPG/PNG, proporção <strong>1:1</strong> para capa; até ~9 imagens por SKU na maioria das categorias.</li>
+              <li>Tamanho máximo por arquivo costuma ser <strong>8 MB</strong> (confira a central de ajuda da Shopee para sua região).</li>
+            </ul>
+          </div>
+
+          <div class="apm-zone-upload">
+            <label class="form-group" style="margin-bottom:0.5rem">
+              Selecionar imagens (JPG, PNG, WebP)
+              <input type="file" id="foto-input" accept="image/jpeg,image/png,image/webp" multiple />
+            </label>
+            <button type="button" class="btn btn-primary" id="btn-enviar-fotos"><i class="fas fa-cloud-upload-alt"></i> Enviar para o servidor</button>
+            <p style="margin:0.5rem 0 0;font-size:0.8rem;color:var(--gray-500)">As fotos ficam em seu domínio e viram link público para o ML.</p>
+            <div class="apm-preview" id="apm-preview"></div>
+          </div>
+          <input type="hidden" name="imagens_json" id="field-imagens-json" value="[]" />
+
+          <details class="apm-details">
+            <summary>Preços e títulos por canal (opcional)</summary>
+            <div class="form-grid" style="margin-top:0.75rem">
+              <div class="form-group">
+                <label>Preço ML (R$)</label>
+                <input name="preco_ml" type="number" step="0.01" placeholder="vazio = preço base" />
+              </div>
+              <div class="form-group">
+                <label>Preço Shopee (R$)</label>
+                <input name="preco_shopee" type="number" step="0.01" placeholder="vazio = preço base" />
+              </div>
+              <div class="form-group">
+                <label>Título ML (máx. 60)</label>
+                <input name="titulo_ml" maxlength="60" placeholder="opcional" />
+              </div>
+              <div class="form-group">
+                <label>Título Shopee</label>
+                <input name="titulo_shopee" placeholder="opcional" />
+              </div>
+            </div>
+          </details>
+
+          <details class="apm-details">
+            <summary>Categorias e Shopee (IDs)</summary>
+            <div class="form-grid" style="margin-top:0.75rem">
+              <div class="form-group">
+                <label>Categoria ML (ID)</label>
+                <input name="categoria_ml" placeholder="ex: MLB5672" />
+              </div>
+              <div class="form-group">
+                <label>Categoria Shopee (ID folha)</label>
+                <input name="categoria_shopee" type="number" placeholder="número" />
+              </div>
+              <div class="form-group" style="grid-column:1/-1">
+                <label>IDs de imagem Shopee (JSON)</label>
+                <textarea name="shopee_media_ids_json" rows="2" placeholder='ex: [123456789] após upload no Media Space'></textarea>
+              </div>
+            </div>
+          </details>
+
+          <details class="apm-details">
+            <summary>Avançado: editar lista de URLs manualmente</summary>
+            <div class="form-group" style="margin-top:0.75rem">
+              <label>JSON array de URLs (ML)</label>
+              <textarea id="manual-imagens-json" rows="3" placeholder='["https://..."]'></textarea>
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-aplicar-manual" style="margin-top:0.5rem">Aplicar à lista</button>
+            </div>
+          </details>
+
+          <div style="margin-top:1rem">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar produto</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>Seus produtos</h2>
+        <p style="font-size:0.85rem;color:var(--gray-500);margin-top:-0.35rem">
+          Contas ML: <span id="hint-ml">—</span> · Shopee: <span id="hint-sh">—</span>
         </p>
+        <div style="overflow-x:auto">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Nome</th>
+                <th>Preços</th>
+                <th>Est.</th>
+                <th>Publicar</th>
+              </tr>
+            </thead>
+            <tbody id="tb"></tbody>
+          </table>
+        </div>
       </div>
-    </div>
-    <div id="msg"></div>
-
-    <div class="panel">
-      <h2>Novo produto</h2>
-      <form id="novo" class="form-grid">
-        <div class="form-group">
-          <label>SKU interno *</label>
-          <input name="sku_interno" required placeholder="ex: FILTRO-ABC-01" />
-        </div>
-        <div class="form-group">
-          <label>Nome *</label>
-          <input name="nome" required />
-        </div>
-        <div class="form-group">
-          <label>Preço base (R$)</label>
-          <input name="preco" type="number" step="0.01" value="0" />
-        </div>
-        <div class="form-group">
-          <label>Preço Mercado Livre (R$)</label>
-          <input name="preco_ml" type="number" step="0.01" placeholder="vazio = usa preço base" />
-        </div>
-        <div class="form-group">
-          <label>Preço Shopee (R$)</label>
-          <input name="preco_shopee" type="number" step="0.01" placeholder="vazio = usa preço base" />
-        </div>
-        <div class="form-group">
-          <label>Título anúncio ML (máx. 60)</label>
-          <input name="titulo_ml" maxlength="60" placeholder="opcional — padrão: nome" />
-        </div>
-        <div class="form-group">
-          <label>Título Shopee</label>
-          <input name="titulo_shopee" placeholder="opcional — padrão: nome" />
-        </div>
-        <div class="form-group">
-          <label>Estoque</label>
-          <input name="estoque" type="number" value="0" />
-        </div>
-        <div class="form-group">
-          <label>Categoria ML (ID)</label>
-          <input name="categoria_ml" placeholder="ex: MLB5672" />
-        </div>
-        <div class="form-group">
-          <label>Categoria Shopee (ID folha)</label>
-          <input name="categoria_shopee" type="number" placeholder="número da categoria" />
-        </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Descrição (texto completo — vai para ML e Shopee)</label>
-          <textarea name="descricao" rows="4" placeholder="Especificações, garantia, compatibilidade…"></textarea>
-        </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Imagens ML — JSON com URLs públicas</label>
-          <textarea name="imagens_json" placeholder='["https://seu-cdn.com/foto1.jpg"]'></textarea>
-        </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>IDs de imagem Shopee — JSON (após upload na API / painel)</label>
-          <textarea name="shopee_media_ids_json" placeholder="[123456789, 123456790]"></textarea>
-        </div>
-        <div style="grid-column:1/-1">
-          <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Salvar produto</button>
-        </div>
-      </form>
-    </div>
-
-    <div class="panel">
-      <h2>Cadastrados</h2>
-      <p style="font-size:0.85rem;color:#64748b;margin-top:-0.5rem;">Contas ML: <span id="hint-ml">—</span> · Contas Shopee: <span id="hint-sh">—</span></p>
-      <div style="overflow-x:auto">
-        <table class="data">
-          <thead>
-            <tr>
-              <th>SKU</th>
-              <th>Nome</th>
-              <th>Base / ML / Shopee</th>
-              <th>Est.</th>
-              <th>Publicar</th>
-            </tr>
-          </thead>
-          <tbody id="tb"></tbody>
-        </table>
-      </div>
-    </div>
     </div>
   </main>
+  <div id="jpapg-footer"></div>
+  <script src="js/shell.js"></script>
   <script src="js/app.js"></script>
   <script>
     const msg = document.getElementById('msg');
     let contasMl = [];
     let contasSh = [];
+    let mlPhotoUrls = [];
 
     function showErr(t) {
       msg.innerHTML = '<div class="msg err">' + t + '</div>';
@@ -139,13 +177,81 @@
       return d.innerHTML;
     }
 
+    function syncImagenJson() {
+      document.getElementById('field-imagens-json').value = JSON.stringify(mlPhotoUrls);
+      const manual = document.getElementById('manual-imagens-json');
+      if (manual) manual.value = JSON.stringify(mlPhotoUrls, null, 2);
+      const prev = document.getElementById('apm-preview');
+      prev.innerHTML = mlPhotoUrls
+        .map(
+          (u, i) =>
+            '<span style="position:relative;display:inline-block">' +
+            '<img src="' +
+            escapeHtml(u) +
+            '" alt=""/>' +
+            '<button type="button" data-rm="' +
+            i +
+            '" class="btn btn-sm btn-ghost" style="position:absolute;top:-6px;right:-6px;padding:2px 6px;border-radius:50%" title="Remover">×</button></span>'
+        )
+        .join('');
+      prev.querySelectorAll('[data-rm]').forEach((b) => {
+        b.addEventListener('click', () => {
+          const i = parseInt(b.getAttribute('data-rm'), 10);
+          mlPhotoUrls.splice(i, 1);
+          syncImagenJson();
+        });
+      });
+    }
+
+    document.getElementById('btn-enviar-fotos').addEventListener('click', async () => {
+      const inp = document.getElementById('foto-input');
+      if (!inp.files.length) {
+        showErr('Selecione ao menos uma imagem.');
+        return;
+      }
+      const fd = new FormData();
+      for (const f of inp.files) fd.append('imagens', f);
+      try {
+        const r = await fetch('/api/autopecasrg/upload/imagens', { method: 'POST', credentials: 'include', body: fd });
+        const d = await r.json();
+        if (!r.ok) {
+          showErr(d.error || 'Falha no upload');
+          return;
+        }
+        (d.urls || []).forEach((u) => mlPhotoUrls.push(u));
+        syncImagenJson();
+        showOk('Fotos enviadas. Total na lista: ' + mlPhotoUrls.length + '.');
+        inp.value = '';
+      } catch (e) {
+        showErr('Erro de rede no upload.');
+      }
+    });
+
+    document.getElementById('btn-aplicar-manual').addEventListener('click', () => {
+      const raw = document.getElementById('manual-imagens-json').value.trim();
+      if (!raw) {
+        mlPhotoUrls = [];
+        syncImagenJson();
+        return;
+      }
+      try {
+        const arr = JSON.parse(raw);
+        if (!Array.isArray(arr)) throw new Error('não é array');
+        mlPhotoUrls = arr.map((x) => String(x).trim()).filter(Boolean);
+        syncImagenJson();
+        showOk('Lista aplicada.');
+      } catch {
+        showErr('JSON inválido.');
+      }
+    });
+
     function optsMl() {
-      if (!contasMl.length) return '<option value="">— cadastre contas ML —</option>';
-      return contasMl.map(c => '<option value="' + c.id + '">' + escapeHtml(c.nome) + ' (#' + c.id + ')</option>').join('');
+      if (!contasMl.length) return '<option value="">— cadastre ML —</option>';
+      return contasMl.map((c) => '<option value="' + c.id + '">' + escapeHtml(c.nome) + '</option>').join('');
     }
     function optsSh() {
-      if (!contasSh.length) return '<option value="">— cadastre contas Shopee —</option>';
-      return contasSh.map(c => '<option value="' + c.id + '">' + escapeHtml(c.nome) + ' (#' + c.id + ')</option>').join('');
+      if (!contasSh.length) return '<option value="">— cadastre Shopee —</option>';
+      return contasSh.map((c) => '<option value="' + c.id + '">' + escapeHtml(c.nome) + '</option>').join('');
     }
 
     async function loadContas() {
@@ -162,47 +268,87 @@
     async function loadList() {
       await loadContas();
       const r = await fetch('/api/autopecasrg/produtos', { credentials: 'include' });
-      if (r.status === 401) { window.location.href = 'login.html'; return; }
+      if (r.status === 401) {
+        window.location.href = 'login.html';
+        return;
+      }
       const rows = await r.json();
       const tb = document.getElementById('tb');
-      tb.innerHTML = rows.map(p => {
-        const pb = formatMoney(p.preco);
-        const pm = p.preco_ml != null ? formatMoney(p.preco_ml) : '—';
-        const ps = p.preco_shopee != null ? formatMoney(p.preco_shopee) : '—';
-        return `<tr>
-          <td>${escapeHtml(p.sku_interno)}</td>
-          <td>${escapeHtml(p.nome)}</td>
-          <td style="font-size:0.8rem">${pb}<br><span style="color:#0d9488">ML ${pm}</span> · <span style="color:#ee4d2d">Sh ${ps}</span></td>
-          <td>${p.estoque}</td>
-          <td style="white-space:nowrap">
-            <select class="sel-ml" data-pid="${p.id}" style="max-width:120px;font-size:0.75rem">${optsMl()}</select>
-            <button type="button" class="btn btn-sm btn-ghost btn-ml" data-pid="${p.id}">ML</button>
-            <select class="sel-sh" data-pid="${p.id}" style="max-width:120px;font-size:0.75rem">${optsSh()}</select>
-            <button type="button" class="btn btn-sm btn-ghost btn-sh" data-pid="${p.id}">Shopee</button>
-            <button type="button" class="btn btn-sm btn-primary btn-all" data-pid="${p.id}" title="Todas as contas">Todas</button>
-          </td>
-        </tr>`;
-      }).join('') || '<tr><td colspan="5">Nenhum produto.</td></tr>';
+      tb.innerHTML =
+        rows
+          .map((p) => {
+            const pb = formatMoney(p.preco);
+            const pm = p.preco_ml != null ? formatMoney(p.preco_ml) : '—';
+            const ps = p.preco_shopee != null ? formatMoney(p.preco_shopee) : '—';
+            return (
+              '<tr>' +
+              '<td>' +
+              escapeHtml(p.sku_interno) +
+              '</td>' +
+              '<td>' +
+              escapeHtml(p.nome) +
+              '</td>' +
+              '<td style="font-size:0.8rem">' +
+              pb +
+              '<br><span style="color:var(--accent-teal)">ML ' +
+              pm +
+              '</span> · <span style="color:#ee4d2d">Sh ' +
+              ps +
+              '</span></td>' +
+              '<td>' +
+              p.estoque +
+              '</td>' +
+              '<td style="white-space:nowrap">' +
+              '<select class="sel-ml" data-pid="' +
+              p.id +
+              '" style="max-width:110px;font-size:0.75rem">' +
+              optsMl() +
+              '</select> ' +
+              '<button type="button" class="btn btn-sm btn-ghost btn-ml" data-pid="' +
+              p.id +
+              '">ML</button> ' +
+              '<select class="sel-sh" data-pid="' +
+              p.id +
+              '" style="max-width:110px;font-size:0.75rem">' +
+              optsSh() +
+              '</select> ' +
+              '<button type="button" class="btn btn-sm btn-ghost btn-sh" data-pid="' +
+              p.id +
+              '">Sh</button> ' +
+              '<button type="button" class="btn btn-sm btn-primary btn-all" data-pid="' +
+              p.id +
+              '" title="Todas">Todas</button>' +
+              '</td>' +
+              '</tr>'
+            );
+          })
+          .join('') || '<tr><td colspan="5">Nenhum produto.</td></tr>';
 
-      tb.querySelectorAll('.btn-ml').forEach(b => {
+      tb.querySelectorAll('.btn-ml').forEach((b) => {
         b.addEventListener('click', () => {
           const pid = b.getAttribute('data-pid');
           const sel = tb.querySelector('.sel-ml[data-pid="' + pid + '"]');
           const cid = sel && sel.value;
-          if (!cid) { showErr('Escolha uma conta ML.'); return; }
+          if (!cid) {
+            showErr('Escolha uma conta ML.');
+            return;
+          }
           publicarMl(pid, cid);
         });
       });
-      tb.querySelectorAll('.btn-sh').forEach(b => {
+      tb.querySelectorAll('.btn-sh').forEach((b) => {
         b.addEventListener('click', () => {
           const pid = b.getAttribute('data-pid');
           const sel = tb.querySelector('.sel-sh[data-pid="' + pid + '"]');
           const cid = sel && sel.value;
-          if (!cid) { showErr('Escolha uma conta Shopee.'); return; }
+          if (!cid) {
+            showErr('Escolha uma conta Shopee.');
+            return;
+          }
           publicarSh(pid, cid);
         });
       });
-      tb.querySelectorAll('.btn-all').forEach(b => {
+      tb.querySelectorAll('.btn-all').forEach((b) => {
         b.addEventListener('click', () => publicarTodos(b.getAttribute('data-pid')));
       });
     }
@@ -232,45 +378,39 @@
     }
 
     async function publicarTodos(id) {
-      const mlIds = contasMl.filter(c => c.autorizado).map(c => c.id);
-      const shIds = contasSh.filter(c => c.tem_token).map(c => c.id);
+      const mlIds = contasMl.filter((c) => c.autorizado).map((c) => c.id);
+      const shIds = contasSh.filter((c) => c.tem_token).map((c) => c.id);
       if (!mlIds.length && !shIds.length) {
         showErr('Autorize contas ML (OAuth) e/ou informe refresh_token nas contas Shopee.');
         return;
       }
-      if (!confirm('Publicar nesta conta(s): ' + mlIds.length + ' ML e ' + shIds.length + ' Shopee?')) return;
-      const body = { contas_ml_ids: mlIds, contas_shopee_ids: shIds };
+      if (!confirm('Publicar em ' + mlIds.length + ' ML e ' + shIds.length + ' Shopee?')) return;
       const r = await fetch('/api/autopecasrg/produtos/' + id + '/publicar-todos', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify({ contas_ml_ids: mlIds, contas_shopee_ids: shIds })
       });
       const d = await r.json().catch(() => ({}));
-      if (!r.ok) { showErr(d.error || 'Falha'); return; }
+      if (!r.ok) {
+        showErr(d.error || 'Falha');
+        return;
+      }
       const okn = (d.resultados || []).length;
       const bad = (d.erros || []).length;
-      showOk('Concluído: ' + okn + ' ok, ' + bad + ' erro(s). Ver console ou resposta da API.');
+      showOk('Concluído: ' + okn + ' ok, ' + bad + ' erro(s).');
       if (bad && d.erros) console.table(d.erros);
     }
 
     document.getElementById('novo').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
-      function parseJsonField(name, required) {
-        const raw = fd.get(name);
-        if (!raw || !String(raw).trim()) return null;
-        try { return JSON.parse(String(raw)); } catch {
-          if (required) throw new Error(name + ' JSON inválido');
-          return null;
-        }
-      }
       let imagens_json = null;
       try {
-        const raw = fd.get('imagens_json');
-        if (raw && String(raw).trim()) imagens_json = JSON.parse(String(raw));
+        const raw = document.getElementById('field-imagens-json').value;
+        if (raw && raw.trim()) imagens_json = JSON.parse(raw);
       } catch {
-        showErr('imagens_json inválido.');
+        showErr('Lista de fotos inválida.');
         return;
       }
       let shopee_media_ids_json = null;
@@ -278,7 +418,7 @@
         const raw = fd.get('shopee_media_ids_json');
         if (raw && String(raw).trim()) shopee_media_ids_json = JSON.parse(String(raw));
       } catch {
-        showErr('shopee_media_ids_json inválido.');
+        showErr('IDs Shopee (JSON) inválidos.');
         return;
       }
       const body = {
@@ -303,12 +443,18 @@
         body: JSON.stringify(body)
       });
       const d = await r.json().catch(() => ({}));
-      if (r.ok) { showOk('Produto salvo.'); e.target.reset(); loadList(); }
-      else showErr(d.error || 'Erro ao salvar');
+      if (r.ok) {
+        showOk('Produto salvo.');
+        e.target.reset();
+        mlPhotoUrls = [];
+        syncImagenJson();
+        loadList();
+      } else showErr(d.error || 'Erro ao salvar');
     });
 
     (async function () {
       await checkAuth(true);
+      syncImagenJson();
       await loadList();
     })();
   </script>

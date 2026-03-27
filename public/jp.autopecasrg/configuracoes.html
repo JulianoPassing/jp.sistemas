@@ -4,149 +4,151 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JP Auto Peças RG — Configurações</title>
+  <link rel="icon" type="image/png" href="https://i.imgur.com/TwZLW6a.png" />
+  <meta name="theme-color" content="#002f4b" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="../style-sistema.css" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
-<body class="sistema-padrao">
-  <header class="sistema-header">
-    <div class="header-content">
-      <a href="dashboard.html" class="logo" style="gap:0.5rem">
-        <i class="fas fa-warehouse"></i>
-        <span>JP Auto Peças RG</span>
-      </a>
-      <nav>
-        <a href="dashboard.html" class="nav-link"><i class="fas fa-chart-pie"></i> Painel</a>
-        <a href="estoque.html" class="nav-link"><i class="fas fa-boxes-stacked"></i> Estoque</a>
-        <a href="configuracoes.html" class="nav-link active"><i class="fas fa-sliders"></i> Configurações</a>
-        <a href="#" class="nav-link nav-sair" onclick="logout();return false;"><i class="fas fa-sign-out-alt"></i> Sair</a>
-      </nav>
-    </div>
-  </header>
-  <main class="sistema-main">
+<body class="sistema-padrao apm-layout" data-page="config">
+  <div id="jpapg-header"></div>
+  <main class="sistema-main apm-grow">
     <div class="sistema-container">
-    <div class="sistema-page-header">
-      <div class="sistema-page-header-icon"><i class="fas fa-sliders"></i></div>
-      <div class="sistema-page-header-text">
-        <h1 class="page-title">Configurações</h1>
-        <p class="page-subtitle">Mercado Livre (várias contas), Shopee, etiquetas e impressão. No ML, crie um aplicativo em developers.mercadolibre.com.br e use a mesma URL de redirect do servidor.</p>
+      <div class="sistema-page-header">
+        <div class="sistema-page-header-icon"><i class="fas fa-sliders"></i></div>
+        <div class="sistema-page-header-text">
+          <h1 class="page-title">Configurações</h1>
+          <p class="page-subtitle">Contas dos marketplaces, etiquetas e webhooks.</p>
+        </div>
       </div>
-    </div>
-    <div id="msg"></div>
+      <div id="msg"></div>
 
-    <div class="panel">
-      <h2><i class="fas fa-truck"></i> Etiquetas e vendas (ML + Shopee)</h2>
-      <p style="color:#64748b;font-size:0.88rem;margin-top:-0.5rem;">
-        Com <strong>pagamento aprovado</strong>, o sistema pode dar <strong>baixa no estoque</strong> (e sincronizar nas outras plataformas),
-        baixar o PDF da etiqueta e imprimir. Configure impressora e formato <strong>por canal</strong> abaixo.
-      </p>
-      <p style="color:#64748b;font-size:0.82rem;margin-top:0.25rem;">
-        <strong>ML:</strong> URL de notificações no app: <code style="font-size:0.72rem">https://seu-dominio/api/autopecasrg/webhooks/ml</code> (tópico pedidos).
-        <strong>Shopee:</strong> callback Open Platform: <code style="font-size:0.72rem">https://seu-dominio/api/autopecasrg/webhooks/shopee</code>
-        (o corpo deve incluir <code>shop_id</code> e <code>order_sn</code> — ajuste no Partner Center se o payload for outro).
-      </p>
-      <form id="form-etiq" class="form-grid">
-        <div class="form-group">
-          <label>Intervalo de verificação worker ML (segundos)</label>
-          <input name="intervalo_segundos" type="number" min="60" value="300" />
-        </div>
-        <div class="form-group">
-          <label>Impressora padrão (fallback)</label>
-          <input name="impressora_nome" placeholder="nome no Windows/CUPS, se usar só um aparelho" />
-        </div>
-        <div class="form-group">
-          <label>Impressora Mercado Livre</label>
-          <input name="impressora_ml" placeholder="opcional; sobrepõe a padrão para ML" />
-        </div>
-        <div class="form-group">
-          <label>Impressora Shopee</label>
-          <input name="impressora_shopee" placeholder="opcional; sobrepõe a padrão para Shopee" />
-        </div>
-        <div class="form-group">
-          <label>Formato etiqueta ML (API Mercado Envios)</label>
-          <select name="formato_ml">
-            <option value="pdf">pdf</option>
-            <option value="pdf_a4" selected>pdf_a4</option>
-            <option value="zpl2">zpl2</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Formato documento Shopee</label>
-          <input name="formato_shopee" value="pdf_a4" placeholder="reservado / doc regional" />
-        </div>
-        <div class="form-group">
-          <label>Pasta para PDFs na VPS</label>
-          <input name="pasta_download" placeholder="/var/lib/autopecasrg/etiquetas" />
-        </div>
-        <div class="form-group">
-          <label><input type="checkbox" name="baixar_pdf_automatico" checked /> Baixar PDF automaticamente</label>
-        </div>
-        <div class="form-group">
-          <label><input type="checkbox" name="imprimir_automatico" /> Legado: imprimir (se os específicos abaixo estiverem vazios)</label>
-        </div>
-        <div class="form-group">
-          <label><input type="checkbox" name="baixa_estoque_auto" checked /> Baixa automática de estoque ao confirmar pagamento</label>
-        </div>
-        <div class="form-group">
-          <label><input type="checkbox" name="imprimir_auto_ml" checked /> Imprimir etiqueta ML automaticamente</label>
-        </div>
-        <div class="form-group">
-          <label><input type="checkbox" name="imprimir_auto_shopee" checked /> Imprimir etiqueta Shopee automaticamente</label>
-        </div>
-        <div style="grid-column:1/-1">
-          <button type="submit" class="btn btn-primary">Salvar</button>
-        </div>
-      </form>
-    </div>
+      <div class="apm-help" style="margin-bottom:1rem">
+        <strong>Webhooks (copie para o app / Partner Center):</strong><br />
+        ML: <code style="font-size:0.78rem">https://seu-dominio/api/autopecasrg/webhooks/ml</code> (pedidos)<br />
+        Shopee: <code style="font-size:0.78rem">https://seu-dominio/api/autopecasrg/webhooks/shopee</code>
+      </div>
 
-    <div class="panel">
-      <h2><i class="fab fa-font-awesome"></i> Contas Mercado Livre</h2>
-      <form id="form-ml" class="form-grid">
-        <div class="form-group">
-          <label>Nome da conta</label>
-          <input name="nome" required placeholder="Loja principal" />
-        </div>
-        <div class="form-group">
-          <label>App ID (Client ID)</label>
-          <input name="app_id" required />
-        </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Client Secret</label>
-          <input name="client_secret" type="password" required autocomplete="new-password" />
-        </div>
-        <div style="grid-column:1/-1">
-          <button type="submit" class="btn btn-primary">Adicionar conta</button>
-        </div>
-      </form>
-      <table class="data" style="margin-top:1rem">
-        <thead><tr><th>ID</th><th>Nome</th><th>App ID</th><th>OAuth</th><th></th></tr></thead>
-        <tbody id="tb-ml"></tbody>
-      </table>
-    </div>
+      <details class="apm-details panel" open>
+        <summary style="padding:0.5rem 0 0"><strong><i class="fas fa-truck" style="color:var(--accent-teal)"></i> Etiquetas e vendas automáticas</strong></summary>
+        <form id="form-etiq" class="form-grid" style="margin-top:0.75rem">
+          <div class="form-group">
+            <label>Intervalo worker ML (seg)</label>
+            <input name="intervalo_segundos" type="number" min="60" value="300" />
+          </div>
+          <div class="form-group">
+            <label>Impressora padrão</label>
+            <input name="impressora_nome" placeholder="fallback" />
+          </div>
+          <div class="form-group">
+            <label>Impressora ML</label>
+            <input name="impressora_ml" placeholder="opcional" />
+          </div>
+          <div class="form-group">
+            <label>Impressora Shopee</label>
+            <input name="impressora_shopee" placeholder="opcional" />
+          </div>
+          <div class="form-group">
+            <label>Formato etiqueta ML</label>
+            <select name="formato_ml">
+              <option value="pdf">pdf</option>
+              <option value="pdf_a4" selected>pdf_a4</option>
+              <option value="zpl2">zpl2</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Formato Shopee (reserva)</label>
+            <input name="formato_shopee" value="pdf_a4" />
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Pasta PDFs (servidor)</label>
+            <input name="pasta_download" placeholder="/var/lib/autopecasrg/etiquetas" />
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" name="baixar_pdf_automatico" checked /> Baixar PDF da etiqueta</label>
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" name="imprimir_automatico" /> Imprimir (legado)</label>
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" name="baixa_estoque_auto" checked /> Baixa de estoque ao pagar</label>
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" name="imprimir_auto_ml" checked /> Imprimir ML</label>
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" name="imprimir_auto_shopee" checked /> Imprimir Shopee</label>
+          </div>
+          <div style="grid-column:1/-1">
+            <button type="submit" class="btn btn-primary">Salvar etiquetas</button>
+          </div>
+        </form>
+      </details>
 
-    <div class="panel">
-      <h2><i class="fas fa-shopping-bag"></i> Contas Shopee (Partner API)</h2>
-      <p style="color:#64748b;font-size:0.88rem;">Armazene credenciais para futura publicação e sync de estoque (assinatura de requisições Shopee).</p>
-      <form id="form-sh" class="form-grid">
-        <div class="form-group"><label>Nome</label><input name="nome" required /></div>
-        <div class="form-group"><label>Partner ID</label><input name="partner_id" required /></div>
-        <div class="form-group"><label>Shop ID</label><input name="shop_id" required /></div>
-        <div class="form-group" style="grid-column:1/-1"><label>Partner Key</label><input name="partner_key" type="password" required /></div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Refresh token (Partner Center — necessário para publicar)</label>
-          <input name="refresh_token" type="password" autocomplete="off" placeholder="cole uma vez; fica criptografado" />
-        </div>
-        <div style="grid-column:1/-1"><button type="submit" class="btn btn-primary">Salvar conta Shopee</button></div>
-      </form>
-      <table class="data" style="margin-top:1rem">
-        <thead><tr><th>ID</th><th>Nome</th><th>Shop</th></tr></thead>
-        <tbody id="tb-sh"></tbody>
-      </table>
-    </div>
+      <details class="apm-details panel" open>
+        <summary style="padding:0.5rem 0 0"><strong><i class="fas fa-store" style="color:var(--accent-teal)"></i> Contas Mercado Livre</strong></summary>
+        <p style="font-size:0.85rem;color:var(--gray-500);margin:0.5rem 0">App em <code>developers.mercadolibre.com.br</code> — mesma URL de redirect do servidor.</p>
+        <form id="form-ml" class="form-grid" style="margin-top:0.5rem">
+          <div class="form-group">
+            <label>Nome</label>
+            <input name="nome" required placeholder="Loja principal" />
+          </div>
+          <div class="form-group">
+            <label>App ID</label>
+            <input name="app_id" required />
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Client Secret</label>
+            <input name="client_secret" type="password" required autocomplete="new-password" />
+          </div>
+          <div style="grid-column:1/-1">
+            <button type="submit" class="btn btn-primary">Adicionar conta</button>
+          </div>
+        </form>
+        <table class="data" style="margin-top:1rem">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>App ID</th>
+              <th>OAuth</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tb-ml"></tbody>
+        </table>
+      </details>
+
+      <details class="apm-details panel" open>
+        <summary style="padding:0.5rem 0 0"><strong><i class="fas fa-shopping-bag" style="color:var(--accent-teal)"></i> Contas Shopee</strong></summary>
+        <form id="form-sh" class="form-grid" style="margin-top:0.75rem">
+          <div class="form-group"><label>Nome</label><input name="nome" required /></div>
+          <div class="form-group"><label>Partner ID</label><input name="partner_id" required /></div>
+          <div class="form-group"><label>Shop ID</label><input name="shop_id" required /></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Partner Key</label><input name="partner_key" type="password" required /></div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Refresh token</label>
+            <input name="refresh_token" type="password" autocomplete="off" placeholder="cole uma vez" />
+          </div>
+          <div style="grid-column:1/-1"><button type="submit" class="btn btn-primary">Salvar conta Shopee</button></div>
+        </form>
+        <table class="data" style="margin-top:1rem">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Shop</th>
+            </tr>
+          </thead>
+          <tbody id="tb-sh"></tbody>
+        </table>
+      </details>
     </div>
   </main>
+  <div id="jpapg-footer"></div>
+  <script src="js/shell.js"></script>
   <script src="js/app.js"></script>
   <script>
     const msg = document.getElementById('msg');
@@ -157,13 +159,16 @@
     (function mlQuery() {
       const q = new URLSearchParams(location.search);
       if (q.get('ml') === 'ok') flash('Mercado Livre autorizado com sucesso.', true);
-      if (q.get('ml') === 'erro') flash('Erro na autorização ML. Verifique App ID, Secret e URL de redirect.', false);
+      if (q.get('ml') === 'erro') flash('Erro na autorização ML.', false);
       if (q.get('ml') === 'denied') flash('Autorização negada no ML.', false);
     })();
 
     async function loadCfg() {
       const r = await fetch('/api/autopecasrg/config/etiquetas', { credentials: 'include' });
-      if (r.status === 401) { window.location.href = 'login.html'; return; }
+      if (r.status === 401) {
+        window.location.href = 'login.html';
+        return;
+      }
       const c = await r.json();
       const f = document.getElementById('form-etiq');
       f.intervalo_segundos.value = c.intervalo_segundos || 300;
@@ -202,25 +207,29 @@
           imprimir_auto_shopee: f.imprimir_auto_shopee.checked
         })
       });
-      flash(r.ok ? 'Configuração de etiquetas salva.' : 'Erro ao salvar.', r.ok);
+      flash(r.ok ? 'Salvo.' : 'Erro ao salvar.', r.ok);
     });
 
     async function loadMl() {
       const r = await fetch('/api/autopecasrg/contas-ml', { credentials: 'include' });
       const rows = await r.json();
-      document.getElementById('tb-ml').innerHTML = rows.map(row => `
-        <tr>
+      document.getElementById('tb-ml').innerHTML =
+        rows
+          .map(
+            (row) =>
+              `<tr>
           <td>${row.id}</td>
           <td>${escape(row.nome)}</td>
           <td>${escape(row.app_id)}</td>
           <td>${row.autorizado ? '<span class="badge badge-ok">OK</span>' : '<span class="badge badge-warn">pendente</span>'}</td>
           <td>
-            <a class="btn btn-sm btn-primary" href="/api/autopecasrg/oauth/ml/start?contaId=${row.id}">Autorizar ML</a>
+            <a class="btn btn-sm btn-primary" href="/api/autopecasrg/oauth/ml/start?contaId=${row.id}">Autorizar</a>
             <button type="button" class="btn btn-sm btn-ghost" data-del-ml="${row.id}">Remover</button>
           </td>
-        </tr>
-      `).join('') || '<tr><td colspan="5">Nenhuma conta.</td></tr>';
-      document.querySelectorAll('[data-del-ml]').forEach(b => {
+        </tr>`
+          )
+          .join('') || '<tr><td colspan="5">Nenhuma conta.</td></tr>';
+      document.querySelectorAll('[data-del-ml]').forEach((b) => {
         b.addEventListener('click', async () => {
           if (!confirm('Remover esta conta?')) return;
           await fetch('/api/autopecasrg/contas-ml/' + b.getAttribute('data-del-ml'), { method: 'DELETE', credentials: 'include' });
@@ -249,16 +258,19 @@
         })
       });
       const d = await r.json().catch(() => ({}));
-      if (r.ok) { flash('Conta adicionada. Clique em Autorizar ML.', true); f.reset(); loadMl(); }
-      else flash(d.error || 'Erro', false);
+      if (r.ok) {
+        flash('Conta adicionada. Clique em Autorizar.', true);
+        f.reset();
+        loadMl();
+      } else flash(d.error || 'Erro', false);
     });
 
     async function loadSh() {
       const r = await fetch('/api/autopecasrg/contas-shopee', { credentials: 'include' });
       const rows = await r.json();
-      document.getElementById('tb-sh').innerHTML = rows.map(row => `
-        <tr><td>${row.id}</td><td>${escape(row.nome)}</td><td>${escape(row.shop_id)}</td></tr>
-      `).join('') || '<tr><td colspan="3">Nenhuma conta Shopee.</td></tr>';
+      document.getElementById('tb-sh').innerHTML =
+        rows.map((row) => `<tr><td>${row.id}</td><td>${escape(row.nome)}</td><td>${escape(row.shop_id)}</td></tr>`).join('') ||
+        '<tr><td colspan="3">Nenhuma conta Shopee.</td></tr>';
     }
 
     document.getElementById('form-sh').addEventListener('submit', async (e) => {
@@ -277,8 +289,11 @@
         })
       });
       const d = await r.json().catch(() => ({}));
-      if (r.ok) { flash(d.aviso || 'Salvo.', true); f.reset(); loadSh(); }
-      else flash(d.error || 'Erro', false);
+      if (r.ok) {
+        flash(d.aviso || 'Salvo.', true);
+        f.reset();
+        loadSh();
+      } else flash(d.error || 'Erro', false);
     });
 
     (async function () {
