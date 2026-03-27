@@ -671,7 +671,7 @@ router.get('/contas-ml', requireAuth, async (req, res) => {
     const pool = getPool();
     const [rows] = await pool.execute(
       `SELECT id, nome, app_id, ativo, seller_id, nickname, token_expires_at,
-              (refresh_token_enc IS NOT NULL) AS autorizado
+              (refresh_token_enc IS NOT NULL OR access_token_enc IS NOT NULL) AS autorizado
        FROM contas_mercadolivre WHERE usuario_id = ? ORDER BY id`,
       [req.autopecasrgUsuarioId]
     );
@@ -806,10 +806,20 @@ router.get('/oauth/ml/callback', async (req, res) => {
       clientSecret,
       redirectUri
     });
+    if (!data.access_token) {
+      console.error('[autopecasrg] oauth/ml callback sem access_token', data);
+      return res.redirect(`${cfgUrl}?ml=erro`);
+    }
+    const refreshTok = data.refresh_token || null;
+    if (!refreshTok) {
+      console.warn(
+        '[autopecasrg] oauth/ml: resposta sem refresh_token — ative escopos no app ML e use Autorizar de novo. Salvando só access_token.'
+      );
+    }
     const exp = new Date(Date.now() + (data.expires_in || 21600) * 1000);
     await pool.execute(
       `UPDATE contas_mercadolivre SET refresh_token_enc = ?, access_token_enc = ?, token_expires_at = ?, seller_id = ? WHERE id = ?`,
-      [encryptSecret(data.refresh_token), encryptSecret(data.access_token), exp, data.user_id || null, contaId]
+      [refreshTok ? encryptSecret(refreshTok) : null, encryptSecret(data.access_token), exp, data.user_id || null, contaId]
     );
     delete req.session.mlOauthState;
     delete req.session.mlOauthContaId;
