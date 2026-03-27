@@ -570,12 +570,15 @@ router.delete('/contas-ml/:id', requireAuth, async (req, res) => {
   }
 });
 
-// OAuth ML
+// OAuth ML (conta cadastrada manualmente com App ID + Secret)
 router.get('/oauth/ml/start', requireAuth, async (req, res) => {
   const contaId = parseInt(req.query.contaId, 10);
   const redirectUri = process.env.AUTOPECASRG_ML_REDIRECT_URI;
   if (!redirectUri) {
     return res.status(500).send('Defina AUTOPECASRG_ML_REDIRECT_URI no servidor (URL de callback cadastrada no app ML).');
+  }
+  if (!contaId || Number.isNaN(contaId)) {
+    return res.status(400).send('Informe contaId (cadastre a conta no formulário primeiro).');
   }
   try {
     const pool = getPool();
@@ -636,12 +639,15 @@ router.get('/oauth/ml/callback', async (req, res) => {
   }
 });
 
-// OAuth Shopee (Partner): login do vendedor na loja → code + shop_id → tokens
+// OAuth Shopee (Partner): conta com Partner ID + Key já salva
 router.get('/oauth/shopee/start', requireAuth, async (req, res) => {
   const contaId = parseInt(req.query.contaId, 10);
   const redirectUri = process.env.AUTOPECASRG_SHOPEE_REDIRECT_URI;
   if (!redirectUri) {
     return res.status(500).send('Defina AUTOPECASRG_SHOPEE_REDIRECT_URI (URL de callback cadastrada no app Open Platform Shopee).');
+  }
+  if (!contaId || Number.isNaN(contaId)) {
+    return res.status(400).send('Informe contaId (cadastre a conta no formulário primeiro).');
   }
   try {
     const pool = getPool();
@@ -674,7 +680,7 @@ router.get('/oauth/shopee/callback', async (req, res) => {
     return res.redirect(`${cfgUrl}?sh=denied`);
   }
   if (!req.session || !req.session.shopeeOauthContaId) {
-    return res.status(400).send('Sessão inválida. Abra o módulo logado e use “Conectar com Shopee” de novo.');
+    return res.status(400).send('Sessão inválida. Abra o módulo logado e use Autorizar Shopee de novo.');
   }
   const contaId = req.session.shopeeOauthContaId;
   const redirectUri = process.env.AUTOPECASRG_SHOPEE_REDIRECT_URI;
@@ -702,13 +708,7 @@ router.get('/oauth/shopee/callback', async (req, res) => {
     const shopIdFinal = data.shop_id != null ? String(data.shop_id) : String(shopIdQ);
     await pool.execute(
       `UPDATE contas_shopee SET shop_id = ?, refresh_token_enc = ?, access_token_enc = ?, token_expires_at = ? WHERE id = ?`,
-      [
-        shopIdFinal,
-        encryptSecret(data.refresh_token),
-        encryptSecret(data.access_token),
-        exp,
-        contaId
-      ]
+      [shopIdFinal, encryptSecret(data.refresh_token), encryptSecret(data.access_token), exp, contaId]
     );
     delete req.session.shopeeOauthState;
     delete req.session.shopeeOauthContaId;
@@ -832,7 +832,7 @@ router.post('/contas-shopee', requireAuth, async (req, res) => {
       id: r.insertId,
       aviso: rt
         ? 'Conta salva com refresh_token. Pode publicar produtos na Shopee.'
-        : 'Use “Conectar com Shopee” na tabela ou informe refresh_token manualmente.'
+        : 'Use “Autorizar Shopee” na tabela ou informe refresh_token manualmente.'
     });
   } catch (e) {
     console.error(e);
