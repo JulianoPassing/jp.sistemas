@@ -40,6 +40,97 @@ function normCategoriaShopee(v) {
   return Number.isFinite(n) ? n : DEFAULT_CATEGORIA_SHOPEE;
 }
 
+/** Atributos com tags.read_only/hidden não entram no POST inicial do item. */
+function atributoMlPrecisaPreencher(a) {
+  const t = a.tags || {};
+  if (t.read_only || t.hidden) return false;
+  if (t.required === true || t.catalog_required === true) return true;
+  if (t.fixed === true && Array.isArray(a.values) && a.values.length) return true;
+  return false;
+}
+
+function valorPadraoAtributoMl(a, sku, nomeProd) {
+  const id = a.id;
+  const max = a.value_max_length ? Math.min(255, a.value_max_length) : 255;
+  if (id === 'BRAND') return { id: 'BRAND', value_name: 'Genérica' };
+  if (id === 'PART_NUMBER') return { id: 'PART_NUMBER', value_name: String(sku).slice(0, 255) };
+  if (id === 'COLOR' && a.value_type === 'list' && a.values && a.values.length) {
+    const preto = a.values.find((v) => /preto/i.test(v.name || '')) || a.values[0];
+    return { id: 'COLOR', value_id: preto.id };
+  }
+  if (a.value_type === 'boolean' && a.values && a.values.length) {
+    return { id, value_id: a.values[0].id };
+  }
+  if (a.value_type === 'list' && a.values && a.values.length) {
+    return { id, value_id: a.values[0].id };
+  }
+  if (a.value_type === 'number' || a.value_type === 'number_unit') {
+    return { id, value_name: '1' };
+  }
+  return { id, value_name: String(nomeProd).slice(0, max) };
+}
+
+function parseAtributosJsonProduto(prod) {
+  try {
+    if (prod.atributos_json == null) return [];
+    const p = typeof prod.atributos_json === 'string' ? JSON.parse(prod.atributos_json) : prod.atributos_json;
+    return Array.isArray(p) ? p.filter((x) => x && x.id) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Monta o array `attributes` exigido pelo ML (marca, nº de peça, tipo de veículo, etc.).
+ * Usa `atributos_json` do produto quando existir e completa obrigatórios da categoria (API pública).
+ */
+async function mlMontarAttributesParaItem(prod, categoryId) {
+  const sku = String(prod.sku_interno || '').trim() || 'N/A';
+  const nome = String(prod.nome || '').trim() || 'Produto';
+  const user = parseAtributosJsonProduto(prod);
+  const byId = new Map(user.map((x) => [String(x.id), x]));
+
+  let schema = [];
+  try {
+    const r = await fetch(
+      `https://api.mercadolibre.com/categories/${encodeURIComponent(categoryId)}/attributes`
+    );
+    if (r.ok) {
+      const j = await r.json();
+      if (Array.isArray(j)) schema = j;
+    }
+  } catch {
+    schema = [];
+  }
+
+  if (schema.length) {
+    for (const a of schema) {
+      if (!atributoMlPrecisaPreencher(a)) continue;
+      if (byId.has(String(a.id))) continue;
+      const def = valorPadraoAtributoMl(a, sku, nome);
+      if (def) byId.set(String(a.id), def);
+    }
+  } else {
+    if (!byId.has('BRAND')) byId.set('BRAND', { id: 'BRAND', value_name: 'Genérica' });
+    if (!byId.has('PART_NUMBER')) byId.set('PART_NUMBER', { id: 'PART_NUMBER', value_name: sku.slice(0, 255) });
+    if (!byId.has('VEHICLE_TYPE')) byId.set('VEHICLE_TYPE', { id: 'VEHICLE_TYPE', value_id: '11377043' });
+  }
+
+  return Array.from(byId.values());
+}
+
+function mensagemErroMlApi(e) {
+  const d = e.detail || {};
+  if (Array.isArray(d.cause) && d.cause.length) {
+    const parts = d.cause
+      .map((c) => (c && (c.message || c.code)) || '')
+      .filter(Boolean);
+    if (parts.length) return parts.join(' ');
+  }
+  if (d.message && typeof d.message === 'string') return d.message;
+  return e.message || 'Erro na API do Mercado Livre';
+}
+
 function precoMl(prod) {
   return prod.preco_ml != null ? Number(prod.preco_ml) : Number(prod.preco);
 }
@@ -1036,6 +1127,7 @@ router.post('/produtos/:id/publicar-ml', requireAuth, async (req, res) => {
       });
     }
     const titulo = (prod.titulo_ml || prod.nome).trim().slice(0, 60);
+    const attributes = await mlMontarAttributesParaItem(prod, catMl);
     const body = {
       title: titulo,
       category_id: catMl,
@@ -1045,7 +1137,8 @@ router.post('/produtos/:id/publicar-ml', requireAuth, async (req, res) => {
       buying_mode: 'buy_it_now',
       listing_type_id: prod.listing_type_ml || 'gold_special',
       condition: prod.condicao_ml || 'new',
-      pictures: imagens
+      pictures: imagens,
+      attributes
     };
     const created = await ml.createItem(token, body);
     const itemId = created.id;
@@ -1065,7 +1158,13 @@ router.post('/produtos/:id/publicar-ml', requireAuth, async (req, res) => {
     res.json({ ok: true, mercadolivre_item_id: itemId, permalink: created.permalink });
   } catch (e) {
     console.error('[autopecasrg] publicar-ml', e);
-    res.status(500).json({ error: e.message || 'Falha ao publicar', detail: e.detail });
+    const st = typeof e.status === 'number' ? e.status : 500;
+    const clientErr = st >= 400 && st < 500;
+    res.status(clientErr ? st : 500).json({
+      error: mensagemErroMlApi(e),
+      detail: e.detail,
+      code: e.code || (clientErr ? 'ml_api' : undefined)
+    });
   }
 });
 
@@ -1288,6 +1387,7 @@ router.post('/produtos/:id/publicar-todos', requireAuth, async (req, res) => {
         }
         if (!imagens.length) throw new Error('Sem imagens_json');
         const titulo = (prod.titulo_ml || prod.nome).trim().slice(0, 60);
+        const attributes = await mlMontarAttributesParaItem(prod, catMlNorm);
         const body = {
           title: titulo,
           category_id: catMlNorm,
@@ -1297,7 +1397,8 @@ router.post('/produtos/:id/publicar-todos', requireAuth, async (req, res) => {
           buying_mode: 'buy_it_now',
           listing_type_id: prod.listing_type_ml || 'gold_special',
           condition: prod.condicao_ml || 'new',
-          pictures: imagens
+          pictures: imagens,
+          attributes
         };
         const created = await ml.createItem(token, body);
         const itemId = created.id;
