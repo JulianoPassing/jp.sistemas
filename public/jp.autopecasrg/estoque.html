@@ -594,6 +594,16 @@
           'Falta foto com URL pública: envie imagens pelo botão "Enviar para o servidor" (ou URLs https no JSON) e salve o produto antes de publicar.';
       } else if (d.code === 'invalid_conta') {
         msg = 'Conta Mercado Livre inválida. Recarregue a página e escolha a conta no seletor.';
+      } else if (d.code === 'ml_oauth_required') {
+        msg =
+          d.error ||
+          'Autorize o Mercado Livre em Configurações (botão Autorizar). É preciso receber refresh_token (escopo offline_access no app ML).';
+      } else if (d.code === 'ml_crypto_mismatch') {
+        msg =
+          d.error ||
+          'Token ML não confere com a chave do servidor. Use a mesma SESSION_SECRET/AUTOPECASRG_CRYPTO_KEY da instalação que autorizou a conta, ou autorize de novo.';
+      } else if (d.code === 'ml_config') {
+        msg = d.error || 'Revise app_id e client secret da conta ML em Configurações.';
       }
       if (d.detail && typeof d.detail === 'object' && d.detail.message) msg += ' — ' + d.detail.message;
       showErr(msg);

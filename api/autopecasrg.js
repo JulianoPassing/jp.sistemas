@@ -241,8 +241,30 @@ function configuracoesHtmlUrl() {
 async function ensureMlAccessToken(conta) {
   const pool = getPool();
   const clientSecret = decryptSecret(conta.client_secret_enc);
+  if (!clientSecret) {
+    const err = new Error(
+      'Client secret do app Mercado Livre ausente ou inválido. Abra Configurações, edite a conta ML e salve o secret do aplicativo.'
+    );
+    err.code = 'ml_config';
+    throw err;
+  }
+  const hasRefreshEnc =
+    conta.refresh_token_enc != null && String(conta.refresh_token_enc).trim() !== '';
   const refresh = decryptSecret(conta.refresh_token_enc);
-  if (!refresh) throw new Error('Autorize a conta no Mercado Livre (OAuth).');
+  if (!refresh) {
+    if (hasRefreshEnc) {
+      const err = new Error(
+        'Não foi possível ler o refresh token da conta ML. A chave AUTOPECASRG_CRYPTO_KEY (ou SESSION_SECRET) neste servidor deve ser a mesma usada quando a conta foi autorizada — ou autorize de novo em Configurações → Mercado Livre.'
+      );
+      err.code = 'ml_crypto_mismatch';
+      throw err;
+    }
+    const err = new Error(
+      'Conta Mercado Livre ainda não autorizada. Em Configurações → Mercado Livre, clique em Autorizar e conclua o login no ML (escopo offline_access para receber refresh_token).'
+    );
+    err.code = 'ml_oauth_required';
+    throw err;
+  }
   const expires = conta.token_expires_at ? new Date(conta.token_expires_at) : null;
   if (conta.access_token_enc && expires && expires > new Date(Date.now() + 120000)) {
     return decryptSecret(conta.access_token_enc);
@@ -852,7 +874,7 @@ router.get('/contas-ml', requireAuth, async (req, res) => {
     const pool = getPool();
     const [rows] = await pool.execute(
       `SELECT id, nome, app_id, ativo, seller_id, nickname, token_expires_at,
-              (refresh_token_enc IS NOT NULL OR access_token_enc IS NOT NULL) AS autorizado
+              (refresh_token_enc IS NOT NULL) AS autorizado
        FROM contas_mercadolivre WHERE usuario_id = ? ORDER BY id`,
       [req.autopecasrgUsuarioId]
     );
@@ -1158,6 +1180,15 @@ router.post('/produtos/:id/publicar-ml', requireAuth, async (req, res) => {
     res.json({ ok: true, mercadolivre_item_id: itemId, permalink: created.permalink });
   } catch (e) {
     console.error('[autopecasrg] publicar-ml', e);
+    if (e.code === 'ml_oauth_required') {
+      return res.status(403).json({ error: e.message, code: e.code });
+    }
+    if (e.code === 'ml_config') {
+      return res.status(400).json({ error: e.message, code: e.code });
+    }
+    if (e.code === 'ml_crypto_mismatch') {
+      return res.status(500).json({ error: e.message, code: e.code });
+    }
     const st = typeof e.status === 'number' ? e.status : 500;
     const clientErr = st >= 400 && st < 500;
     res.status(clientErr ? st : 500).json({
