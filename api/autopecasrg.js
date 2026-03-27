@@ -99,16 +99,26 @@ const uploadPlanilhaProdutos = multer({
   }
 });
 
-/** URL pós-OAuth (ML/Shopee). Opcional: AUTOPECASRG_CONFIGURACOES_URL = URL completa do HTML. */
+/**
+ * URL pós-OAuth (ML/Shopee).
+ * AUTOPECASRG_PUBLIC_URL pode ser:
+ *   - só o site: https://jp-sistemas.com
+ *   - pasta do módulo: https://jp-sistemas.com/jp.autopecasrg
+ *   - página inteira (aceito): https://.../jp.autopecasrg/configuracoes.html
+ * Opcional: AUTOPECASRG_CONFIGURACOES_URL = URL completa (sobrescreve).
+ */
 function configuracoesHtmlUrl() {
   const explicit = (process.env.AUTOPECASRG_CONFIGURACOES_URL || '').trim().replace(/\/$/, '');
   if (explicit) return explicit;
-  const base = (process.env.AUTOPECASRG_PUBLIC_URL || '').replace(/\/$/, '');
-  if (base) {
-    if (/\/jp\.autopecasrg$/i.test(base)) return `${base}/configuracoes.html`;
-    return `${base}/jp.autopecasrg/configuracoes.html`;
-  }
-  return '/jp.autopecasrg/configuracoes.html';
+
+  const base = (process.env.AUTOPECASRG_PUBLIC_URL || '').trim().replace(/\/$/, '');
+  if (!base) return '/jp.autopecasrg/configuracoes.html';
+
+  if (/configuracoes\.html$/i.test(base)) return base;
+
+  if (/\/jp\.autopecasrg$/i.test(base)) return `${base}/configuracoes.html`;
+
+  return `${base}/jp.autopecasrg/configuracoes.html`;
 }
 
 async function ensureMlAccessToken(conta) {
