@@ -25,6 +25,14 @@
       </div>
       <div id="msg"></div>
 
+      <div class="apm-inline-hint">
+        <i class="fas fa-circle-info fa-lg"></i>
+        <div>
+          <strong>Fluxo recomendado:</strong> conecte as contas em <a href="configuracoes.html">Configurações</a> → cadastre o produto aqui → na lista use <strong>Publicar</strong>.
+          Regras oficiais de fotos, IDs e webhooks estão no <a href="guia.html">Guia ML &amp; Shopee</a>.
+        </div>
+      </div>
+
       <div class="panel panel-compact">
         <h2><i class="fas fa-plus-circle" style="color:var(--accent-teal)"></i> Novo produto</h2>
         <form id="novo">
@@ -52,19 +60,12 @@
             </div>
           </div>
 
-          <h3 style="margin:1.25rem 0 0.75rem;font-size:0.95rem;color:var(--terciary)">Fotos (Mercado Livre)</h3>
+          <h3 style="margin:1.25rem 0 0.75rem;font-size:0.95rem;color:var(--terciary)">Fotos</h3>
           <div class="apm-help">
-            <strong>Mercado Livre:</strong> JPG ou PNG, até <strong>10 fotos</strong>, tamanho máx. por arquivo 10&nbsp;MB.
-            Recomendado: fundo branco ou neutro, produto centralizado, resolução mínima em torno de <strong>500 px</strong> no menor lado (ideal 1200–1600 px para zoom).
-            <ul>
-              <li>Sem bordas artificiais nem texto sobre a foto principal.</li>
-              <li>URLs públicas em HTTPS — aqui o sistema gera automaticamente após o envio.</li>
-            </ul>
-            <strong>Shopee:</strong> o anúncio costuma usar fotos enviadas pelo <em>Media Space</em> da Shopee (IDs numéricos). Abaixo você pode colar os IDs depois de subir no painel Partner.
-            <ul>
-              <li>Formato comum: JPG/PNG, proporção <strong>1:1</strong> para capa; até ~9 imagens por SKU na maioria das categorias.</li>
-              <li>Tamanho máximo por arquivo costuma ser <strong>8 MB</strong> (confira a central de ajuda da Shopee para sua região).</li>
-            </ul>
+            <strong>Mercado Livre</strong> (API / anúncio): em geral <strong>JPG ou PNG</strong>, várias imagens (até ~10 conforme categoria), resolução mínima costuma ser ~<strong>500 px</strong> no menor lado — use fotos maiores (ex.: 1200 px) para zoom. Fundo neutro, produto nítido; sem texto na imagem principal. Após o upload aqui, o sistema gera <strong>URL HTTPS pública</strong> para a API.
+            <br /><br />
+            <strong>Shopee:</strong> na prática as fotos do anúncio vêm do <strong>Media Space</strong> (IDs numéricos). Envie as imagens no painel Shopee / API de mídia e cole os <strong>image_id</strong> no campo JSON abaixo. Capa muito usada em <strong>1:1</strong>; limites de MB e quantidade variam por categoria — veja a <a href="https://help.shopee.com.br" target="_blank" rel="noopener">Central Shopee</a>.
+            <p style="margin:0.6rem 0 0"><a href="guia.html#ml-produto" style="color:var(--accent-teal);font-weight:600">Padrões resumidos no guia →</a></p>
           </div>
 
           <div class="apm-zone-upload">
@@ -138,7 +139,7 @@
         <p style="font-size:0.85rem;color:var(--gray-500);margin-top:-0.35rem">
           Contas ML: <span id="hint-ml">—</span> · Shopee: <span id="hint-sh">—</span>
         </p>
-        <div style="overflow-x:auto">
+        <div class="table-wrap">
           <table class="data">
             <thead>
               <tr>

@@ -25,6 +25,14 @@
       </div>
       <div id="msg"></div>
 
+      <div class="apm-inline-hint">
+        <i class="fas fa-book fa-lg"></i>
+        <div>
+          Cada campo abaixo vem de um lugar específico (DevCenter ML, Open Platform Shopee). Se tiver dúvida, abra o
+          <a href="guia.html">Guia completo</a> com links oficiais e ordem dos passos.
+        </div>
+      </div>
+
       <div class="apm-help" style="margin-bottom:1rem">
         <strong>Webhooks (copie para o app / Partner Center):</strong><br />
         ML: <code style="font-size:0.78rem">https://seu-dominio/api/autopecasrg/webhooks/ml</code> (pedidos)<br />
@@ -38,29 +46,36 @@
             <label>Intervalo worker ML (seg)</label>
             <input name="intervalo_segundos" type="number" min="60" value="300" />
           </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <p class="apm-hint-print" style="margin:0 0 0.75rem;font-size:0.85rem;color:var(--gray-600);line-height:1.5">
+              <strong>Padrão simples:</strong> impressora comum (jato de tinta ou laser) + <strong>PDF 10×15 cm</strong> — use papel adesivo 10×15 cm se tiver.
+              Só troque o formato se usar folha A4 inteira ou impressora térmica (ZPL).
+            </p>
+          </div>
           <div class="form-group">
             <label>Impressora padrão</label>
-            <input name="impressora_nome" placeholder="fallback" />
+            <input name="impressora_nome" placeholder="ex.: nome no Windows / CUPS" />
           </div>
           <div class="form-group">
-            <label>Impressora ML</label>
-            <input name="impressora_ml" placeholder="opcional" />
+            <label>Impressora ML (opcional)</label>
+            <input name="impressora_ml" placeholder="se for diferente da padrão" />
           </div>
           <div class="form-group">
-            <label>Impressora Shopee</label>
-            <input name="impressora_shopee" placeholder="opcional" />
+            <label>Impressora Shopee (opcional)</label>
+            <input name="impressora_shopee" placeholder="se for diferente da padrão" />
           </div>
           <div class="form-group">
-            <label>Formato etiqueta ML</label>
+            <label>Formato PDF etiqueta ML (API Mercado Envios)</label>
             <select name="formato_ml">
-              <option value="pdf">pdf</option>
-              <option value="pdf_a4" selected>pdf_a4</option>
-              <option value="zpl2">zpl2</option>
+              <option value="pdf_100x150" selected>PDF 10×15 cm — impressora comum (recomendado)</option>
+              <option value="pdf">PDF padrão</option>
+              <option value="pdf_a4">PDF folha A4</option>
+              <option value="zpl2">ZPL — etiquetadora térmica</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Formato Shopee (reserva)</label>
-            <input name="formato_shopee" value="pdf_a4" />
+            <label>Formato Shopee (reserva / doc)</label>
+            <input name="formato_shopee" value="pdf_100x150" placeholder="pdf_100x150" />
           </div>
           <div class="form-group" style="grid-column:1/-1">
             <label>Pasta PDFs (servidor)</label>
@@ -107,8 +122,9 @@
             <button type="submit" class="btn btn-primary">Adicionar conta</button>
           </div>
         </form>
-        <table class="data" style="margin-top:1rem">
-          <thead>
+      <div class="table-wrap">
+        <table class="data">
+        <thead>
             <tr>
               <th>ID</th>
               <th>Nome</th>
@@ -119,6 +135,7 @@
           </thead>
           <tbody id="tb-ml"></tbody>
         </table>
+      </div>
       </details>
 
       <details class="apm-details panel" open>
@@ -134,8 +151,9 @@
           </div>
           <div style="grid-column:1/-1"><button type="submit" class="btn btn-primary">Salvar conta Shopee</button></div>
         </form>
-        <table class="data" style="margin-top:1rem">
-          <thead>
+      <div class="table-wrap">
+        <table class="data">
+        <thead>
             <tr>
               <th>ID</th>
               <th>Nome</th>
@@ -144,6 +162,7 @@
           </thead>
           <tbody id="tb-sh"></tbody>
         </table>
+      </div>
       </details>
     </div>
   </main>
@@ -175,8 +194,8 @@
       f.impressora_nome.value = c.impressora_nome || '';
       f.impressora_ml.value = c.impressora_ml || '';
       f.impressora_shopee.value = c.impressora_shopee || '';
-      if (f.formato_ml) f.formato_ml.value = c.formato_ml || 'pdf_a4';
-      f.formato_shopee.value = c.formato_shopee || 'pdf_a4';
+      if (f.formato_ml) f.formato_ml.value = c.formato_ml || 'pdf_100x150';
+      f.formato_shopee.value = c.formato_shopee || 'pdf_100x150';
       f.pasta_download.value = c.pasta_download || '';
       f.baixar_pdf_automatico.checked = !!c.baixar_pdf_automatico;
       f.imprimir_automatico.checked = !!c.imprimir_automatico;
@@ -197,8 +216,8 @@
           impressora_nome: f.impressora_nome.value || null,
           impressora_ml: f.impressora_ml.value || null,
           impressora_shopee: f.impressora_shopee.value || null,
-          formato_ml: f.formato_ml ? f.formato_ml.value : 'pdf_a4',
-          formato_shopee: f.formato_shopee.value || 'pdf_a4',
+          formato_ml: f.formato_ml ? f.formato_ml.value : 'pdf_100x150',
+          formato_shopee: f.formato_shopee.value || 'pdf_100x150',
           pasta_download: f.pasta_download.value || null,
           baixar_pdf_automatico: f.baixar_pdf_automatico.checked,
           imprimir_automatico: f.imprimir_automatico.checked,

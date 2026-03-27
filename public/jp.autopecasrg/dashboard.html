@@ -26,6 +26,14 @@
         </div>
       </div>
 
+      <div class="apm-cta-card">
+        <p>
+          <strong>Primeira vez ou dúvida sobre ML / Shopee?</strong>
+          Abra o guia: onde obter Client ID, Partner Key, webhooks, fotos, etiquetas e ordem dos passos — no mesmo estilo de um hub multicanal (cadastro único, várias vitrines).
+        </p>
+        <a href="guia.html" class="btn"><i class="fas fa-book-open"></i> Abrir guia completo</a>
+      </div>
+
       <div class="sistema-cards" id="cards">
         <div class="sistema-card">
           <div class="apm-metric-label"><i class="fas fa-cubes"></i> Total em estoque</div>
@@ -46,12 +54,22 @@
       </div>
 
       <div class="sistema-section">
-        <h2 class="sistema-section-title" style="margin-bottom:0.75rem"><i class="fas fa-route" style="color:var(--accent-teal)"></i> Por onde começar</h2>
-        <ol class="apm-steps">
-          <li><strong>Configurações</strong> — cadastre Mercado Livre (OAuth) e Shopee (Partner).</li>
-          <li><strong>Estoque</strong> — cadastre produtos e envie fotos pelo próprio sistema.</li>
-          <li>Na lista, use <strong>Publicar</strong> para criar anúncios nas contas conectadas.</li>
+        <h2 class="sistema-section-title sistema-section-title--with-icon"><i class="fas fa-route"></i> Por onde começar</h2>
+        <ol class="apm-steps apm-steps--numbered">
+          <li>
+            <span class="apm-step-n">1</span>
+            <div><strong>Configurações</strong> — contas ML (DevCenter + OAuth) e Shopee (open.shopee.com + tokens). URLs de webhook estão no guia.</div>
+          </li>
+          <li>
+            <span class="apm-step-n">2</span>
+            <div><strong>Estoque</strong> — produto, upload de fotos (URLs para o ML), categorias e publicar por canal.</div>
+          </li>
+          <li>
+            <span class="apm-step-n">3</span>
+            <div><strong>Pedidos</strong> — com webhooks ativos, baixa de estoque e etiquetas podem rodar automático (veja Configurações → etiquetas).</div>
+          </li>
         </ol>
+        <p class="apm-link-more"><a href="guia.html">Ver detalhes e links oficiais →</a></p>
       </div>
     </div>
   </main>
@@ -83,9 +101,5 @@
     }
     init();
   </script>
-  <style>
-    .apm-steps { margin: 0; padding-left: 1.2rem; color: var(--gray-600); font-size: 0.95rem; line-height: 1.75; }
-    .apm-steps li { margin-bottom: 0.35rem; }
-  </style>
 </body>
 </html>
