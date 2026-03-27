@@ -636,6 +636,89 @@ router.get('/oauth/ml/callback', async (req, res) => {
   }
 });
 
+// OAuth Shopee (Partner): login do vendedor na loja → code + shop_id → tokens
+router.get('/oauth/shopee/start', requireAuth, async (req, res) => {
+  const contaId = parseInt(req.query.contaId, 10);
+  const redirectUri = process.env.AUTOPECASRG_SHOPEE_REDIRECT_URI;
+  if (!redirectUri) {
+    return res.status(500).send('Defina AUTOPECASRG_SHOPEE_REDIRECT_URI (URL de callback cadastrada no app Open Platform Shopee).');
+  }
+  try {
+    const pool = getPool();
+    const [rows] = await pool.execute(
+      'SELECT * FROM contas_shopee WHERE id = ? AND usuario_id = ?',
+      [contaId, req.autopecasrgUsuarioId]
+    );
+    if (!rows.length) return res.status(404).send('Conta não encontrada');
+    const c = rows[0];
+    const partnerKey = decryptSecret(c.partner_key_enc);
+    const state = crypto.randomBytes(16).toString('hex');
+    req.session.shopeeOauthState = state;
+    req.session.shopeeOauthContaId = contaId;
+    const url = shopee.buildAuthPartnerUrl({
+      partnerId: c.partner_id,
+      partnerKey,
+      redirectUri
+    });
+    res.redirect(url);
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Erro ao iniciar OAuth Shopee');
+  }
+});
+
+router.get('/oauth/shopee/callback', async (req, res) => {
+  const cfgUrl = configuracoesHtmlUrl();
+  const { code, shop_id: shopIdQ, error } = req.query;
+  if (error) {
+    return res.redirect(`${cfgUrl}?sh=denied`);
+  }
+  if (!req.session || !req.session.shopeeOauthContaId) {
+    return res.status(400).send('Sessão inválida. Abra o módulo logado e use “Conectar com Shopee” de novo.');
+  }
+  const contaId = req.session.shopeeOauthContaId;
+  const redirectUri = process.env.AUTOPECASRG_SHOPEE_REDIRECT_URI;
+  if (!code || shopIdQ == null || shopIdQ === '' || !redirectUri) {
+    return res.redirect(`${cfgUrl}?sh=erro`);
+  }
+  try {
+    const pool = getPool();
+    const [rows] = await pool.execute('SELECT * FROM contas_shopee WHERE id = ?', [contaId]);
+    if (!rows.length) return res.redirect(`${cfgUrl}?sh=404`);
+    const c = rows[0];
+    const partnerKey = decryptSecret(c.partner_key_enc);
+    const data = await shopee.exchangeAuthCode({
+      partnerId: c.partner_id,
+      partnerKey,
+      code: String(code),
+      shopId: shopIdQ
+    });
+    if (!data.refresh_token) {
+      console.error('[autopecasrg] Shopee token/get sem refresh_token', data);
+      return res.redirect(`${cfgUrl}?sh=erro`);
+    }
+    const expSec = data.expire_in || data.expires_in || 14400;
+    const exp = new Date(Date.now() + Number(expSec) * 1000);
+    const shopIdFinal = data.shop_id != null ? String(data.shop_id) : String(shopIdQ);
+    await pool.execute(
+      `UPDATE contas_shopee SET shop_id = ?, refresh_token_enc = ?, access_token_enc = ?, token_expires_at = ? WHERE id = ?`,
+      [
+        shopIdFinal,
+        encryptSecret(data.refresh_token),
+        encryptSecret(data.access_token),
+        exp,
+        contaId
+      ]
+    );
+    delete req.session.shopeeOauthState;
+    delete req.session.shopeeOauthContaId;
+    res.redirect(`${cfgUrl}?sh=ok`);
+  } catch (e) {
+    console.error('[autopecasrg] oauth shopee callback', e);
+    res.redirect(`${cfgUrl}?sh=erro`);
+  }
+});
+
 // ——— Publicar ML ———
 router.post('/produtos/:id/publicar-ml', requireAuth, async (req, res) => {
   const produtoId = parseInt(req.params.id, 10);
@@ -726,19 +809,21 @@ router.get('/contas-shopee', requireAuth, async (req, res) => {
 
 router.post('/contas-shopee', requireAuth, async (req, res) => {
   const b = req.body || {};
-  if (!b.nome || !b.partner_id || !b.shop_id || !b.partner_key) {
-    return res.status(400).json({ error: 'nome, partner_id, shop_id e partner_key são obrigatórios.' });
+  if (!b.nome || !b.partner_id || !b.partner_key) {
+    return res.status(400).json({ error: 'nome, partner_id e partner_key são obrigatórios.' });
   }
   try {
     const pool = getPool();
     const rt = b.refresh_token ? encryptSecret(String(b.refresh_token).trim()) : null;
+    const shopId =
+      b.shop_id != null && String(b.shop_id).trim() !== '' ? String(b.shop_id).trim() : '0';
     const [r] = await pool.execute(
       `INSERT INTO contas_shopee (usuario_id, nome, partner_id, shop_id, partner_key_enc, refresh_token_enc) VALUES (?,?,?,?,?,?)`,
       [
         req.autopecasrgUsuarioId,
         String(b.nome).trim(),
         String(b.partner_id).trim(),
-        String(b.shop_id).trim(),
+        shopId,
         encryptSecret(b.partner_key),
         rt
       ]
@@ -747,7 +832,7 @@ router.post('/contas-shopee', requireAuth, async (req, res) => {
       id: r.insertId,
       aviso: rt
         ? 'Conta salva com refresh_token. Pode publicar produtos na Shopee.'
-        : 'Informe o refresh_token (Partner Center) para publicar e sincronizar estoque.'
+        : 'Use “Conectar com Shopee” na tabela ou informe refresh_token manualmente.'
     });
   } catch (e) {
     console.error(e);
@@ -843,6 +928,11 @@ router.post('/produtos/:id/publicar-shopee', requireAuth, async (req, res) => {
     );
     if (!crows.length) return res.status(404).json({ error: 'Conta Shopee não encontrada' });
     const conta = crows[0];
+    if (!conta.shop_id || String(conta.shop_id) === '0') {
+      return res.status(400).json({
+        error: 'Conecte a loja com “Conectar com Shopee” em Configurações ou informe um Shop ID válido.'
+      });
+    }
     const token = await ensureShopeeAccessToken(conta);
     const pk = decryptSecret(conta.partner_key_enc);
     const nome = (prod.titulo_shopee || prod.nome).trim().slice(0, 255);
@@ -984,6 +1074,9 @@ router.post('/produtos/:id/publicar-todos', requireAuth, async (req, res) => {
         );
         if (!crows.length) throw new Error('Conta Shopee ' + cid);
         const conta = crows[0];
+        if (!conta.shop_id || String(conta.shop_id) === '0') {
+          throw new Error('Conecte a loja Shopee (OAuth) em Configurações antes de publicar');
+        }
         const token = await ensureShopeeAccessToken(conta);
         const pk = decryptSecret(conta.partner_key_enc);
         const nome = (prod.titulo_shopee || prod.nome).trim().slice(0, 255);
