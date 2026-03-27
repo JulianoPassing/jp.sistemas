@@ -8,6 +8,7 @@
   --apm-radius: 10px;
   --apm-radius-lg: 12px;
   --apm-radius-xl: 14px;
+  --apm-radius-2xl: 18px;
   --apm-space-xs: 0.35rem;
   --apm-space-sm: 0.5rem;
   --apm-space-md: 0.75rem;
@@ -20,6 +21,10 @@
   --apm-font-label: 0.8rem;
   --apm-line: 1.55;
   --apm-shadow-card: 0 2px 12px rgb(0 0 0 / 0.06);
+  --apm-shadow-elevated: 0 8px 30px rgb(0 47 75 / 0.08);
+  --apm-shadow-soft: 0 1px 3px rgb(0 0 0 / 0.04);
+  --apm-brand-grad: linear-gradient(135deg, #002f4b 0%, #0a5f72 50%, #0d9488 100%);
+  --apm-surface-page: linear-gradient(180deg, #eef2f7 0%, #f4f7fb 35%, #fafbfc 100%);
 }
 
 /* ——— Base do módulo ——— */
@@ -29,6 +34,8 @@ body.sistema-padrao.apm-layout {
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  background: var(--apm-surface-page);
+  background-attachment: fixed;
 }
 
 body.sistema-padrao.apm-layout .sistema-main.apm-grow {
@@ -78,6 +85,30 @@ body.apm-layout .sistema-main > .sistema-container > .apm-toc {
 }
 
 /* ——— Cabeçalho da página ——— */
+body.apm-layout .sistema-page-header {
+  align-items: flex-start;
+  gap: var(--apm-space-xl);
+  margin-bottom: 0;
+  padding: var(--apm-space-2xl) var(--apm-space-3xl);
+  background: var(--white);
+  border: 1px solid rgb(0 47 75 / 0.08);
+  border-radius: var(--apm-radius-2xl);
+  box-shadow: var(--apm-shadow-soft), 0 0 0 1px rgb(255 255 255 / 0.8) inset;
+  border-bottom: none;
+}
+
+body.apm-layout .sistema-page-header-icon {
+  width: 3.75rem;
+  height: 3.75rem;
+  border-radius: var(--apm-radius-xl);
+  background: var(--apm-brand-grad);
+  box-shadow: 0 6px 20px rgb(13 148 136 / 0.35);
+}
+
+body.apm-layout .sistema-page-header-text .page-title {
+  letter-spacing: -0.02em;
+}
+
 .sistema-page-header {
   align-items: flex-start;
   gap: var(--apm-space-lg);
@@ -143,6 +174,37 @@ body.apm-layout .sistema-main > .sistema-container > .apm-toc {
   color: var(--accent-teal);
 }
 
+/* Cards do dashboard — barra superior + hover */
+body.apm-layout .sistema-cards {
+  gap: var(--apm-space-xl);
+}
+
+body.apm-layout .sistema-card {
+  position: relative;
+  border-radius: var(--apm-radius-2xl);
+  padding: var(--apm-space-2xl) var(--apm-space-2xl) var(--apm-space-2xl);
+  border: 1px solid rgb(0 47 75 / 0.07);
+  box-shadow: var(--apm-shadow-soft), var(--apm-shadow-card);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+body.apm-layout .sistema-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--apm-brand-grad);
+  opacity: 0.95;
+}
+
+body.apm-layout .sistema-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--apm-shadow-elevated);
+}
+
 /* ——— Painéis genéricos ——— */
 .panel {
   background-color: var(--white);
@@ -151,6 +213,18 @@ body.apm-layout .sistema-main > .sistema-container > .apm-toc {
   box-shadow: var(--apm-shadow-card);
   border: 1px solid var(--gray-200);
   margin-bottom: 0;
+}
+
+body.apm-layout .panel {
+  border-radius: var(--apm-radius-2xl);
+  border: 1px solid rgb(0 47 75 / 0.08);
+  box-shadow: var(--apm-shadow-soft), var(--apm-shadow-card);
+  background: linear-gradient(180deg, var(--white) 0%, #fcfdfe 100%);
+}
+
+body.apm-layout .panel h2 {
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
 }
 
 .panel h2,
@@ -183,6 +257,14 @@ body.apm-layout .sistema-main > .sistema-container > .apm-toc {
 }
 
 /* ——— Seções (dashboard) ——— */
+body.apm-layout .sistema-section {
+  border-radius: var(--apm-radius-2xl);
+  border: 1px solid rgb(0 47 75 / 0.07);
+  box-shadow: var(--apm-shadow-soft), var(--apm-shadow-card);
+  background: linear-gradient(180deg, var(--white) 0%, #fbfcfd 100%);
+  border-left: 4px solid #0d9488;
+}
+
 .sistema-section {
   margin-bottom: 0;
   border-radius: var(--apm-radius-lg);
@@ -316,6 +398,17 @@ body.apm-layout .sistema-main > .sistema-container > .apm-toc {
   filter: brightness(0.96);
 }
 
+body.apm-layout .btn-primary {
+  background: linear-gradient(135deg, #0f766e 0%, #0d9488 55%, #14b8a6 100%);
+  box-shadow: 0 2px 8px rgb(13 148 136 / 0.35);
+  border: 1px solid rgb(15 118 110 / 0.4);
+}
+
+body.apm-layout .btn-primary:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 4px 14px rgb(13 148 136 / 0.4);
+}
+
 .btn-ghost {
   background: var(--gray-100);
   color: var(--gray-700);
@@ -338,6 +431,13 @@ body.apm-layout .sistema-main > .sistema-container > .apm-toc {
   margin-top: var(--apm-space-md);
   border-radius: var(--apm-radius);
   border: 1px solid var(--gray-200);
+}
+
+body.apm-layout .table-wrap {
+  border-radius: var(--apm-radius-lg);
+  border: 1px solid rgb(0 47 75 / 0.1);
+  box-shadow: var(--apm-shadow-soft);
+  background: var(--white);
 }
 
 table.data {
@@ -397,6 +497,11 @@ table.data tbody tr:hover td {
   border-color: #a7f3d0;
 }
 
+body.apm-layout .msg {
+  border-radius: var(--apm-radius-lg);
+  box-shadow: var(--apm-shadow-soft);
+}
+
 /* ——— Badges ——— */
 .badge {
   display: inline-block;
@@ -417,6 +522,13 @@ table.data tbody tr:hover td {
   color: #92400e;
 }
 
+body.apm-layout .badge {
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+
 /* ——— Login ——— */
 .apm-login-wrap {
   min-height: 100vh;
@@ -428,12 +540,16 @@ table.data tbody tr:hover td {
 
 .apm-login-card {
   background: var(--white);
-  border-radius: var(--apm-radius-lg);
+  border-radius: var(--apm-radius-2xl);
   padding: var(--apm-space-3xl);
   width: 100%;
   max-width: 420px;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--gray-200);
+  box-shadow: var(--apm-shadow-elevated), 0 0 0 1px rgb(255 255 255 / 0.9) inset;
+  border: 1px solid rgb(0 47 75 / 0.1);
+}
+
+body.apm-layout .apm-login-wrap {
+  background: transparent;
 }
 
 .apm-login-card h1 {
@@ -540,14 +656,15 @@ table.data tbody tr:hover td {
 
 /* ——— Ajuda / upload ——— */
 .apm-help {
-  background: var(--gray-50);
+  background: linear-gradient(180deg, #f8fafc 0%, var(--gray-50) 100%);
   border: 1px solid var(--gray-200);
-  border-radius: var(--apm-radius-lg);
+  border-radius: var(--apm-radius-xl);
   padding: var(--apm-space-lg) var(--apm-space-xl);
   font-size: var(--apm-font-small);
   color: var(--gray-600);
   line-height: var(--apm-line);
   margin-bottom: 0;
+  box-shadow: var(--apm-shadow-soft);
 }
 
 .apm-help strong {
@@ -617,6 +734,120 @@ table.data tbody tr:hover td {
   text-decoration: underline;
 }
 
+/* Botões grandes “Conectar conta” (ML / Shopee) */
+.apm-cfg-connect-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--apm-space-md);
+  margin: var(--apm-space-xl) 0 var(--apm-space-lg);
+  padding: var(--apm-space-xl);
+  background: linear-gradient(165deg, #f8fafc 0%, var(--white) 100%);
+  border: 1px solid rgb(0 47 75 / 0.08);
+  border-radius: var(--apm-radius-2xl);
+  box-shadow: var(--apm-shadow-soft);
+}
+
+.apm-cfg-connect-hint {
+  margin: 0;
+  font-size: var(--apm-font-small);
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+
+.apm-cfg-connect-hint i {
+  color: var(--accent-teal);
+  margin-right: 0.35rem;
+}
+
+.apm-btn-connect {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  width: 100%;
+  max-width: 28rem;
+  padding: 0.85rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  border-radius: var(--apm-radius);
+  border: none;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  line-height: 1.35;
+}
+
+.apm-btn-connect:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.apm-btn-connect--ml {
+  color: #1a1a2e;
+  background: linear-gradient(180deg, #fffef5 0%, #fff159 100%);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.08);
+  border: 1px solid rgb(234 200 0 / 0.5);
+}
+
+.apm-btn-connect--ml:hover:not(:disabled) {
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.12);
+  transform: translateY(-1px);
+}
+
+.apm-btn-connect--sh {
+  color: #fff;
+  background: linear-gradient(180deg, #ff6b4a 0%, #ee4d2d 100%);
+  box-shadow: 0 2px 8px rgb(238 77 45 / 0.35);
+  border: 1px solid rgb(200 60 30 / 0.4);
+}
+
+.apm-btn-connect--sh:hover:not(:disabled) {
+  box-shadow: 0 4px 14px rgb(238 77 45 / 0.45);
+  transform: translateY(-1px);
+}
+
+.apm-btn-connect-name {
+  font-weight: 500;
+  opacity: 0.92;
+}
+
+.apm-btn-connect--done {
+  max-width: none;
+  width: 100%;
+  cursor: default;
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-200);
+  box-shadow: none;
+}
+
+.apm-btn-connect--ghost {
+  max-width: none;
+  width: auto;
+  align-self: flex-start;
+  padding: 0.5rem 0.9rem;
+  font-size: var(--apm-font-small);
+  font-weight: 500;
+  background: transparent;
+  color: var(--accent-teal);
+  border: 1px dashed var(--gray-300);
+  box-shadow: none;
+}
+
+.apm-btn-connect--ghost:hover {
+  border-color: var(--accent-teal);
+  background: rgb(0 47 75 / 0.04);
+}
+
+.apm-cfg-connect-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--apm-space-sm);
+  align-items: flex-start;
+}
+
 .apm-zone-upload {
   border: 2px dashed var(--gray-300);
   border-radius: var(--apm-radius-lg);
@@ -669,13 +900,18 @@ details.apm-details[open] > summary {
 details.apm-details.panel {
   padding: var(--apm-space-2xl);
   margin-bottom: 0;
+  background: var(--white);
+  border-radius: var(--apm-radius-2xl);
+  border: 1px solid rgb(0 47 75 / 0.08);
+  box-shadow: var(--apm-shadow-soft), var(--apm-shadow-card);
 }
 
 details.apm-details.panel > summary {
   padding: 0;
   margin: 0 0 var(--apm-space-md) 0;
-  font-size: 1.05rem;
+  font-size: 1.08rem;
   border: none;
+  letter-spacing: -0.01em;
 }
 
 details.apm-details.panel[open] > summary {
@@ -684,11 +920,21 @@ details.apm-details.panel[open] > summary {
   border-bottom: 1px solid var(--gray-100);
 }
 
+details.apm-details.panel > summary i {
+  margin-right: 0.35rem;
+  opacity: 0.95;
+}
+
 /* ——— Guia ——— */
 .apm-guide-hero {
   margin-bottom: 0;
+  padding: var(--apm-space-2xl);
   padding-bottom: var(--apm-space-xl);
-  border-bottom: 1px solid var(--gray-200);
+  border-bottom: none;
+  background: var(--white);
+  border: 1px solid rgb(0 47 75 / 0.08);
+  border-radius: var(--apm-radius-2xl);
+  box-shadow: var(--apm-shadow-soft), var(--apm-shadow-card);
 }
 
 .apm-guide-hero .page-title {
@@ -711,9 +957,10 @@ details.apm-details.panel[open] > summary {
   flex-wrap: wrap;
   gap: var(--apm-space-sm);
   padding: var(--apm-space-lg);
-  background: linear-gradient(135deg, #f0fdfa 0%, #f8fafc 100%);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--apm-radius-lg);
+  background: linear-gradient(135deg, #ecfdf5 0%, #f8fafc 100%);
+  border: 1px solid rgb(0 47 75 / 0.08);
+  border-radius: var(--apm-radius-2xl);
+  box-shadow: var(--apm-shadow-soft);
 }
 
 .apm-toc a {
@@ -737,9 +984,9 @@ details.apm-details.panel[open] > summary {
   margin-bottom: 0;
   padding: var(--apm-space-2xl);
   background: var(--white);
-  border-radius: var(--apm-radius-lg);
-  border: 1px solid var(--gray-200);
-  box-shadow: var(--apm-shadow-card);
+  border-radius: var(--apm-radius-2xl);
+  border: 1px solid rgb(0 47 75 / 0.08);
+  box-shadow: var(--apm-shadow-soft), var(--apm-shadow-card);
   scroll-margin-top: 5rem;
 }
 
@@ -842,9 +1089,9 @@ details.apm-details.panel[open] > summary {
   gap: var(--apm-space-xl);
   padding: var(--apm-space-xl) var(--apm-space-2xl);
   background: linear-gradient(135deg, #002f4b 0%, #0a4d6e 55%, #0d9488 100%);
-  border-radius: var(--apm-radius-xl);
+  border-radius: var(--apm-radius-2xl);
   color: #fff;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--apm-shadow-elevated), 0 0 0 1px rgb(255 255 255 / 0.12) inset;
   margin-bottom: 0;
 }
 
@@ -880,12 +1127,13 @@ details.apm-details.panel[open] > summary {
   gap: var(--apm-space-md);
   padding: var(--apm-space-lg) var(--apm-space-xl);
   margin-bottom: 0;
-  background: #f0fdfa;
-  border: 1px solid #99f6e4;
-  border-radius: var(--apm-radius-lg);
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 50%, #f8fafc 100%);
+  border: 1px solid rgb(153 246 228 / 0.85);
+  border-radius: var(--apm-radius-2xl);
   font-size: var(--apm-font-body);
   color: var(--gray-700);
   line-height: var(--apm-line);
+  box-shadow: var(--apm-shadow-soft);
 }
 
 .apm-inline-hint i {
@@ -932,6 +1180,18 @@ details.apm-details.panel[open] > summary {
 @media (max-width: 600px) {
   .sistema-cards {
     grid-template-columns: 1fr;
+  }
+
+  body.apm-layout .sistema-page-header {
+    padding: var(--apm-space-xl);
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  body.apm-layout .sistema-page-header-icon {
+    width: 3.25rem;
+    height: 3.25rem;
+    font-size: 1.25rem;
   }
 
   .apm-toc {

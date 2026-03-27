@@ -87,6 +87,7 @@
             <button type="submit" class="btn btn-primary">Adicionar conta</button>
           </div>
         </form>
+        <div id="apm-cta-ml" class="apm-cfg-connect-wrap" aria-live="polite"></div>
       <div class="table-wrap">
         <table class="data">
         <thead>
@@ -152,6 +153,7 @@
           </div>
           <div style="grid-column:1/-1"><button type="submit" class="btn btn-primary">Salvar conta Shopee</button></div>
         </form>
+        <div id="apm-cta-sh" class="apm-cfg-connect-wrap" aria-live="polite"></div>
       <div class="table-wrap">
         <table class="data">
         <thead>
@@ -160,7 +162,6 @@
               <th>Nome</th>
               <th>Shop</th>
               <th>OAuth</th>
-              <th></th>
             </tr>
           </thead>
           <tbody id="tb-sh"></tbody>
@@ -298,9 +299,45 @@
       flash(r.ok ? 'Salvo.' : 'Erro ao salvar.', r.ok);
     });
 
+    function renderMlConnectButtons(rows) {
+      const el = document.getElementById('apm-cta-ml');
+      if (!el) return;
+      if (!rows.length) {
+        el.innerHTML =
+          '<p class="apm-cfg-connect-hint"><i class="fas fa-info-circle"></i> Preencha o formulário acima e clique em <strong>Adicionar conta</strong>. Depois use o botão para conectar sua loja ao Mercado Livre.</p>' +
+          '<button type="button" class="apm-btn-connect apm-btn-connect--ml" disabled><i class="fas fa-store"></i> Conectar conta Mercado Livre</button>';
+        return;
+      }
+      el.innerHTML = rows
+        .map((row) => {
+          const href = '/api/autopecasrg/oauth/ml/start?contaId=' + row.id;
+          const nome = escape(row.nome);
+          if (row.autorizado) {
+            return (
+              '<div class="apm-cfg-connect-row">' +
+              '<div class="apm-btn-connect apm-btn-connect--ml apm-btn-connect--done" role="status"><i class="fas fa-check-circle"></i> Conta Mercado Livre conectada <span class="apm-btn-connect-name">(' +
+              nome +
+              ')</span></div>' +
+              '<a href="' +
+              href +
+              '" class="apm-btn-connect apm-btn-connect--ml apm-btn-connect--ghost"><i class="fas fa-redo-alt"></i> Reconectar ou trocar loja</a></div>'
+            );
+          }
+          return (
+            '<a href="' +
+            href +
+            '" class="apm-btn-connect apm-btn-connect--ml"><i class="fas fa-store"></i> Conectar conta Mercado Livre <span class="apm-btn-connect-name">— ' +
+            nome +
+            '</span></a>'
+          );
+        })
+        .join('');
+    }
+
     async function loadMl() {
       const r = await fetch('/api/autopecasrg/contas-ml', { credentials: 'include' });
       const rows = await r.json();
+      renderMlConnectButtons(rows);
       document.getElementById('tb-ml').innerHTML =
         rows
           .map(
@@ -311,7 +348,6 @@
           <td>${escape(row.app_id)}</td>
           <td>${row.autorizado ? '<span class="badge badge-ok">OK</span>' : '<span class="badge badge-warn">pendente</span>'}</td>
           <td>
-            <a class="btn btn-sm btn-primary" href="/api/autopecasrg/oauth/ml/start?contaId=${row.id}" title="Abre o login do Mercado Livre para vincular a loja">Conectar com ML</a>
             <button type="button" class="btn btn-sm btn-ghost" data-del-ml="${row.id}">Remover</button>
           </td>
         </tr>`
@@ -347,15 +383,55 @@
       });
       const d = await r.json().catch(() => ({}));
       if (r.ok) {
-        flash('Conta salva. Clique em Conectar com Mercado Livre na tabela.', true);
+        flash('Conta salva. Use o botão azul “Conectar conta Mercado Livre” abaixo.', true);
         f.reset();
         loadMl();
       } else flash(d.error || 'Erro', false);
     });
 
+    function renderShConnectButtons(rows) {
+      const el = document.getElementById('apm-cta-sh');
+      if (!el) return;
+      if (!rows.length) {
+        el.innerHTML =
+          '<p class="apm-cfg-connect-hint"><i class="fas fa-info-circle"></i> Preencha Partner ID e Partner Key acima e clique em <strong>Salvar conta Shopee</strong>. Depois use o botão para conectar sua loja na Shopee.</p>' +
+          '<button type="button" class="apm-btn-connect apm-btn-connect--sh" disabled><i class="fas fa-shopping-bag"></i> Conectar conta Shopee</button>';
+        return;
+      }
+      el.innerHTML = rows
+        .map((row) => {
+          const href = '/api/autopecasrg/oauth/shopee/start?contaId=' + row.id;
+          const nome = escape(row.nome);
+          const shopOk = row.shop_id && String(row.shop_id) !== '0';
+          const oauthOk = row.tem_token && shopOk;
+          if (oauthOk) {
+            return (
+              '<div class="apm-cfg-connect-row">' +
+              '<div class="apm-btn-connect apm-btn-connect--sh apm-btn-connect--done" role="status"><i class="fas fa-check-circle"></i> Conta Shopee conectada <span class="apm-btn-connect-name">(' +
+              nome +
+              ' · shop ' +
+              escape(String(row.shop_id)) +
+              ')</span></div>' +
+              '<a href="' +
+              href +
+              '" class="apm-btn-connect apm-btn-connect--sh apm-btn-connect--ghost"><i class="fas fa-redo-alt"></i> Reconectar loja</a></div>'
+            );
+          }
+          return (
+            '<a href="' +
+            href +
+            '" class="apm-btn-connect apm-btn-connect--sh"><i class="fas fa-shopping-bag"></i> Conectar conta Shopee <span class="apm-btn-connect-name">— ' +
+            nome +
+            '</span></a>'
+          );
+        })
+        .join('');
+    }
+
     async function loadSh() {
       const r = await fetch('/api/autopecasrg/contas-shopee', { credentials: 'include' });
       const rows = await r.json();
+      renderShConnectButtons(rows);
       document.getElementById('tb-sh').innerHTML =
         rows
           .map((row) => {
@@ -366,12 +442,9 @@
           <td>${escape(row.nome)}</td>
           <td>${shopOk ? escape(String(row.shop_id)) : '—'}</td>
           <td>${oauthOk ? '<span class="badge badge-ok">OK</span>' : '<span class="badge badge-warn">pendente</span>'}</td>
-          <td>
-            <a class="btn btn-sm btn-primary" href="/api/autopecasrg/oauth/shopee/start?contaId=${row.id}" title="Login na Shopee para vincular loja e tokens">Conectar com Shopee</a>
-          </td>
         </tr>`;
           })
-          .join('') || '<tr><td colspan="5">Nenhuma conta Shopee.</td></tr>';
+          .join('') || '<tr><td colspan="4">Nenhuma conta Shopee.</td></tr>';
     }
 
     document.getElementById('form-sh').addEventListener('submit', async (e) => {
