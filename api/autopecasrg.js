@@ -99,9 +99,15 @@ const uploadPlanilhaProdutos = multer({
   }
 });
 
+/** URL pós-OAuth (ML/Shopee). Opcional: AUTOPECASRG_CONFIGURACOES_URL = URL completa do HTML. */
 function configuracoesHtmlUrl() {
+  const explicit = (process.env.AUTOPECASRG_CONFIGURACOES_URL || '').trim().replace(/\/$/, '');
+  if (explicit) return explicit;
   const base = (process.env.AUTOPECASRG_PUBLIC_URL || '').replace(/\/$/, '');
-  if (base) return `${base}/configuracoes.html`;
+  if (base) {
+    if (/\/jp\.autopecasrg$/i.test(base)) return `${base}/configuracoes.html`;
+    return `${base}/jp.autopecasrg/configuracoes.html`;
+  }
   return '/jp.autopecasrg/configuracoes.html';
 }
 
