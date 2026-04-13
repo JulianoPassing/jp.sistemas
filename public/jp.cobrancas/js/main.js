@@ -117,7 +117,7 @@ async function verificarCadastroPixEmail() {
   } catch (e) { console.warn('Erro ao verificar cadastro:', e); }
 }
 
-/** Períodos completos em atraso conforme frequência (alinhado ao MySQL do servidor). */
+/** Períodos completos em atraso conforme frequência (alinhado ao MySQL do servidor, com teto). */
 function periodosAtrasoPorFrequencia(dataVencStr, frequencia) {
   const v = utils.createValidDate(dataVencStr);
   if (!v) return 0;
@@ -128,11 +128,17 @@ function periodosAtrasoPorFrequencia(dataVencStr, frequencia) {
   const f = String(frequencia || 'monthly').toLowerCase();
   const msDia = 86400000;
   const dias = Math.floor((hoje - v) / msDia);
-  if (f === 'daily') return dias;
-  if (f === 'weekly') return Math.floor(dias / 7);
-  if (f === 'biweekly') return Math.floor(dias / 14);
-  // Mensal: blocos de 30 dias (igual ao servidor CEIL(dias/30)) — ex. 12/03→13/04 ≈ 32 dias → 2 períodos
-  return Math.max(0, Math.ceil(dias / 30));
+  let raw;
+  if (f === 'daily') raw = dias;
+  else if (f === 'weekly') raw = Math.floor(dias / 7);
+  else if (f === 'biweekly') raw = Math.floor(dias / 14);
+  else raw = Math.max(0, Math.ceil(dias / 30));
+  const cap =
+    f === 'daily' ? 3650 :
+    f === 'weekly' ? 520 :
+    f === 'biweekly' ? 260 :
+    120;
+  return Math.min(Math.max(0, raw), cap);
 }
 
 function textoPeriodosEmAberto(periodos, frequencia) {

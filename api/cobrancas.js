@@ -42,17 +42,32 @@ function mensagemPeriodosEmAberto(periodos, frequencia) {
  * a cada período em aberto, aplica o % sobre a base correta: parcelas usam valor_original da cobrança;
  * empréstimo fixo (uma cobrança) usa o capital e.valor — não valor_original (que já inclui o 1º juros).
  * Mensal: períodos de 30 dias corridos (CEIL), não TIMESTAMPDIFF(MONTH) — ex.: 12/03→13/04 ≈ 32 dias = 2 períodos.
+ * Teto por frequência evita valor_atualizado explodir (dívidas muito antigas / datas ruins inflando o dashboard).
  * Usa a mesma expressão no UPDATE e no SELECT.
  */
 const SQL_PERIODOS_ATRASO = `
   CASE WHEN cb.data_vencimento >= CURDATE() THEN 0
-  ELSE CASE LOWER(TRIM(COALESCE(e.frequencia, 'monthly')))
-    WHEN 'daily' THEN TIMESTAMPDIFF(DAY, cb.data_vencimento, CURDATE())
-    WHEN 'weekly' THEN TIMESTAMPDIFF(WEEK, cb.data_vencimento, CURDATE())
-    WHEN 'biweekly' THEN FLOOR(GREATEST(0, DATEDIFF(CURDATE(), cb.data_vencimento)) / 14)
-    WHEN 'monthly' THEN CEILING(GREATEST(0, DATEDIFF(CURDATE(), cb.data_vencimento)) / 30)
-    ELSE CEILING(GREATEST(0, DATEDIFF(CURDATE(), cb.data_vencimento)) / 30)
-  END END`;
+  ELSE LEAST(
+    (
+      CASE LOWER(TRIM(COALESCE(e.frequencia, 'monthly')))
+        WHEN 'daily' THEN GREATEST(0, TIMESTAMPDIFF(DAY, cb.data_vencimento, CURDATE()))
+        WHEN 'weekly' THEN GREATEST(0, TIMESTAMPDIFF(WEEK, cb.data_vencimento, CURDATE()))
+        WHEN 'biweekly' THEN FLOOR(GREATEST(0, DATEDIFF(CURDATE(), cb.data_vencimento)) / 14)
+        WHEN 'monthly' THEN CEILING(GREATEST(0, DATEDIFF(CURDATE(), cb.data_vencimento)) / 30)
+        ELSE CEILING(GREATEST(0, DATEDIFF(CURDATE(), cb.data_vencimento)) / 30)
+      END
+    ),
+    (
+      CASE LOWER(TRIM(COALESCE(e.frequencia, 'monthly')))
+        WHEN 'daily' THEN 3650
+        WHEN 'weekly' THEN 520
+        WHEN 'biweekly' THEN 260
+        WHEN 'monthly' THEN 120
+        ELSE 120
+      END
+    )
+  )
+  END`;
 
 const SQL_UPDATE_COBRANCAS_JUROS_POR_PERIODO = `
   UPDATE cobrancas cb
@@ -750,61 +765,17 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Um empréstimo em atraso = 1 (não importa quantas parcelas/cobranças vencidas)
-      console.log('Dashboard: Buscando empréstimos em atraso (por empréstimo)');
-      try {
-        [emprestimosEmAtraso] = await connection.execute(`
-          SELECT COUNT(DISTINCT e.id) AS total
-          FROM emprestimos e
-          WHERE e.cliente_id IS NOT NULL AND e.valor > 0
-            AND TRIM(UPPER(e.status)) IN ('ATIVO', 'PENDENTE', 'EM ANDAMENTO', 'VIGENTE', 'ABERTO')
-            AND TRIM(UPPER(e.status)) NOT IN ('QUITADO', 'CANCELADO')
-            AND (
-              EXISTS (
-                SELECT 1 FROM cobrancas cb
-                WHERE cb.emprestimo_id = e.id
-                  AND cb.cliente_id IS NOT NULL
-                  AND TRIM(UPPER(cb.status)) = 'PENDENTE'
-                  AND cb.data_vencimento < CURDATE()
-              )
-              OR EXISTS (
-                SELECT 1 FROM parcelas p
-                WHERE p.emprestimo_id = e.id
-                  AND TRIM(UPPER(p.status)) IN ('PENDENTE', 'ATRASADA')
-                  AND p.data_vencimento < CURDATE()
-              )
-              OR (
-                NOT EXISTS (SELECT 1 FROM cobrancas cb2 WHERE cb2.emprestimo_id = e.id)
-                AND NOT EXISTS (SELECT 1 FROM parcelas p2 WHERE p2.emprestimo_id = e.id)
-                AND e.data_vencimento IS NOT NULL
-                AND e.data_vencimento < CURDATE()
-              )
-            )
-        `);
-      } catch (parcelasErr) {
-        console.log('Dashboard: Fallback empréstimos em atraso (sem tabela parcelas):', parcelasErr.message);
-        [emprestimosEmAtraso] = await connection.execute(`
-          SELECT COUNT(DISTINCT e.id) AS total
-          FROM emprestimos e
-          WHERE e.cliente_id IS NOT NULL AND e.valor > 0
-            AND TRIM(UPPER(e.status)) IN ('ATIVO', 'PENDENTE', 'EM ANDAMENTO', 'VIGENTE', 'ABERTO')
-            AND TRIM(UPPER(e.status)) NOT IN ('QUITADO', 'CANCELADO')
-            AND (
-              EXISTS (
-                SELECT 1 FROM cobrancas cb
-                WHERE cb.emprestimo_id = e.id
-                  AND cb.cliente_id IS NOT NULL
-                  AND TRIM(UPPER(cb.status)) = 'PENDENTE'
-                  AND cb.data_vencimento < CURDATE()
-              )
-              OR (
-                NOT EXISTS (SELECT 1 FROM cobrancas cb2 WHERE cb2.emprestimo_id = e.id)
-                AND e.data_vencimento IS NOT NULL
-                AND e.data_vencimento < CURDATE()
-              )
-            )
-        `);
-      }
+      // Card do dashboard: 1 linha por empréstimo — usa vencimento do contrato (evita inflar com parcelas/cobranças)
+      console.log('Dashboard: Buscando empréstimos em atraso (vencimento do empréstimo)');
+      [emprestimosEmAtraso] = await connection.execute(`
+        SELECT COUNT(*) AS total
+        FROM emprestimos e
+        WHERE e.cliente_id IS NOT NULL AND e.valor > 0
+          AND TRIM(UPPER(e.status)) IN ('ATIVO', 'PENDENTE', 'EM ANDAMENTO', 'VIGENTE', 'ABERTO')
+          AND TRIM(UPPER(e.status)) NOT IN ('QUITADO', 'CANCELADO')
+          AND e.data_vencimento IS NOT NULL
+          AND e.data_vencimento < CURDATE()
+      `);
       console.log('Dashboard: Empréstimos em atraso obtidos:', emprestimosEmAtraso[0]);
     } catch (error) {
       console.log('Dashboard: Erro ao buscar empréstimos em atraso:', error.message);
