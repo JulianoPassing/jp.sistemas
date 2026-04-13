@@ -472,19 +472,23 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     let emprestimosAtivos = [{ total: 0 }];
     
     try {
-      // Atualizar dias de atraso - Query corrigida
-      console.log('Dashboard: Atualizando dias de atraso');
+      // Mesma base do GET /cobrancas: dias em atraso + valor_atualizado (juros/multa sobre valor_original)
+      console.log('Dashboard: Atualizando dias de atraso e valores de cobranças pendentes');
       await connection.execute(`
         UPDATE cobrancas 
-        SET dias_atraso = CASE 
-          WHEN data_vencimento < CURDATE() THEN DATEDIFF(CURDATE(), data_vencimento)
-          ELSE 0 
-        END
+        SET 
+          dias_atraso = CASE 
+            WHEN data_vencimento < CURDATE() THEN DATEDIFF(CURDATE(), data_vencimento)
+            ELSE 0 
+          END,
+          valor_atualizado = valor_original + 
+            (valor_original * (juros_calculados / 100)) + 
+            (valor_original * (multa_calculada / 100))
         WHERE TRIM(UPPER(status)) = 'PENDENTE'
       `);
-      console.log('Dashboard: Dias de atraso atualizados');
+      console.log('Dashboard: Cobranças pendentes atualizadas (dias + valor_atualizado)');
     } catch (error) {
-      console.log('Dashboard: Erro ao atualizar dias de atraso:', error.message);
+      console.log('Dashboard: Erro ao atualizar cobranças pendentes:', error.message);
     }
 
     try {
@@ -516,68 +520,62 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Estatísticas de cobranças - Query corrigida para calcular valor a receber
+      // Valor a receber = total em aberto: soma das cobranças pendentes (valor_atualizado) dos empréstimos não quitados,
+      // incluindo ATRASADO. Legado: empréstimos sem nenhuma linha em cobrancas (valor contratual com juros).
       console.log('Dashboard: Buscando estatísticas de cobranças');
-      
-              // Primeiro, tentar calcular baseado em parcelas (sistema mais preciso)
-        try {
-          // Calcular valor a receber baseado em parcelas pendentes + empréstimos de valor fixo pendentes
-          const [parcelasStats] = await connection.execute(`
-            SELECT 
-              COALESCE(SUM(
-                CASE 
-                  WHEN p.status IN ('Pendente', 'Atrasada') THEN p.valor_parcela
-                  ELSE 0 
-                END
-              ), 0) as valor_parcelas_pendentes,
-              COUNT(CASE WHEN p.status IN ('Pendente', 'Atrasada') THEN 1 END) as parcelas_pendentes,
-              COUNT(CASE WHEN p.status = 'Paga' THEN 1 END) as parcelas_pagas
-            FROM parcelas p
-            JOIN emprestimos e ON p.emprestimo_id = e.id
-            WHERE e.status IN ('Ativo', 'Pendente')
-          `);
-          
-          // Calcular valor a receber de empréstimos de valor fixo (sem parcelas)
-          const [valorFixoStats] = await connection.execute(`
-            SELECT 
-              COALESCE(SUM(
-                CASE 
-                  WHEN e.status IN ('Ativo', 'Pendente') 
-                    AND NOT EXISTS (SELECT 1 FROM parcelas p WHERE p.emprestimo_id = e.id)
-                    AND e.data_vencimento >= CURDATE()
-                  THEN 
-                    CASE 
-                      WHEN e.tipo_emprestimo = 'in_installments' AND e.valor_parcela > 0 AND e.numero_parcelas > 0
-                        THEN (e.valor_parcela * e.numero_parcelas)
-                      WHEN e.valor > 0 AND e.juros_mensal > 0 
-                        THEN e.valor * (1 + (e.juros_mensal / 100))
-                      ELSE COALESCE(e.valor, 0)
-                    END
-                  ELSE 0 
-                END
-              ), 0) as valor_fixo_pendente
-            FROM emprestimos e
-            WHERE e.status IN ('Ativo', 'Pendente')
-          `);
-          
-          // Combinar os resultados (sempre somar como número — evita "12.503.40" → NaN no cliente)
-          const vParc = mysqlDecimalToNumber(parcelasStats[0].valor_parcelas_pendentes);
-          const vFixo = mysqlDecimalToNumber(valorFixoStats[0].valor_fixo_pendente);
-          cobrancasStats = [{
-            total_cobrancas: mysqlDecimalToNumber(parcelasStats[0].parcelas_pendentes) + mysqlDecimalToNumber(parcelasStats[0].parcelas_pagas),
-            valor_total_cobrancas: vParc + vFixo,
-            cobrancas_pendentes: parcelasStats[0].parcelas_pendentes,
-            cobrancas_pagas: parcelasStats[0].parcelas_pagas,
-            valor_atrasado: 0 // Será calculado separadamente se necessário
-          }];
-          
-          console.log('Dashboard: Estatísticas baseadas em parcelas + valor fixo:', cobrancasStats[0]);
-          console.log('Dashboard: Valor parcelas pendentes:', parcelasStats[0].valor_parcelas_pendentes);
-          console.log('Dashboard: Valor fixo pendente:', valorFixoStats[0].valor_fixo_pendente);
-          console.log('Dashboard: Total valor a receber:', cobrancasStats[0].valor_total_cobrancas);
-        } catch (parcelasError) {
-        // Fallback para cobranças se não há parcelas
-        console.log('Dashboard: Usando fallback para cobranças:', parcelasError.message);
+      try {
+        const [abertoRows] = await connection.execute(`
+          SELECT 
+            COALESCE(SUM(cb.valor_atualizado), 0) as valor_aberto,
+            COALESCE(SUM(CASE WHEN cb.dias_atraso > 0 THEN cb.valor_atualizado ELSE 0 END), 0) as valor_atrasado,
+            COUNT(*) as cobrancas_pendentes_abertas
+          FROM cobrancas cb
+          INNER JOIN emprestimos e ON cb.emprestimo_id = e.id
+          WHERE cb.cliente_id IS NOT NULL
+            AND TRIM(UPPER(cb.status)) = 'PENDENTE'
+            AND TRIM(UPPER(e.status)) NOT IN ('QUITADO', 'CANCELADO')
+        `);
+
+        const [legacyRows] = await connection.execute(`
+          SELECT COALESCE(SUM(
+            CASE 
+              WHEN e.tipo_emprestimo = 'in_installments' AND e.valor_parcela > 0 AND e.numero_parcelas > 0
+                THEN (e.valor_parcela * e.numero_parcelas)
+              WHEN e.valor > 0 AND e.juros_mensal > 0 
+                THEN e.valor * (1 + (e.juros_mensal / 100))
+              ELSE COALESCE(e.valor, 0)
+            END
+          ), 0) as valor_legacy
+          FROM emprestimos e
+          WHERE e.cliente_id IS NOT NULL AND e.valor > 0
+            AND TRIM(UPPER(e.status)) NOT IN ('QUITADO', 'CANCELADO')
+            AND NOT EXISTS (SELECT 1 FROM cobrancas c WHERE c.emprestimo_id = e.id)
+        `);
+
+        const [countRows] = await connection.execute(`
+          SELECT 
+            COUNT(*) as total_cobrancas,
+            COUNT(CASE WHEN TRIM(UPPER(status)) = 'PENDENTE' THEN 1 END) as cobrancas_pendentes,
+            COUNT(CASE WHEN TRIM(UPPER(status)) = 'PAGA' THEN 1 END) as cobrancas_pagas
+          FROM cobrancas
+          WHERE cliente_id IS NOT NULL
+        `);
+
+        const vAberto = mysqlDecimalToNumber(abertoRows[0].valor_aberto);
+        const vLeg = mysqlDecimalToNumber(legacyRows[0].valor_legacy);
+        cobrancasStats = [{
+          total_cobrancas: mysqlDecimalToNumber(countRows[0].total_cobrancas),
+          valor_total_cobrancas: vAberto + vLeg,
+          cobrancas_pendentes: mysqlDecimalToNumber(abertoRows[0].cobrancas_pendentes_abertas),
+          cobrancas_pagas: mysqlDecimalToNumber(countRows[0].cobrancas_pagas),
+          valor_atrasado: mysqlDecimalToNumber(abertoRows[0].valor_atrasado)
+        }];
+
+        console.log('Dashboard: Valor aberto (cobranças + empréstimos ativos):', abertoRows[0].valor_aberto);
+        console.log('Dashboard: Legado sem cobranças:', legacyRows[0].valor_legacy);
+        console.log('Dashboard: Total valor a receber:', cobrancasStats[0].valor_total_cobrancas);
+      } catch (innerError) {
+        console.log('Dashboard: Fallback estatísticas cobranças:', innerError.message);
         [cobrancasStats] = await connection.execute(`
           SELECT 
             COUNT(*) as total_cobrancas,
@@ -2127,7 +2125,8 @@ router.get('/cobrancas', ensureDatabase, async (req, res) => {
       FROM cobrancas cb
       INNER JOIN emprestimos e ON cb.emprestimo_id = e.id
       LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
-      WHERE cb.status = 'Pendente' AND cb.cliente_id IS NOT NULL AND e.status IN ('Ativo', 'Pendente')
+      WHERE cb.status = 'Pendente' AND cb.cliente_id IS NOT NULL
+        AND TRIM(UPPER(e.status)) NOT IN ('QUITADO', 'CANCELADO')
       ORDER BY cb.data_vencimento ASC
     `);
     await connection.end();
