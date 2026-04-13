@@ -18,6 +18,55 @@ function mysqlDecimalToNumber(v) {
   return Number.isFinite(n) ? n : 0;
 }
 
+/** Texto amigável: "2 mês(es) em aberto", etc. */
+function mensagemPeriodosEmAberto(periodos, frequencia) {
+  const p = Math.max(0, Math.floor(Number(periodos) || 0));
+  if (p < 1) return '';
+  const f = String(frequencia || 'monthly').toLowerCase();
+  if (f === 'daily') return `${p} dia(s) em aberto`;
+  if (f === 'weekly') return `${p} semana(s) em aberto`;
+  if (f === 'biweekly') return `${p} quinzena(s) em aberto`;
+  return `${p} mês(es) em aberto`;
+}
+
+/**
+ * Juros por período de atraso (mensal / semanal / quinzenal / diário):
+ * a cada período completo após o vencimento, soma de novo o % do empréstimo sobre valor_original da cobrança.
+ * Usa a mesma expressão no UPDATE e no SELECT.
+ */
+const SQL_PERIODOS_ATRASO = `
+  CASE WHEN cb.data_vencimento >= CURDATE() THEN 0
+  ELSE CASE LOWER(TRIM(COALESCE(e.frequencia, 'monthly')))
+    WHEN 'daily' THEN TIMESTAMPDIFF(DAY, cb.data_vencimento, CURDATE())
+    WHEN 'weekly' THEN TIMESTAMPDIFF(WEEK, cb.data_vencimento, CURDATE())
+    WHEN 'biweekly' THEN FLOOR(GREATEST(0, DATEDIFF(CURDATE(), cb.data_vencimento)) / 14)
+    WHEN 'monthly' THEN TIMESTAMPDIFF(MONTH, cb.data_vencimento, CURDATE())
+    ELSE TIMESTAMPDIFF(MONTH, cb.data_vencimento, CURDATE())
+  END END`;
+
+const SQL_UPDATE_COBRANCAS_JUROS_POR_PERIODO = `
+  UPDATE cobrancas cb
+  INNER JOIN emprestimos e ON e.id = cb.emprestimo_id
+  SET
+    cb.dias_atraso = CASE WHEN cb.data_vencimento < CURDATE() THEN DATEDIFF(CURDATE(), cb.data_vencimento) ELSE 0 END,
+    cb.juros_calculados = COALESCE(e.juros_mensal, 0) * (${SQL_PERIODOS_ATRASO}),
+    cb.multa_calculada = CASE
+      WHEN cb.data_vencimento < CURDATE() AND COALESCE(e.multa_atraso, 0) > 0 THEN COALESCE(e.multa_atraso, 0)
+      ELSE 0
+    END,
+    cb.valor_atualizado = cb.valor_original * (
+      1
+      + (COALESCE(e.juros_mensal, 0) * (${SQL_PERIODOS_ATRASO}) / 100)
+      + (
+          CASE
+            WHEN cb.data_vencimento < CURDATE() AND COALESCE(e.multa_atraso, 0) > 0 THEN COALESCE(e.multa_atraso, 0)
+            ELSE 0
+          END / 100
+        )
+    )
+  WHERE TRIM(UPPER(cb.status)) = 'PENDENTE'
+`;
+
 // Multer para backup por e-mail: 1 arquivo ZIP (reduz tamanho do upload e evita 413)
 const uploadBackupEmail = multer({
   storage: multer.memoryStorage(),
@@ -472,21 +521,10 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     let emprestimosAtivos = [{ total: 0 }];
     
     try {
-      // Mesma base do GET /cobrancas: dias em atraso + valor_atualizado (juros/multa sobre valor_original)
-      console.log('Dashboard: Atualizando dias de atraso e valores de cobranças pendentes');
-      await connection.execute(`
-        UPDATE cobrancas 
-        SET 
-          dias_atraso = CASE 
-            WHEN data_vencimento < CURDATE() THEN DATEDIFF(CURDATE(), data_vencimento)
-            ELSE 0 
-          END,
-          valor_atualizado = valor_original + 
-            (valor_original * (juros_calculados / 100)) + 
-            (valor_original * (multa_calculada / 100))
-        WHERE TRIM(UPPER(status)) = 'PENDENTE'
-      `);
-      console.log('Dashboard: Cobranças pendentes atualizadas (dias + valor_atualizado)');
+      // Juros por período (frequência do empréstimo) + multa — mesma regra do GET /cobrancas
+      console.log('Dashboard: Atualizando cobranças pendentes (juros por período de atraso)');
+      await connection.execute(SQL_UPDATE_COBRANCAS_JUROS_POR_PERIODO);
+      console.log('Dashboard: Cobranças pendentes atualizadas');
     } catch (error) {
       console.log('Dashboard: Erro ao atualizar cobranças pendentes:', error.message);
     }
@@ -648,11 +686,14 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
       // Cobranças pendentes - Query corrigida
       console.log('Dashboard: Buscando cobranças pendentes');
       [cobrancasPendentes] = await connection.execute(`
-        SELECT cb.*, c.nome as cliente_nome, c.telefone as telefone
+        SELECT cb.*, c.nome as cliente_nome, c.telefone as telefone,
+          e.frequencia AS emprestimo_frequencia,
+          (${SQL_PERIODOS_ATRASO}) AS periodos_em_aberto
         FROM cobrancas cb
         LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
         LEFT JOIN emprestimos e ON cb.emprestimo_id = e.id
-        WHERE TRIM(UPPER(cb.status)) = 'PENDENTE' AND cb.cliente_id IS NOT NULL AND TRIM(UPPER(e.status)) IN ('ATIVO', 'PENDENTE')
+        WHERE TRIM(UPPER(cb.status)) = 'PENDENTE' AND cb.cliente_id IS NOT NULL
+          AND TRIM(UPPER(e.status)) NOT IN ('QUITADO', 'CANCELADO')
         ORDER BY cb.data_vencimento ASC
         LIMIT 10
       `);
@@ -2106,22 +2147,11 @@ router.get('/cobrancas', ensureDatabase, async (req, res) => {
   try {
     const username = req.session.cobrancasUser;
     const connection = await createCobrancasConnection(username);
-    // Atualizar dias de atraso e valores
-    await connection.execute(`
-      UPDATE cobrancas 
-      SET 
-        dias_atraso = CASE 
-          WHEN data_vencimento < CURDATE() THEN DATEDIFF(CURDATE(), data_vencimento)
-          ELSE 0 
-        END,
-        valor_atualizado = valor_original + 
-          (valor_original * (juros_calculados / 100)) + 
-          (valor_original * (multa_calculada / 100))
-      WHERE status = 'Pendente'
-    `);
-    // Buscar apenas cobranças de empréstimos ativos/pendentes e existentes
+    await connection.execute(SQL_UPDATE_COBRANCAS_JUROS_POR_PERIODO);
     const [cobrancas] = await connection.execute(`
-      SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
+      SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email,
+        e.frequencia AS emprestimo_frequencia,
+        (${SQL_PERIODOS_ATRASO}) AS periodos_em_aberto
       FROM cobrancas cb
       INNER JOIN emprestimos e ON cb.emprestimo_id = e.id
       LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
@@ -2130,7 +2160,11 @@ router.get('/cobrancas', ensureDatabase, async (req, res) => {
       ORDER BY cb.data_vencimento ASC
     `);
     await connection.end();
-    res.json(cobrancas);
+    const out = cobrancas.map((row) => ({
+      ...row,
+      mensagem_periodos_aberto: mensagemPeriodosEmAberto(row.periodos_em_aberto, row.emprestimo_frequencia)
+    }));
+    res.json(out);
   } catch (error) {
     console.error('Erro ao buscar cobranças:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
@@ -2142,15 +2176,23 @@ router.get('/cobrancas/atrasadas', ensureDatabase, async (req, res) => {
   try {
     const username = req.session.cobrancasUser;
     const connection = await createCobrancasConnection(username);
+    await connection.execute(SQL_UPDATE_COBRANCAS_JUROS_POR_PERIODO);
     const [cobrancas] = await connection.execute(`
-      SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email
+      SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email,
+        e.frequencia AS emprestimo_frequencia,
+        (${SQL_PERIODOS_ATRASO}) AS periodos_em_aberto
       FROM cobrancas cb
       LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
+      LEFT JOIN emprestimos e ON cb.emprestimo_id = e.id
       WHERE cb.dias_atraso > 0 AND cb.status = 'Pendente'
       ORDER BY cb.dias_atraso DESC
     `);
     await connection.end();
-    res.json(cobrancas);
+    const out = cobrancas.map((row) => ({
+      ...row,
+      mensagem_periodos_aberto: mensagemPeriodosEmAberto(row.periodos_em_aberto, row.emprestimo_frequencia)
+    }));
+    res.json(out);
   } catch (error) {
     console.error('Erro ao buscar cobranças atrasadas:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
