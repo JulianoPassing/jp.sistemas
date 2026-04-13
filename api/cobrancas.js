@@ -208,6 +208,60 @@ async function ensureEmprestimosSchemaUpToDate(connection) {
   }
 }
 
+/** Tabela de auditoria: alterações no empréstimo (edição, status, parcela, cadastro, remoção). */
+async function ensureHistoricoEmprestimoEventosSchema(connection) {
+  try {
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS historico_emprestimo_eventos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        emprestimo_id INT NOT NULL,
+        tipo_evento VARCHAR(64) NOT NULL,
+        descricao TEXT,
+        detalhes TEXT NULL,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_emp (emprestimo_id),
+        INDEX idx_emp_criado (emprestimo_id, criado_em)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+  } catch (e) {
+    console.warn('historico_emprestimo_eventos:', e.message);
+  }
+}
+
+async function registrarEventoEmprestimo(connection, { emprestimo_id, tipo_evento, descricao, detalhes }) {
+  await ensureHistoricoEmprestimoEventosSchema(connection);
+  const det = detalhes != null ? JSON.stringify(detalhes) : null;
+  await connection.execute(
+    `INSERT INTO historico_emprestimo_eventos (emprestimo_id, tipo_evento, descricao, detalhes) VALUES (?, ?, ?, ?)`,
+    [emprestimo_id, tipo_evento, descricao || '', det]
+  );
+}
+
+function tipoEventoParaExibicao(tipo_evento) {
+  switch (tipo_evento) {
+    case 'parcela_status':
+    case 'parcela_data':
+    case 'parcela_valor':
+      return 'Parcela';
+    case 'emprestimo_criacao':
+      return 'Cadastro';
+    case 'emprestimo_edicao':
+      return 'Alteração';
+    case 'emprestimo_status':
+      return 'Status';
+    case 'emprestimo_remocao':
+      return 'Remoção';
+    default:
+      return 'Registro';
+  }
+}
+
+function normYmd(v) {
+  if (v == null || v === '') return '';
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  return String(v).split('T')[0];
+}
+
 // Função para criar banco de dados de cobranças do usuário
 async function createCobrancasDatabase(username) {
   const dbName = `jpcobrancas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
@@ -376,6 +430,7 @@ async function createCobrancasDatabase(username) {
 
     // Migrações emprestimos: bases antigas só tinham CREATE inicial sem parcelamento / tipo_calculo
     await ensureEmprestimosSchemaUpToDate(cobrancasConnection);
+    await ensureHistoricoEmprestimoEventosSchema(cobrancasConnection);
 
     // Inserir registro padrão de configurações se não existir
     const [configExists] = await cobrancasConnection.execute('SELECT COUNT(*) as total FROM configuracoes');
@@ -1001,6 +1056,20 @@ router.put('/emprestimos/:emprestimo_id/parcelas/:numero_parcela/status', ensure
         WHERE id = ? AND status = 'Quitado'
       `, [emprestimo_id]);
     }
+
+    try {
+      const ant = parcela.status || '';
+      const novo = status || '';
+      if (String(ant) !== String(novo) && String(novo) !== 'Paga') {
+        await registrarEventoEmprestimo(connection, {
+          emprestimo_id: parseInt(emprestimo_id, 10),
+          tipo_evento: 'parcela_status',
+          descricao: `Parcela ${numero_parcela}: status ${ant} → ${novo}`
+        });
+      }
+    } catch (e) {
+      console.warn('registrarEventoEmprestimo parcela_status:', e.message);
+    }
     
     await connection.end();
     res.json({ message: 'Status da parcela atualizado com sucesso' });
@@ -1059,6 +1128,20 @@ router.put('/emprestimos/:emprestimo_id/parcelas/:numero_parcela/data', ensureDa
         WHERE id = ?
       `, [data_vencimento, parcela.cobranca_id]);
     }
+
+    try {
+      const ant = normYmd(parcela.data_vencimento);
+      const novo = normYmd(data_vencimento);
+      if (ant !== novo) {
+        await registrarEventoEmprestimo(connection, {
+          emprestimo_id: parseInt(emprestimo_id, 10),
+          tipo_evento: 'parcela_data',
+          descricao: `Parcela ${numero_parcela}: vencimento ${ant || '—'} → ${novo || '—'}`
+        });
+      }
+    } catch (e) {
+      console.warn('registrarEventoEmprestimo parcela_data:', e.message);
+    }
     
     await connection.end();
     res.json({ message: 'Data de vencimento da parcela atualizada com sucesso' });
@@ -1113,6 +1196,19 @@ router.put('/emprestimos/:emprestimo_id/parcelas/:numero_parcela/valor', ensureD
         SET valor_original = ?, valor_atualizado = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `, [valorNum, valorNum, parcela.cobranca_id]);
+    }
+
+    try {
+      const ant = mysqlDecimalToNumber(parcela.valor_parcela);
+      if (Math.abs(ant - valorNum) > 0.009) {
+        await registrarEventoEmprestimo(connection, {
+          emprestimo_id: parseInt(emprestimo_id, 10),
+          tipo_evento: 'parcela_valor',
+          descricao: `Parcela ${numero_parcela}: valor R$ ${ant.toFixed(2)} → R$ ${valorNum.toFixed(2)}`
+        });
+      }
+    } catch (e) {
+      console.warn('registrarEventoEmprestimo parcela_valor:', e.message);
     }
     
     await connection.end();
@@ -1403,6 +1499,44 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
     } catch (statusError) {
       console.warn('Erro ao recalcular status:', statusError);
       // Não interromper o processo se o recálculo falhar
+    }
+
+    try {
+      const linhas = [];
+      const cmp = (a, b) => String(a ?? '') === String(b ?? '');
+      if (!cmp(emprestimoAtual.cliente_id, cliente_id)) {
+        linhas.push(`Cliente ID: ${emprestimoAtual.cliente_id} → ${cliente_id}`);
+      }
+      if (Math.abs(mysqlDecimalToNumber(emprestimoAtual.valor) - Number(valor)) > 0.015) {
+        linhas.push(`Valor inicial: R$ ${mysqlDecimalToNumber(emprestimoAtual.valor).toFixed(2)} → R$ ${Number(valor).toFixed(2)}`);
+      }
+      if (Math.abs(mysqlDecimalToNumber(emprestimoAtual.juros_mensal) - jurosMensalNum) > 0.000001) {
+        linhas.push(`Juros %: ${mysqlDecimalToNumber(emprestimoAtual.juros_mensal)} → ${jurosMensalNum}`);
+      }
+      if (normYmd(emprestimoAtual.data_vencimento) !== normYmd(data_vencimento)) {
+        linhas.push(`Vencimento: ${normYmd(emprestimoAtual.data_vencimento)} → ${normYmd(data_vencimento)}`);
+      }
+      if (Number(emprestimoAtual.numero_parcelas || 1) !== numeroParcelasNum) {
+        linhas.push(`Nº parcelas: ${emprestimoAtual.numero_parcelas} → ${numeroParcelasNum} (parcelas ajustadas)`);
+      }
+      const obsA = (emprestimoAtual.observacoes || '').trim();
+      const obsB = (observacoes || '').trim();
+      if (obsA !== obsB) linhas.push('Observações alteradas');
+      if (hasFrequencia && emprestimoAtual.frequencia && String(emprestimoAtual.frequencia) !== String(frequencia)) {
+        linhas.push(`Frequência: ${emprestimoAtual.frequencia} → ${frequencia}`);
+      }
+      if (String(emprestimoAtual.status || '') !== String(statusResposta || '')) {
+        linhas.push(`Status: ${emprestimoAtual.status} → ${statusResposta}`);
+      }
+      if (linhas.length > 0) {
+        await registrarEventoEmprestimo(connection, {
+          emprestimo_id: parseInt(id, 10),
+          tipo_evento: 'emprestimo_edicao',
+          descricao: linhas.join(' · ')
+        });
+      }
+    } catch (e) {
+      console.warn('registrarEventoEmprestimo emprestimo_edicao:', e.message);
     }
     
     await connection.end();
@@ -1834,14 +1968,74 @@ router.get('/historico-pagamentos', ensureDatabase, async (req, res) => {
       });
     });
 
-    // Ordenar por data (mais recente primeiro)
-    historico.sort((a, b) => {
-      const da = a.data_pagamento ? new Date(a.data_pagamento) : new Date(0);
-      const db = b.data_pagamento ? new Date(b.data_pagamento) : new Date(0);
-      return db - da;
+    await ensureHistoricoEmprestimoEventosSchema(connection);
+
+    let sqlEv = `
+      SELECT he.id, he.emprestimo_id, he.tipo_evento, he.descricao, he.criado_em,
+        e.cliente_id, cl.nome as cliente_nome
+      FROM historico_emprestimo_eventos he
+      LEFT JOIN emprestimos e ON e.id = he.emprestimo_id
+      LEFT JOIN clientes_cobrancas cl ON e.cliente_id = cl.id
+      WHERE 1=1
+    `;
+    const evParams = [];
+    if (emprestimo_id) {
+      sqlEv += ' AND he.emprestimo_id = ?';
+      evParams.push(emprestimo_id);
+    }
+    if (cliente_id) {
+      sqlEv += ' AND e.cliente_id = ?';
+      evParams.push(cliente_id);
+    }
+    if (data_inicio) {
+      sqlEv += ' AND DATE(he.criado_em) >= ?';
+      evParams.push(data_inicio);
+    }
+    if (data_fim) {
+      sqlEv += ' AND DATE(he.criado_em) <= ?';
+      evParams.push(data_fim);
+    }
+    sqlEv += ' ORDER BY he.criado_em DESC';
+
+    const [eventosRows] = await connection.execute(sqlEv, evParams);
+    eventosRows.forEach((row) => {
+      const raw = row.criado_em;
+      const d = raw instanceof Date ? raw : new Date(raw);
+      const criadoIso = Number.isFinite(d.getTime()) ? d.toISOString() : new Date().toISOString();
+      const ymd = criadoIso.split('T')[0];
+      historico.push({
+        id: `evento_${row.id}`,
+        origem: 'evento',
+        emprestimo_id: row.emprestimo_id,
+        cliente_id: row.cliente_id,
+        cliente_nome: row.cliente_nome || 'N/A',
+        tipo_pagamento: tipoEventoParaExibicao(row.tipo_evento),
+        tipo_evento: row.tipo_evento,
+        valor: null,
+        data_pagamento: ymd,
+        observacoes: row.descricao || '',
+        criado_em_iso: criadoIso
+      });
     });
 
-    // Aplicar filtros
+    const tipoNormalizado = (s) => String(s || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+    // Ordenar por data/hora (mais recente primeiro)
+    historico.sort((a, b) => {
+      const ta = a.criado_em_iso
+        ? new Date(a.criado_em_iso).getTime()
+        : new Date((a.data_pagamento || '1970-01-01') + 'T12:00:00').getTime();
+      const tb = b.criado_em_iso
+        ? new Date(b.criado_em_iso).getTime()
+        : new Date((b.data_pagamento || '1970-01-01') + 'T12:00:00').getTime();
+      if (tb !== ta) return tb - ta;
+      return String(b.id).localeCompare(String(a.id));
+    });
+
+    // Aplicar filtros (pagamentos: filtro de data/cliente/emprestimo aqui; eventos já restritos na query quando aplicável)
     let resultado = historico;
     if (data_inicio) {
       resultado = resultado.filter(h => h.data_pagamento && h.data_pagamento >= data_inicio);
@@ -1853,7 +2047,8 @@ router.get('/historico-pagamentos', ensureDatabase, async (req, res) => {
       resultado = resultado.filter(h => String(h.cliente_id) === String(cliente_id));
     }
     if (tipo) {
-      resultado = resultado.filter(h => h.tipo_pagamento.toLowerCase() === tipo.toLowerCase());
+      const tq = tipoNormalizado(tipo);
+      resultado = resultado.filter(h => tipoNormalizado(h.tipo_pagamento) === tq);
     }
     if (emprestimo_id) {
       resultado = resultado.filter(h => String(h.emprestimo_id) === String(emprestimo_id));
@@ -2185,6 +2380,19 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
       
       console.log('Cobrança única criada automaticamente');
     }
+
+    try {
+      const np = parseInt(numero_parcelas, 10) || 1;
+      await registrarEventoEmprestimo(connection, {
+        emprestimo_id: emprestimoResult.insertId,
+        tipo_evento: 'emprestimo_criacao',
+        descricao: tipo_emprestimo === 'in_installments' && np > 1
+          ? `Empréstimo cadastrado (${np} parcelas).`
+          : 'Empréstimo cadastrado (parcela única).'
+      });
+    } catch (e) {
+      console.warn('registrarEventoEmprestimo criacao:', e.message);
+    }
     
     await connection.end();
     res.json({ 
@@ -2463,6 +2671,9 @@ router.put('/emprestimos/:id/status', ensureDatabase, async (req, res) => {
     const { status } = req.body;
     const username = req.session.cobrancasUser;
     const connection = await createCobrancasConnection(username);
+
+    const [antesRows] = await connection.execute('SELECT status FROM emprestimos WHERE id = ?', [id]);
+    const statusAntes = antesRows[0]?.status ?? '';
     
     // Atualizar status do empréstimo
     await connection.execute(
@@ -2506,6 +2717,18 @@ router.put('/emprestimos/:id/status', ensureDatabase, async (req, res) => {
     if (status === 'Cancelado') {
       await connection.execute('UPDATE cobrancas SET status = ? WHERE emprestimo_id = ?', ['Cancelada', id]);
     }
+
+    try {
+      if (String(statusAntes) !== String(status ?? '')) {
+        await registrarEventoEmprestimo(connection, {
+          emprestimo_id: parseInt(id, 10),
+          tipo_evento: 'emprestimo_status',
+          descricao: `Status: ${statusAntes || '—'} → ${status || '—'}`
+        });
+      }
+    } catch (e) {
+      console.warn('registrarEventoEmprestimo emprestimo_status:', e.message);
+    }
     
     await connection.end();
     res.json({ success: true });
@@ -2521,6 +2744,15 @@ router.delete('/emprestimos/:id', ensureDatabase, async (req, res) => {
     const { id } = req.params;
     const username = req.session.cobrancasUser;
     const connection = await createCobrancasConnection(username);
+    try {
+      await registrarEventoEmprestimo(connection, {
+        emprestimo_id: parseInt(id, 10),
+        tipo_evento: 'emprestimo_remocao',
+        descricao: 'Empréstimo removido do sistema.'
+      });
+    } catch (e) {
+      console.warn('registrarEventoEmprestimo remocao:', e.message);
+    }
     await connection.execute('DELETE FROM emprestimos WHERE id = ?', [id]);
     await connection.end();
     res.json({ success: true });

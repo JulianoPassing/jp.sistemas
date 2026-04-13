@@ -22,6 +22,7 @@
     .pagamento-badge.parcela { background: #d1fae5; color: #059669; }
     .pagamento-badge.juros { background: #dbeafe; color: #2563eb; }
     .pagamento-badge.emprestimo { background: #e0e7ff; color: #4f46e5; }
+    .pagamento-badge.alteracao { background: #fef3c7; color: #b45309; }
   </style>
 </head>
 <body class="app-layout">
@@ -308,15 +309,20 @@
         historicoPagamentos = await apiService.getHistoricoPagamentos(params);
 
         if (!historicoPagamentos || historicoPagamentos.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-money-bill-wave empty-state-icon"></i><div class="empty-state-title">Nenhum pagamento registrado</div><div class="empty-state-text">Os pagamentos são gravados automaticamente quando você marca parcelas ou juros como pagos no Dashboard ou Empréstimos.</div></div></td></tr>';
-          info.textContent = 'Nenhum pagamento encontrado';
+          tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-money-bill-wave empty-state-icon"></i><div class="empty-state-title">Nenhum registro encontrado</div><div class="empty-state-text">Inclui pagamentos (parcelas/juros) e alterações cadastrais no empréstimo, conforme os filtros.</div></div></td></tr>';
+          info.textContent = 'Nenhum registro encontrado';
         } else {
           tbody.innerHTML = '';
           historicoPagamentos.forEach(p => {
             const dataStr = p.data_pagamento ? utils.formatDate(p.data_pagamento) : '-';
-            const valorStr = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.valor || 0);
-            const tipo = (p.tipo_pagamento || '').toLowerCase();
-            const tipoClass = tipo === 'juros' ? 'juros' : tipo === 'emprestimo' ? 'emprestimo' : 'parcela';
+            const valorStr = (p.origem === 'evento' || p.valor == null)
+              ? '—'
+              : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.valor || 0);
+            const tipo = (p.tipo_pagamento || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            let tipoClass = 'parcela';
+            if (tipo === 'juros') tipoClass = 'juros';
+            else if (tipo === 'emprestimo') tipoClass = 'emprestimo';
+            else if (['alteracao', 'cadastro', 'status', 'remocao', 'registro'].includes(tipo)) tipoClass = 'alteracao';
             const detalhes = p.observacoes || '-';
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -329,7 +335,7 @@
             `;
             tbody.appendChild(row);
           });
-          info.textContent = `Mostrando ${historicoPagamentos.length} pagamento(s)`;
+          info.textContent = `Mostrando ${historicoPagamentos.length} registro(s)`;
         }
       } catch (err) {
         console.error(err);
@@ -421,9 +427,10 @@
       hoje.setHours(0, 0, 0, 0);
       const historico = historicoCompletoParaEmprestimos;
 
-      // Pagas: contar do histórico de pagamentos (Parcela ou Empréstimo)
+      // Pagas: só lançamentos financeiros (parcela/pagamento), não eventos de auditoria
       const pagas = historico.filter(p =>
         String(p.emprestimo_id) === String(emprestimoId) &&
+        p.origem !== 'evento' &&
         ((p.tipo_pagamento || '').toLowerCase() === 'parcela' || (p.tipo_pagamento || '').toLowerCase() === 'emprestimo')
       ).length;
 

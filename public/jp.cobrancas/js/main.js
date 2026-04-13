@@ -2852,14 +2852,17 @@ const emprestimoController = {
                 ? lista.map((h) => {
                     const obs = (h.observacoes || '').trim();
                     const extra = h.forma_pagamento ? ` · ${h.forma_pagamento}` : '';
+                    const valorCell = (h.origem === 'evento' || h.valor == null)
+                      ? '—'
+                      : utils.formatCurrency(Number(h.valor));
                     return `<tr>
                       <td style="padding:0.45rem 0.5rem; border-bottom:1px solid #eee; white-space:nowrap;">${h.data_pagamento ? utils.formatDate(h.data_pagamento) : '—'}</td>
                       <td style="padding:0.45rem 0.5rem; border-bottom:1px solid #eee;">${escapeHtmlCobrancas(h.tipo_pagamento || '—')}</td>
-                      <td style="padding:0.45rem 0.5rem; border-bottom:1px solid #eee; text-align:right; font-weight:600;">${utils.formatCurrency(Number(h.valor || 0))}</td>
+                      <td style="padding:0.45rem 0.5rem; border-bottom:1px solid #eee; text-align:right; font-weight:600;">${valorCell}</td>
                       <td style="padding:0.45rem 0.5rem; border-bottom:1px solid #eee; font-size:0.9rem; color:#444;">${escapeHtmlCobrancas(obs)}${escapeHtmlCobrancas(extra)}</td>
                     </tr>`;
                   }).join('')
-                : '<tr><td colspan="4" style="padding:1rem; text-align:center; color:#64748b;">Nenhum pagamento registrado neste empréstimo.</td></tr>';
+                : '<tr><td colspan="4" style="padding:1rem; text-align:center; color:#64748b;">Nenhum registro neste empréstimo.</td></tr>';
               const htmlHistorico = `
                 <div style="padding:0.25rem 0; max-width:520px; margin:0 auto;">
                   <p style="margin:0 0 0.75rem; font-size:0.95rem; color:#334155;"><strong>${escapeHtmlCobrancas(emp.cliente_nome || 'Cliente')}</strong> · PCL #${emp.id}</p>
@@ -2877,7 +2880,7 @@ const emprestimoController = {
                     </table>
                   </div>
                 </div>`;
-              ui.showModal(htmlHistorico, 'Histórico de pagamentos');
+              ui.showModal(htmlHistorico, 'Histórico do empréstimo');
             } catch (err) {
               ui.showNotification(err.message || 'Erro ao carregar histórico', 'error');
             } finally {
@@ -3235,6 +3238,11 @@ const clienteController = {
       const modalContent = `
         <div class="cliente-modal-box" style="padding: 1.5rem; max-width: 800px; margin: 0 auto; max-height: 80vh; overflow-y: auto;">
           <h3 style="margin-bottom: 1rem; color: #002f4b;">${cliente.nome}</h3>
+          <div style="margin-bottom: 1.25rem;">
+            <button type="button" class="btn" id="modal-cliente-btn-historico" style="width: 100%; background: linear-gradient(90deg, #0ea5e9, #0284c7); color: #fff; font-weight: 600; border-radius: 8px; padding: 0.55em 1em; font-size: 0.98rem;">
+              <i class="fas fa-history" style="margin-right: 0.45rem;"></i> Histórico do cliente (pagamentos e alterações)
+            </button>
+          </div>
           
           <!-- Dados do Cliente -->
           <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
@@ -3342,6 +3350,60 @@ const clienteController = {
       `;
       
       const modal = ui.showModal(modalContent, 'Detalhes do Cliente');
+
+      const btnHistCliente = modal.querySelector('#modal-cliente-btn-historico');
+      if (btnHistCliente) {
+        btnHistCliente.addEventListener('click', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          ui.setButtonLoading(btnHistCliente, true, 'Carregando...');
+          try {
+            const rows = await apiService.getHistoricoPagamentos({ cliente_id: String(id) });
+            const lista = Array.isArray(rows) ? rows : [];
+            const linhas = lista.length
+              ? lista.map((h) => {
+                  const obs = (h.observacoes || '').trim();
+                  const extra = h.forma_pagamento ? ` · ${h.forma_pagamento}` : '';
+                  const pcl = h.emprestimo_id != null ? `#${h.emprestimo_id}` : '—';
+                  const valorCell = (h.origem === 'evento' || h.valor == null)
+                    ? '—'
+                    : utils.formatCurrency(Number(h.valor));
+                  return `<tr>
+                      <td style="padding:0.45rem 0.5rem; border-bottom:1px solid #eee; white-space:nowrap;">${h.data_pagamento ? utils.formatDate(h.data_pagamento) : '—'}</td>
+                      <td style="padding:0.45rem 0.5rem; border-bottom:1px solid #eee;">${pcl}</td>
+                      <td style="padding:0.45rem 0.5rem; border-bottom:1px solid #eee;">${escapeHtmlCobrancas(h.tipo_pagamento || '—')}</td>
+                      <td style="padding:0.45rem 0.5rem; border-bottom:1px solid #eee; text-align:right; font-weight:600;">${valorCell}</td>
+                      <td style="padding:0.45rem 0.5rem; border-bottom:1px solid #eee; font-size:0.9rem; color:#444;">${escapeHtmlCobrancas(obs)}${escapeHtmlCobrancas(extra)}</td>
+                    </tr>`;
+                }).join('')
+              : '<tr><td colspan="5" style="padding:1rem; text-align:center; color:#64748b;">Nenhum registro neste histórico.</td></tr>';
+            const htmlHistoricoCliente = `
+                <div style="padding:0.25rem 0; max-width:640px; margin:0 auto;">
+                  <p style="margin:0 0 0.75rem; font-size:0.95rem; color:#334155;"><strong>${escapeHtmlCobrancas(cliente.nome || 'Cliente')}</strong></p>
+                  <div style="max-height:min(60vh,420px); overflow:auto; border:1px solid #e2e8f0; border-radius:8px;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.92rem;">
+                      <thead>
+                        <tr style="background:#f1f5f9; position:sticky; top:0;">
+                          <th style="text-align:left; padding:0.5rem;">Data</th>
+                          <th style="text-align:left; padding:0.5rem;">PCL</th>
+                          <th style="text-align:left; padding:0.5rem;">Tipo</th>
+                          <th style="text-align:right; padding:0.5rem;">Valor</th>
+                          <th style="text-align:left; padding:0.5rem;">Detalhes</th>
+                        </tr>
+                      </thead>
+                      <tbody>${linhas}</tbody>
+                    </table>
+                  </div>
+                </div>`;
+            ui.showModal(htmlHistoricoCliente, 'Histórico do cliente');
+          } catch (err) {
+            ui.showNotification(err.message || 'Erro ao carregar histórico', 'error');
+          } finally {
+            ui.setButtonLoading(btnHistCliente, false);
+          }
+        });
+      }
+
       initDocumentosModalVer(modal, id);
     } catch (error) {
       console.error('Erro ao buscar cliente:', error);
