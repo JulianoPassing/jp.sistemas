@@ -2702,8 +2702,6 @@ const emprestimoController = {
         let dataParcelaAtual = dataVencFormatada;
         let numeroParcelaAtual = 1;
         let totalParcelas = 1;
-        let parcelasVencidas = [];
-        let valorTotalVencidas = 0;
         
         if (parcelas.length > 0) {
           totalParcelas = parcelas.length;
