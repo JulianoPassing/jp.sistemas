@@ -23,10 +23,10 @@ function mensagemPeriodosEmAberto(periodos, frequencia) {
   const p = Math.max(0, Math.floor(Number(periodos) || 0));
   if (p < 1) return '';
   const f = String(frequencia || 'monthly').toLowerCase();
-  if (f === 'daily') return `${p} dia(s) em aberto`;
-  if (f === 'weekly') return `${p} semana(s) em aberto`;
-  if (f === 'biweekly') return `${p} quinzena(s) em aberto`;
-  return `${p} mês(es) em aberto`;
+  if (f === 'daily') return p === 1 ? '1 dia em aberto' : `${p} dias em aberto`;
+  if (f === 'weekly') return p === 1 ? '1 semana em aberto' : `${p} semanas em aberto`;
+  if (f === 'biweekly') return p === 1 ? '1 quinzena em aberto' : `${p} quinzenas em aberto`;
+  return p === 1 ? '1 mês em aberto' : `${p} meses em aberto`;
 }
 
 /**

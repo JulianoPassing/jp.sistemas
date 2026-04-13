@@ -184,8 +184,8 @@
               </div>
               
               <div class="form-group">
-                <label>Multa por Atraso (%) *</label>
-                <input type="number" name="multa_atraso" id="modal-multa" class="form-input" step="0.01" min="0" required placeholder="ex.: 5.0">
+                <label>Multa por Atraso (%) <span style="font-weight:400;color:#64748b;">(opcional — use 0 para não cobrar)</span></label>
+                <input type="number" name="multa_atraso" id="modal-multa" class="form-input" step="0.01" min="0" placeholder="0">
               </div>
               
               <div class="form-group">
@@ -295,7 +295,7 @@
                 data_emprestimo: formData.get('data_emprestimo'),
                 data_vencimento: formData.get('data_vencimento'),
                 juros_mensal: parseFloat(formData.get('juros_mensal')),
-                multa_atraso: parseFloat(formData.get('multa_atraso')),
+                multa_atraso: parseFloat(String(formData.get('multa_atraso') ?? '').replace(',', '.')) || 0,
                 observacoes: formData.get('observacoes')
               };
               

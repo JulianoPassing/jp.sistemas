@@ -140,10 +140,21 @@ function textoPeriodosEmAberto(periodos, frequencia) {
   const p = Math.max(0, Math.floor(Number(periodos) || 0));
   if (p < 1) return '';
   const f = String(frequencia || 'monthly').toLowerCase();
-  if (f === 'daily') return `${p} dia(s) em aberto`;
-  if (f === 'weekly') return `${p} semana(s) em aberto`;
-  if (f === 'biweekly') return `${p} quinzena(s) em aberto`;
-  return `${p} mês(es) em aberto`;
+  if (f === 'daily') return p === 1 ? '1 dia em aberto' : `${p} dias em aberto`;
+  if (f === 'weekly') return p === 1 ? '1 semana em aberto' : `${p} semanas em aberto`;
+  if (f === 'biweekly') return p === 1 ? '1 quinzena em aberto' : `${p} quinzenas em aberto`;
+  return p === 1 ? '1 mês em aberto' : `${p} meses em aberto`;
+}
+
+/** Mesma contagem de períodos, com redação "em atraso" (cobrança). */
+function textoPeriodosEmAtraso(periodos, frequencia) {
+  const p = Math.max(0, Math.floor(Number(periodos) || 0));
+  if (p < 1) return '';
+  const f = String(frequencia || 'monthly').toLowerCase();
+  if (f === 'daily') return p === 1 ? '1 dia em atraso' : `${p} dias em atraso`;
+  if (f === 'weekly') return p === 1 ? '1 semana em atraso' : `${p} semanas em atraso`;
+  if (f === 'biweekly') return p === 1 ? '1 quinzena em atraso' : `${p} quinzenas em atraso`;
+  return p === 1 ? '1 mês em atraso' : `${p} meses em atraso`;
 }
 
 function rotuloFrequenciaJuros(frequencia) {
@@ -180,6 +191,11 @@ function gerarMensagemCobranca(tipo, dados) {
         '{total_parcelas}': dados.totalParcelas,
         '{data_vencimento}': dados.dataVencimento,
         '{valor}': dados.valor,
+        '{valor_total_atualizado}': dados.valorTotalAtualizado || dados.valor || '',
+        '{periodos_aberto}': dados.periodosAberto != null ? String(dados.periodosAberto) : '',
+        '{texto_periodos_aberto}': dados.textoPeriodosAberto || '',
+        '{texto_periodos_em_atraso}': dados.textoPeriodosEmAtraso || '',
+        '{juros_extra_atraso}': dados.jurosExtraAtraso || '',
         '{chave_pix}': chavePix,
         '{nome_banco_pix}': nomeBancoPix
       };
@@ -210,6 +226,9 @@ Solicitamos o pagamento até a data de vencimento.`;
         '{valor_total}': dados.valorTotal,
         '{periodos_aberto}': dados.periodosAberto != null ? String(dados.periodosAberto) : '',
         '{texto_periodos_aberto}': dados.textoPeriodosAberto || '',
+        '{texto_periodos_em_atraso}': dados.textoPeriodosEmAtraso || '',
+        '{juros_extra_atraso}': dados.jurosExtraAtraso || dados.jurosAtraso || '',
+        '{valor_base_juros}': dados.valorBaseJuros || '',
         '{chave_pix}': chavePix,
         '{nome_banco_pix}': nomeBancoPix
       };
@@ -272,6 +291,13 @@ function showModalNotificacaoCobranca(dadosNotificacao) {
   const linhaPix = nomeBancoPix
     ? `Chave PIX: ${chavePix}\n${nomeBancoPix}`
     : `Chave PIX: ${chavePix}`;
+  const freq = dadosNotificacao.frequenciaEmprestimo || 'monthly';
+  const rotulo = rotuloFrequenciaJuros(freq);
+  const p = Math.max(0, Math.floor(Number(dadosNotificacao.periodosAberto) || 0));
+  const textoAtrasoLinha = textoPeriodosEmAtraso(p, freq);
+  const textoAbertoLinha = dadosNotificacao.textoPeriodosAberto || textoPeriodosEmAberto(p, freq);
+  const baseJ = Number(dadosNotificacao.baseJurosAtraso) || 0;
+
   const infoParcela = dadosNotificacao.isParcelado ? ` (parcela ${dadosNotificacao.numeroParcelaAtual}/${dadosNotificacao.totalParcelas})` : '';
   let msgParcelado;
   const msgParcelaPersonalizada = gerarMensagemCobranca('parcela', {
@@ -280,10 +306,27 @@ function showModalNotificacaoCobranca(dadosNotificacao) {
     totalParcelas: dadosNotificacao.totalParcelas,
     dataVencimento: dadosNotificacao.dataParcela,
     valor: utils.formatCurrency(dadosNotificacao.valorParcela),
-    isParcelado: dadosNotificacao.isParcelado
+    isParcelado: dadosNotificacao.isParcelado,
+    valorTotalAtualizado: utils.formatCurrency(dadosNotificacao.valorTotal),
+    periodosAberto: p,
+    textoPeriodosAberto: textoAbertoLinha,
+    textoPeriodosEmAtraso: textoAtrasoLinha,
+    jurosExtraAtraso: utils.formatCurrency(dadosNotificacao.jurosAplicado || 0)
   });
   if (msgParcelaPersonalizada) {
     msgParcelado = msgParcelaPersonalizada;
+  } else if (p > 0 && (dadosNotificacao.diasAtraso || 0) > 0) {
+    const eqLinha = baseJ > 0
+      ? `\n_${p}× ${dadosNotificacao.jurosPercent}% sobre ${utils.formatCurrency(baseJ)} = ${utils.formatCurrency(dadosNotificacao.jurosAplicado || 0)}_`
+      : '';
+    msgParcelado = `Olá, ${dadosNotificacao.primeiroNome}, sua parcela${infoParcela} está *${textoAtrasoLinha}* (${textoAbertoLinha}).
+
+💰 *Valor da parcela:* ${utils.formatCurrency(dadosNotificacao.valorParcela)}
+📈 *Juros extras pelo atraso:* ${utils.formatCurrency(dadosNotificacao.jurosAplicado || 0)}${eqLinha}
+
+✅ *Total a pagar agora:* ${utils.formatCurrency(dadosNotificacao.valorTotal)}
+
+${linhaPix}`;
   } else {
     msgParcelado = `Olá, ${dadosNotificacao.primeiroNome}, a sua parcela${infoParcela} vence ${dadosNotificacao.dataParcela}. Você pode pagar o valor de ${utils.formatCurrency(dadosNotificacao.valorParcela)}.
 
@@ -291,25 +334,50 @@ ${linhaPix}
 
 Solicitamos o pagamento até a data de vencimento.`;
   }
-  const freq = dadosNotificacao.frequenciaEmprestimo || 'monthly';
-  const rotulo = rotuloFrequenciaJuros(freq);
-  const textoPer = dadosNotificacao.textoPeriodosAberto || textoPeriodosEmAberto(dadosNotificacao.periodosAberto, freq);
+
   const jurosMensalMaisAtraso = dadosNotificacao.jurosTotal + dadosNotificacao.jurosAplicado;
-  const infoJurosMsg = dadosNotificacao.diasAtraso > 0
-    ? `\n📊 *Detalhes:*
+  const temAtrasoPeriodos = (dadosNotificacao.diasAtraso || 0) > 0 && p > 0;
+  const destaqueTopo = temAtrasoPeriodos
+    ? `📌 *${textoAtrasoLinha.charAt(0).toUpperCase() + textoAtrasoLinha.slice(1)}* — ${textoAbertoLinha}
+`
+    : (dadosNotificacao.diasAtraso || 0) > 0
+      ? `📌 *Atraso:* ${dadosNotificacao.diasAtraso} dia(s) corridos
+`
+      : '';
+
+  const eqJurosExtra = baseJ > 0 && p > 0
+    ? `\n  _(Equiv.: ${p}× ${dadosNotificacao.jurosPercent}% sobre ${utils.formatCurrency(baseJ)})_`
+    : '';
+
+  const infoJurosMsg = temAtrasoPeriodos
+    ? `${destaqueTopo}
+📊 *Detalhes:*
 • Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
 • Juros contratuais (${dadosNotificacao.jurosPercent}% ${rotulo}): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
-• ${textoPer || 'Atraso'} — juros extras (${dadosNotificacao.periodosAberto || 0}× ${dadosNotificacao.jurosPercent}% sobre o valor da parcela em aberto): ${utils.formatCurrency(dadosNotificacao.jurosAplicado)}
-• Dias corridos em atraso: ${dadosNotificacao.diasAtraso} dia(s)
-• Total de juros: ${utils.formatCurrency(jurosMensalMaisAtraso)}
+• *Juros extras (${p} ${p === 1 ? 'período vencido' : 'períodos vencidos'} em aberto):* ${utils.formatCurrency(dadosNotificacao.jurosAplicado)}${eqJurosExtra}
+• Total de juros (contrato + extras): ${utils.formatCurrency(jurosMensalMaisAtraso)}
+• Dias corridos desde o vencimento: ${dadosNotificacao.diasAtraso}
 
-💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotal)}*`
-    : `\n📊 *Detalhes:*
+💰 *Total a pagar agora:* ${utils.formatCurrency(dadosNotificacao.valorTotal)}`
+    : (dadosNotificacao.diasAtraso || 0) > 0
+      ? `${destaqueTopo}
+📊 *Detalhes:*
+• Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
+• Juros contratuais (${dadosNotificacao.jurosPercent}% ${rotulo}): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
+• Juros extras pelo atraso: ${utils.formatCurrency(dadosNotificacao.jurosAplicado || 0)}
+
+💰 *Total a pagar:* ${utils.formatCurrency(dadosNotificacao.valorTotal)}`
+      : `\n📊 *Detalhes:*
 • Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
 • Juros contratuais (${dadosNotificacao.jurosPercent}% ${rotulo}): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
 
 💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotal)}*
 💵 *Apenas juros: ${utils.formatCurrency(jurosMensalMaisAtraso)}*`;
+
+  const aberturaEmprestimo = temAtrasoPeriodos
+    ? `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo está *${textoAtrasoLinha}* (${textoAbertoLinha}). Vencimento de referência: ${dadosNotificacao.dataVencimento}.`
+    : `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.`;
+
   let msgEmprestimo;
   const msgEmprestimoPersonalizada = gerarMensagemCobranca('emprestimo_com_juros', {
     nome: dadosNotificacao.primeiroNome,
@@ -320,19 +388,22 @@ Solicitamos o pagamento até a data de vencimento.`;
     jurosDiario: utils.formatCurrency(dadosNotificacao.jurosDiario || 0),
     diasAtraso: dadosNotificacao.diasAtraso,
     jurosAtraso: utils.formatCurrency(dadosNotificacao.jurosAplicado),
+    jurosExtraAtraso: utils.formatCurrency(dadosNotificacao.jurosAplicado || 0),
     valorTotal: utils.formatCurrency(dadosNotificacao.valorTotal),
-    periodosAberto: dadosNotificacao.periodosAberto,
-    textoPeriodosAberto: textoPer || ''
+    valorBaseJuros: baseJ > 0 ? utils.formatCurrency(baseJ) : '',
+    periodosAberto: p,
+    textoPeriodosAberto: textoAbertoLinha || '',
+    textoPeriodosEmAtraso: textoAtrasoLinha || ''
   });
   if (msgEmprestimoPersonalizada) {
     msgEmprestimo = msgEmprestimoPersonalizada;
   } else {
-    msgEmprestimo = `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.
+    msgEmprestimo = `${aberturaEmprestimo}
 ${infoJurosMsg}
 
 ${linhaPix}
 
-Em caso de atraso, somam-se novos juros ${rotulo} (${dadosNotificacao.jurosPercent}%) a cada período em aberto.`;
+${temAtrasoPeriodos ? `Os juros ${rotulo} (${dadosNotificacao.jurosPercent}%) foram somados *${p}×* por período em aberto.` : `Em caso de atraso, somam-se juros ${rotulo} (${dadosNotificacao.jurosPercent}%) a cada período em aberto.`}`;
   }
   const valorTotalSemDiario = dadosNotificacao.valorInvestido + dadosNotificacao.jurosTotal;
   const infoJurosSemDiario = dadosNotificacao.diasAtraso > 0
@@ -2508,6 +2579,7 @@ const emprestimoController = {
         let jurosAplicado = 0;
         let periodosAberto = 0;
         let textoPeriodosAbertoStr = '';
+        let baseJurosAtraso = 0;
         if (status === 'Em Atraso' && dataVencimento) {
           const diffTime = hoje.getTime() - dataVencimento.getTime();
           diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -2518,7 +2590,7 @@ const emprestimoController = {
             : emp.data_vencimento;
           periodosAberto = periodosAtrasoPorFrequencia(dataRefAtraso, frequencia);
           textoPeriodosAbertoStr = textoPeriodosEmAberto(periodosAberto, frequencia);
-          const baseJurosAtraso = parcelaMaisAtrasada
+          baseJurosAtraso = parcelaMaisAtrasada
             ? Number(parcelaMaisAtrasada.valor_parcela || 0)
             : valorInvestido;
           jurosAplicado = baseJurosAtraso * (jurosPercent / 100) * periodosAberto;
@@ -2610,7 +2682,8 @@ const emprestimoController = {
           jurosPercent,
           frequenciaEmprestimo: frequencia,
           periodosAberto,
-          textoPeriodosAberto: textoPeriodosAbertoStr
+          textoPeriodosAberto: textoPeriodosAbertoStr,
+          baseJurosAtraso
         };
         // Se chamado de Cobranças do Dia com parcela específica, usar dados dessa parcela
         if (opts.numeroParcela && parcelas.length > 0) {
@@ -2622,10 +2695,12 @@ const emprestimoController = {
             let txtP = textoPeriodosAbertoStr;
             let ja = jurosAplicado;
             let va = valorAtualizado;
+            let vbBase = dadosNotificacao.baseJurosAtraso;
             if (parcelaAtrasada) {
               pa = periodosAtrasoPorFrequencia(parcelaEspecifica.data_vencimento, frequencia);
               txtP = textoPeriodosEmAberto(pa, frequencia);
               const vb = Number(parcelaEspecifica.valor_parcela || 0);
+              vbBase = vb;
               ja = vb * (jurosPercent / 100) * pa;
               va = vb + ja;
             }
@@ -2637,7 +2712,8 @@ const emprestimoController = {
               periodosAberto: pa,
               textoPeriodosAberto: txtP,
               jurosAplicado: ja,
-              valorTotal: va
+              valorTotal: va,
+              baseJurosAtraso: vbBase
             };
           }
         }
@@ -4321,8 +4397,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             <input type="number" name="porcentagem" id="modal-porcentagem" class="form-input" step="0.01" min="0" placeholder="ex.: 20">
           </div>
           <div class="form-group">
-            <label>Multa por Atraso (%)</label>
-            <input type="number" name="multa" id="modal-multa" class="form-input" step="0.01" min="0" required placeholder="ex.: 2">
+            <label>Multa por Atraso (%) <span style="font-weight:400;color:#64748b;">(opcional — 0 = sem multa)</span></label>
+            <input type="number" name="multa" id="modal-multa" class="form-input" step="0.01" min="0" placeholder="0">
           </div>
           <div class="form-group">
             <label>Data de Vencimento</label>
@@ -4671,7 +4747,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           data_vencimento: formData.dataVencimento,
           data_primeira_parcela: formData.dataVencimento,
           juros_mensal: jurosMensal,
-          multa_atraso: formData.multa,
+          multa_atraso: parseFloat(String(formData.multa ?? '').replace(',', '.')) || 0,
           observacoes: formData.observacoes || '',
           tipo_emprestimo: parseInt(formData.parcelas) > 1 ? 'in_installments' : 'fixed',
           numero_parcelas: parseInt(formData.parcelas) || 1,
