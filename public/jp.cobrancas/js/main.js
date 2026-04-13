@@ -352,16 +352,15 @@ Solicitamos o pagamento até a data de vencimento.`;
 `
       : '';
 
-  const baseMsgAtraso =
-    baseJ > 0 ? baseJ : Number(dadosNotificacao.valorInvestido || 0);
-  const rotuloBaseCapital = dadosNotificacao.isParcelado ? 'Base' : 'Capital';
-
   const infoJurosMsg = temAtrasoPeriodos
-    ? `💰 *Capital + juros (quitação):* ${utils.formatCurrency(dadosNotificacao.valorTotal)}
-💵 *Só juros:* ${utils.formatCurrency(totalJurosExibicao)}
-_Pode pagar o valor total ou apenas os juros._
-_(${rotuloBaseCapital} ${utils.formatCurrency(baseMsgAtraso)} + juros ${p}×${dadosNotificacao.jurosPercent}% = ${utils.formatCurrency(totalJurosExibicao)})_
-_Atraso: ${dadosNotificacao.diasAtraso} dias corridos_`
+    ? `*Opções de pagamento*
+
+• *Quitação* (capital + juros): ${utils.formatCurrency(dadosNotificacao.valorTotal)}
+• *Só juros:* ${utils.formatCurrency(totalJurosExibicao)}
+
+Você pode pagar o valor total ou apenas os juros.
+
+Atraso: ${dadosNotificacao.diasAtraso} dias corridos`
     : (dadosNotificacao.diasAtraso || 0) > 0
       ? `${destaqueTopo}
 📊 *Detalhes:*
@@ -413,11 +412,14 @@ ${linhaPix}${rodapeComJuros ? `\n\n${rodapeComJuros}` : ''}`;
   /** Total a pagar hoje (inclui juros extras de todos os períodos em aberto — mesmo critério da msg "com juros"). */
   const valorTotalSemDiario = dadosNotificacao.valorTotal;
   const infoJurosSemDiario = temAtrasoPeriodos
-    ? `💰 *Capital + juros (quitação):* ${utils.formatCurrency(valorTotalSemDiario)}
-💵 *Só juros:* ${utils.formatCurrency(totalJurosExibicao)}
-_Pode pagar o valor total ou apenas os juros._
-_(${rotuloBaseCapital} ${utils.formatCurrency(baseMsgAtraso)} + juros ${p}×${dadosNotificacao.jurosPercent}% = ${utils.formatCurrency(totalJurosExibicao)})_
-_Atraso: ${dadosNotificacao.diasAtraso} dias corridos_`
+    ? `*Opções de pagamento*
+
+• *Quitação* (capital + juros): ${utils.formatCurrency(valorTotalSemDiario)}
+• *Só juros:* ${utils.formatCurrency(totalJurosExibicao)}
+
+Você pode pagar o valor total ou apenas os juros.
+
+Atraso: ${dadosNotificacao.diasAtraso} dias corridos`
     : (dadosNotificacao.diasAtraso || 0) > 0
       ? `${destaqueTopo}
 📊 *Detalhes:*
