@@ -131,9 +131,8 @@ function periodosAtrasoPorFrequencia(dataVencStr, frequencia) {
   if (f === 'daily') return dias;
   if (f === 'weekly') return Math.floor(dias / 7);
   if (f === 'biweekly') return Math.floor(dias / 14);
-  let months = (hoje.getFullYear() - v.getFullYear()) * 12 + (hoje.getMonth() - v.getMonth());
-  if (hoje.getDate() < v.getDate()) months -= 1;
-  return Math.max(0, months);
+  // Mensal: blocos de 30 dias (igual ao servidor CEIL(dias/30)) — ex. 12/03→13/04 ≈ 32 dias → 2 períodos
+  return Math.max(0, Math.ceil(dias / 30));
 }
 
 function textoPeriodosEmAberto(periodos, frequencia) {

@@ -32,6 +32,7 @@ function mensagemPeriodosEmAberto(periodos, frequencia) {
 /**
  * Juros por período de atraso (mensal / semanal / quinzenal / diário):
  * a cada período completo após o vencimento, soma de novo o % do empréstimo sobre valor_original da cobrança.
+ * Mensal: períodos de 30 dias corridos (CEIL), não TIMESTAMPDIFF(MONTH) — ex.: 12/03→13/04 ≈ 32 dias = 2 períodos.
  * Usa a mesma expressão no UPDATE e no SELECT.
  */
 const SQL_PERIODOS_ATRASO = `
@@ -40,8 +41,8 @@ const SQL_PERIODOS_ATRASO = `
     WHEN 'daily' THEN TIMESTAMPDIFF(DAY, cb.data_vencimento, CURDATE())
     WHEN 'weekly' THEN TIMESTAMPDIFF(WEEK, cb.data_vencimento, CURDATE())
     WHEN 'biweekly' THEN FLOOR(GREATEST(0, DATEDIFF(CURDATE(), cb.data_vencimento)) / 14)
-    WHEN 'monthly' THEN TIMESTAMPDIFF(MONTH, cb.data_vencimento, CURDATE())
-    ELSE TIMESTAMPDIFF(MONTH, cb.data_vencimento, CURDATE())
+    WHEN 'monthly' THEN CEILING(GREATEST(0, DATEDIFF(CURDATE(), cb.data_vencimento)) / 30)
+    ELSE CEILING(GREATEST(0, DATEDIFF(CURDATE(), cb.data_vencimento)) / 30)
   END END`;
 
 const SQL_UPDATE_COBRANCAS_JUROS_POR_PERIODO = `
