@@ -945,6 +945,10 @@ const apiService = {
     return this.request(`/cobrancas/historico-pagamentos${qs ? '?' + qs : ''}`);
   },
 
+  async getHistoricoPagamentosEmprestimo(emprestimoId) {
+    return this.getHistoricoPagamentos({ emprestimo_id: String(emprestimoId) });
+  },
+
   // Cobranças
   async getCobrancas() {
     return this.request('/cobrancas');
@@ -2793,6 +2797,11 @@ const emprestimoController = {
               <span class="badge" style="background: ${status === 'Em Atraso' ? '#fbbf24' : status.toUpperCase() === 'QUITADO' ? '#10b981' : status === 'SÓ JUROS' ? '#6366f1' : '#002f4b'}; color: #fff; font-weight: 600; font-size: 1rem; padding: 0.4em 1em; border-radius: 8px; letter-spacing: 1px;">${status || '-'}</span>
               <button class="btn" style="background: #10b981; color: #fff; font-weight: 600; border-radius: 8px; padding: 0.4em 1.2em; font-size: 1rem;" id="modal-btn-editar">Editar</button>
             </div>
+            <div style="margin-bottom: 1rem;">
+              <button type="button" class="btn" id="modal-btn-historico" style="width: 100%; background: linear-gradient(90deg, #0ea5e9, #0284c7); color: #fff; font-weight: 600; border-radius: 8px; padding: 0.55em 1em; font-size: 0.98rem;">
+                <i class="fas fa-history" style="margin-right: 0.45rem;"></i> Histórico de pagamentos
+              </button>
+            </div>
             <div style="margin-bottom: 1.2rem;">
               <h2 style="font-size: 1.4rem; font-weight: bold; margin-bottom: 0.2em; color: #002f4b;">${emp.cliente_nome || 'N/A'}</h2>
               ${telefone ? `<div style="font-size: 0.95rem; color: #666; margin-bottom: 0.4em; display: flex; align-items: center; gap: 0.4rem;">
@@ -2829,6 +2838,53 @@ const emprestimoController = {
           </div>
         `;
         const modal = ui.showModal(detalhes, 'Detalhes do Empréstimo');
+
+        const btnHistorico = modal.querySelector('#modal-btn-historico');
+        if (btnHistorico) {
+          btnHistorico.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            ui.setButtonLoading(btnHistorico, true, 'Carregando...');
+            try {
+              const rows = await apiService.getHistoricoPagamentosEmprestimo(emp.id);
+              const lista = Array.isArray(rows) ? rows : [];
+              const linhas = lista.length
+                ? lista.map((h) => {
+                    const obs = (h.observacoes || '').trim();
+                    const extra = h.forma_pagamento ? ` · ${h.forma_pagamento}` : '';
+                    return `<tr>
+                      <td style="padding:0.45rem 0.5rem; border-bottom:1px solid #eee; white-space:nowrap;">${h.data_pagamento ? utils.formatDate(h.data_pagamento) : '—'}</td>
+                      <td style="padding:0.45rem 0.5rem; border-bottom:1px solid #eee;">${escapeHtmlCobrancas(h.tipo_pagamento || '—')}</td>
+                      <td style="padding:0.45rem 0.5rem; border-bottom:1px solid #eee; text-align:right; font-weight:600;">${utils.formatCurrency(Number(h.valor || 0))}</td>
+                      <td style="padding:0.45rem 0.5rem; border-bottom:1px solid #eee; font-size:0.9rem; color:#444;">${escapeHtmlCobrancas(obs)}${escapeHtmlCobrancas(extra)}</td>
+                    </tr>`;
+                  }).join('')
+                : '<tr><td colspan="4" style="padding:1rem; text-align:center; color:#64748b;">Nenhum pagamento registrado neste empréstimo.</td></tr>';
+              const htmlHistorico = `
+                <div style="padding:0.25rem 0; max-width:520px; margin:0 auto;">
+                  <p style="margin:0 0 0.75rem; font-size:0.95rem; color:#334155;"><strong>${escapeHtmlCobrancas(emp.cliente_nome || 'Cliente')}</strong> · PCL #${emp.id}</p>
+                  <div style="max-height:min(60vh,420px); overflow:auto; border:1px solid #e2e8f0; border-radius:8px;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.92rem;">
+                      <thead>
+                        <tr style="background:#f1f5f9; position:sticky; top:0;">
+                          <th style="text-align:left; padding:0.5rem;">Data</th>
+                          <th style="text-align:left; padding:0.5rem;">Tipo</th>
+                          <th style="text-align:right; padding:0.5rem;">Valor</th>
+                          <th style="text-align:left; padding:0.5rem;">Observações</th>
+                        </tr>
+                      </thead>
+                      <tbody>${linhas}</tbody>
+                    </table>
+                  </div>
+                </div>`;
+              ui.showModal(htmlHistorico, 'Histórico de pagamentos');
+            } catch (err) {
+              ui.showNotification(err.message || 'Erro ao carregar histórico', 'error');
+            } finally {
+              ui.setButtonLoading(btnHistorico, false);
+            }
+          });
+        }
         
         // Botão Notificar WhatsApp - abre modal com opções
         const btnWhats = modal.querySelector('#modal-notificar');

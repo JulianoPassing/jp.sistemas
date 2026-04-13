@@ -1750,7 +1750,7 @@ router.get('/historico-pagamentos', ensureDatabase, async (req, res) => {
   try {
     const username = req.session.cobrancasUser;
     const connection = await createCobrancasConnection(username);
-    const { data_inicio, data_fim, cliente_id, tipo } = req.query;
+    const { data_inicio, data_fim, cliente_id, tipo, emprestimo_id } = req.query;
 
     // 1. Pagamentos de PARCELAS ou EMPRÉSTIMO (quando marca como pago no dashboard/emprestimos)
     const [parcelasPagas] = await connection.execute(`
@@ -1854,6 +1854,9 @@ router.get('/historico-pagamentos', ensureDatabase, async (req, res) => {
     }
     if (tipo) {
       resultado = resultado.filter(h => h.tipo_pagamento.toLowerCase() === tipo.toLowerCase());
+    }
+    if (emprestimo_id) {
+      resultado = resultado.filter(h => String(h.emprestimo_id) === String(emprestimo_id));
     }
 
     await connection.end();
