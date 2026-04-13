@@ -39,8 +39,8 @@ function mensagemPeriodosEmAberto(periodos, frequencia) {
 
 /**
  * Juros por período de atraso (mensal / semanal / quinzenal / diário):
- * a cada período em aberto, aplica o % sobre a base correta: parcelas usam valor_original da cobrança;
- * empréstimo fixo (uma cobrança) usa o capital e.valor — não valor_original (que já inclui o 1º juros).
+ * Só em empréstimo de UMA cobrança (valor fixo): aplica % × períodos sobre o capital.
+ * Empréstimo PARCELADO: cada cobrança é valor fixo de parcela — sem juros mensais empilhados; só multa % se houver.
  * Mensal: períodos de 30 dias corridos (CEIL), não TIMESTAMPDIFF(MONTH) — ex.: 12/03→13/04 ≈ 32 dias = 2 períodos.
  * Teto por frequência evita valor_atualizado explodir (dívidas muito antigas / datas ruins inflando o dashboard).
  * Usa a mesma expressão no UPDATE e no SELECT.
@@ -69,30 +69,53 @@ const SQL_PERIODOS_ATRASO = `
   )
   END`;
 
+/** Parcelado: mais de uma parcela OU tipo in_installments — sem juros de mora por calendário, só multa opcional. */
+const SQL_EMPRESTIMO_PARCELADO = `
+  (COALESCE(e.numero_parcelas, 1) > 1 OR LOWER(TRIM(COALESCE(e.tipo_emprestimo, 'fixed'))) = 'in_installments')
+`;
+
+/** Períodos para exibição em listagens: 0 em parcelado (não há “meses de juros” empilhados por calendário). */
+const SQL_PERIODOS_EM_ABERTO_LISTAGEM = `
+  CASE WHEN ${SQL_EMPRESTIMO_PARCELADO.trim()}
+    THEN 0
+    ELSE (${SQL_PERIODOS_ATRASO})
+  END`;
+
 const SQL_UPDATE_COBRANCAS_JUROS_POR_PERIODO = `
   UPDATE cobrancas cb
   INNER JOIN emprestimos e ON e.id = cb.emprestimo_id
   SET
     cb.dias_atraso = CASE WHEN cb.data_vencimento < CURDATE() THEN DATEDIFF(CURDATE(), cb.data_vencimento) ELSE 0 END,
-    cb.juros_calculados = COALESCE(e.juros_mensal, 0) * (${SQL_PERIODOS_ATRASO}),
+    cb.juros_calculados = CASE
+      WHEN ${SQL_EMPRESTIMO_PARCELADO} THEN 0
+      ELSE COALESCE(e.juros_mensal, 0) * (${SQL_PERIODOS_ATRASO})
+    END,
     cb.multa_calculada = CASE
       WHEN cb.data_vencimento < CURDATE() AND COALESCE(e.multa_atraso, 0) > 0 THEN COALESCE(e.multa_atraso, 0)
       ELSE 0
     END,
-    cb.valor_atualizado = (
-      CASE WHEN COALESCE(e.numero_parcelas, 1) > 1 THEN cb.valor_original
-      ELSE COALESCE(NULLIF(e.valor, 0), cb.valor_original)
-      END
-    ) * (
-      1
-      + (COALESCE(e.juros_mensal, 0) * (${SQL_PERIODOS_ATRASO}) / 100)
-      + (
-          CASE
-            WHEN cb.data_vencimento < CURDATE() AND COALESCE(e.multa_atraso, 0) > 0 THEN COALESCE(e.multa_atraso, 0)
-            ELSE 0
-          END / 100
+    cb.valor_atualizado = CASE
+      WHEN ${SQL_EMPRESTIMO_PARCELADO} THEN
+        cb.valor_original * (
+          1 + (
+            CASE
+              WHEN cb.data_vencimento < CURDATE() AND COALESCE(e.multa_atraso, 0) > 0 THEN COALESCE(e.multa_atraso, 0)
+              ELSE 0
+            END / 100
+          )
         )
-    )
+      ELSE
+        COALESCE(NULLIF(e.valor, 0), cb.valor_original) * (
+          1
+          + (COALESCE(e.juros_mensal, 0) * (${SQL_PERIODOS_ATRASO}) / 100)
+          + (
+              CASE
+                WHEN cb.data_vencimento < CURDATE() AND COALESCE(e.multa_atraso, 0) > 0 THEN COALESCE(e.multa_atraso, 0)
+                ELSE 0
+              END / 100
+            )
+        )
+    END
   WHERE TRIM(UPPER(cb.status)) = 'PENDENTE'
 `;
 
@@ -587,15 +610,13 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Valor a receber (dashboard): soma do valor de FACE das cobranças pendentes (valor_original), não valor_atualizado.
-      // valor_atualizado inclui juros/mora empilhados por período em cada linha e infla o KPI (várias vezes o investido).
-      // Legado: empréstimos sem linha em cobrancas — mantém o total contratual estimado.
+      // Valor a receber: soma valor_atualizado (juros de mora só em empréstimo fixo; parcelado = face da parcela + multa).
       console.log('Dashboard: Buscando estatísticas de cobranças');
       try {
         const [abertoRows] = await connection.execute(`
           SELECT 
-            COALESCE(SUM(cb.valor_original), 0) as valor_aberto,
-            COALESCE(SUM(CASE WHEN cb.dias_atraso > 0 THEN cb.valor_original ELSE 0 END), 0) as valor_atrasado,
+            COALESCE(SUM(cb.valor_atualizado), 0) as valor_aberto,
+            COALESCE(SUM(CASE WHEN cb.dias_atraso > 0 THEN cb.valor_atualizado ELSE 0 END), 0) as valor_atrasado,
             COUNT(*) as cobrancas_pendentes_abertas
           FROM cobrancas cb
           INNER JOIN emprestimos e ON cb.emprestimo_id = e.id
@@ -639,7 +660,7 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
           valor_atrasado: mysqlDecimalToNumber(abertoRows[0].valor_atrasado)
         }];
 
-        console.log('Dashboard: Valor a receber (soma valor_original cobranças pendentes):', abertoRows[0].valor_aberto);
+        console.log('Dashboard: Valor a receber (soma valor_atualizado cobranças pendentes):', abertoRows[0].valor_aberto);
         console.log('Dashboard: Legado sem cobranças:', legacyRows[0].valor_legacy);
         console.log('Dashboard: Total valor a receber:', cobrancasStats[0].valor_total_cobrancas);
       } catch (innerError) {
@@ -647,10 +668,10 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
         [cobrancasStats] = await connection.execute(`
           SELECT 
             COUNT(*) as total_cobrancas,
-            COALESCE(SUM(CASE WHEN TRIM(UPPER(status)) = 'PENDENTE' THEN valor_original ELSE 0 END), 0) as valor_total_cobrancas,
+            COALESCE(SUM(CASE WHEN TRIM(UPPER(status)) = 'PENDENTE' THEN valor_atualizado ELSE 0 END), 0) as valor_total_cobrancas,
             COUNT(CASE WHEN TRIM(UPPER(status)) = 'PENDENTE' THEN 1 END) as cobrancas_pendentes,
             COUNT(CASE WHEN TRIM(UPPER(status)) = 'PAGA' THEN 1 END) as cobrancas_pagas,
-            COALESCE(SUM(CASE WHEN dias_atraso > 0 AND TRIM(UPPER(status)) = 'PENDENTE' THEN valor_original ELSE 0 END), 0) as valor_atrasado
+            COALESCE(SUM(CASE WHEN dias_atraso > 0 AND TRIM(UPPER(status)) = 'PENDENTE' THEN valor_atualizado ELSE 0 END), 0) as valor_atrasado
           FROM cobrancas
           WHERE cliente_id IS NOT NULL
         `);
@@ -718,7 +739,7 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
       [cobrancasPendentes] = await connection.execute(`
         SELECT cb.*, c.nome as cliente_nome, c.telefone as telefone,
           e.frequencia AS emprestimo_frequencia,
-          (${SQL_PERIODOS_ATRASO}) AS periodos_em_aberto
+          (${SQL_PERIODOS_EM_ABERTO_LISTAGEM}) AS periodos_em_aberto
         FROM cobrancas cb
         LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
         LEFT JOIN emprestimos e ON cb.emprestimo_id = e.id
@@ -2183,7 +2204,7 @@ router.get('/cobrancas', ensureDatabase, async (req, res) => {
     const [cobrancas] = await connection.execute(`
       SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email,
         e.frequencia AS emprestimo_frequencia,
-        (${SQL_PERIODOS_ATRASO}) AS periodos_em_aberto
+        (${SQL_PERIODOS_EM_ABERTO_LISTAGEM}) AS periodos_em_aberto
       FROM cobrancas cb
       INNER JOIN emprestimos e ON cb.emprestimo_id = e.id
       LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
@@ -2212,7 +2233,7 @@ router.get('/cobrancas/atrasadas', ensureDatabase, async (req, res) => {
     const [cobrancas] = await connection.execute(`
       SELECT cb.*, c.nome as cliente_nome, c.telefone, c.email,
         e.frequencia AS emprestimo_frequencia,
-        (${SQL_PERIODOS_ATRASO}) AS periodos_em_aberto
+        (${SQL_PERIODOS_EM_ABERTO_LISTAGEM}) AS periodos_em_aberto
       FROM cobrancas cb
       LEFT JOIN clientes_cobrancas c ON cb.cliente_id = c.id
       LEFT JOIN emprestimos e ON cb.emprestimo_id = e.id
