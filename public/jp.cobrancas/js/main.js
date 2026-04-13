@@ -346,26 +346,20 @@ Solicitamos o pagamento até a data de vencimento.`;
       : dadosNotificacao.jurosTotal + dadosNotificacao.jurosAplicado;
   const temAtrasoPeriodos = (dadosNotificacao.diasAtraso || 0) > 0 && p > 0;
   const destaqueTopo = temAtrasoPeriodos
-    ? `📌 *${textoAtrasoLinha.charAt(0).toUpperCase() + textoAtrasoLinha.slice(1)}* — ${textoAbertoLinha}
-`
+    ? ''
     : (dadosNotificacao.diasAtraso || 0) > 0
       ? `📌 *Atraso:* ${dadosNotificacao.diasAtraso} dia(s) corridos
 `
       : '';
 
-  const eqJurosExtra = baseJ > 0 && p > 0
-    ? `\n  _(Equiv.: ${p}× ${dadosNotificacao.jurosPercent}% sobre ${utils.formatCurrency(baseJ)})_`
-    : '';
+  const baseMsgAtraso =
+    baseJ > 0 ? baseJ : Number(dadosNotificacao.valorInvestido || 0);
+  const rotuloBaseCapital = dadosNotificacao.isParcelado ? 'Base' : 'Capital';
 
   const infoJurosMsg = temAtrasoPeriodos
-    ? `${destaqueTopo}
-📊 *Detalhes:*
-• Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
-• *Juros (${p} ${p === 1 ? 'período em aberto' : 'períodos em aberto'} — ${dadosNotificacao.jurosPercent}% ${rotulo} sobre ${baseJ > 0 ? utils.formatCurrency(baseJ) : utils.formatCurrency(dadosNotificacao.valorInvestido)}):* ${utils.formatCurrency(dadosNotificacao.jurosAplicado)}${eqJurosExtra}
-• Total de juros: ${utils.formatCurrency(totalJurosExibicao)}
-• Dias corridos desde o vencimento: ${dadosNotificacao.diasAtraso}
-
-💰 *Total a pagar agora:* ${utils.formatCurrency(dadosNotificacao.valorTotal)}`
+    ? `💰 *Total a pagar agora:* ${utils.formatCurrency(dadosNotificacao.valorTotal)}
+_(${rotuloBaseCapital} ${utils.formatCurrency(baseMsgAtraso)} + juros ${p}×${dadosNotificacao.jurosPercent}% = ${utils.formatCurrency(totalJurosExibicao)})_
+_Atraso: ${dadosNotificacao.diasAtraso} dias corridos_`
     : (dadosNotificacao.diasAtraso || 0) > 0
       ? `${destaqueTopo}
 📊 *Detalhes:*
@@ -382,7 +376,7 @@ Solicitamos o pagamento até a data de vencimento.`;
 💵 *Apenas juros: ${utils.formatCurrency(totalJurosExibicao)}*`;
 
   const aberturaEmprestimo = temAtrasoPeriodos
-    ? `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo está *${textoAtrasoLinha}* (${textoAbertoLinha}). Vencimento de referência: ${dadosNotificacao.dataVencimento}.`
+    ? `Olá, ${dadosNotificacao.primeiroNome} — seu empréstimo está *${textoAtrasoLinha}* (venceu em ${dadosNotificacao.dataVencimento}).`
     : `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.`;
 
   let msgEmprestimo;
@@ -405,24 +399,21 @@ Solicitamos o pagamento até a data de vencimento.`;
   if (msgEmprestimoPersonalizada) {
     msgEmprestimo = msgEmprestimoPersonalizada;
   } else {
+    const rodapeComJuros = temAtrasoPeriodos
+      ? ''
+      : `Em caso de atraso, somam-se juros ${rotulo} (${dadosNotificacao.jurosPercent}%) a cada período em aberto.`;
     msgEmprestimo = `${aberturaEmprestimo}
+
 ${infoJurosMsg}
 
-${linhaPix}
-
-${temAtrasoPeriodos ? `Os juros ${rotulo} (${dadosNotificacao.jurosPercent}%) foram somados *${p}×* por período em aberto.` : `Em caso de atraso, somam-se juros ${rotulo} (${dadosNotificacao.jurosPercent}%) a cada período em aberto.`}`;
+${linhaPix}${rodapeComJuros ? `\n\n${rodapeComJuros}` : ''}`;
   }
   /** Total a pagar hoje (inclui juros extras de todos os períodos em aberto — mesmo critério da msg "com juros"). */
   const valorTotalSemDiario = dadosNotificacao.valorTotal;
   const infoJurosSemDiario = temAtrasoPeriodos
-    ? `${destaqueTopo}
-📊 *Detalhes:*
-• Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
-• *Juros (${p} ${p === 1 ? 'período em aberto' : 'períodos em aberto'} — ${dadosNotificacao.jurosPercent}% ${rotulo} sobre ${baseJ > 0 ? utils.formatCurrency(baseJ) : utils.formatCurrency(dadosNotificacao.valorInvestido)}):* ${utils.formatCurrency(dadosNotificacao.jurosAplicado)}${eqJurosExtra}
-• Total de juros: ${utils.formatCurrency(totalJurosExibicao)}
-• Dias corridos desde o vencimento: ${dadosNotificacao.diasAtraso}
-
-💰 *Total a pagar agora:* ${utils.formatCurrency(valorTotalSemDiario)}`
+    ? `💰 *Total a pagar agora:* ${utils.formatCurrency(valorTotalSemDiario)}
+_(${rotuloBaseCapital} ${utils.formatCurrency(baseMsgAtraso)} + juros ${p}×${dadosNotificacao.jurosPercent}% = ${utils.formatCurrency(totalJurosExibicao)})_
+_Atraso: ${dadosNotificacao.diasAtraso} dias corridos_`
     : (dadosNotificacao.diasAtraso || 0) > 0
       ? `${destaqueTopo}
 📊 *Detalhes:*
@@ -438,7 +429,7 @@ ${temAtrasoPeriodos ? `Os juros ${rotulo} (${dadosNotificacao.jurosPercent}%) fo
 💰 *Total a pagar: ${utils.formatCurrency(valorTotalSemDiario)}*
 💵 *Apenas juros: ${utils.formatCurrency(dadosNotificacao.jurosTotal)}*`;
   const aberturaSemDiario = temAtrasoPeriodos
-    ? `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo está *${textoAtrasoLinha}* (${textoAbertoLinha}). Vencimento de referência: ${dadosNotificacao.dataVencimento}.`
+    ? `Olá, ${dadosNotificacao.primeiroNome} — seu empréstimo está *${textoAtrasoLinha}* (venceu em ${dadosNotificacao.dataVencimento}).`
     : `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo vence ${dadosNotificacao.dataVencimento}.`;
   let msgEmprestimoSemDiario;
   const msgEmprestimoSemJurosPersonalizada = gerarMensagemCobranca('emprestimo_sem_juros', {
@@ -458,12 +449,14 @@ ${temAtrasoPeriodos ? `Os juros ${rotulo} (${dadosNotificacao.jurosPercent}%) fo
   if (msgEmprestimoSemJurosPersonalizada) {
     msgEmprestimoSemDiario = msgEmprestimoSemJurosPersonalizada;
   } else {
+    const rodapeSemDiario = temAtrasoPeriodos
+      ? ''
+      : 'Solicitamos o pagamento até a data de vencimento.';
     msgEmprestimoSemDiario = `${aberturaSemDiario}
+
 ${infoJurosSemDiario}
 
-${linhaPix}
-
-${temAtrasoPeriodos ? `Os juros ${rotulo} (${dadosNotificacao.jurosPercent}%) foram somados *${p}×* pelos períodos em aberto.` : 'Solicitamos o pagamento até a data de vencimento.'}`;
+${linhaPix}${rodapeSemDiario ? `\n\n${rodapeSemDiario}` : ''}`;
   }
   const telefoneNumeros = (dadosNotificacao.telefone || '').replace(/\D/g, '');
   const telefoneFinal = telefoneNumeros.startsWith('55') ? telefoneNumeros : `55${telefoneNumeros}`;
