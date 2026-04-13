@@ -887,42 +887,27 @@
     .cupom-msg {
       font-size: 1.1rem;
       color: rgba(255,255,255,0.9);
-      margin-bottom: 1.5rem;
+      margin-bottom: 0.75rem;
       line-height: 1.5;
       position: relative;
     }
-    .cupom-countdown {
-      display: flex;
-      justify-content: center;
-      gap: 0.8rem;
-      margin: 1.5rem 0;
-      flex-wrap: wrap;
+    .cupom-sempre {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: rgba(0, 230, 255, 0.95);
+      margin-bottom: 1.25rem;
+      line-height: 1.4;
       position: relative;
+      text-shadow: 0 0 12px rgba(0, 230, 255, 0.35);
+      animation: cupomSempreGlow 2.8s ease-in-out infinite;
     }
-    .countdown-item {
-      background: linear-gradient(145deg, #003a5e, var(--primary-blue));
-      border: 2px solid rgba(0,230,255,0.4);
-      border-radius: 12px;
-      padding: 0.8rem 1rem;
-      min-width: 70px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    }
-    .countdown-item span {
-      display: block;
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: var(--accent-blue);
-      line-height: 1.2;
-    }
-    .countdown-item small {
-      font-size: 0.7rem;
-      color: rgba(255,255,255,0.7);
-      text-transform: uppercase;
-      letter-spacing: 1px;
+    @keyframes cupomSempreGlow {
+      0%, 100% { opacity: 0.88; }
+      50% { opacity: 1; }
     }
     .cupom-cta {
       display: inline-block;
-      margin-top: 1.5rem;
+      margin-top: 0.5rem;
       padding: 1.2rem 2.5rem;
       background: linear-gradient(135deg, #4ade80, #22c55e);
       color: #001a2e;
@@ -974,12 +959,6 @@
         font-size: 1.8rem;
         letter-spacing: 2px;
       }
-      .cupom-countdown { gap: 0.5rem; }
-      .countdown-item {
-        min-width: 55px;
-        padding: 0.5rem 0.6rem;
-      }
-      .countdown-item span { font-size: 1.4rem; }
     }
   </style>
 </head>
@@ -1044,18 +1023,12 @@
   <div class="cupom-modal-bg" id="cupom-modal-bg">
     <div class="cupom-modal-box">
       <button class="cupom-modal-close" id="cupom-modal-close" title="Fechar">&times;</button>
-      <span class="cupom-badge">🔥 Oferta Limitada</span>
+      <span class="cupom-badge">✨ Promoção ativa</span>
       <h2>Não perca essa oportunidade!</h2>
       <div class="cupom-code">JPSISTEMAS50</div>
       <div class="cupom-desconto">50% DE DESCONTO</div>
-      <p class="cupom-msg">Aproveite! Use o cupom no checkout e garanta metade do valor. Oferta por tempo limitado!</p>
-      <div class="cupom-countdown">
-        <div class="countdown-item"><span id="cd-days">00</span><small>Dias</small></div>
-        <div class="countdown-item"><span id="cd-hours">00</span><small>Horas</small></div>
-        <div class="countdown-item"><span id="cd-mins">00</span><small>Min</small></div>
-        <div class="countdown-item"><span id="cd-secs">00</span><small>Seg</small></div>
-      </div>
-      <p style="font-size:0.85rem;color:rgba(255,255,255,0.6);margin-top:0.5rem;">Encerra em 28/02/2026 às 23:59</p>
+      <p class="cupom-msg">Aproveite! Use o cupom no checkout da página de preços e garanta metade do valor.</p>
+      <p class="cupom-sempre">Cupom sempre disponível — sem data de encerramento.</p>
       <a href="precos.html" class="cupom-cta">Compre Agora - Aproveite! 🚀</a>
     </div>
   </div>
@@ -1085,18 +1058,6 @@
           <div class="sistema-info">
             <h3>Sistema de Empréstimos</h3>
             <p>Controle de empréstimos, cobranças e gestão financeira</p>
-          </div>
-          <div class="sistema-arrow">
-            <i class="fas fa-arrow-right"></i>
-          </div>
-        </div>
-        <div class="sistema-opcao" onclick="window.location.href='jp.autopecasrg/login.html'">
-          <div class="sistema-icon">
-            <i class="fas fa-tags"></i>
-          </div>
-          <div class="sistema-info">
-            <h3>JP Auto Peças RG</h3>
-            <p>Estoque, Mercado Livre, Shopee e etiquetas</p>
           </div>
           <div class="sistema-arrow">
             <i class="fas fa-arrow-right"></i>
@@ -1328,30 +1289,9 @@
       });
     }
 
-    // Pop-up Cupom - Exibe ao carregar a página
+    // Pop-up Cupom - Exibe ao carregar a página (oferta permanente, sem countdown)
     const cupomModal = document.getElementById('cupom-modal-bg');
     const cupomClose = document.getElementById('cupom-modal-close');
-    const cupomEndDate = new Date('2026-02-28T23:59:59').getTime();
-
-    function updateCountdown() {
-      const now = new Date().getTime();
-      const diff = cupomEndDate - now;
-      if (diff <= 0) {
-        document.getElementById('cd-days').textContent = '00';
-        document.getElementById('cd-hours').textContent = '00';
-        document.getElementById('cd-mins').textContent = '00';
-        document.getElementById('cd-secs').textContent = '00';
-        return;
-      }
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const secs = Math.floor((diff % (1000 * 60)) / 1000);
-      document.getElementById('cd-days').textContent = String(days).padStart(2, '0');
-      document.getElementById('cd-hours').textContent = String(hours).padStart(2, '0');
-      document.getElementById('cd-mins').textContent = String(mins).padStart(2, '0');
-      document.getElementById('cd-secs').textContent = String(secs).padStart(2, '0');
-    }
 
     document.getElementById('mobile-menu-btn')?.addEventListener('click', function() {
       document.getElementById('main-nav').classList.toggle('open');
@@ -1359,8 +1299,6 @@
 
     if (cupomModal && cupomClose) {
       setTimeout(() => cupomModal.classList.add('active'), 800);
-      updateCountdown();
-      setInterval(updateCountdown, 1000);
       cupomClose.addEventListener('click', () => cupomModal.classList.remove('active'));
       cupomModal.addEventListener('click', (e) => {
         if (e.target === cupomModal) cupomModal.classList.remove('active');

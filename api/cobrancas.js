@@ -11,6 +11,13 @@ const bcrypt = require('bcryptjs');
 
 const router = express.Router();
 
+/** Valores DECIMAL do MySQL chegam como string; somar com + sem Number vira concatenação e quebra o front (NaN). */
+function mysqlDecimalToNumber(v) {
+  if (v == null || v === '') return 0;
+  const n = typeof v === 'number' ? v : parseFloat(String(v).replace(',', '.'));
+  return Number.isFinite(n) ? n : 0;
+}
+
 // Multer para backup por e-mail: 1 arquivo ZIP (reduz tamanho do upload e evita 413)
 const uploadBackupEmail = multer({
   storage: multer.memoryStorage(),
@@ -553,10 +560,12 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
             WHERE e.status IN ('Ativo', 'Pendente')
           `);
           
-          // Combinar os resultados
+          // Combinar os resultados (sempre somar como número — evita "12.503.40" → NaN no cliente)
+          const vParc = mysqlDecimalToNumber(parcelasStats[0].valor_parcelas_pendentes);
+          const vFixo = mysqlDecimalToNumber(valorFixoStats[0].valor_fixo_pendente);
           cobrancasStats = [{
-            total_cobrancas: parcelasStats[0].parcelas_pendentes + parcelasStats[0].parcelas_pagas,
-            valor_total_cobrancas: parcelasStats[0].valor_parcelas_pendentes + valorFixoStats[0].valor_fixo_pendente,
+            total_cobrancas: mysqlDecimalToNumber(parcelasStats[0].parcelas_pendentes) + mysqlDecimalToNumber(parcelasStats[0].parcelas_pagas),
+            valor_total_cobrancas: vParc + vFixo,
             cobrancas_pendentes: parcelasStats[0].parcelas_pendentes,
             cobrancas_pagas: parcelasStats[0].parcelas_pagas,
             valor_atrasado: 0 // Será calculado separadamente se necessário
@@ -734,13 +743,18 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     await connection.end();
     console.log('Dashboard: Conexão fechada');
 
+    const cobRaw = cobrancasStats[0] || {};
     const response = {
       emprestimos: {
         ...emprestimosStats[0],
         // Para compatibilidade, mapear valor_total_inicial para valor_total_emprestimos
-        valor_total_emprestimos: emprestimosStats[0].valor_total_inicial
+        valor_total_emprestimos: mysqlDecimalToNumber(emprestimosStats[0].valor_total_inicial)
       },
-      cobrancas: cobrancasStats[0],
+      cobrancas: {
+        ...cobRaw,
+        valor_total_cobrancas: mysqlDecimalToNumber(cobRaw.valor_total_cobrancas),
+        valor_atrasado: mysqlDecimalToNumber(cobRaw.valor_atrasado)
+      },
       clientes: clientesStats[0],
       emprestimosRecentes,
       cobrancasPendentes,

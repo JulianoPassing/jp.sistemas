@@ -977,16 +977,22 @@ const dashboardController = {
   updateDashboardCards(data) {
     // Atualizar cards com animação baseado no formato da API
     console.log('📊 Dados recebidos do dashboard:', data);
+
+    const safeMoney = (v) => {
+      if (v == null || v === '') return 0;
+      const n = typeof v === 'number' ? v : parseFloat(String(v).replace(',', '.'));
+      return Number.isFinite(n) ? n : 0;
+    };
     
     const cards = {
       'total-clientes': data.clientes?.total_clientes || 0,
       'total-emprestimos': data.emprestimos?.total_emprestimos || 0,
-      'valor-receber': data.cobrancas?.valor_total_cobrancas || 0,
+      'valor-receber': safeMoney(data.cobrancas?.valor_total_cobrancas),
       'clientes-atraso': (data.clientesEmAtraso ?? data.cobrancas?.clientes_em_atraso) || 0,
       'emprestimos-atraso': data.emprestimosEmAtraso || 0,
       'clientes-ativos': data.clientesAtivos || 0,
       'emprestimos-ativos': data.emprestimosAtivos || 0,
-      'total-investido': data.emprestimos?.valor_total_emprestimos || 0
+      'total-investido': safeMoney(data.emprestimos?.valor_total_emprestimos)
     };
     
     console.log('📊 Valores mapeados para os cards:', cards);
