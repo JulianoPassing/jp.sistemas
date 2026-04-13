@@ -417,6 +417,16 @@ main {
   display: block;
 }
 
+/* Valores monetários longos: mostrar valor completo (evita “…” no dashboard) */
+.cards .card .card-value.valor-sensivel {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.25;
+  font-size: clamp(1rem, 2.6vw, 1.85rem);
+  word-break: break-word;
+}
+
 .card-change {
   font-size: 0.875rem;
   display: flex;

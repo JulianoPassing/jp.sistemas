@@ -637,6 +637,21 @@ const utils = {
     }).format(value);
   },
 
+  /** Número vindo da API (number ou string en/pt-BR) para cards e totais */
+  parseMoney: (v) => {
+    if (v == null || v === '') return 0;
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+    const s = String(v).trim().replace(/\s/g, '');
+    if (!s) return 0;
+    if (/^-?\d+(\.\d+)?$/.test(s)) return parseFloat(s);
+    if (s.includes(',')) {
+      const n = parseFloat(s.replace(/\./g, '').replace(',', '.'));
+      return Number.isFinite(n) ? n : 0;
+    }
+    const n = parseFloat(s);
+    return Number.isFinite(n) ? n : 0;
+  },
+
   // Função auxiliar para criar data válida a partir de diversos formatos
   createValidDate: (dateInput) => {
     if (!dateInput) return null;
@@ -1116,21 +1131,15 @@ const dashboardController = {
     // Atualizar cards com animação baseado no formato da API
     console.log('📊 Dados recebidos do dashboard:', data);
 
-    const safeMoney = (v) => {
-      if (v == null || v === '') return 0;
-      const n = typeof v === 'number' ? v : parseFloat(String(v).replace(',', '.'));
-      return Number.isFinite(n) ? n : 0;
-    };
-    
     const cards = {
       'total-clientes': data.clientes?.total_clientes || 0,
       'total-emprestimos': data.emprestimos?.total_emprestimos || 0,
-      'valor-receber': safeMoney(data.cobrancas?.valor_total_cobrancas),
+      'valor-receber': utils.parseMoney(data.cobrancas?.valor_total_cobrancas),
       'clientes-atraso': (data.clientesEmAtraso ?? data.cobrancas?.clientes_em_atraso) || 0,
       'emprestimos-atraso': data.emprestimosEmAtraso || 0,
       'clientes-ativos': data.clientesAtivos || 0,
       'emprestimos-ativos': data.emprestimosAtivos || 0,
-      'total-investido': safeMoney(data.emprestimos?.valor_total_emprestimos)
+      'total-investido': utils.parseMoney(data.emprestimos?.valor_total_emprestimos)
     };
     
     console.log('📊 Valores mapeados para os cards:', cards);

@@ -11,10 +11,18 @@ const bcrypt = require('bcryptjs');
 
 const router = express.Router();
 
-/** Valores DECIMAL do MySQL chegam como string; somar com + sem Number vira concatenação e quebra o front (NaN). */
+/** Valores DECIMAL do MySQL chegam como string; aceita também formato pt-BR (1.234,56). */
 function mysqlDecimalToNumber(v) {
   if (v == null || v === '') return 0;
-  const n = typeof v === 'number' ? v : parseFloat(String(v).replace(',', '.'));
+  if (typeof v === 'number' && Number.isFinite(v)) return v;
+  const s = String(v).trim().replace(/\s/g, '');
+  if (!s) return 0;
+  if (/^-?\d+(\.\d+)?$/.test(s)) return parseFloat(s);
+  if (s.includes(',')) {
+    const n = parseFloat(s.replace(/\./g, '').replace(',', '.'));
+    return Number.isFinite(n) ? n : 0;
+  }
+  const n = parseFloat(s);
   return Number.isFinite(n) ? n : 0;
 }
 
@@ -742,15 +750,61 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Empréstimos em atraso - Query corrigida
-      console.log('Dashboard: Buscando empréstimos em atraso');
-      [emprestimosEmAtraso] = await connection.execute(`
-        SELECT COUNT(*) as total
-        FROM emprestimos e
-        WHERE TRIM(UPPER(e.status)) IN ('ATIVO', 'PENDENTE')
-          AND TRIM(UPPER(e.status)) <> 'QUITADO'
-          AND e.data_vencimento < CURDATE()
-      `);
+      // Um empréstimo em atraso = 1 (não importa quantas parcelas/cobranças vencidas)
+      console.log('Dashboard: Buscando empréstimos em atraso (por empréstimo)');
+      try {
+        [emprestimosEmAtraso] = await connection.execute(`
+          SELECT COUNT(DISTINCT e.id) AS total
+          FROM emprestimos e
+          WHERE e.cliente_id IS NOT NULL AND e.valor > 0
+            AND TRIM(UPPER(e.status)) IN ('ATIVO', 'PENDENTE', 'EM ANDAMENTO', 'VIGENTE', 'ABERTO')
+            AND TRIM(UPPER(e.status)) NOT IN ('QUITADO', 'CANCELADO')
+            AND (
+              EXISTS (
+                SELECT 1 FROM cobrancas cb
+                WHERE cb.emprestimo_id = e.id
+                  AND cb.cliente_id IS NOT NULL
+                  AND TRIM(UPPER(cb.status)) = 'PENDENTE'
+                  AND cb.data_vencimento < CURDATE()
+              )
+              OR EXISTS (
+                SELECT 1 FROM parcelas p
+                WHERE p.emprestimo_id = e.id
+                  AND TRIM(UPPER(p.status)) IN ('PENDENTE', 'ATRASADA')
+                  AND p.data_vencimento < CURDATE()
+              )
+              OR (
+                NOT EXISTS (SELECT 1 FROM cobrancas cb2 WHERE cb2.emprestimo_id = e.id)
+                AND NOT EXISTS (SELECT 1 FROM parcelas p2 WHERE p2.emprestimo_id = e.id)
+                AND e.data_vencimento IS NOT NULL
+                AND e.data_vencimento < CURDATE()
+              )
+            )
+        `);
+      } catch (parcelasErr) {
+        console.log('Dashboard: Fallback empréstimos em atraso (sem tabela parcelas):', parcelasErr.message);
+        [emprestimosEmAtraso] = await connection.execute(`
+          SELECT COUNT(DISTINCT e.id) AS total
+          FROM emprestimos e
+          WHERE e.cliente_id IS NOT NULL AND e.valor > 0
+            AND TRIM(UPPER(e.status)) IN ('ATIVO', 'PENDENTE', 'EM ANDAMENTO', 'VIGENTE', 'ABERTO')
+            AND TRIM(UPPER(e.status)) NOT IN ('QUITADO', 'CANCELADO')
+            AND (
+              EXISTS (
+                SELECT 1 FROM cobrancas cb
+                WHERE cb.emprestimo_id = e.id
+                  AND cb.cliente_id IS NOT NULL
+                  AND TRIM(UPPER(cb.status)) = 'PENDENTE'
+                  AND cb.data_vencimento < CURDATE()
+              )
+              OR (
+                NOT EXISTS (SELECT 1 FROM cobrancas cb2 WHERE cb2.emprestimo_id = e.id)
+                AND e.data_vencimento IS NOT NULL
+                AND e.data_vencimento < CURDATE()
+              )
+            )
+        `);
+      }
       console.log('Dashboard: Empréstimos em atraso obtidos:', emprestimosEmAtraso[0]);
     } catch (error) {
       console.log('Dashboard: Erro ao buscar empréstimos em atraso:', error.message);
