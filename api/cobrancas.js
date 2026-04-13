@@ -1134,7 +1134,7 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
       data_vencimento, 
       frequencia_pagamento, 
       numero_parcelas, 
-      status, 
+      status: statusReq, 
       observacoes 
     } = req.body;
     
@@ -1142,7 +1142,7 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
     console.log('ID:', id);
     console.log('Dados recebidos:', req.body);
     console.log('🔍 DEBUG - Data de vencimento recebida:', data_vencimento);
-    console.log('🔍 DEBUG - Status recebido:', status);
+    console.log('🔍 DEBUG - Status recebido:', statusReq);
     
     // LOG EXTRA: Mostrar valor antes do update
     console.log('🟡 LOG EXTRA: Valor de data_vencimento ANTES do update:', data_vencimento);
@@ -1232,7 +1232,7 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
       jurosMensalNum,
       data_vencimento,
       numeroParcelasNum,
-      status,
+      statusReq,
       observacoes
     ];
     
@@ -1329,6 +1329,7 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
       // Não interromper o processo se a atualização das cobranças falhar
     }
     
+    let statusResposta = statusReq;
     // ✅ CORREÇÃO: Recalcular status automaticamente quando data é alterada
     try {
       const hoje = new Date();
@@ -1339,13 +1340,13 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
       console.log('📅 DEBUG - Recálculo de status:');
       console.log('   Data hoje:', hoje.toISOString().split('T')[0]);
       console.log('   Data vencimento:', dataVencimento.toISOString().split('T')[0]);
-      console.log('   Status atual:', status);
+      console.log('   Status atual:', statusReq);
       console.log('   É empréstimo parcelado?', numeroParcelasNum > 1);
       
-      let novoStatus = status; // Manter o status fornecido pelo usuário
+      let novoStatus = statusReq;
       
       // Só recalcular se o status não foi explicitamente definido como 'Quitado'
-      if (status !== 'Quitado') {
+      if (statusReq !== 'Quitado') {
         // Verificar se é empréstimo parcelado
         if (numeroParcelasNum > 1) {
           // Para empréstimos parcelados, verificar status das parcelas
@@ -1380,8 +1381,8 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
         }
         
         // Atualizar status se foi recalculado
-        console.log('🔄 Comparando status:', { statusAnterior: status, novoStatus });
-        if (novoStatus !== status) {
+        console.log('🔄 Comparando status:', { statusAnterior: statusReq, novoStatus });
+        if (novoStatus !== statusReq) {
           console.log('📝 Atualizando status no banco de dados...');
           await connection.execute(`
             UPDATE emprestimos 
@@ -1391,12 +1392,12 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
           
           console.log(`🔄 ATUALIZAÇÃO DE STATUS:`);
           console.log(`   Empréstimo ID: ${id}`);
-          console.log(`   Status anterior: ${status}`);
+          console.log(`   Status anterior: ${statusReq}`);
           console.log(`   Status novo: ${novoStatus}`);
           console.log(`   ✅ Status recalculado com sucesso!`);
-          status = novoStatus; // Atualizar variável para resposta
+          statusResposta = novoStatus;
         } else {
-          console.log(`✅ Status já está correto (${status}) - nenhuma atualização necessária`);
+          console.log(`✅ Status já está correto (${statusReq}) - nenhuma atualização necessária`);
         }
       }
     } catch (statusError) {
@@ -1417,7 +1418,7 @@ router.put('/emprestimos/:id', ensureDatabase, async (req, res) => {
         data_vencimento,
         frequencia,
         numero_parcelas: numeroParcelasNum,
-        status,
+        status: statusResposta,
         observacoes,
         tipo_emprestimo: tipoEmprestimo
       }
