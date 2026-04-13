@@ -37,6 +37,69 @@ async function createCobrancasConnection(username) {
   }
 }
 
+/** ALTER TABLE incremental para emprestimos em bases criadas antes das colunas de parcelamento */
+async function ensureEmprestimosSchemaUpToDate(connection) {
+  const addCol = async (sql) => {
+    try {
+      await connection.execute(sql);
+    } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') {
+        console.warn('Migração emprestimos:', e.message);
+      }
+    }
+  };
+  await addCol(`
+    ALTER TABLE emprestimos
+    ADD COLUMN tipo_emprestimo ENUM('fixed', 'in_installments') DEFAULT 'fixed' AFTER observacoes
+  `);
+  await addCol(`
+    ALTER TABLE emprestimos
+    ADD COLUMN numero_parcelas INT DEFAULT 1 AFTER tipo_emprestimo
+  `);
+  await addCol(`
+    ALTER TABLE emprestimos
+    ADD COLUMN frequencia ENUM('daily', 'weekly', 'biweekly', 'monthly') DEFAULT 'monthly' AFTER numero_parcelas
+  `);
+  await addCol(`
+    ALTER TABLE emprestimos
+    ADD COLUMN valor_parcela DECIMAL(10,2) DEFAULT 0.00 AFTER frequencia
+  `);
+  await addCol(`
+    ALTER TABLE emprestimos
+    ADD COLUMN tipo_calculo VARCHAR(32) DEFAULT NULL AFTER valor_parcela
+  `);
+  try {
+    const [rows] = await connection.execute(`
+      SELECT COLUMN_TYPE AS ct
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'emprestimos' AND COLUMN_NAME = 'juros_mensal'
+    `);
+    const ct = rows[0]?.ct || '';
+    if (ct.includes('5,2')) {
+      await connection.execute(
+        'ALTER TABLE emprestimos MODIFY COLUMN juros_mensal DECIMAL(12,6) DEFAULT 0'
+      );
+    }
+  } catch (e) {
+    console.warn('Migração juros_mensal DECIMAL:', e.message);
+  }
+  try {
+    const [rows] = await connection.execute(`
+      SELECT COLUMN_TYPE AS ct
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'emprestimos' AND COLUMN_NAME = 'multa_atraso'
+    `);
+    const ct = rows[0]?.ct || '';
+    if (ct.includes('5,2')) {
+      await connection.execute(
+        'ALTER TABLE emprestimos MODIFY COLUMN multa_atraso DECIMAL(12,6) DEFAULT 0'
+      );
+    }
+  } catch (e) {
+    console.warn('Migração multa_atraso DECIMAL:', e.message);
+  }
+}
+
 // Função para criar banco de dados de cobranças do usuário
 async function createCobrancasDatabase(username) {
   const dbName = `jpcobrancas_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
@@ -86,8 +149,8 @@ async function createCobrancasDatabase(username) {
         valor DECIMAL(10,2) NOT NULL,
         data_emprestimo DATE NOT NULL,
         data_vencimento DATE NOT NULL,
-        juros_mensal DECIMAL(5,2) DEFAULT 0.00,
-        multa_atraso DECIMAL(5,2) DEFAULT 0.00,
+        juros_mensal DECIMAL(12,6) DEFAULT 0.000000,
+        multa_atraso DECIMAL(12,6) DEFAULT 0.000000,
         status VARCHAR(50) DEFAULT 'Ativo',
         observacoes TEXT,
         tipo_emprestimo ENUM('fixed', 'in_installments') DEFAULT 'fixed',
@@ -202,6 +265,9 @@ async function createCobrancasDatabase(username) {
     } catch (e) {
       if (e.code !== 'ER_DUP_FIELDNAME') throw e;
     }
+
+    // Migrações emprestimos: bases antigas só tinham CREATE inicial sem parcelamento / tipo_calculo
+    await ensureEmprestimosSchemaUpToDate(cobrancasConnection);
 
     // Inserir registro padrão de configurações se não existir
     const [configExists] = await cobrancasConnection.execute('SELECT COUNT(*) as total FROM configuracoes');
@@ -1768,10 +1834,17 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
     console.log('Cliente encontrado:', clienteRows[0]);
     
     // Calcular valores baseado no tipo de cálculo
-    let valorInicial = parseFloat(valor) || 0;
-    let valorFinalCalculado = parseFloat(valor_final) || valorInicial;
-    let valorParcelaCalculado = parseFloat(valor_parcela) || 0;
-    let jurosMensalFinal = parseFloat(juros_mensal) || 0;
+    const parseDecimal = (v) => {
+      if (v === null || v === undefined || v === '') return 0;
+      const n = parseFloat(String(v).replace(',', '.'));
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    let valorInicial = parseDecimal(valor);
+    let valorFinalCalculado = parseDecimal(valor_final) || valorInicial;
+    let valorParcelaCalculado = parseDecimal(valor_parcela);
+    let jurosMensalFinal = parseDecimal(juros_mensal);
+    const multaAtrasoNorm = parseDecimal(multa_atraso);
     
     console.log('Valores recebidos do frontend:', {
       valor, valor_final, valor_parcela, valor_inicial_final, valor_inicial_parcela, tipo_calculo
@@ -1783,18 +1856,22 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
       // valor_inicial_final é o valor que o cliente pegou emprestado
       // valor_final é o total que ele deve pagar
       valorInicial = valorInicial; // manter o valor enviado no campo 'valor'
-      valorFinalCalculado = parseFloat(valor_final);
-      valorParcelaCalculado = valorFinalCalculado / parseInt(numero_parcelas);
+      valorFinalCalculado = parseDecimal(valor_final);
+      valorParcelaCalculado = valorFinalCalculado / parseInt(String(numero_parcelas), 10);
       jurosMensalFinal = valorInicial > 0 ? ((valorFinalCalculado - valorInicial) / valorInicial) * 100 : 0;
     } else if (tipo_calculo === 'parcela_fixa' && valor_parcela) {
       valorInicial = valorInicial; // manter o valor enviado no campo 'valor'
-      valorParcelaCalculado = parseFloat(valor_parcela);
-      valorFinalCalculado = valorParcelaCalculado * parseInt(numero_parcelas);
+      valorParcelaCalculado = parseDecimal(valor_parcela);
+      valorFinalCalculado = valorParcelaCalculado * parseInt(String(numero_parcelas), 10);
       jurosMensalFinal = valorInicial > 0 ? ((valorFinalCalculado - valorInicial) / valorInicial) * 100 : 0;
     } else if (tipo_calculo === 'valor_inicial') {
       valorFinalCalculado = valorInicial * (1 + jurosMensalFinal / 100);
-      valorParcelaCalculado = valorFinalCalculado / parseInt(numero_parcelas);
+      valorParcelaCalculado = valorFinalCalculado / parseInt(numero_parcelas, 10);
     }
+
+    if (!Number.isFinite(jurosMensalFinal)) jurosMensalFinal = 0;
+    if (!Number.isFinite(valorFinalCalculado)) valorFinalCalculado = valorInicial;
+    if (!Number.isFinite(valorParcelaCalculado)) valorParcelaCalculado = 0;
 
     console.log('Valores calculados finais:', {
       valorInicial, valorFinalCalculado, valorParcelaCalculado, jurosMensalFinal
@@ -1812,7 +1889,7 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
     console.log('Tentando inserir empréstimo com dados:', {
       cliente_id, valor: valorInicial, data_emprestimo, data_vencimento: dataVencimentoFinal, 
       juros_mensal: jurosMensalFinal, 
-      multa_atraso: multa_atraso || 0, 
+      multa_atraso: multaAtrasoNorm, 
       observacoes: observacoes || '',
       tipo_emprestimo,
       numero_parcelas,
@@ -1825,7 +1902,7 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
     const [columns] = await connection.execute(`
       SELECT COLUMN_NAME 
       FROM INFORMATION_SCHEMA.COLUMNS 
-      WHERE TABLE_NAME = 'emprestimos' AND COLUMN_NAME = 'tipo_calculo'
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'emprestimos' AND COLUMN_NAME = 'tipo_calculo'
     `);
     
     let emprestimoResult;
@@ -1839,7 +1916,7 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         cliente_id, valorInicial, data_emprestimo, dataVencimentoFinal, 
-        jurosMensalFinal, multa_atraso || 0, observacoes || '',
+        jurosMensalFinal, multaAtrasoNorm, observacoes || '',
         tipo_emprestimo, numero_parcelas, frequencia, valorParcelaCalculado, tipo_calculo || 'valor_inicial'
       ]);
     } else {
@@ -1852,7 +1929,7 @@ router.post('/emprestimos', ensureDatabase, async (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         cliente_id, valorInicial, data_emprestimo, dataVencimentoFinal, 
-        jurosMensalFinal, multa_atraso || 0, observacoes || '',
+        jurosMensalFinal, multaAtrasoNorm, observacoes || '',
         tipo_emprestimo, numero_parcelas, frequencia, valorParcelaCalculado
       ]);
     }
