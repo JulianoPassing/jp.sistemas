@@ -357,7 +357,9 @@ Solicitamos o pagamento até a data de vencimento.`;
   const rotuloBaseCapital = dadosNotificacao.isParcelado ? 'Base' : 'Capital';
 
   const infoJurosMsg = temAtrasoPeriodos
-    ? `💰 *Total a pagar agora:* ${utils.formatCurrency(dadosNotificacao.valorTotal)}
+    ? `💰 *Capital + juros (quitação):* ${utils.formatCurrency(dadosNotificacao.valorTotal)}
+💵 *Só juros:* ${utils.formatCurrency(totalJurosExibicao)}
+_Pode pagar o valor total ou apenas os juros._
 _(${rotuloBaseCapital} ${utils.formatCurrency(baseMsgAtraso)} + juros ${p}×${dadosNotificacao.jurosPercent}% = ${utils.formatCurrency(totalJurosExibicao)})_
 _Atraso: ${dadosNotificacao.diasAtraso} dias corridos_`
     : (dadosNotificacao.diasAtraso || 0) > 0
@@ -411,7 +413,9 @@ ${linhaPix}${rodapeComJuros ? `\n\n${rodapeComJuros}` : ''}`;
   /** Total a pagar hoje (inclui juros extras de todos os períodos em aberto — mesmo critério da msg "com juros"). */
   const valorTotalSemDiario = dadosNotificacao.valorTotal;
   const infoJurosSemDiario = temAtrasoPeriodos
-    ? `💰 *Total a pagar agora:* ${utils.formatCurrency(valorTotalSemDiario)}
+    ? `💰 *Capital + juros (quitação):* ${utils.formatCurrency(valorTotalSemDiario)}
+💵 *Só juros:* ${utils.formatCurrency(totalJurosExibicao)}
+_Pode pagar o valor total ou apenas os juros._
 _(${rotuloBaseCapital} ${utils.formatCurrency(baseMsgAtraso)} + juros ${p}×${dadosNotificacao.jurosPercent}% = ${utils.formatCurrency(totalJurosExibicao)})_
 _Atraso: ${dadosNotificacao.diasAtraso} dias corridos_`
     : (dadosNotificacao.diasAtraso || 0) > 0
