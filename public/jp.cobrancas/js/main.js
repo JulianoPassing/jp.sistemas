@@ -765,6 +765,10 @@ const apiService = {
     return this.request('/cobrancas/emprestimos');
   },
 
+  async getEmprestimo(id) {
+    return this.request(`/cobrancas/emprestimos/${id}`);
+  },
+
   async createEmprestimo(emprestimoData) {
     return this.request('/cobrancas/emprestimos', {
       method: 'POST',
@@ -867,12 +871,17 @@ const ui = {
 
     return modal;
   },
+
+  /** Remove todos os modais (evita empilhar ao reabrir detalhes após ação) */
+  closeAllModals() {
+    document.querySelectorAll('.modal').forEach((m) => m.remove());
+  },
   
   // Fechar modal
   closeModal() {
-    const modal = document.querySelector('.modal');
-    if (modal) {
-      modal.remove();
+    const modals = document.querySelectorAll('.modal');
+    if (modals.length) {
+      modals[modals.length - 1].remove();
     }
   },
 
@@ -943,51 +952,7 @@ const dashboardController = {
       }
       
       const data = await apiService.getDashboardData();
-      // ✅ CORREÇÃO: Usar valores já padronizados pela API em vez de calcular localmente
-      // A API já calcula os valores consistentemente usando as funções padronizadas
-      // Não sobrescrever os valores da API com cálculos locais
-      
-      // Se precisar de valores específicos, usar os já calculados pela API
-      const emprestimos = await apiService.getEmprestimos();
-      let valorTotalReceber = 0;
-      
-      for (const emprestimo of emprestimos) {
-        const status = (emprestimo.status || '').toUpperCase();
-        
-        // Ignorar empréstimos quitados
-        if (status === 'QUITADO') continue;
-        
-        const valorInvestido = Number(emprestimo.valor_inicial || emprestimo.valor || 0);
-        
-        // Verificar se é parcelado
-        if (emprestimo.tipo_emprestimo === 'in_installments' && emprestimo.numero_parcelas > 1) {
-          try {
-            const parcelas = await apiService.getParcelasEmprestimo(emprestimo.id);
-            if (parcelas && parcelas.length > 0) {
-              // Verificar se todas as parcelas estão pagas
-              const todasPagas = parcelas.every(p => p.status === 'Paga');
-              if (!todasPagas) {
-                // Somar valor investido + parcelas de juros em aberto
-                valorTotalReceber += valorInvestido;
-                const parcelasEmAberto = parcelas.filter(p => p.status !== 'Paga');
-                parcelasEmAberto.forEach(parcela => {
-                  valorTotalReceber += Number(parcela.valor || 0);
-                });
-              }
-            }
-          } catch (error) {
-            console.error('Erro ao buscar parcelas:', error);
-          }
-        } else {
-          // Empréstimo normal - somar valor investido + juros (valor_final)
-          const valorFinal = Number(emprestimo.valor_final || emprestimo.valor || 0);
-          valorTotalReceber += valorInvestido + valorFinal;
-        }
-      }
-      
-      // Usar o valor calculado baseado nos valores padronizados da API
-      data.cobrancas = data.cobrancas || {};
-      data.cobrancas.valor_total_cobrancas = valorTotalReceber;
+      // Valor a receber e demais totais vêm agregados no servidor (sem N+1 de parcelas no cliente)
       appState.data.dashboard = data;
       this.updateDashboardCards(data);
       await this.updateRecentEmprestimos(data.emprestimosRecentes || []);
@@ -1805,63 +1770,15 @@ const app = {
         document.getElementById('emprestimos-ativos').textContent = data.emprestimosAtivos || 0;
       }
       if (document.getElementById('emprestimos-atraso')) {
-        const emprestimos = await apiService.getEmprestimos();
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
-        
-        let emAtraso = 0;
-        
-        for (const emp of (emprestimos || [])) {
-          const statusEmp = (emp.status || '').toUpperCase();
-          
-          // Ignorar quitados
-          if (statusEmp === 'QUITADO') continue;
-          
-          // Verificar se é empréstimo parcelado
-          if (emp.tipo_emprestimo === 'in_installments' && emp.numero_parcelas > 1) {
-            try {
-              const parcelas = await apiService.getParcelasEmprestimo(emp.id);
-              if (parcelas && parcelas.length > 0) {
-                // Verificar se todas as parcelas estão pagas
-                const todasPagas = parcelas.every(p => p.status === 'Paga');
-                if (todasPagas) continue;
-                
-                // Verificar se há parcelas atrasadas
-                const temAtrasada = parcelas.some(p => {
-                  if (p.status === 'Paga') return false;
-                  const dataVenc = utils.createValidDate(p.data_vencimento);
-                  return dataVenc && dataVenc < hoje;
-                });
-                
-                if (temAtrasada) emAtraso++;
-              }
-            } catch (error) {
-              console.error('Erro ao verificar parcelas:', error);
-            }
-          } else {
-            // Empréstimo de valor fixo - verificar data de vencimento
-            const dataVenc = utils.createValidDate(emp.data_vencimento);
-            if (dataVenc && dataVenc < hoje) {
-              emAtraso++;
-            }
-          }
-        }
-        
-        document.getElementById('emprestimos-atraso').textContent = emAtraso;
+        document.getElementById('emprestimos-atraso').textContent = data.emprestimosEmAtraso ?? 0;
       }
       
-      // Card de valor total
+      // Card legado #valor-total (se existir em alguma página): usa total já agregado na API
       if (document.getElementById('valor-total')) {
-        const emprestimos = await apiService.getEmprestimos();
-        const total = (emprestimos || []).reduce((acc, emp) => {
-          const status = (emp.status || '').toLowerCase();
-          if ((status === 'ativo' || status === 'pendente') && status !== 'quitado') {
-            const valor = Number(emp.valor || 0);
-            const juros = Number(emp.juros_mensal || 0);
-            acc += valor + (valor * (juros / 100));
-          }
-          return acc;
-        }, 0);
+        const total =
+          Number(data.emprestimos?.valor_total_final) ||
+          Number(data.cobrancas?.valor_total_cobrancas) ||
+          0;
         document.getElementById('valor-total').textContent = utils.formatCurrency(total);
       }
       
@@ -2475,8 +2392,13 @@ const emprestimoController = {
   async viewEmprestimo(id, opts) {
     try {
       opts = opts || {};
-      const emprestimos = await apiService.getEmprestimos();
-      const emp = emprestimos.find(e => String(e.id) === String(id));
+      let emp;
+      try {
+        emp = await apiService.getEmprestimo(id);
+      } catch (e) {
+        ui.showNotification('Empréstimo não encontrado', 'error');
+        return;
+      }
       console.log('DEBUG EMPRESTIMO:', emp);
       if (!emp) {
         ui.showNotification('Empréstimo não encontrado', 'error');
@@ -2702,17 +2624,21 @@ const emprestimoController = {
         modal.querySelector('#modal-btn-quitado').onclick = async (e) => {
           e.preventDefault();
           try {
-            await fetch(`/api/cobrancas/emprestimos/${emp.id}/status`, {
+            const response = await fetch(`/api/cobrancas/emprestimos/${emp.id}/status`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               credentials: 'include',
               body: JSON.stringify({ status: 'Quitado' })
             });
+            if (!response.ok) {
+              const err = await response.json().catch(() => ({}));
+              throw new Error(err.error || 'Erro ao atualizar status');
+            }
             ui.showNotification('Empréstimo marcado como quitado!', 'success');
             modal.remove();
-            if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
+            await recarregarDadosPagina();
           } catch (err) {
-            ui.showNotification('Erro ao atualizar status', 'error');
+            ui.showNotification(err.message || 'Erro ao atualizar status', 'error');
           }
         };
         // Botão Só Juros
@@ -2853,17 +2779,21 @@ const emprestimoController = {
         modal.querySelector('#modal-btn-naopagou').onclick = async (e) => {
           e.preventDefault();
           try {
-            await fetch(`/api/cobrancas/emprestimos/${emp.id}/status`, {
+            const response = await fetch(`/api/cobrancas/emprestimos/${emp.id}/status`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               credentials: 'include',
               body: JSON.stringify({ status: 'Em Atraso' })
             });
+            if (!response.ok) {
+              const err = await response.json().catch(() => ({}));
+              throw new Error(err.error || 'Erro ao atualizar status');
+            }
             ui.showNotification('Status alterado para Em Atraso!', 'success');
             modal.remove();
-            if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
+            await recarregarDadosPagina();
           } catch (err) {
-            ui.showNotification('Erro ao atualizar status', 'error');
+            ui.showNotification(err.message || 'Erro ao atualizar status', 'error');
           }
         };
         // Botão Remover
@@ -2872,15 +2802,19 @@ const emprestimoController = {
           const ok = await ui.showConfirm('Tem certeza que deseja remover este empréstimo?', { title: 'Remover empréstimo', confirmText: 'Remover', danger: true });
           if (!ok) return;
           try {
-            await fetch(`/api/cobrancas/emprestimos/${emp.id}`, {
+            const response = await fetch(`/api/cobrancas/emprestimos/${emp.id}`, {
               method: 'DELETE',
               credentials: 'include'
             });
+            if (!response.ok) {
+              const err = await response.json().catch(() => ({}));
+              throw new Error(err.error || 'Erro ao remover empréstimo');
+            }
             ui.showNotification('Empréstimo removido!', 'success');
             modal.remove();
-            if (document.getElementById('emprestimos-lista')) renderEmprestimosLista();
+            await recarregarDadosPagina();
           } catch (err) {
-            ui.showNotification('Erro ao remover empréstimo', 'error');
+            ui.showNotification(err.message || 'Erro ao remover empréstimo', 'error');
           }
         };
       } catch (err) {
@@ -4178,6 +4112,10 @@ async function recarregarDadosPagina() {
     if (document.getElementById('lista-negra-clientes')) {
       await renderListaNegra();
     }
+
+    if (document.getElementById('emprestimos-lista')) {
+      await renderEmprestimosLista();
+    }
     
     console.log('Dados recarregados com sucesso!');
     return true;
@@ -5028,11 +4966,9 @@ async function marcarParcelaPaga(emprestimoId, numeroParcela) {
     
     ui.showNotification('Parcela marcada como paga!', 'success');
     
-    // Recarregar os detalhes do empréstimo
+    ui.closeAllModals();
     await emprestimoController.viewEmprestimo(emprestimoId);
-    
-    // Atualizar dashboard (empréstimos recentes + todos os empréstimos) se estiver na página
-    await recarregarDadosPagina();
+    recarregarDadosPagina().catch(() => {});
     
   } catch (error) {
     console.error('Erro ao marcar parcela como paga:', error);
@@ -5059,8 +4995,9 @@ async function marcarParcelaAtrasada(emprestimoId, numeroParcela) {
     
     ui.showNotification('Parcela marcada como atrasada!', 'success');
     
-    // Recarregar os detalhes do empréstimo
+    ui.closeAllModals();
     await emprestimoController.viewEmprestimo(emprestimoId);
+    recarregarDadosPagina().catch(() => {});
     
   } catch (error) {
     console.error('Erro ao marcar parcela como atrasada:', error);
@@ -5088,11 +5025,9 @@ async function marcarParcelaPendente(emprestimoId, numeroParcela) {
     
     ui.showNotification('Parcela marcada como pendente!', 'success');
     
-    // Recarregar os detalhes do empréstimo
+    ui.closeAllModals();
     await emprestimoController.viewEmprestimo(emprestimoId);
-    
-    // Atualizar dashboard se estiver na página
-    await recarregarDadosPagina();
+    recarregarDadosPagina().catch(() => {});
     
   } catch (error) {
     console.error('Erro ao marcar parcela como pendente:', error);
@@ -5150,10 +5085,8 @@ async function editarDataParcela(emprestimoId, numeroParcela, dataAtual) {
         throw new Error(data.error || 'Erro ao atualizar data');
       }
       
-      ui.closeModal();
       ui.showNotification('Data da parcela atualizada com sucesso!', 'success');
-      
-      // Recarregar os detalhes do empréstimo
+      ui.closeAllModals();
       await emprestimoController.viewEmprestimo(emprestimoId);
       
     } catch (error) {
@@ -5217,9 +5150,8 @@ async function editarValorParcela(emprestimoId, numeroParcela, valorAtual) {
         throw new Error(data.error || 'Erro ao atualizar valor');
       }
       
-      ui.closeModal();
       ui.showNotification('Valor da parcela atualizado com sucesso!', 'success');
-      
+      ui.closeAllModals();
       await emprestimoController.viewEmprestimo(emprestimoId);
       
     } catch (error) {

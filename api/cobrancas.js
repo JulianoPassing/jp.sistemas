@@ -1407,27 +1407,62 @@ router.get('/emprestimos', ensureDatabase, async (req, res) => {
   }
 });
 
-// Buscar empréstimo por ID
+// Buscar empréstimo por ID (mesmo processamento da lista: status, valor_final, datas)
 router.get('/emprestimos/:id', ensureDatabase, async (req, res) => {
   try {
     const { id } = req.params;
     const username = req.session.cobrancasUser;
     const connection = await createCobrancasConnection(username);
-    
+
+    await connection.execute(`
+      UPDATE parcelas 
+      SET status = 'Atrasada' 
+      WHERE status = 'Pendente' 
+        AND data_vencimento < CURDATE()
+    `);
+
     const [emprestimos] = await connection.execute(`
-      SELECT e.*, c.nome as cliente_nome, c.telefone as telefone
+      SELECT DISTINCT e.*, 
+             c.nome as cliente_nome, 
+             c.telefone as telefone,
+             COALESCE(e.valor, 0) as valor,
+             COALESCE(e.juros_mensal, 0) as juros_mensal,
+             COALESCE(e.numero_parcelas, 1) as numero_parcelas,
+             COALESCE(e.valor_parcela, 0) as valor_parcela,
+             CASE 
+               WHEN e.tipo_emprestimo = 'in_installments' AND e.valor_parcela > 0 AND e.numero_parcelas > 0 
+                 THEN (e.valor_parcela * e.numero_parcelas)
+               WHEN e.valor > 0 AND e.juros_mensal > 0 
+                 THEN e.valor * (1 + (e.juros_mensal / 100))
+               ELSE COALESCE(e.valor, 0)
+             END as valor_final,
+             DATE_FORMAT(e.data_emprestimo, '%Y-%m-%d') as data_emprestimo_formatada,
+             DATE_FORMAT(e.data_vencimento, '%Y-%m-%d') as data_vencimento_formatada
       FROM emprestimos e
       LEFT JOIN clientes_cobrancas c ON e.cliente_id = c.id
       WHERE e.id = ?
     `, [id]);
-    
-    await connection.end();
-    
+
     if (emprestimos.length === 0) {
+      await connection.end();
       return res.status(404).json({ error: 'Empréstimo não encontrado' });
     }
-    
-    res.json(emprestimos[0]);
+
+    const emp = emprestimos[0];
+    const valores = calcularValoresEmprestimo(emp);
+    const status = await determinarStatusEmprestimo(emp, connection);
+    if (emp.data_emprestimo_formatada) {
+      emp.data_emprestimo = emp.data_emprestimo_formatada;
+    }
+    if (emp.data_vencimento_formatada) {
+      emp.data_vencimento = emp.data_vencimento_formatada;
+    }
+    emp.valor_final = valores.valor_final;
+    emp.valor_inicial = valores.valor_inicial;
+    emp.status = status;
+
+    await connection.end();
+    res.json(emp);
   } catch (error) {
     console.error('Erro ao buscar empréstimo:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
