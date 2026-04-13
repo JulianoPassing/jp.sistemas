@@ -587,14 +587,15 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
     }
 
     try {
-      // Valor a receber = total em aberto: soma das cobranças pendentes (valor_atualizado) dos empréstimos não quitados,
-      // incluindo ATRASADO. Legado: empréstimos sem nenhuma linha em cobrancas (valor contratual com juros).
+      // Valor a receber (dashboard): soma do valor de FACE das cobranças pendentes (valor_original), não valor_atualizado.
+      // valor_atualizado inclui juros/mora empilhados por período em cada linha e infla o KPI (várias vezes o investido).
+      // Legado: empréstimos sem linha em cobrancas — mantém o total contratual estimado.
       console.log('Dashboard: Buscando estatísticas de cobranças');
       try {
         const [abertoRows] = await connection.execute(`
           SELECT 
-            COALESCE(SUM(cb.valor_atualizado), 0) as valor_aberto,
-            COALESCE(SUM(CASE WHEN cb.dias_atraso > 0 THEN cb.valor_atualizado ELSE 0 END), 0) as valor_atrasado,
+            COALESCE(SUM(cb.valor_original), 0) as valor_aberto,
+            COALESCE(SUM(CASE WHEN cb.dias_atraso > 0 THEN cb.valor_original ELSE 0 END), 0) as valor_atrasado,
             COUNT(*) as cobrancas_pendentes_abertas
           FROM cobrancas cb
           INNER JOIN emprestimos e ON cb.emprestimo_id = e.id
@@ -638,7 +639,7 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
           valor_atrasado: mysqlDecimalToNumber(abertoRows[0].valor_atrasado)
         }];
 
-        console.log('Dashboard: Valor aberto (cobranças + empréstimos ativos):', abertoRows[0].valor_aberto);
+        console.log('Dashboard: Valor a receber (soma valor_original cobranças pendentes):', abertoRows[0].valor_aberto);
         console.log('Dashboard: Legado sem cobranças:', legacyRows[0].valor_legacy);
         console.log('Dashboard: Total valor a receber:', cobrancasStats[0].valor_total_cobrancas);
       } catch (innerError) {
@@ -646,10 +647,10 @@ router.get('/dashboard', ensureDatabase, async (req, res) => {
         [cobrancasStats] = await connection.execute(`
           SELECT 
             COUNT(*) as total_cobrancas,
-            COALESCE(SUM(valor_atualizado), 0) as valor_total_cobrancas,
+            COALESCE(SUM(CASE WHEN TRIM(UPPER(status)) = 'PENDENTE' THEN valor_original ELSE 0 END), 0) as valor_total_cobrancas,
             COUNT(CASE WHEN TRIM(UPPER(status)) = 'PENDENTE' THEN 1 END) as cobrancas_pendentes,
             COUNT(CASE WHEN TRIM(UPPER(status)) = 'PAGA' THEN 1 END) as cobrancas_pagas,
-            COALESCE(SUM(CASE WHEN dias_atraso > 0 THEN valor_atualizado ELSE 0 END), 0) as valor_atrasado
+            COALESCE(SUM(CASE WHEN dias_atraso > 0 AND TRIM(UPPER(status)) = 'PENDENTE' THEN valor_original ELSE 0 END), 0) as valor_atrasado
           FROM cobrancas
           WHERE cliente_id IS NOT NULL
         `);
