@@ -1622,34 +1622,36 @@ const dashboardController = {
   }
 };
 
-// Mobile Menu Controller
+// Mobile Menu Controller (CSS usa .nav-wrapper.open — ver style.css)
 const mobileMenuController = {
   init() {
-    const menuToggle = document.getElementById('menuToggle');
-    const nav = document.querySelector('nav');
-    
-    if (menuToggle && nav) {
-      menuToggle.addEventListener('click', () => {
-        nav.classList.toggle('nav-open');
-        menuToggle.classList.toggle('active');
-      });
+    const menuToggle = document.getElementById('mobile-menu-toggle');
+    const navWrapper = document.querySelector('.nav-wrapper');
+    if (!menuToggle || !navWrapper) return;
+    if (menuToggle.dataset.jpMenuInit === '1') return;
+    menuToggle.dataset.jpMenuInit = '1';
 
-      // Fechar menu ao clicar em um link
-      nav.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('click', () => {
-          nav.classList.remove('nav-open');
-          menuToggle.classList.remove('active');
-        });
-      });
+    menuToggle.addEventListener('click', () => {
+      navWrapper.classList.toggle('open');
+      menuToggle.classList.toggle('active');
+    });
 
-      // Fechar menu ao redimensionar para desktop
-      window.addEventListener('resize', utils.debounce(() => {
+    navWrapper.querySelectorAll('.nav-link').forEach((link) => {
+      link.addEventListener('click', () => {
+        navWrapper.classList.remove('open');
+        menuToggle.classList.remove('active');
+      });
+    });
+
+    window.addEventListener(
+      'resize',
+      utils.debounce(() => {
         if (window.innerWidth > 768) {
-          nav.classList.remove('nav-open');
+          navWrapper.classList.remove('open');
           menuToggle.classList.remove('active');
         }
-      }, 250));
-    }
+      }, 250)
+    );
   }
 };
 

@@ -828,6 +828,11 @@ footer {
   .header-content {
     flex-direction: column;
     gap: 1rem;
+    position: relative;
+  }
+
+  .nav-wrapper {
+    width: 100%;
   }
   
   nav {
@@ -1048,11 +1053,17 @@ footer {
     display: flex;
   }
   .mobile-menu-btn {
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: none;
     border: none;
     margin-left: 1rem;
     cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0.5rem;
+    -webkit-tap-highlight-color: transparent;
   }
   .menu-icon {
     width: 32px;
@@ -1870,4 +1881,46 @@ table td .empty-state {
     min-width: auto;
     width: 100%;
   }
-} 
+}
+
+/* ========== Mobile: safe area (iPhone com notch / barra home) + toque ========== */
+@supports (padding: max(0px)) {
+  body.app-layout {
+    padding-left: env(safe-area-inset-left, 0);
+    padding-right: env(safe-area-inset-right, 0);
+  }
+
+  header {
+    padding-left: max(1rem, env(safe-area-inset-left, 1rem));
+    padding-right: max(1rem, env(safe-area-inset-right, 1rem));
+    padding-top: max(0.75rem, env(safe-area-inset-top, 0.75rem));
+  }
+
+  main {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .modal-content {
+    max-height: min(90vh, calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 2rem));
+    margin-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-close {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-body {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .btn.btn-sm {
+    min-height: 40px;
+    padding: 0.5rem 0.75rem;
+  }
+}

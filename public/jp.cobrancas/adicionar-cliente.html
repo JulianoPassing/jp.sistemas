@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <link rel="canonical" href="https://jp-sistemas.com/jp.cobrancas/adicionar-cliente.html">
   <title>JP-Cobranças - Adicionar Cliente</title>
   <link rel="icon" type="image/png" href="https://i.imgur.com/6N82fk2.png">
@@ -324,14 +324,6 @@
   <script src="./js/main.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const menuBtn = document.getElementById('mobile-menu-toggle');
-      const navWrapper = document.querySelector('.nav-wrapper');
-      if (menuBtn && navWrapper) {
-        menuBtn.addEventListener('click', function() {
-          navWrapper.classList.toggle('open');
-        });
-      }
-
       // Validação em tempo real
       function validarCampo(id, valor, tipo) {
         const grp = document.getElementById('grp-' + id);
