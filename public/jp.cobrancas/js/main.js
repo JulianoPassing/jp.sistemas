@@ -340,7 +340,10 @@ ${linhaPix}
 Solicitamos o pagamento até a data de vencimento.`;
   }
 
-  const jurosMensalMaisAtraso = dadosNotificacao.jurosTotal + dadosNotificacao.jurosAplicado;
+  const totalJurosExibicao =
+    dadosNotificacao.valorJuros != null && !Number.isNaN(Number(dadosNotificacao.valorJuros))
+      ? Number(dadosNotificacao.valorJuros)
+      : dadosNotificacao.jurosTotal + dadosNotificacao.jurosAplicado;
   const temAtrasoPeriodos = (dadosNotificacao.diasAtraso || 0) > 0 && p > 0;
   const destaqueTopo = temAtrasoPeriodos
     ? `📌 *${textoAtrasoLinha.charAt(0).toUpperCase() + textoAtrasoLinha.slice(1)}* — ${textoAbertoLinha}
@@ -358,9 +361,8 @@ Solicitamos o pagamento até a data de vencimento.`;
     ? `${destaqueTopo}
 📊 *Detalhes:*
 • Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
-• Juros contratuais (${dadosNotificacao.jurosPercent}% ${rotulo}): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
-• *Juros extras (${p} ${p === 1 ? 'período vencido' : 'períodos vencidos'} em aberto):* ${utils.formatCurrency(dadosNotificacao.jurosAplicado)}${eqJurosExtra}
-• Total de juros (contrato + extras): ${utils.formatCurrency(jurosMensalMaisAtraso)}
+• *Juros (${p} ${p === 1 ? 'período em aberto' : 'períodos em aberto'} — ${dadosNotificacao.jurosPercent}% ${rotulo} sobre ${baseJ > 0 ? utils.formatCurrency(baseJ) : utils.formatCurrency(dadosNotificacao.valorInvestido)}):* ${utils.formatCurrency(dadosNotificacao.jurosAplicado)}${eqJurosExtra}
+• Total de juros: ${utils.formatCurrency(totalJurosExibicao)}
 • Dias corridos desde o vencimento: ${dadosNotificacao.diasAtraso}
 
 💰 *Total a pagar agora:* ${utils.formatCurrency(dadosNotificacao.valorTotal)}`
@@ -377,7 +379,7 @@ Solicitamos o pagamento até a data de vencimento.`;
 • Juros contratuais (${dadosNotificacao.jurosPercent}% ${rotulo}): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
 
 💰 *Total a pagar: ${utils.formatCurrency(dadosNotificacao.valorTotal)}*
-💵 *Apenas juros: ${utils.formatCurrency(jurosMensalMaisAtraso)}*`;
+💵 *Apenas juros: ${utils.formatCurrency(totalJurosExibicao)}*`;
 
   const aberturaEmprestimo = temAtrasoPeriodos
     ? `Olá, ${dadosNotificacao.primeiroNome}, seu empréstimo está *${textoAtrasoLinha}* (${textoAbertoLinha}). Vencimento de referência: ${dadosNotificacao.dataVencimento}.`
@@ -416,9 +418,8 @@ ${temAtrasoPeriodos ? `Os juros ${rotulo} (${dadosNotificacao.jurosPercent}%) fo
     ? `${destaqueTopo}
 📊 *Detalhes:*
 • Valor investido: ${utils.formatCurrency(dadosNotificacao.valorInvestido)}
-• Juros do contrato (${dadosNotificacao.jurosPercent}% ${rotulo}): ${utils.formatCurrency(dadosNotificacao.jurosTotal)}
-• *Juros extras (${p} ${p === 1 ? 'período vencido' : 'períodos vencidos'} em aberto):* ${utils.formatCurrency(dadosNotificacao.jurosAplicado)}${eqJurosExtra}
-• Total de juros (contrato + extras): ${utils.formatCurrency(jurosMensalMaisAtraso)}
+• *Juros (${p} ${p === 1 ? 'período em aberto' : 'períodos em aberto'} — ${dadosNotificacao.jurosPercent}% ${rotulo} sobre ${baseJ > 0 ? utils.formatCurrency(baseJ) : utils.formatCurrency(dadosNotificacao.valorInvestido)}):* ${utils.formatCurrency(dadosNotificacao.jurosAplicado)}${eqJurosExtra}
+• Total de juros: ${utils.formatCurrency(totalJurosExibicao)}
 • Dias corridos desde o vencimento: ${dadosNotificacao.diasAtraso}
 
 💰 *Total a pagar agora:* ${utils.formatCurrency(valorTotalSemDiario)}`
@@ -2624,16 +2625,26 @@ const emprestimoController = {
           if (parcelaMaisAtrasada) {
             valorAtualizado = baseJurosAtraso + jurosAplicado;
           } else {
-            const valorComContrato = valorInvestido + jurosTotal;
-            valorAtualizado = valorComContrato + jurosAplicado;
+            // Uma linha de juros: períodos × % sobre o capital (sem somar de novo o juros do contrato em cima)
+            valorAtualizado = valorInvestido + jurosAplicado;
           }
           const rotuloF = rotuloFrequenciaJuros(frequencia);
-          infoJuros = `
+          const jurosPorPeriodoUnidade = baseJurosAtraso * (jurosPercent / 100);
+          infoJuros = parcelaMaisAtrasada
+            ? `
             <div style='margin-top:1em; color:#ef4444; font-size:1rem;'>
               <b>Em atraso:</b> ${diasAtraso} dia(s) corridos<br>
               <b>${textoPeriodosAbertoStr || 'Períodos em aberto'}</b> (${rotuloF})<br>
-              Juros por período (${jurosPercent}% ${rotuloF} sobre o valor em aberto): <b>R$ ${(baseJurosAtraso * (jurosPercent / 100)).toFixed(2)}</b> cada<br>
+              Juros por período (${jurosPercent}% ${rotuloF} sobre o valor em aberto): <b>R$ ${jurosPorPeriodoUnidade.toFixed(2)}</b> cada<br>
               Juros extras pelo atraso (${periodosAberto} período(s)): <b>R$ ${jurosAplicado.toFixed(2)}</b>${multaAtraso > 0 ? ` — multa ${multaAtraso}% pode incidir (vide cobranças)` : ''}<br>
+              <span style='font-size:1.1em;'><br>Valor atualizado (esta cobrança): <b>R$ ${valorAtualizado.toFixed(2)}</b></span>
+            </div>
+          `
+            : `
+            <div style='margin-top:1em; color:#ef4444; font-size:1rem;'>
+              <b>Em atraso:</b> ${diasAtraso} dia(s) corridos<br>
+              <b>${textoPeriodosAbertoStr || 'Períodos em aberto'}</b> (${rotuloF})<br>
+              <b>Juros (${periodosAberto} × ${jurosPercent}% ${rotuloF} sobre ${utils.formatCurrency(valorInvestido)}):</b> R$ ${jurosAplicado.toFixed(2)}${multaAtraso > 0 ? ` — multa ${multaAtraso}% pode incidir (vide cobranças)` : ''}<br>
               <span style='font-size:1.1em;'><br>Valor atualizado (esta cobrança): <b>R$ ${valorAtualizado.toFixed(2)}</b></span>
             </div>
           `;
@@ -2642,8 +2653,11 @@ const emprestimoController = {
         const telefone = emp.telefone || emp.celular || emp.whatsapp || '';
         const nomeCompleto = emp.cliente_nome || '';
         const primeiroNome = nomeCompleto.split(' ')[0];
-        // Calcular valor total dos juros (juros total + juros aplicado por atraso)
-        const valorTotalJuros = jurosTotal + jurosAplicado;
+        // Com períodos em aberto, o total de juros é só o empilhamento (p × % × base), não contrato + extras
+        let valorTotalJuros = jurosTotal + jurosAplicado;
+        if (status === 'Em Atraso' && dataVencimento && periodosAberto > 0 && diasAtraso > 0) {
+          valorTotalJuros = jurosAplicado;
+        }
         const dataVencFormatada = utils.formatDate(emp.data_vencimento);
         
         // Buscar dados da próxima parcela se for parcelado
@@ -2740,7 +2754,8 @@ const emprestimoController = {
               textoPeriodosAberto: txtP,
               jurosAplicado: ja,
               valorTotal: va,
-              baseJurosAtraso: vbBase
+              baseJurosAtraso: vbBase,
+              ...(parcelaAtrasada && pa > 0 ? { valorJuros: ja } : {})
             };
           }
         }
